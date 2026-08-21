@@ -413,9 +413,11 @@ usePopupShellLifecycle({
 
 ### 7.5 Shell Debug（DEV only）
 
+**【必须】** 壳外工具与 `.app-preview` 业务 **互不影响**：调 Inspect / QA / Popover 只改 `src/dev/shell-debug/**`（及 `AppRoot.vue` 的 DEV 挂载）；**【禁止】** 为壳外改 `src/views/**`、`src/scenes/**`、业务布局/CSS。业务 **【禁止】** import `src/dev/**` 或为 Dev 加 `if (DEV)`。
+
 **【允许】** 只改 `src/dev/shell-debug/**`；import 业务已 export API。**【禁止】** 业务 `import src/dev/**`；为 QA 改 `src/scenes/**`。
 
-详案：`src/dev/shell-debug/AGENTS.md`。
+**Inspect 命名（全局 · 点谁是谁）**：`findDirectDomCatalogEntry` → **`findNearestVueCatalogOwner`（最内层 Vue catalog）** → Apply_Item → **structural eds 借名** → HTML 标签。布局/样式 **永远** 对应当前点击节点。禁止 CSS Module 类名片段借名。详案：`src/dev/shell-debug/AGENTS.md`。
 
 ---
 

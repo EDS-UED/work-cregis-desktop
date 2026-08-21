@@ -1,6 +1,15 @@
-import type { InspectCodeSection } from './buildIconInspect';
-import { formatTokenVar, formatValueWithToken, resolveTokenNameForValue } from './resolveDesignToken';
-import { resolveEdsComponentInspect } from './resolveEdsComponentInspect';
+import {
+  buildMotionPropertyItem,
+  deriveInspectMotion,
+  type InspectCodeSection,
+} from './buildIconInspect';
+import { buildDataListAdaptiveInspect } from './buildDataListAdaptiveInspect';
+import { buildDeclaredInspectCode } from './buildDeclaredInspectCode';
+import { resolveInspectStyleTargetElement } from './resolveInspectStyleTarget';
+import { buildInspectCodeSections } from './buildInspectCodeSections';
+import { formatDomTagInspectLabel } from './buildTextInspect';
+import { isInspectFloatLayerElement, resolveInspectScopeRoot } from './inspectFloatLayerScope';
+import { resolveInspectTarget, type InspectTargetResolution } from './resolveEdsComponentInspect';
 
 export type InspectPropertyItem = {
   label: string;
@@ -18,12 +27,14 @@ export type InspectPropertyGroup = {
 export type ElementInspectInfo = {
   element: Element;
   label: string;
+  /** 自内向外的 DS 组件链路（内部识别，UI 不展示完整路径）。 */
+  componentChain: string[];
   tagName: string;
   domPath: string;
   classList: string[];
   edsComponentHints: string[];
   vueComponentName: string | null;
-  edsComponent: ReturnType<typeof resolveEdsComponentInspect>;
+  edsComponent: InspectTargetResolution['edsComponent'];
   /** 非 DS 组件时展示的元素本身属性。 */
   elementAttributes: InspectPropertyItem[];
   rect: { width: number; height: number };
@@ -33,6 +44,8 @@ export type ElementInspectInfo = {
   };
   /** Icon 等组件专用：分块代码（布局 / SVG），不走 Tab。 */
   codeSections?: InspectCodeSection[];
+  /** DataList 页面级列宽自适应（属性与用法之间）。 */
+  adaptiveItems?: InspectPropertyItem[];
   /** @deprecated Legacy grouped dump — prefer edsComponent + code */
   groups: InspectPropertyGroup[];
   copyBundle: string;
@@ -42,10 +55,20 @@ function roundPx(value: number): string {
   return `${Math.round(value * 10) / 10}px`;
 }
 
-function buildElementAttributes(
+function ensureInspectMotionProperty(
+  items: InspectPropertyItem[],
   element: Element,
   preview: Element,
-  style: CSSStyleDeclaration,
+): InspectPropertyItem[] {
+  const withoutMotion = items.filter((item) => item.label !== '动效');
+  const motion = deriveInspectMotion(element, preview);
+  return [...withoutMotion, buildMotionPropertyItem(motion)];
+}
+
+function buildElementAttributes(
+  element: Element,
+  _preview: Element,
+  _style: CSSStyleDeclaration,
   rect: DOMRect,
 ): InspectPropertyItem[] {
   const items: InspectPropertyItem[] = [];
@@ -93,46 +116,6 @@ function buildElementAttributes(
     });
   }
 
-  const textContent = element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-  if (textContent && textContent.length <= 80) {
-    items.push({
-      label: '文本',
-      value: textContent,
-      token: null,
-      copyLine: `text: "${textContent}"`,
-    });
-  }
-
-  const { display, token: displayToken } = formatValueWithToken(preview, style.display);
-  if (display && display !== 'inline') {
-    items.push({
-      label: 'Display',
-      value: displayToken ? formatTokenVar(displayToken) : display,
-      token: displayToken,
-      copyLine: `display: ${display};`,
-    });
-  }
-
-  const fontSize = formatValueWithToken(preview, style.fontSize, (name) => name.startsWith('--eds-'));
-  if (fontSize.token) {
-    items.push({
-      label: '字号',
-      value: formatTokenVar(fontSize.token),
-      token: fontSize.token,
-      copyLine: `font-size: ${formatTokenVar(fontSize.token)};`,
-    });
-  }
-
-  const color = formatValueWithToken(preview, style.color, (name) => name.startsWith('--text-'));
-  if (color.token) {
-    items.push({
-      label: '颜色',
-      value: formatTokenVar(color.token),
-      token: color.token,
-      copyLine: `color: ${formatTokenVar(color.token)};`,
-    });
-  }
-
   return items;
 }
 
@@ -156,6 +139,10 @@ function buildDomPath(element: Element, root: Element): string {
   }
 
   return segments.join(' > ');
+}
+
+function formatVueInspectLabel(vueName: string): string {
+  return vueName.startsWith('Eg') ? vueName.slice(2) : vueName;
 }
 
 function resolveVueComponentName(element: Element): string | null {
@@ -190,133 +177,29 @@ function readEdsComponentHints(element: Element): string[] {
   return [...hints].sort();
 }
 
-function addLiteralCodeItem(
-  items: InspectPropertyItem[],
-  label: string,
-  rawValue: string,
-  cssProp?: string,
-) {
-  const trimmed = rawValue.trim();
-  if (!trimmed || trimmed === 'none' || trimmed === 'auto' || trimmed === 'normal') {
-    return;
-  }
-  const cssName = cssProp ?? label;
-  items.push({
-    label,
-    value: trimmed,
-    token: null,
-    copyLine: `${cssName}: ${trimmed};`,
-  });
-}
-
-function addTokenCodeItem(
-  preview: Element,
-  items: InspectPropertyItem[],
-  label: string,
-  rawValue: string,
-  cssProp?: string,
-  filter?: (name: string) => boolean,
-) {
-  const trimmed = rawValue.trim();
-  if (!trimmed || trimmed === 'none' || trimmed === 'auto' || trimmed === 'normal') {
-    return;
-  }
-  const token = resolveTokenNameForValue(preview, trimmed, filter);
-  if (!token) return;
-
-  const cssName = cssProp ?? label;
-  const tokenVar = formatTokenVar(token);
-  items.push({
-    label,
-    value: tokenVar,
-    token,
-    copyLine: `${cssName}: ${tokenVar};`,
-  });
-}
-
-function addPaddingTokenItem(
-  preview: Element,
-  items: InspectPropertyItem[],
-  style: CSSStyleDeclaration,
-) {
-  const spacingFilter = (name: string) => name.startsWith('--spacing-');
-  const top = resolveTokenNameForValue(preview, style.paddingTop, spacingFilter);
-  const right = resolveTokenNameForValue(preview, style.paddingRight, spacingFilter);
-  const bottom = resolveTokenNameForValue(preview, style.paddingBottom, spacingFilter);
-  const left = resolveTokenNameForValue(preview, style.paddingLeft, spacingFilter);
-
-  if (!top || !right || !bottom || !left) return;
-
-  let paddingValue: string;
-  if (top === right && right === bottom && bottom === left) {
-    paddingValue = formatTokenVar(top);
-  } else if (top === bottom && left === right) {
-    paddingValue = `${formatTokenVar(top)} ${formatTokenVar(right)}`;
-  } else {
-    paddingValue = [top, right, bottom, left].map(formatTokenVar).join(' ');
-  }
-
-  items.push({
-    label: 'padding',
-    value: paddingValue,
-    token: top,
-    copyLine: `padding: ${paddingValue};`,
-  });
-}
-
-function buildUsefulCode(
-  preview: Element,
-  style: CSSStyleDeclaration,
-): { layout: InspectPropertyItem[]; styleItems: InspectPropertyItem[] } {
-  const layout: InspectPropertyItem[] = [];
-  const styleItems: InspectPropertyItem[] = [];
-  const spacingFilter = (name: string) => name.startsWith('--spacing-');
-
-  addLiteralCodeItem(layout, 'display', style.display, 'display');
-  addPaddingTokenItem(preview, layout, style);
-  addTokenCodeItem(preview, layout, 'gap', style.gap, 'gap', spacingFilter);
-  addLiteralCodeItem(layout, 'justify-content', style.justifyContent, 'justify-content');
-  addLiteralCodeItem(layout, 'align-items', style.alignItems, 'align-items');
-
-  addTokenCodeItem(preview, styleItems, 'border-radius', style.borderRadius, 'border-radius', (name) =>
-    name.startsWith('--radius-'),
-  );
-  addTokenCodeItem(
-    preview,
-    styleItems,
-    'background',
-    style.backgroundColor,
-    'background',
-    (name) => name.startsWith('--material-') || name.startsWith('--box-') || name.startsWith('--event-'),
-  );
-  addTokenCodeItem(preview, styleItems, 'color', style.color, 'color', (name) => name.startsWith('--text-'));
-  addTokenCodeItem(preview, styleItems, 'font-size', style.fontSize, 'font-size', (name) =>
-    name.startsWith('--eds-'),
-  );
-  addTokenCodeItem(preview, styleItems, 'font-weight', style.fontWeight, 'font-weight', (name) =>
-    name.startsWith('--weight-') || name.startsWith('--eds-'),
-  );
-  addTokenCodeItem(preview, styleItems, 'line-height', style.lineHeight, 'line-height', (name) =>
-    name.startsWith('--eds-'),
-  );
-
-  return { layout, styleItems };
-}
-
 function buildLabel(info: {
-  edsComponent: ReturnType<typeof resolveEdsComponentInspect>;
+  inspectTarget: InspectTargetResolution;
   vueComponentName: string | null;
   edsComponentHints: string[];
   tagName: string;
 }): string {
-  if (info.edsComponent) return info.edsComponent.displayName;
-  if (info.vueComponentName) return info.vueComponentName;
-  if (info.edsComponentHints[0]) return info.edsComponentHints[0];
-  return info.tagName;
+  if (info.inspectTarget.primaryLabel) {
+    return info.inspectTarget.primaryLabel;
+  }
+
+  if (info.edsComponentHints[0]) {
+    return info.edsComponentHints[0];
+  }
+
+  if (info.vueComponentName) {
+    return formatVueInspectLabel(info.vueComponentName);
+  }
+
+  return formatDomTagInspectLabel(info.tagName);
 }
 
 function buildCopyBundle(
-  edsComponent: ReturnType<typeof resolveEdsComponentInspect>,
+  edsComponent: InspectTargetResolution['edsComponent'],
   elementAttributes: InspectPropertyItem[],
   code: { layout: InspectPropertyItem[]; style: InspectPropertyItem[] },
 ): string {
@@ -358,29 +241,54 @@ export function buildElementInspectInfo(
   element: Element,
   preview: Element,
 ): ElementInspectInfo | null {
-  if (!preview.contains(element)) return null;
+  if (!preview.contains(element) && !isInspectFloatLayerElement(element)) return null;
   if (element.closest('[data-shell-debug-ui]')) return null;
 
   const style = getComputedStyle(element);
   const rect = element.getBoundingClientRect();
   const vueComponentName = resolveVueComponentName(element);
   const edsComponentHints = readEdsComponentHints(element);
-  const edsComponent = resolveEdsComponentInspect(element);
-  const elementAttributes = buildElementAttributes(element, preview, style, rect);
+  const inspectTarget = resolveInspectTarget(element, preview);
+  let edsComponent = inspectTarget.edsComponent;
+  if (edsComponent) {
+    edsComponent = {
+      ...edsComponent,
+      props: ensureInspectMotionProperty(edsComponent.props, element, preview),
+    };
+  }
+
+  const elementAttributes = ensureInspectMotionProperty(
+    buildElementAttributes(element, preview, style, rect),
+    element,
+    preview,
+  );
   const tagName = element.tagName.toLowerCase();
-  const domPath = buildDomPath(element, preview);
-  const label = buildLabel({ edsComponent, vueComponentName, edsComponentHints, tagName });
-  const usefulCode = buildUsefulCode(preview, style);
+  const scopeRoot = resolveInspectScopeRoot(element, preview);
+  const domPath = buildDomPath(element, scopeRoot);
+  const label = inspectTarget.primaryLabel
+    || buildLabel({ inspectTarget, vueComponentName, edsComponentHints, tagName });
+  const componentChain = inspectTarget.componentChain.length > 0
+    ? inspectTarget.componentChain
+    : [label];
+  const styleTarget = resolveInspectStyleTargetElement(element, edsComponent);
+  const declaredCode = buildDeclaredInspectCode(styleTarget, preview);
 
   const code = {
-    layout: usefulCode.layout,
-    style: usefulCode.styleItems,
+    layout: declaredCode.layout,
+    style: declaredCode.styleItems,
   };
-  const codeSections = edsComponent?.codeSections;
+  const codeSections = buildInspectCodeSections(
+    element,
+    preview,
+    edsComponent?.codeSections,
+    declaredCode,
+  );
+  const adaptiveItems = buildDataListAdaptiveInspect(preview, element);
 
   return {
     element,
     label,
+    componentChain,
     tagName,
     domPath,
     classList: [...element.classList],
@@ -394,6 +302,7 @@ export function buildElementInspectInfo(
     },
     code,
     codeSections,
+    adaptiveItems: adaptiveItems.length > 0 ? adaptiveItems : undefined,
     groups: [],
     copyBundle: buildCopyBundle(edsComponent, elementAttributes, code),
   };

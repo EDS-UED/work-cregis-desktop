@@ -7,8 +7,8 @@
 1. **只允许** `@eds/desktop-tokens`、`@eds/desktop-animations`、`@eds/desktop-components`（及未来的 patterns / workflows）。
 2. **禁止** `@eds/website-tokens`、`@eds/website-components`，以及任何 Website 排版 / 壳层 CSS。
 3. **禁止**从 `eds-desktop/apps/showcase/**` 复制样式、token 名或集成方式。
-4. **排版 token** 以 `../eds-desktop/packages/tokens/spec/typography/semantic.json` 为准。  
-   例：用 `--eds-footnote-size`，**不存在** `--eds-footnote-medium-size`。
+4. **排版** 优先 Text Style 类 `.typography-*`（`@eds/desktop-tokens` 主入口已含）；语义变量 `--eds-*` 仅单轴覆盖。真源：`spec/text/styles.json` + `spec/typography/semantic.json`。  
+   例：`.typography-footnote` / `composes: typography-body-medium from global`；**不存在** `--eds-footnote-medium-size`。
 5. **组件样式** dev/build 走 eds-desktop **源码**（见 `vite.config.ts` alias），不要 `@import '@eds/desktop-components/style.css'`（dist 快照会过期）。
 6. **`pnpm sync` / 说「同步 eds-desktop」** 只更新 Desktop packages，与 showcase / Website 无关。
 7. **禁止复制**：所有业务页面（含后续新增）不得向用户提供复制能力；`installPageCopyGuard()` 拦截 `copy`/`cut`；`.app-preview` 与 teleport 到 `body` 的 `eds-tooltip-v-*` / `.eds-flotation-menu` 全局 `user-select: none`（`global.css`）。不得新增复制按钮、clipboard API、DS 复制 Menu。
