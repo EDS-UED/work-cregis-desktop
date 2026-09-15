@@ -1,0 +1,23 @@
+/**
+ * EgLayout `show-toolbar` / `show-paginer` chrome overlay：
+ * 正文须 respect `--eds-layout-chrome-inset-*`（由 EgLayout body 写入），
+ * 与 EgDataList `.tableContent` 一致，避免正文与 ToolBar / Paginer 叠层。
+ */
+.layoutChromeScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding-top: var(--eds-layout-chrome-inset-top, 0);
+  padding-bottom: var(--eds-layout-chrome-inset-bottom, 0);
+}
+
+.layoutChromeColumn {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-top: var(--eds-layout-chrome-inset-top, 0);
+}

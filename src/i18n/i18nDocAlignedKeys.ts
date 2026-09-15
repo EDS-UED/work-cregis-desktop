@@ -188,6 +188,7 @@ export const I18N_DOC_ALIGNED_KEYS = new Set<string>([
   'Transfer',
   'Triggered Policy',
   'View Reason',
+  'View',
   'View details',
   'WaaS',
   'Waiting',

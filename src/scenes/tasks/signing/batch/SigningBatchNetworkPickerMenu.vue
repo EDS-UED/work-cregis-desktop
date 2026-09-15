@@ -151,7 +151,7 @@ function onProcess(group: BatchCurrencyGroup) {
                 size="md"
                 @click.stop="onProcess(group)"
               >
-                {{ ui('Process') }}
+                {{ ui('View') }}
               </EgButton>
             </div>
           </div>

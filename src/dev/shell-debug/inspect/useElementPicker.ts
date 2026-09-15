@@ -11,12 +11,16 @@ import {
   inspectPinnedRect,
 } from './developerInspectSession';
 
-import { markShellDebugUiInteraction } from '../installShellDebugFloatLayerGuard';
+import {
+  markShellDebugUiInteraction,
+  nativeWindowAddEventListener,
+  nativeWindowRemoveEventListener,
+} from '../installShellDebugFloatLayerGuard';
 import { isShellDebugUiElement } from '../shellDebugUiScope';
 import { isInspectFloatLayerElement } from './inspectFloatLayerScope';
 
 const PREVIEW_SELECTOR = '.app-preview';
-const BLOCK_EVENT_TYPES = ['click', 'mousedown', 'dblclick'] as const;
+const BLOCK_EVENT_TYPES = ['click', 'mousedown', 'mouseup', 'dblclick'] as const;
 
 let lastHoverTarget: Element | null = null;
 let pointerRafId: number | null = null;
@@ -33,7 +37,10 @@ function isInspectOverlayTarget(target: Element): boolean {
   );
 }
 
-function isInspectableTarget(target: Element, preview: Element): boolean {
+
+/** Dev 点选须拦截业务交互：preview 内 + teleport 浮层（eds-tooltip-v-* / Flotation / Popover）。 */
+function shouldBlockDevInspectBusinessInteraction(target: Element, preview: Element): boolean {
+  if (isInspectOverlayTarget(target)) return false;
   if (preview.contains(target)) return true;
   return isInspectFloatLayerElement(target);
 }
@@ -58,8 +65,7 @@ function blockPreviewInteraction(event: Event) {
 
   const target = event.target;
   if (!(target instanceof Element)) return;
-  if (!preview.contains(target)) return;
-  if (isInspectOverlayTarget(target)) return;
+  if (!shouldBlockDevInspectBusinessInteraction(target, preview)) return;
 
   event.preventDefault();
   event.stopPropagation();
@@ -74,8 +80,7 @@ function blockPreviewKeyboard(event: KeyboardEvent) {
 
   const target = event.target;
   if (!(target instanceof Element)) return;
-  if (!preview.contains(target)) return;
-  if (isInspectOverlayTarget(target)) return;
+  if (!shouldBlockDevInspectBusinessInteraction(target, preview)) return;
 
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault();
@@ -91,7 +96,7 @@ function syncPinnedRect() {
     return;
   }
   if (!pinned.element.isConnected) {
-    clearInspectSelection();
+    // Teleport 浮层可能在业务关闭动画中短暂 unmount；保留 pin 快照供粉框与 Dev 面板。
     return;
   }
   inspectPinnedRect.value = pinned.element.getBoundingClientRect();
@@ -214,40 +219,55 @@ function cancelPointerRaf() {
   pendingPointer = null;
 }
 
+function isShellDebugUiPointerEvent(event: PointerEvent): boolean {
+  if (event.target instanceof Element && isShellDebugUiElement(event.target)) {
+    return true;
+  }
+  if ('composedPath' in event) {
+    for (const node of event.composedPath()) {
+      if (node instanceof Element && isShellDebugUiElement(node)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function onPointerDown(event: PointerEvent) {
   if (!developerInspectActive.value) return;
-
-  const eventTarget = event.target;
-  if (eventTarget instanceof Element && isShellDebugUiElement(eventTarget)) {
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-    return;
-  }
 
   const preview = resolvePreview();
   if (!preview) return;
 
-  if (!(eventTarget instanceof Element) || !isInspectableTarget(eventTarget, preview)) {
+  const target = elementFromPreviewPoint(event.clientX, event.clientY, preview);
+
+  if (isShellDebugUiPointerEvent(event)) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    markShellDebugUiInteraction();
+    return;
+  }
+
+  if (!target) {
     if (inspectPinnedInfo.value) {
       clearInspectSelection();
     }
     return;
   }
 
-  const target = elementFromPreviewPoint(event.clientX, event.clientY, preview);
-
-  if (target && isInspectFloatLayerElement(target)) {
-    markShellDebugUiInteraction();
+  if (isShellDebugUiElement(target)) {
+    return;
   }
 
   event.preventDefault();
   event.stopPropagation();
   event.stopImmediatePropagation();
 
-  if (!target) {
-    clearInspectSelection();
-    return;
+  if (isInspectFloatLayerElement(target)) {
+    markShellDebugUiInteraction(400);
+  } else {
+    markShellDebugUiInteraction(120);
   }
 
   const info = buildElementInspectInfo(target, preview, { includeAdaptive: true });
@@ -274,9 +294,10 @@ export function useDeveloperInspectPicker() {
       window.addEventListener(type, blockPreviewInteraction, true);
     }
     window.addEventListener('keydown', blockPreviewKeyboard, true);
-    window.addEventListener('pointerdown', onPointerDown, true);
+    // 须用原生 addEventListener：installShellDebugFloatLayerGuard 会跳过浮层上的 wrapped capture pointerdown。
+    nativeWindowAddEventListener('pointerdown', onPointerDown, true);
     window.addEventListener('pointermove', onPointerMove, true);
-    window.addEventListener('scroll', onScrollOrResize, true);
+    nativeWindowAddEventListener('scroll', onScrollOrResize, true);
     window.addEventListener('resize', onScrollOrResize, true);
   });
 
@@ -286,9 +307,9 @@ export function useDeveloperInspectPicker() {
       window.removeEventListener(type, blockPreviewInteraction, true);
     }
     window.removeEventListener('keydown', blockPreviewKeyboard, true);
-    window.removeEventListener('pointerdown', onPointerDown, true);
+    nativeWindowRemoveEventListener('pointerdown', onPointerDown, true);
     window.removeEventListener('pointermove', onPointerMove, true);
-    window.removeEventListener('scroll', onScrollOrResize, true);
+    nativeWindowRemoveEventListener('scroll', onScrollOrResize, true);
     window.removeEventListener('resize', onScrollOrResize, true);
   });
 

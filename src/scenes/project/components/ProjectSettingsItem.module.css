@@ -1,0 +1,95 @@
+.itemShell {
+  padding: 0 var(--spacing-3);
+}
+
+.root {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--spacing-20);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--scale-9);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  background-color: var(--material-hide);
+  composes: motion-ease is-paint from global;
+}
+
+.root:hover {
+  background-color: var(--event-hover);
+}
+
+.rootInteractive {
+  cursor: pointer;
+}
+
+.rootInteractive:focus-visible {
+  background-color: var(--event-hover);
+  outline: none;
+}
+
+.dataCombo {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.label {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.valueRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  width: 100%;
+}
+
+.valueRaw {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-05);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.valueText {
+  composes: typography-body-medium from global;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-base-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.valueCopyButton {
+  flex-shrink: 0;
+}
+
+.actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-1);
+  box-sizing: border-box;
+  min-height: calc(var(--scale-7) + var(--scale-05));
+}
+
+.actionsEmpty {
+  width: calc(var(--scale-50) - var(--scale-05));
+  min-width: calc(var(--scale-50) - var(--scale-05));
+  pointer-events: none;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-base-tertiary);
+}

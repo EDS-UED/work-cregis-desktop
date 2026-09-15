@@ -1,6 +1,11 @@
 # work-cregis-desktop
 
-Cregis 桌面端业务应用，基于 [eds-desktop](https://github.com/your-org/eds-desktop) 设计系统构建。
+Cregis 桌面端业务应用，基于 [eds-desktop](https://github.com/EDS-UED/eds-desktop) 设计系统构建。
+
+| | |
+|---|---|
+| **GitHub** | [EDS-UED/work-cregis-desktop](https://github.com/EDS-UED/work-cregis-desktop) |
+| **Live Preview (Pages)** | https://eds-ued.github.io/work-cregis-desktop/ |
 
 ## 前置条件
 
@@ -95,9 +100,9 @@ src/
 
 仓库已配置 [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)：`main` 分支 push 后自动构建并发布。
 
-**前置：** CI 需同目录检出 [evergreen-design-system-desktop](https://github.com/theyangsong/evergreen-design-system-desktop)（workflow 内自动 clone 为 sibling `eds-desktop`）。
+**前置：** CI 需同目录检出 [EDS-UED/eds-desktop](https://github.com/EDS-UED/eds-desktop)（workflow 内按 SHA pin 检出为 sibling `eds-desktop`）。
 
-**预览地址（push 成功后）：** https://theyangsong.github.io/work-cregis-desktop/
+**预览地址（push 成功后）：** https://eds-ued.github.io/work-cregis-desktop/
 
 本地模拟 Pages 构建（可与 `pnpm dev` 同时运行，preview 用 **4174** 端口）：
 

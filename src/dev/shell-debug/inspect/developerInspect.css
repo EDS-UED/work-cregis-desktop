@@ -2,6 +2,31 @@
   cursor: crosshair;
 }
 
+/*
+ * 业务区 button / role=button 等会设 cursor:pointer；Dev 点选时统一继承 crosshair，不用手指指针。
+ * 禁止对 * 写 crosshair !important（I14 性能约束）；inherit 即可盖过子级 pointer。
+ */
+.app-preview[data-dev-inspect-active] * {
+  cursor: inherit;
+}
+
+/* teleport 浮层（批处理 Flotation 等）不在 .app-preview 内，单独继承 crosshair。 */
+body[data-dev-inspect-active] [id^='eds-tooltip-v-']:not(:has([data-shell-debug-ui])):not(:has([data-dev-inspect-panel])) {
+  cursor: crosshair;
+}
+
+body[data-dev-inspect-active] [id^='eds-tooltip-v-']:not(:has([data-shell-debug-ui])):not(:has([data-dev-inspect-panel])) * {
+  cursor: inherit;
+}
+
+body[data-dev-inspect-active] .eds-flotation-menu:not(:has([data-shell-debug-ui])):not(:has([data-dev-inspect-panel])) {
+  cursor: crosshair;
+}
+
+body[data-dev-inspect-active] .eds-flotation-menu:not(:has([data-shell-debug-ui])):not(:has([data-dev-inspect-panel])) * {
+  cursor: inherit;
+}
+
 [data-shell-debug-ui] {
   user-select: text;
   -webkit-user-select: text;

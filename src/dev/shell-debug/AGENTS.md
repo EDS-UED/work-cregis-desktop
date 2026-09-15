@@ -166,7 +166,7 @@ EDS 组件识别用 dev 下 plugin-vue 注入的 `__file`（含 `eds-desktop/pac
 **【禁止】** 用 inline `style`、`!important`、`[data-effect-spec-panel]` 等容器分支给某一处单独补色；**【禁止】** 在 `InspectDetailPanel.vue` 的 `<style module>` 里再声明 `.token*` 颜色。 
 **【必须】** 主色 / 注释走 `var(--text-base-primary)` / `var(--text-base-tertiary)`（两处容器都在 `.desktopTokens` 内）；语法色 sRGB 后跟 `color(display-p3 …)` 渐进增强。
 
-**Inspect 命名**：`node scripts/verify-shell-debug-inspect-naming.mjs` —— 14 项全局不变量（规则顺序、归属判据、region 真源 / 不重名 / 不覆盖组件根、旧机制已清、样式对准点击节点、片段匹配、单一命名路径、任意 EDS 组件根有自己的名字、多角色走 catalog hook、祖先只作属性首行、壳外 UI 排除、hover 轻量路径）。已接入 `predev` / `prebuild`，与 catalog 覆盖脚本同时跑。
+**Inspect 命名**：`node scripts/verify-shell-debug-inspect-naming.mjs` —— 16 项全局不变量（规则顺序、归属判据、region 真源 / 不重名 / 不覆盖组件根、旧机制已清、样式对准点击节点、片段匹配、单一命名路径、任意 EDS 组件根有自己的名字、多角色走 catalog hook、祖先只作属性首行、壳外 UI 排除、hover 轻量路径、浮层 Pin、布局线框底图）。已接入 `predev` / `prebuild`，与 catalog 覆盖脚本同时跑。
 
 **4174 Inspect 与 4173 对齐**：R2 / DataList 实例读取依赖 DOM 上的 `__vueParentComponent`（`inspectIdentity.ts` 的 `findVueInstancesWithDomRoot`）。Vue 3.5 production 默认不写入，须在 Shell Debug 构建中开启 `__VUE_PROD_DEVTOOLS__`（见 `vite.config.ts`）；`verify-pages-artifact.mjs` 会检查 bundle 含 `__vueParentComponent`。
 
@@ -180,10 +180,12 @@ EDS 组件识别用 dev 下 plugin-vue 注入的 `__file`（含 `eds-desktop/pac
 | Pin（`pointerdown`） | `buildElementInspectInfo(..., { includeAdaptive: true })` | 全量 props / CSS 级联 / 代码片段 / DataList 适配 |
 
 **【禁止】** hover 调用 `resolveInspectTarget`（会沿 DOM 祖先逐层重跑命名 `componentChain`，文本叶子分支还会全量扫 `document.styleSheets`）、`collectDeclaredCssValues`、`buildInspectCodeSections`。 
-**【允许】** hover 高亮跑 `buildLayoutChromeModel`（仅 DOM 测量：padding / 子元素 gap）；命名解析仍走 `buildElementInspectHoverPreview`，与测量解耦。标签只展示组件名，**不**在角标拼 `宽 × 高`（尺寸见属性面板 Pin 后「尺寸」行）。 
-**Pin + Hover 比对**：已固定（粉）且悬停另一元素（紫）时，须渲染 `buildHoverMeasureModel` → `InspectEdgeMeasureChrome`，在两者之间展示间距数字（如 `16px`）。比对间距色系：**浅 `#F59F00` / 深 `#FFC247`**（`devInspectCompareMeasure.css`，sRGB + display-p3），与 hover 紫 / pin 粉区分。 
+**【允许】** hover 高亮跑 `buildLayoutChromeModel`（DOM 测量：padding / 子元素 gap；与 Pin 同色 accent，**不**单独 margin 橙 / padding 绿 / gap 蓝）；命名解析仍走 `buildElementInspectHoverPreview`，与测量解耦。标签只展示组件名，**不**在角标拼 `宽 × 高`（尺寸见属性面板 Pin 后「尺寸」行）。 
+**Pin + Hover 比对**：已固定（粉）且悬停另一元素（紫）时，须渲染 `buildHoverMeasureModel` → `InspectEdgeMeasureChrome`，在两者之间展示间距数字（如 `16px`）。比对间距为**橙色**系：**浅 `#F59F00` / 深 `#FFC247`**（`devInspectCompareMeasure.css`）。 
 **【禁止】** `developerInspect.css` 对 `.app-preview *` 强制 `cursor: crosshair !important`（大规模样式重算），仅根节点 `cursor: crosshair`。 
 **【必须】** `resolveInspectPrimaryLabel` 复用同一 `resolveInspectLayerIdentity`，不得成为第二条命名路径，也不得沿祖先取名。
+
+**布局结构图（I16）**：点 Dev 且无 hover/pin 时，每组 layout **最外层 1px 实线（100% 不透明）**，**内部子格与嵌套 layout 1px 虚线**；组外壳实线 = **圆角 / 背景 / 边框**（**非** padding alone）。每个 layout 宿主另绘 **margin 橙 38% / padding 绿 28%**；**gap 品红 40%** 仅当宿主声明 gap 且相邻子元素间距匹配。**简单原子 / 控件**（见 `layoutMapBorderOnlyComponents.ts`，含 **NavBar / Paginer（EgNavBar / EgPaginer）/ BatchBar 胶囊**）只画外框 + margin；**EgTooltipPanel `panelKind=popup` + `panelRadius=radius-full` 胶囊**（如多签邀请浮标）同理。**其余 EDS 组件**展开完整结构。超量时 **padding 优先保留**（独立 spacing 预算），再裁 gap / margin / cell。**fixed / sticky / EgLayout chrome 钉住层**（`layoutMapPinningLayers.ts`）下方非其子树的结构图不绘制。有叠层时只画 **z-index 最上层**（**Popover > Flotation Box > Tooltip 宿主 > Popup** 类型优先；含 teleport 到 `body` 的 EgFlotation / 矿工费 Popover，与 preview 相交即采集；下层让位）。悬停 / Pin 时隐藏。
 
 **探针缓存（I14）**：`resolveDesignToken.ts` 的 `normalizeComparableStyleValue` 会把探针 `<div>` 插入 token 根再读 `getComputedStyle` —— 每次插入/移除都强制 style 重算，还会惊动业务侧 Observer。 
 **【必须】** 结果进 `normalizedValueCache`（与 `computedTokenCache` 同批 clear）。 

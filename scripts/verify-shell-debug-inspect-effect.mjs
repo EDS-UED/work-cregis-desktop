@@ -6,7 +6,8 @@
  * E2 样式一行 class · token；布局仅关键片段
  * E3 buildTooltipUsageSnippet 始终含 panelKind
  * E4 buildInspectCodeSections effect 区块优先于 declared
- * E5 catalog panelKind=flotation → FlotationBox
+ * E5 catalog / panelKind 映射真源 inspectTooltipPanelKind.ts
+ * E7 容器行 = raw panelKind；Popover 内无容器行
  * E6 语法色单一真源：shellDebugInspectCodeTokens.css 的全局类，无容器分支 / inline style
  */
 import { readFileSync } from 'node:fs';
@@ -24,6 +25,8 @@ const specSource = read('effectSemanticSpec.ts');
 const effectSource = read('buildEffectSemanticInspect.ts');
 const sectionsSource = read('buildInspectCodeSections.ts');
 const catalogSource = read('edsInspectCatalog.ts');
+const panelKindSource = read('inspectTooltipPanelKind.ts');
+const tooltipContainerSource = read('resolveInspectTooltipContainer.ts');
 
 if (!specSource.includes('primaryToken')) {
   fail('E1', 'effectSemanticSpec 须含 primaryToken');
@@ -51,13 +54,25 @@ if (!specSource.includes('parseEffectSemanticClassFromStyleLine')) {
 }
 
 const panelSource = readFileSync(join(inspectDir, 'InspectDetailPanel.vue'), 'utf8');
-if (!/\bEgTooltip\b/.test(panelSource)) {
-  fail('E2', 'InspectDetailPanel 须用 Tooltip 展示 Effect 参数');
+if (!panelSource.includes('data-effect-spec-panel')) {
+  fail('E2', 'InspectDetailPanel 须在 Dev 面板内联展示 Effect 参数（data-effect-spec-panel）');
 }
 
 const highlightSource = readFileSync(join(inspectDir, 'inspectCodeHighlight.ts'), 'utf8');
 if (!highlightSource.includes("'effectClass'")) {
   fail('E2', 'Effect class 须用 effectClass token + 虚线下划线');
+}
+if (!/function tokenizeInspectPropertyCodeValue\([\s\S]*context\?: InspectPropertyValueContext/.test(highlightSource)) {
+  fail('E6', 'tokenizeInspectPropertyCodeValue 须接收 context 以正确高亮元素类型等 code 值');
+}
+if (!highlightSource.includes('MARKUP_CODE_VALUES') || !highlightSource.includes("'button'")) {
+  fail('E6', '元素类型值（如 button）须走品红 markup code 高亮');
+}
+if (!/context\?\.label === '容器'\)[\s\S]{0,48}return 'code'/.test(highlightSource)) {
+  fail('E6', '容器属性值须走 code 品红 keyword（与布局 flex 同列）');
+}
+if (!/context\?\.label === '祖先'\)[\s\S]{0,48}return 'token'/.test(highlightSource)) {
+  fail('E6', '祖先属性值须走 token 黄色高亮');
 }
 if (!specSource.includes('class=".${spec.className}"')) {
   fail('E2', '样式区须输出 class=".effect-*"');
@@ -108,8 +123,30 @@ if (!sectionsSource.includes('buildEffectSemanticCodeSections')) {
   fail('E4', 'buildInspectCodeSections 须消费 effect 语义区块');
 }
 
-if (!catalogSource.includes("flotation: 'FlotationBox'")) {
-  fail('E5', 'Tooltip panelKind=flotation 须映射 FlotationBox');
+if (!panelKindSource.includes("flotation: 'FlotationBox'")) {
+  fail('E5', 'catalog panelKind=flotation 须映射 FlotationBox（组件名，非容器行）');
+}
+if (!catalogSource.includes("from './inspectTooltipPanelKind'")) {
+  fail('E5', 'edsInspectCatalog 须从 inspectTooltipPanelKind 导入 panelKind 映射');
+}
+if (!/resolveTooltipCatalogDisplayNameFromPanelKind\(props\.panelKind\)/.test(catalogSource)) {
+  fail('E5', 'catalog resolveDisplayName 须用 resolveTooltipCatalogDisplayNameFromPanelKind');
+}
+
+if (!/normalizeTooltipPanelKindValue\(/.test(tooltipContainerSource)) {
+  fail('E7', '容器行须输出 raw panelKind（normalizeTooltipPanelKindValue）');
+}
+if (!/element\.closest\('\.eds-popover'\)\) return null/.test(tooltipContainerSource)) {
+  fail('E7', 'Popover 内不得展示容器行');
+}
+if (/resolveEffectBoxContainerLabel|resolveContainerFromEdsPopoverShell/.test(tooltipContainerSource)) {
+  fail('E7', '容器行禁止 effect 盒子名兜底');
+}
+if (!panelKindSource.includes("'subtle'") || !panelKindSource.includes("'molde'")) {
+  fail('E7', 'panelKind 须收录 subtle / molde');
+}
+if (!panelKindSource.includes("panelKind ?? 'flotation'")) {
+  fail('E7', 'panelKind 缺省须对齐 EDS 默认 flotation');
 }
 
 if (errors.length > 0) {
@@ -118,4 +155,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log('verify-shell-debug-inspect-effect: OK — 6 项 Effect 不变量');
+console.log('verify-shell-debug-inspect-effect: OK — 7 项 Effect 不变量');

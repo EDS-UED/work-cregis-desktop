@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue';
-import { EgTooltip, EgTooltipPanel } from '@eds/desktop-components';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { ElementInspectInfo, InspectPropertyItem } from './buildElementInspectInfo';
 import { copyDevInspectText } from './copyDevInspectText';
 import { DEV_INSPECT_COPY_FEEDBACK } from './devInspectCopyFeedback';
@@ -22,23 +21,39 @@ import './shellDebugInspectCodeTokens.css';
 
 import { markShellDebugUiInteraction } from '../installShellDebugFloatLayerGuard';
 
-const EFFECT_SPEC_TOOLTIP_WIDTH = 320;
-
 const props = defineProps<{
   info: ElementInspectInfo | null;
   embedded?: boolean;
 }>();
 
 const copiedLineKey = ref<string | null>(null);
-const effectSpecTooltipRef = ref<{ close?: () => void } | null>(null);
+const expandedEffectSpecKey = ref<string | null>(null);
 let copiedLineTimer: ReturnType<typeof setTimeout> | undefined;
 
 const hasSelection = computed(() => props.info != null);
 
-const HIDDEN_INSPECT_PROPERTY_LABELS = new Set(['标签', 'EDS 类名']);
+const HIDDEN_INSPECT_PROPERTY_LABELS = new Set(['标签', 'EDS 类名', 'Role']);
+
+/** 属性面板固定 leading：祖先 → 容器 → 其余（尺寸、动效、组件 props…） */
+const INSPECT_PROPERTY_FIXED_LEADING_LABELS = ['祖先', '容器'] as const;
+
+function orderInspectPropertyPanelItems(items: InspectPropertyItem[]): InspectPropertyItem[] {
+  const leading = INSPECT_PROPERTY_FIXED_LEADING_LABELS.flatMap((label) => {
+    const item = items.find((entry) => entry.label === label);
+    return item ? [item] : [];
+  });
+  const rest = items.filter(
+    (entry) => !INSPECT_PROPERTY_FIXED_LEADING_LABELS.includes(
+      entry.label as (typeof INSPECT_PROPERTY_FIXED_LEADING_LABELS)[number],
+    ),
+  );
+  return [...leading, ...rest];
+}
 
 function filterInspectPropertyPanelItems(items: InspectPropertyItem[]): InspectPropertyItem[] {
-  return items.filter((item) => !HIDDEN_INSPECT_PROPERTY_LABELS.has(item.label));
+  return orderInspectPropertyPanelItems(
+    items.filter((item) => !HIDDEN_INSPECT_PROPERTY_LABELS.has(item.label)),
+  );
 }
 
 const propertyItems = computed(() => {
@@ -99,25 +114,38 @@ function onEffectClassPointerDown(event: PointerEvent) {
   markShellDebugUiInteraction();
 }
 
-function onInspectPanelPointerDown(event: PointerEvent) {
-  if (!(event.target instanceof Element)) return;
-  if (event.target.closest('[data-effect-spec-trigger]')) return;
-  if (event.target.closest('.shell-debug-effect-spec-tooltip')) return;
-  if (event.target.closest('[class*="floating"]')?.querySelector('.shell-debug-effect-spec-tooltip')) {
-    return;
-  }
-  if (!event.target.closest('.shell-debug-dev-inspect-popover')) return;
-  effectSpecTooltipRef.value?.close?.();
-}
-
-function onEffectSpecTooltipPointerDown(event: PointerEvent) {
+function onPanelPointerDown(event: PointerEvent) {
   event.stopPropagation();
   markShellDebugUiInteraction();
+}
+
+function effectSpecRowKey(sectionTitle: string, rowNumber: number, className: string) {
+  return `${sectionTitle}-${rowNumber}-${className}`;
+}
+
+function isEffectSpecExpanded(sectionTitle: string, rowNumber: number, line: string): boolean {
+  const className = effectClassFromLine(line);
+  if (!className) return false;
+  return expandedEffectSpecKey.value === effectSpecRowKey(sectionTitle, rowNumber, className);
+}
+
+function toggleEffectSpec(sectionTitle: string, rowNumber: number, line: string) {
+  const className = effectClassFromLine(line);
+  if (!className) return;
+  const key = effectSpecRowKey(sectionTitle, rowNumber, className);
+  expandedEffectSpecKey.value = expandedEffectSpecKey.value === key ? null : key;
 }
 
 function effectSpecLineKey(className: string, lineNumber: number) {
   return `effect-spec-${className}-${lineNumber}`;
 }
+
+watch(
+  () => props.info,
+  () => {
+    expandedEffectSpecKey.value = null;
+  },
+);
 
 async function onCopyLine(line: string, lineKey: string) {
   if (!line.trim()) return;
@@ -146,7 +174,7 @@ onBeforeUnmount(() => {
     v-if="hasSelection && info"
     :class="[$style.root, embedded && $style.rootEmbedded]"
     data-dev-inspect-copy
-    @pointerdown="onInspectPanelPointerDown"
+    @pointerdown="onPanelPointerDown"
   >
     <div v-if="propertyItems.length > 0" :class="$style.inspectGroup">
       <p :class="$style.sectionTitle">属性</p>
@@ -167,7 +195,7 @@ onBeforeUnmount(() => {
               <span :class="$style.propValue">
                 <template v-if="propertyValueTone(item) === 'code'">
                   <span
-                    v-for="(token, tokenIndex) in tokenizeInspectPropertyCodeValue(item.value)"
+                    v-for="(token, tokenIndex) in tokenizeInspectPropertyCodeValue(item.value, item)"
                     :key="`property-value-${item.label}-${tokenIndex}`"
                     :class="inspectCodeTokenClass(token.kind)"
                   >{{ token.text }}</span>
@@ -210,7 +238,7 @@ onBeforeUnmount(() => {
               <span :class="$style.propValue">
                 <template v-if="propertyValueTone(item) === 'code'">
                   <span
-                    v-for="(token, tokenIndex) in tokenizeInspectPropertyCodeValue(item.value)"
+                    v-for="(token, tokenIndex) in tokenizeInspectPropertyCodeValue(item.value, item)"
                     :key="`adaptive-value-${item.label}-${tokenIndex}`"
                     :class="inspectCodeTokenClass(token.kind)"
                   >{{ token.text }}</span>
@@ -282,28 +310,20 @@ onBeforeUnmount(() => {
               effectClassFromLine(row.line) && $style.codeLineRowExpand,
             ]"
           >
-            <div
-              v-if="effectClassFromLine(row.line)"
-              class="effect-class-trigger-host"
-              :class="$style.effectClassTooltipHost"
-            >
-              <EgTooltip
-                ref="effectSpecTooltipRef"
-                placement="left"
-                align="end"
-                trigger="click"
-                :click-toggle="true"
-                :wrap-tooltip="false"
-                :close-on-scroll="false"
-                teleport-to="body"
-                boundary-selector="body"
-              >
+            <template v-if="effectClassFromLine(row.line)">
+              <div :class="$style.effectClassBlock">
                 <button
                   type="button"
-                  :class="$style.codeLineButton"
+                  :class="[
+                    $style.codeLineButton,
+                    isEffectSpecExpanded(section.title, row.number, row.line)
+                      && $style.codeLineButtonExpanded,
+                  ]"
                   data-effect-spec-trigger
-                  title="点击查看 Effect 参数"
+                  :aria-expanded="isEffectSpecExpanded(section.title, row.number, row.line)"
+                  title="点击展开 Effect 参数"
                   @pointerdown="onEffectClassPointerDown"
+                  @click="toggleEffectSpec(section.title, row.number, row.line)"
                 >
                   <span :class="$style.lineNumber">{{ row.number }}</span>
                   <span :class="$style.lineContent">
@@ -314,65 +334,53 @@ onBeforeUnmount(() => {
                     >{{ token.text }}</span>
                   </span>
                 </button>
-                <template #content>
-                  <EgTooltipPanel
-                    panel-kind="flotation"
-                    panel-radius="radius-md"
-                    panel-layout-motion
-                    panel-micro-float
-                    width-mode="fixed"
-                    :width="EFFECT_SPEC_TOOLTIP_WIDTH"
-                    height-mode="adaptive"
-                    :max-height="360"
-                    :scrollable="true"
-                  >
-                    <div
-                      class="shell-debug-effect-spec-tooltip"
-                      :class="$style.effectSpecCodeBlock"
-                      @pointerdown="onEffectSpecTooltipPointerDown"
+                <div
+                  v-if="isEffectSpecExpanded(section.title, row.number, row.line)"
+                  data-effect-spec-panel
+                  class="shell-debug-effect-spec-panel"
+                  :class="$style.effectSpecInlinePanel"
+                  @pointerdown="onEffectClassPointerDown"
+                >
+                  <ul :class="$style.codeLineRows">
+                    <li
+                      v-for="detailRow in effectCssBlockLines(effectClassFromLine(row.line)!)"
+                      :key="`${section.title}-effect-${detailRow.number}`"
+                      :class="$style.codeLineRow"
                     >
-                      <ul :class="$style.codeLineRows">
-                        <li
-                          v-for="detailRow in effectCssBlockLines(effectClassFromLine(row.line)!)"
-                          :key="`${section.title}-effect-${detailRow.number}`"
-                          :class="$style.codeLineRow"
-                        >
-                          <div
-                            role="button"
-                            tabindex="0"
-                            :class="$style.effectSpecLineButton"
-                            @click="onCopyLine(
-                              detailRow.line,
-                              effectSpecLineKey(effectClassFromLine(row.line)!, detailRow.number),
-                            )"
-                            @keydown.enter.prevent="onCopyLine(
-                              detailRow.line,
-                              effectSpecLineKey(effectClassFromLine(row.line)!, detailRow.number),
-                            )"
-                          >
-                            <span :class="$style.lineNumber">{{ detailRow.number }}</span>
-                            <span :class="$style.effectSpecLineContent">
-                              <span
-                                v-for="(token, tokenIndex) in detailRow.tokens"
-                                :key="`${section.title}-effect-${detailRow.number}-${tokenIndex}`"
-                                :class="inspectCodeTokenClass(token.kind)"
-                              >{{ token.text }}</span>
-                            </span>
-                            <span
-                              v-if="copiedLineKey === effectSpecLineKey(
-                                effectClassFromLine(row.line)!,
-                                detailRow.number,
-                              )"
-                              :class="$style.copyFeedback"
-                            >{{ DEV_INSPECT_COPY_FEEDBACK }}</span>
-                          </div>
-                        </li>
-                      </ul>
-                    </div>
-                  </EgTooltipPanel>
-                </template>
-              </EgTooltip>
-            </div>
+                      <div
+                        role="button"
+                        tabindex="0"
+                        :class="$style.effectSpecLineButton"
+                        @click="onCopyLine(
+                          detailRow.line,
+                          effectSpecLineKey(effectClassFromLine(row.line)!, detailRow.number),
+                        )"
+                        @keydown.enter.prevent="onCopyLine(
+                          detailRow.line,
+                          effectSpecLineKey(effectClassFromLine(row.line)!, detailRow.number),
+                        )"
+                      >
+                        <span :class="$style.lineNumber">{{ detailRow.number }}</span>
+                        <span :class="$style.effectSpecLineContent">
+                          <span
+                            v-for="(token, tokenIndex) in detailRow.tokens"
+                            :key="`${section.title}-effect-${detailRow.number}-${tokenIndex}`"
+                            :class="inspectCodeTokenClass(token.kind)"
+                          >{{ token.text }}</span>
+                        </span>
+                        <span
+                          v-if="copiedLineKey === effectSpecLineKey(
+                            effectClassFromLine(row.line)!,
+                            detailRow.number,
+                          )"
+                          :class="$style.copyFeedback"
+                        >{{ DEV_INSPECT_COPY_FEEDBACK }}</span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </template>
             <button
               v-else
               type="button"
@@ -479,19 +487,23 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
-.effectClassTooltipHost {
-  display: block;
+.effectClassBlock {
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  gap: var(--spacing-025);
 }
 
-.effectClassTooltipHost :global([class*='root']) {
-  display: block;
-  width: 100%;
+.codeLineButtonExpanded {
+  background: var(--event-hover);
 }
 
-.effectClassTooltipHost :global([class*='trigger']) {
-  display: block;
-  width: 100%;
+.effectSpecInlinePanel {
+  box-sizing: border-box;
+  margin-left: var(--spacing-6);
+  padding: var(--spacing-1);
+  border-left: var(--stroke-xs) solid var(--stroke-outline-shallow);
+  user-select: text;
 }
 
 .codeRow,
@@ -614,16 +626,6 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-.effectSpecCodeBlock {
-  border: none;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  box-sizing: border-box;
-  min-width: 0;
-  user-select: text;
-}
-
 .effectSpecLineButton {
   display: grid;
   width: 100%;
@@ -640,6 +642,7 @@ onBeforeUnmount(() => {
   composes: motion-ease is-paint from global;
 }
 
+.effectSpecInlinePanel .effectSpecLineButton:hover,
 .effectSpecLineButton:hover {
   background: var(--event-hover);
 }

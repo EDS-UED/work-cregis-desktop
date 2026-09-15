@@ -235,7 +235,7 @@ work-cregis-desktop/src/scenes/tasks/approval/ApprovalDetailPopup.vue → 集成
 
 ## 10. GitHub 方案核查（eds-desktop `c5e577c`）
 
-**远程 commit：** `theyangsong/eds-desktop` `c5e577c`（展示站升级，2026-08-25）
+**远程 commit：** `EDS-UED/eds-desktop` `c5e577c`（展示站升级，2026-08-25）
 
 已合并（方案 A + Tooltip 补链）：
 

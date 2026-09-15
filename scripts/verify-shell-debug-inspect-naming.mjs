@@ -19,6 +19,8 @@
  * I12 「祖先」只作属性面板首行，禁止回流进命名
  * I13 Dev Inspect 不得读取壳外 Shell Debug UI（见 shellDebugUiScope.ts）
  * I14 hover 轻量路径：buildElementInspectHoverPreview + 无全局 cursor * + hover chrome 简化
+ * I15 浮层 Pin：picker 须绕过 float guard wrapper；disconnect 不清 pin
+ * I16 布局线框底图：仅绑 developerInspectActive；禁止在 pointermove 重建
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
@@ -355,6 +357,31 @@ if (!existsSync(ancestorPath)) {
   if (!/parentElement/.test(ancestorSource)) {
     fail('I12', '祖先解析须沿 parentElement 向上走');
   }
+  if (
+    !/INSPECT_TOOLTIP_ANCESTOR_LABEL/.test(ancestorSource)
+    || !/eds-tooltip-v-/.test(ancestorSource)
+  ) {
+    fail('I12', 'teleport Tooltip 浮层祖先须固定为 Tooltip');
+  }
+  if (!/export const INSPECT_TOOLTIP_ANCESTOR_LABEL = 'Tooltip'/.test(ancestorSource)) {
+    fail('I12', 'Tooltip 祖先须导出 INSPECT_TOOLTIP_ANCESTOR_LABEL 常量');
+  }
+  if (!/export function resolveInspectContainerName/.test(ancestorSource)) {
+    fail('I12', '缺少 resolveInspectContainerName（容器行）');
+  }
+  const tooltipContainerSource = read('resolveInspectTooltipContainer.ts');
+  if (!/normalizeTooltipPanelKindValue\(/.test(tooltipContainerSource)) {
+    fail('I12', '容器值须为 raw panelKind（normalizeTooltipPanelKindValue）');
+  }
+  if (!/element\.closest\('\.eds-popover'\)\) return null/.test(tooltipContainerSource)) {
+    fail('I12', 'Popover（.eds-popover）内不得展示容器行');
+  }
+  if (/resolveEffectBoxContainerLabel|resolveContainerFromEdsPopoverShell/.test(tooltipContainerSource)) {
+    fail('I12', '容器不得用 effect 盒子名或 Popover 壳兜底');
+  }
+  if (!/resolveInspectTooltipContainerName/.test(ancestorSource)) {
+    fail('I12', 'resolveInspectContainerName 须委托 resolveInspectTooltipContainerName');
+  }
 
   // 具名层判定：R5（dom-tag）必须返回 null，否则祖先会取到 HTML 标签名
   const namedLayerBody = readFunctionBody(resolverSource, 'resolveInspectNamedLayerLabel');
@@ -382,8 +409,25 @@ const prependBody =
     : readFunctionBody(infoSource, 'prependAncestorProperty');
 if (!prependBody) {
   fail('I12', '缺少 prependAncestorProperty');
-} else if (!/label: '祖先'/.test(prependBody) || !/buildSizePropertyItem\(rect\)/.test(prependBody)) {
-  fail('I12', '「祖先」须为第一条、「尺寸」须紧跟其后（见 prependAncestorProperty）');
+} else if (
+  !/label: '祖先'/.test(prependBody)
+  || !/label: '容器'/.test(prependBody)
+  || !/buildSizePropertyItem\(rect\)/.test(prependBody)
+  || !/label: '容器'[\s\S]{0,220}return \[\.\.\.leading,\s*buildSizePropertyItem\(rect\),\s*\.\.\.rest\]/.test(prependBody)
+) {
+  fail('I12', 'prependAncestorProperty 须输出 祖先 → 容器 → 其他属性（尺寸起）顺序');
+}
+if (!/orderInspectPropertyPanelItems/.test(readFileSync(join(inspectDir, 'InspectDetailPanel.vue'), 'utf8'))) {
+  fail('I12', 'InspectDetailPanel 须 orderInspectPropertyPanelItems 固定 祖先 → 容器 在最前');
+}
+if (!/resolveInspectContainerName\(element, preview\)/.test(infoSource)) {
+  fail('I12', 'buildElementInspectInfo 须调用 resolveInspectContainerName');
+}
+if (!/ancestorName === INSPECT_TOOLTIP_ANCESTOR_LABEL[\s\S]{0,160}resolveInspectContainerName/.test(infoSource)) {
+  fail('I12', '容器行须在祖先为 Tooltip 时才 resolve');
+}
+if (/label: 'Role'/.test(readFunctionBody(infoSource, 'buildElementAttributes') ?? '')) {
+  fail('I12', 'buildElementAttributes 不得输出 Role 属性');
 }
 
 // 两条属性路径都要带祖先：组件 props 与元素属性（面板二选一渲染）
@@ -452,6 +496,9 @@ if (!readFileSync(join(inspectDir, 'devInspectCompareMeasure.css'), 'utf8').incl
   fail('I14', '比对间距浅色须为 #F59F00');
 }
 const measureSource = readFileSync(join(inspectDir, 'buildLayoutMeasurement.ts'), 'utf8');
+if (/marginZones/.test(measureSource)) {
+  fail('I14', 'buildLayoutChromeModel 不得输出 marginZones（margin 橙仅结构图）');
+}
 if (!/gapBelow/.test(measureSource) || !/gapRight/.test(measureSource)) {
   fail('I14', 'buildHoverMeasureModel 须按最近边间距（gapBelow/gapRight）计算');
 }
@@ -499,11 +546,191 @@ if (
   fail('I14', 'normalizeStyleValueForCompare 不得在排版角色循环内逐个调用');
 }
 
+// I15 浮层 Pin：guard 会吞掉 wrapped capture pointerdown，picker 须用原生 API。
+const guardSource = readFileSync(
+  join(repoRoot, 'src/dev/shell-debug/installShellDebugFloatLayerGuard.ts'),
+  'utf8',
+);
+if (!/export const nativeWindowAddEventListener/.test(guardSource)) {
+  fail('I15', 'installShellDebugFloatLayerGuard 须导出 nativeWindowAddEventListener');
+}
+if (!/nativeWindowAddEventListener\(\s*'pointerdown'/.test(pickerSource)) {
+  fail('I15', 'useElementPicker 的 pointerdown 须用 nativeWindowAddEventListener（浮层 Pin）');
+}
+const syncPinnedStart = pickerSource.indexOf('function syncPinnedRect');
+const syncPinnedEnd = pickerSource.indexOf('function syncHoverRect');
+const syncPinnedSource = syncPinnedStart >= 0 && syncPinnedEnd > syncPinnedStart
+  ? pickerSource.slice(syncPinnedStart, syncPinnedEnd)
+  : '';
+if (/clearInspectSelection\(\)/.test(syncPinnedSource)) {
+  fail('I15', 'syncPinnedRect 不得在 element disconnect 时 clearInspectSelection');
+}
+const onPointerDownStart = pickerSource.indexOf('function onPointerDown');
+const onPointerDownEnd = pickerSource.indexOf('function onScrollOrResize');
+const onPointerDownSource = onPointerDownStart >= 0 && onPointerDownEnd > onPointerDownStart
+  ? pickerSource.slice(onPointerDownStart, onPointerDownEnd)
+  : '';
+const resolveTargetIdx = onPointerDownSource.indexOf('elementFromPreviewPoint');
+if (
+  resolveTargetIdx >= 0
+  && /isShellDebugUiElement\(eventTarget\)[\s\S]{0,120}return;/.test(
+    onPointerDownSource.slice(0, resolveTargetIdx),
+  )
+) {
+  fail('I15', 'onPointerDown 不得在 elementFromPreviewPoint 之前因 eventTarget 早退');
+}
+if (!/function isShellDebugUiPointerEvent/.test(pickerSource)
+  || !/if \(isShellDebugUiPointerEvent\(event\)\) \{[\s\S]{0,220}markShellDebugUiInteraction/.test(onPointerDownSource)) {
+  fail('I15', 'onPointerDown 点击 Dev 参数面板须 isShellDebugUiPointerEvent + markShellDebugUiInteraction，不得 clearInspectSelection');
+}
+
+// I16 布局线框底图：生命周期仅 developerInspectActive；与 hover/pin 路径解耦。
+const layoutMapSource = readFileSync(join(inspectDir, 'buildLayoutMap.ts'), 'utf8');
+const layoutMapVueSource = readFileSync(join(inspectDir, 'InspectLayoutMap.vue'), 'utf8');
+if (!/export function collectLayoutMapItems/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须导出 collectLayoutMapItems');
+}
+if (!/InspectLayoutMap/.test(overlaySource)) {
+  fail('I16', 'DeveloperInspectOverlay 须渲染 InspectLayoutMap 底图');
+}
+if (!/watch\(\s*developerInspectActive/.test(layoutMapVueSource)) {
+  fail('I16', 'InspectLayoutMap 须 watch developerInspectActive 控制生命周期');
+}
+if (!/pointer-events:\s*none/.test(layoutMapVueSource)) {
+  fail('I16', 'InspectLayoutMap 须 pointer-events: none');
+}
+if (!/showLayoutMap/.test(layoutMapVueSource) || !/inspectHoverInfo/.test(layoutMapVueSource) || !/isClientPopupActive/.test(layoutMapVueSource)) {
+  fail('I16', 'InspectLayoutMap 须在 hover / pin / EgPopup 时隐藏底图');
+}
+if (!/bodyMutationObserver/.test(layoutMapVueSource) || !/observe\(document\.body/.test(layoutMapVueSource)) {
+  fail('I16', 'InspectLayoutMap 须监听 body 上 teleport 浮层的 DOM 变更');
+}
+if (/collectLayoutMapItems|buildLayoutMap|scheduleLayoutMapRebuild/.test(hoverFnSource)) {
+  fail('I16', 'updateHoverTarget 不得触发 layout map 重建');
+}
+if (/collectLayoutMapItems|buildLayoutMap|scheduleLayoutMapRebuild/.test(onPointerDownSource)) {
+  fail('I16', 'onPointerDown 不得触发 layout map 重建');
+}
+if (/clearHoverSelection[\s\S]{0,200}layoutItems/.test(layoutMapVueSource)) {
+  fail('I16', 'layout map 不得绑 clearHoverSelection');
+}
+if (!/isPresentingPopupOverlayLayer/.test(layoutMapSource)
+  || !/resolvePresentingPopupOverlayRoot/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须识别正在展示的 EgPopup（effect-popup-box 面板可见）');
+}
+if (!/isPresentingPopoverOverlayLayer/.test(layoutMapSource)
+  || !/HIGH_RANK_OVERLAY_LAYER_RANK/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须识别正在展示的 Popover，且 Popover / Flotation 全局置顶于 Popup');
+}
+if (!/isClientPopupActive/.test(layoutMapSource)) {
+  fail('I16', 'EgPopup 打开时须强制 overlay 模式，避免仍 walk 列表页 layout');
+}
+if (!/topRank >= HIGH_RANK_OVERLAY_LAYER_RANK/.test(layoutMapSource)
+  || !/topRank <= resolveOverlayLayerTypeRank\(presentingPopup\)/.test(layoutMapSource)) {
+  fail('I16', 'Popover teleport 到 preview 时须 walk Popover；仅无更高浮层时 walk EgPopup');
+}
+if (!/isAnchoredTooltipHostOverlayOpen/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须忽略未展开的 tooltip 宿主（如常驻多签浮标），避免误切 overlay 模式');
+}
+if (!/if \(walkRoot\)[\s\S]{0,120}walkLayoutMapTree\(walkRoot/.test(layoutMapSource)) {
+  fail('I16', 'collectLayoutMapItems 有叠层时须只 walk 内容壳（walkRoot），禁止 walk preview 列表 sibling');
+}
+if (!/resolveLayoutMapWalkRoot/.test(layoutMapSource)
+  || !/filterLayoutMapItemsToScopeRoot/.test(layoutMapSource)
+  || !/effect-popup-box/.test(
+    layoutMapSource.slice(
+      layoutMapSource.indexOf('export function resolveLayoutMapWalkRoot'),
+      layoutMapSource.indexOf('function filterLayoutMapItemsToScopeRoot'),
+    ),
+  )) {
+  fail('I16', 'buildLayoutMap 须把 Popup walk/clip 边界下沉到 .effect-popup-box，并过滤 scope 外几何');
+}
+if (!/resolveOverlayLayerTypeRank/.test(layoutMapSource) || !/resolveLayoutMapOverlayCollectionRoot/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须按 Popover > Flotation 叠层类型优先，并下沉 tooltip 宿主到可见内容壳');
+}
+if (!/elementOverlapsPreview/.test(layoutMapSource) || !/document\.querySelectorAll\(selector\)/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须采集 teleport 到 body 且与 preview 相交的 tooltip / flotation 浮层');
+}
+if (!/\.effect-flotation-box/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须直接采集 .effect-flotation-box（wrap-tooltip=false 的 EgFlotation 内容）');
+}
+if (!/role:\s*'frame'\s*\|\s*'cell'\s*\|\s*'padding'\s*\|\s*'margin'\s*\|\s*'gap'/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须含 padding / margin / gap 角色');
+}
+if (!/pushLayoutHostPaddingAndMargin/.test(layoutMapSource) || !/pushLayoutHostChildGaps/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须采集 layout 宿主 padding / margin / gap');
+}
+if (!/shouldCollectLayoutMapPaddingAndMargin/.test(layoutMapSource)
+  || !/isLayoutMapPaddingContentShell/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须仅对 layout 宿主 / EDS 根 / content 壳采集 padding（如 Popover contentSlot）');
+}
+if (!/shouldClipLayoutMapSpacingToOverflowAncestors/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须避免 overflow 祖先误裁 padding / margin / gap 条带');
+}
+if (!/isLayoutMapBorderOnlyComponentRoot\(element\)[\s\S]{0,180}pushLayoutMapItem\(items, element, scope, 'frame'\)/.test(layoutMapSource)
+  || /isLayoutMapBorderOnlyComponentRoot[\s\S]{0,220}pushLayoutHostPaddingAndMargin/.test(layoutMapSource)) {
+  fail('I16', 'border-only 白名单组件须仅 1 条实线外框，不铺 padding / margin');
+}
+if (!/MIN_SPACING_CLIP_W = 1/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap spacing 裁剪门槛须为 1px，避免细 padding / gap 条带被误裁');
+}
+if (!/isLayoutGapHost/.test(layoutMapSource) || !/pushLayoutHostChildGapsAlongAxis/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须放宽 gap 宿主门槛，且 grid 双轴采集 row/column gap');
+}
+if (/MAX_LAYOUT_MAP_SPACING_ITEMS/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 不得裁剪 padding / margin / gap 条带');
+}
+if (!/item\.role === 'padding' \|\| item\.role === 'margin' \|\| item\.role === 'gap'/.test(layoutMapSource)) {
+  fail('I16', 'capLayoutMapItems 须全量保留 spacing，仅裁 cell');
+}
+if (!/DEV_INSPECT_PADDING_ACCENT/.test(layoutMapVueSource) || !/layoutMarginItems/.test(layoutMapVueSource)) {
+  fail('I16', 'InspectLayoutMap 须分色渲染 padding / margin / gap');
+}
+if (!/lineLayer[\s\S]{0,500}marginLayer[\s\S]{0,500}gapLayer[\s\S]{0,500}paddingLayer/.test(layoutMapVueSource)) {
+  fail('I16', 'InspectLayoutMap 须 line → margin → gap → padding 叠层，spacing 均在描边之上');
+}
+const layoutMapBorderOnlySource = readFileSync(join(inspectDir, 'layoutMapBorderOnlyComponents.ts'), 'utf8');
+if (!/isLayoutMapBorderOnlyComponentRoot/.test(layoutMapSource) || !/LAYOUT_MAP_BORDER_ONLY_DISPLAY_NAMES/.test(layoutMapBorderOnlySource)) {
+  fail('I16', 'buildLayoutMap 须按原子组件白名单只画边框');
+}
+if (!/Progress/.test(layoutMapBorderOnlySource) || !/EndFeedbackCard/.test(layoutMapBorderOnlySource)) {
+  fail('I16', 'layoutMapBorderOnlyComponents 须含用户指定的原子组件白名单');
+}
+if (!/'NavBar'/.test(layoutMapBorderOnlySource) || !/eds-nav-bar-shell/.test(layoutMapBorderOnlySource) || !/Paginer/.test(layoutMapBorderOnlySource) || !/'BatchBar'/.test(layoutMapBorderOnlySource)) {
+  fail('I16', 'layoutMapBorderOnlyComponents 须含 NavBar / Paginer / BatchBar 胶囊');
+}
+if (!/isLayoutMapCapsuleTooltipPanelRoot/.test(layoutMapBorderOnlySource) || !/panelRadius === 'radius-full'/.test(layoutMapBorderOnlySource)) {
+  fail('I16', 'layoutMapBorderOnlyComponents 须识别 popup + radius-full 胶囊 TooltipPanel');
+}
+const layoutMapPinningSource = readFileSync(join(inspectDir, 'layoutMapPinningLayers.ts'), 'utf8');
+if (!/collectLayoutMapPinningLayers/.test(layoutMapPinningSource) || !/isLayoutMapItemOccludedByPinningLayer/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须按钉住层遮罩下层结构图');
+}
+if (!/layoutMapItemIntersectsPinningLayer/.test(layoutMapPinningSource)) {
+  fail('I16', '钉住层遮罩须按条带/线框相交判定，不能只看中心点');
+}
+if (!/data-float-interactive/.test(layoutMapPinningSource)) {
+  fail('I16', '钉住层须识别多签浮标等 data-float-interactive 交互区');
+}
+if (!/collectLayoutMapPopupOcclusionLayers/.test(layoutMapPinningSource)
+  || !/collectLayoutMapPopupOcclusionLayers/.test(layoutMapSource)) {
+  fail('I16', 'EgPopup 打开且仍 walk 整页时须用 popup 壳遮罩下层列表结构图');
+}
+if (!/isLayoutMapItemOccludedByPinningLayer\(host, item, scope\.pinningLayers\)/.test(layoutMapSource)) {
+  fail('I16', 'padding / margin / gap 也须受钉住层遮罩');
+}
+if (!/resolveLayoutHostGaps/.test(layoutMapSource) || !/layoutMapGapDistanceMatches/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap gap 须匹配 CSS gap 声明，禁止几何空隙误判');
+}
+if (!/shouldDrawLayoutMapSolidFrame/.test(layoutMapSource) || !/isLayoutMapGroupEnvelope/.test(layoutMapSource)) {
+  fail('I16', 'buildLayoutMap 须区分组外壳实线与内部虚线');
+}
+
 // ---------------------------------------------------------------- report
 
 if (errors.length === 0) {
   console.log(
-    `verify-shell-debug-inspect-naming: OK — ${EXPECTED_ORDER.length} 条规则 / ${regionSpecs.length} 个具名区域 / 14 项不变量`,
+    `verify-shell-debug-inspect-naming: OK — ${EXPECTED_ORDER.length} 条规则 / ${regionSpecs.length} 个具名区域 / 16 项不变量`,
   );
   process.exit(0);
 }

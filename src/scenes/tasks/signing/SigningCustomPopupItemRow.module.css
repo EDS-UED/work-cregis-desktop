@@ -13,10 +13,6 @@
   background-color: var(--event-hover);
 }
 
-.itemRowCopyable {
-  cursor: pointer;
-}
-
 .itemTitle {
   display: inline-flex;
   flex-shrink: 0;

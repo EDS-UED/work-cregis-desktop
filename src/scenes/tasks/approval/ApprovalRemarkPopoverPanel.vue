@@ -136,6 +136,8 @@ defineExpose({
     :hide-confirm="hideInlineConfirm"
     :label="ui('Remark')"
     :placeholder="ui(placeholderKey)"
+    :paste-label="ui('Paste')"
+    :clear-label="ui('Clear')"
     :feedback-text="ui(feedbackKey)"
     :confirm-label="ui('Confirm')"
     hide-label

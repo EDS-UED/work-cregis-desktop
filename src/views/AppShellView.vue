@@ -10,6 +10,17 @@ import {
   type CregisModuleMenuBusinessTitle,
 } from '@/presets/module-menu/businessModuleTitles';
 import { resolveEnglishUiText } from '@/i18n/translateUiText';
+import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
+import {
+  DEFAULT_PAYMENT_ENGINE_MENU_ITEM,
+  DEFAULT_WAAS_MENU_ITEM,
+  PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+} from '@/scenes/payment-engine/paymentEngineMenuData';
+import {
+  isPaymentEngineModuleTitle,
+  isWaasModuleTitle,
+} from '@/scenes/project/projectModuleTitles';
+import { useWaasProjectStore } from '@/scenes/project/waasProjectStore';
 import TasksDataListPage from '@/scenes/tasks/TasksDataListPage.vue';
 import { setMultiSignCollaborationModuleActive } from '@/scenes/tasks/signing/multiSignInvitation/multiSignInvitationStore';
 import { useTasksModuleMenuGroups } from '@/scenes/tasks/useTasksModuleMenuGroups';
@@ -19,8 +30,19 @@ import {
   resolveTasksModuleMenuDisplayLabel,
   type TasksDataListMenuItemLabel,
 } from '@/scenes/tasks/tasksDataListPageData';
+import WaasModuleContentPage from '@/scenes/waas-project/WaasModuleContentPage.vue';
+import WaasProjectCreatePage from '@/scenes/waas-project/WaasProjectCreatePage.vue';
+import WaasProjectEmptyPage from '@/scenes/waas-project/WaasProjectEmptyPage.vue';
+import PaymentEngineProjectSettingsPage from '@/scenes/payment-engine/PaymentEngineProjectSettingsPage.vue';
+import WaasProjectSettingsPage from '@/scenes/waas-project/WaasProjectSettingsPage.vue';
 
 const { messages, ui, locale } = useAppI18n();
+const {
+  hasProjects: waasHasProjects,
+  shellView: waasShellView,
+  openCreateProject: openWaasCreateProject,
+  syncShellViewFromProjects: syncWaasShellViewFromProjects,
+} = useWaasProjectStore();
 
 function translateModuleMenu(text: string) {
   return ui(resolveTasksModuleMenuDisplayLabel(text, locale.value));
@@ -34,7 +56,17 @@ const activeNavLabel = ref('Wallet');
 
 const activeModuleMenuItem = ref<string | null>(null);
 
-const showModuleMenu = computed(() => !navLabelShouldHideModuleMenu(activeNavLabel.value));
+const isWaasModule = computed(() => isWaasModuleTitle(activeModuleTitle.value));
+const isPaymentEngineModule = computed(() => isPaymentEngineModuleTitle(activeModuleTitle.value));
+
+const showModuleMenu = computed(() => {
+  if (navLabelShouldHideModuleMenu(activeNavLabel.value)) return false;
+  if (isPaymentEngineModule.value) return true;
+  if (isWaasModule.value) {
+    return waasHasProjects.value && waasShellView.value === 'content';
+  }
+  return true;
+});
 
 const showTasksDataList = computed(
   () =>
@@ -45,6 +77,44 @@ const showTasksDataList = computed(
 
 const showPreferencePage = computed(
   () => activeModuleTitle.value === 'Account Settings' && activeModuleMenuItem.value === 'Preference',
+);
+
+const showWaasEmpty = computed(
+  () => isWaasModule.value && !waasHasProjects.value && waasShellView.value !== 'create',
+);
+
+const showWaasCreate = computed(
+  () => isWaasModule.value && waasShellView.value === 'create',
+);
+
+const showWaasSettings = computed(
+  () =>
+    isWaasModule.value &&
+    waasHasProjects.value &&
+    waasShellView.value === 'content' &&
+    activeModuleMenuItem.value === PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+);
+
+const showWaasContent = computed(
+  () =>
+    isWaasModule.value &&
+    waasHasProjects.value &&
+    waasShellView.value === 'content' &&
+    activeModuleMenuItem.value !== null &&
+    activeModuleMenuItem.value !== PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+);
+
+const showPaymentEngineSettings = computed(
+  () =>
+    isPaymentEngineModule.value &&
+    activeModuleMenuItem.value === PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+);
+
+const showPaymentEngineContent = computed(
+  () =>
+    isPaymentEngineModule.value &&
+    activeModuleMenuItem.value !== null &&
+    activeModuleMenuItem.value !== PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
 );
 
 const tasksModuleMenuGroups = useTasksModuleMenuGroups();
@@ -58,13 +128,22 @@ watch(activeModuleTitle, (title) => {
     activeModuleMenuItem.value = 'Preference';
     return;
   }
+  if (title === 'WaaS') {
+    activeModuleMenuItem.value = DEFAULT_WAAS_MENU_ITEM;
+    syncWaasShellViewFromProjects();
+    return;
+  }
+  if (title === 'Payment Engine') {
+    activeModuleMenuItem.value = DEFAULT_PAYMENT_ENGINE_MENU_ITEM;
+    return;
+  }
   activeModuleMenuItem.value = null;
 }, { immediate: true });
 
 watch(
-  [activeModuleTitle, activeModuleMenuItem],
-  ([title, item]) => {
-    setMultiSignCollaborationModuleActive(title === 'Tasks' && item === 'Signing');
+  activeModuleTitle,
+  (title) => {
+    setMultiSignCollaborationModuleActive(title === 'Tasks');
   },
   { immediate: true },
 );
@@ -91,6 +170,17 @@ function onModuleMenuItemSelect(label: string) {
 
   if (activeModuleTitle.value === 'Account Settings') {
     activeModuleMenuItem.value = label;
+    return;
+  }
+
+  if (isWaasModuleTitle(activeModuleTitle.value) || isPaymentEngineModuleTitle(activeModuleTitle.value)) {
+    activeModuleMenuItem.value = label;
+  }
+}
+
+function onModuleMenuTitleAdd() {
+  if (isWaasModuleTitle(activeModuleTitle.value)) {
+    openWaasCreateProject();
   }
 }
 </script>
@@ -109,6 +199,7 @@ function onModuleMenuItemSelect(label: string) {
         :translate="translateModuleMenu"
         :groups="activeModuleTitle === 'Tasks' ? tasksModuleMenuGroups : undefined"
         @item-select="onModuleMenuItemSelect"
+        @title-add="onModuleMenuTitleAdd"
       />
     </template>
 
@@ -118,6 +209,27 @@ function onModuleMenuItemSelect(label: string) {
       :toolbar-title="activeModuleMenuItem"
     />
     <PreferencePage v-else-if="showPreferencePage" />
+
+    <template v-else-if="isWaasModule">
+      <WaasProjectEmptyPage v-if="showWaasEmpty" />
+      <WaasProjectCreatePage v-else-if="showWaasCreate" />
+      <WaasProjectSettingsPage v-else-if="showWaasSettings" />
+      <WaasModuleContentPage
+        v-else-if="showWaasContent && activeModuleMenuItem"
+        :key="activeModuleMenuItem"
+        :menu-item="activeModuleMenuItem"
+      />
+    </template>
+
+    <template v-else-if="isPaymentEngineModule">
+      <PaymentEngineProjectSettingsPage v-if="showPaymentEngineSettings" />
+      <PaymentEngineDataListPage
+        v-else-if="showPaymentEngineContent && activeModuleMenuItem"
+        :key="activeModuleMenuItem"
+        :menu-item="activeModuleMenuItem"
+      />
+    </template>
+
     <div v-else class="app-shell-main">
       <p class="app-shell-main__hint">{{ messages.appShellMainHint }}</p>
     </div>

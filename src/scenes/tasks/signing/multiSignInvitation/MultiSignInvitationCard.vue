@@ -2,6 +2,7 @@
 import {
   EgAvatar,
   EgButton,
+  EgListFieldOverflowText,
   EgTag,
   EgTooltipOverflow,
 } from '@eds/desktop-components';
@@ -20,9 +21,18 @@ const emit = defineEmits<{
 
 const { ui } = useAppI18n();
 
+function formatInviterLine(invitation: MultiSignInvitation): string {
+  return ui('{name} invites you to sign').replace('{name}', invitation.inviterName);
+}
+
 function formatInviterSuffix(invitation: MultiSignInvitation): string {
-  return ui('({email}) invites you to sign')
-    .replace('{email}', invitation.inviterEmailMasked);
+  const line = formatInviterLine(invitation);
+  const name = invitation.inviterName;
+  return line.startsWith(name) ? line.slice(name.length).trimStart() : line.trimStart();
+}
+
+function formatInviterTooltip(invitation: MultiSignInvitation): string {
+  return `${invitation.inviterName} (${invitation.inviterEmailMasked})`;
 }
 
 function formatAmountPrimary(invitation: MultiSignInvitation): string {
@@ -53,7 +63,16 @@ function addressCopyLabel(address: string): string {
       </span>
       <div :class="styles.cardHeadline">
         <p :class="styles.inviterLine">
-          <span :class="styles.inviterName">{{ invitation.inviterName }}</span><span :class="styles.inviterSuffix">{{ formatInviterSuffix(invitation) }}</span>
+          <span :class="styles.inviterNameHost">
+            <EgListFieldOverflowText
+              :text="formatInviterTooltip(invitation)"
+              :display-text="invitation.inviterName"
+              variant="primary"
+              tooltip-trigger="hover"
+              boundary-selector=".multi-sign-invitation-panel-root"
+            />
+          </span>
+          <span :class="styles.inviterSuffix">{{ formatInviterSuffix(invitation) }}</span>
         </p>
         <time :class="styles.invitedAt" :datetime="invitation.invitedAtDisplay">
           {{ invitation.invitedAtDisplay }}

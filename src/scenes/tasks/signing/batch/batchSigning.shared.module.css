@@ -954,7 +954,6 @@
   background-color: var(--material-hide);
   color: inherit;
   text-align: left;
-  cursor: pointer;
   composes: motion-ease is-paint from global;
 }
 

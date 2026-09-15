@@ -53,7 +53,6 @@
   padding: var(--spacing-1) var(--spacing-2);
   border-radius: var(--radius-sm);
   box-sizing: border-box;
-  cursor: pointer;
   composes: motion-ease is-paint from global;
 }
 

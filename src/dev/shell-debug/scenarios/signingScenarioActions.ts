@@ -221,7 +221,7 @@ function readShellDebugAppLocale(): AppLocale {
   return 'en';
 }
 
-/** Shell Debug：切到待签名模块（业务 QA 仅在 Tasks:Signing 可见，仍兜底导航）。 */
+/** Shell Debug：切到协作（Tasks）模块；多签浮标在全部子菜单可见，签名类 QA 仍兜底导航到待签名。 */
 function navigateToTasksSigningMenu() {
   const preview = document.querySelector('.app-preview');
   if (!preview) return;

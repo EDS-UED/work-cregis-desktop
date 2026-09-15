@@ -271,6 +271,7 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   'Signable Transaction Details': '可簽名交易明細',
   'Non-signable Reason': '不可簽名原因',
   'Filter Non-signable Reasons': '篩選不可簽名原因',
+  View: '查看',
   'View details': '查看明細',
   'View Reason': '查看原因',
   'Total amount': '總金額',

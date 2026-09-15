@@ -19,7 +19,11 @@ import {
   resolveInspectTarget,
   type InspectTargetResolution,
 } from './resolveEdsComponentInspect';
-import { resolveInspectAncestorName } from './resolveInspectAncestorName';
+import {
+  INSPECT_TOOLTIP_ANCESTOR_LABEL,
+  resolveInspectAncestorName,
+  resolveInspectContainerName,
+} from './resolveInspectAncestorName';
 
 export type InspectPropertyItem = {
   label: string;
@@ -84,17 +88,18 @@ function buildSizePropertyItem(rect: DOMRect): InspectPropertyItem {
 }
 
 /**
- * 「祖先」恒为属性面板 **第一条** item —— 组件 props 与元素属性两条路径都要加，
- * 因为点不到的组件根（如被 `.raw` 铺满的 `header.eds-tool-bar`）只能靠它交代归属。
- * 「尺寸」紧跟祖先（无祖先时则为第一条）。
- * 仅作展示：**【禁止】** 让它参与命名（见 `resolveInspectAncestorName.ts`）。
+ * 「祖先 → 容器 → 其他属性」恒为属性面板顺序 —— 组件 props 与元素属性两条路径都要加。
+ * 其他属性含尺寸、动效、catalog props 等；容器仅 Tooltip 浮层且非 Popover 时展示 raw panelKind。
  */
 function prependAncestorProperty(
   items: InspectPropertyItem[],
   ancestorName: string | null,
+  containerName: string | null,
   rect: DOMRect,
 ): InspectPropertyItem[] {
-  const rest = items.filter((item) => item.label !== '尺寸');
+  const rest = items.filter(
+    (item) => item.label !== '尺寸' && item.label !== '祖先' && item.label !== '容器',
+  );
   const leading: InspectPropertyItem[] = [];
 
   if (ancestorName) {
@@ -106,9 +111,16 @@ function prependAncestorProperty(
     });
   }
 
-  leading.push(buildSizePropertyItem(rect));
+  if (containerName) {
+    leading.push({
+      label: '容器',
+      value: containerName,
+      token: null,
+      copyLine: `container: ${containerName}`,
+    });
+  }
 
-  return [...leading, ...rest];
+  return [...leading, buildSizePropertyItem(rect), ...rest];
 }
 
 function buildElementAttributes(
@@ -125,16 +137,6 @@ function buildElementAttributes(
       value: element.id,
       token: null,
       copyLine: `#${element.id}`,
-    });
-  }
-
-  const role = element.getAttribute('role');
-  if (role) {
-    items.push({
-      label: 'Role',
-      value: role,
-      token: null,
-      copyLine: `role="${role}"`,
     });
   }
 
@@ -261,6 +263,9 @@ export function buildElementInspectInfo(
   const edsComponentHints = readEdsComponentHints(element);
   const inspectTarget = resolveInspectTarget(element, preview);
   const ancestorName = resolveInspectAncestorName(element, preview);
+  const containerName = ancestorName === INSPECT_TOOLTIP_ANCESTOR_LABEL
+    ? resolveInspectContainerName(element, preview)
+    : null;
   let edsComponent = inspectTarget.edsComponent;
   if (edsComponent) {
     edsComponent = {
@@ -268,6 +273,7 @@ export function buildElementInspectInfo(
       props: prependAncestorProperty(
         ensureInspectMotionProperty(edsComponent.props, element, preview),
         ancestorName,
+        containerName,
         rect,
       ),
     };
@@ -280,6 +286,7 @@ export function buildElementInspectInfo(
       preview,
     ),
     ancestorName,
+    containerName,
     rect,
   );
   const tagName = element.tagName.toLowerCase();

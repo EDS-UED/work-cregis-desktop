@@ -2,7 +2,7 @@ import { isShellDebugUiElement } from '../shellDebugUiScope';
 
 /** Teleport 到 preview 外的 EDS 浮层 — Inspect 须能点选，且不得继承 preview 内触发器身份。 */
 const INSPECT_FLOAT_ROOT_SELECTORS = [
-  '[id^="eds-tooltip-v-"]',
+  '[id^="eds-tooltip-"]',
   '.eds-flotation-menu',
   '.eds-popover.desktopTokens',
 ] as const;

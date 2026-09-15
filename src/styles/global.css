@@ -218,6 +218,19 @@ body > [id^='eds-tooltip-v-'],
   z-index: 15;
 }
 
+/*
+ * EgPopup 遮罩 opacity 入场时，列表顶 ToolBar / 底 Paginer 的 frosted backdrop-filter
+ * 与半透明 scrim 叠层会合成闪块；弹窗打开期间切实底，关闭后恢复 frostedPageChrome.css。
+ */
+.app-preview:has(.app-popup-overlay-host .eds-popup)
+  .eds-layout.eds-layout-chrome-overlay
+  :is(.eds-tool-bar, .eds-paginer)
+  .eds-frosted-page-chrome {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--box-page);
+}
+
 #app > .app-preview {
   overflow: clip;
 }
@@ -256,8 +269,14 @@ body > [id^='eds-tooltip-v-'] > div:first-child:has(> :not([class*='floatingInne
 
 /*
  * 可点击态：默认箭头指针，不用手型（对齐 EDS EgButton / motion-ease.is-paint）。
+ * 含 .app-preview 与 teleport 到 body 的业务浮层（批处理 Flotation、Tooltip Menu 等）。
  */
-.app-preview
+:is(
+  .app-preview,
+  body [id^='eds-tooltip-v-']:not(:has([data-shell-debug-ui], [data-dev-inspect-panel])),
+  body .eds-flotation-menu:not(:has([data-shell-debug-ui], [data-dev-inspect-panel])),
+  body .eds-popover.desktopTokens:not(:has([data-shell-debug-ui], [data-dev-inspect-panel]))
+)
   :is(
     button,
     [role='button'],

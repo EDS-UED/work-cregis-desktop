@@ -19,6 +19,7 @@ export const COLLABORATION_LOCALE_OVERRIDES: Record<string, readonly [string, st
   'Batch Processing': ['批处理', '批處理'],
   'Optional, up to 256 characters.': ['选填，256字符以内。', '選填，256字符以內。'],
   Process: ['处理', '處理'],
+  View: ['查看', '查看'],
   Broadcast: ['广播', '廣播'],
   Broadcasting: ['广播中', '廣播中'],
   'Broadcast Successful': ['广播成功', '廣播成功'],

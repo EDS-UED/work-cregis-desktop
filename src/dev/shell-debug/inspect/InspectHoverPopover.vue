@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { EgTooltipPanel } from '@eds/desktop-components';
 import type { ElementInspectInfo } from './buildElementInspectInfo';
 import InspectDetailPanel from './InspectDetailPanel.vue';
+import { markShellDebugUiInteraction } from '../installShellDebugFloatLayerGuard';
 
 const INSPECT_POPOVER_WIDTH = 360;
 const INSPECT_POPOVER_MAX_HEIGHT = 480;
@@ -32,13 +33,20 @@ const shellStyle = computed(() => {
     left: `${left}px`,
   } as const;
 });
+
+function onPopoverPointerDown(event: PointerEvent) {
+  event.stopPropagation();
+  markShellDebugUiInteraction();
+}
 </script>
 
 <template>
   <div
     data-dev-inspect-hover-popover
+    data-dev-inspect-panel
     :class="$style.host"
     :style="shellStyle"
+    @pointerdown="onPopoverPointerDown"
   >
     <EgTooltipPanel
       panel-kind="flotation"
@@ -50,7 +58,7 @@ const shellStyle = computed(() => {
       :max-height="INSPECT_POPOVER_MAX_HEIGHT"
       :scrollable="true"
     >
-      <InspectDetailPanel :info="info" />
+      <InspectDetailPanel :info="info" embedded />
     </EgTooltipPanel>
   </div>
 </template>

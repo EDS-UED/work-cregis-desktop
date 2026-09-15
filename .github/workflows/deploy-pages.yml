@@ -36,8 +36,8 @@ jobs:
       - name: Checkout eds-desktop
         uses: actions/checkout@v4
         with:
-          repository: theyangsong/eds-desktop
-          ref: c94eff4d558756deb7eaa7b0daf2bc6f304bb475
+          repository: EDS-UED/eds-desktop
+          ref: 93490172af69d431db0e38c3c634f92cb67bcb54
           fetch-depth: 0
           path: eds-desktop
 

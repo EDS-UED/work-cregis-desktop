@@ -1,0 +1,30 @@
+.page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pageColumn {
+  composes: layoutChromeColumn from '../project/layoutChromePage.shared.module.css';
+}
+
+.scrollBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.tabsHeader {
+  flex-shrink: 0;
+  padding: var(--spacing-2) var(--spacing-6) 0;
+  background: var(--box-page);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 100%;
+}

@@ -1,0 +1,48 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.headingRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  min-height: var(--scale-9);
+  padding: var(--spacing-2) var(--spacing-6) var(--spacing-1-5);
+}
+
+.headingRowInterface {
+  gap: var(--spacing-20);
+  justify-content: flex-start;
+  min-height: var(--scale-9);
+  padding: var(--spacing-05) var(--spacing-6);
+}
+
+.headingRowInterface .heading {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.heading {
+  margin: 0;
+  composes: typography-body-small-strong from global;
+  color: var(--text-base-primary);
+}
+
+.action {
+  flex-shrink: 0;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.divider {
+  margin: 0;
+}

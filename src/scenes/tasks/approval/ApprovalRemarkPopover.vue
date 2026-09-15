@@ -31,9 +31,17 @@ const props = withDefaults(
     placeholderKey?: string;
     feedbackKey?: string;
     skipRemarkStep?: boolean;
+    /** 多接收方 / 多笔订单等：与批签 pending 笔数同语义，驱动总矿工费统计。 */
+    pendingTransactionCount?: number;
+    /** 多发送方且多接收方：走整页 batch stub，而非档位 + 汇总。 */
+    preferFullBatchStub?: boolean;
+    batchStubTransactionCount?: number;
   }>(),
   {
     selectedCount: 1,
+    pendingTransactionCount: 0,
+    preferFullBatchStub: false,
+    batchStubTransactionCount: 1,
     boundarySelector: '.eds-data-list',
     placeholderKey: 'Please enter remark',
     feedbackKey: 'Optional, Max. 256 characters',
@@ -59,16 +67,26 @@ const resolvedMinerFeeProfile = computed<MinerFeeProfile | null>(
 
 const hasMinerFeeStep = computed(() => resolvedMinerFeeProfile.value != null);
 
-const minerFeeTransactionCount = computed(() =>
-  resolveMinerFeeBatchTransactionCount(
+const minerFeeTransactionCount = computed(() => {
+  if (props.preferFullBatchStub) {
+    return resolveMinerFeeBatchTransactionCount(1, props.batchStubTransactionCount ?? 2);
+  }
+  return resolveMinerFeeBatchTransactionCount(
     props.selectedCount ?? 1,
-    0,
-  ),
+    props.pendingTransactionCount ?? 0,
+  );
+});
+
+const preferBatchTotalSummary = computed(
+  () => !props.preferFullBatchStub && (props.pendingTransactionCount ?? 0) > 1,
 );
 
 const showBatchStubOnly = computed(() => {
   const profile = resolvedMinerFeeProfile.value;
   if (!profile) return false;
+  if (!props.preferFullBatchStub && (props.pendingTransactionCount ?? 0) > 1) {
+    return false;
+  }
   return isMinerFeeBatchStubProfile(profile, minerFeeTransactionCount.value);
 });
 
@@ -162,7 +180,9 @@ function onRemarkOnlyConfirm() {
         v-model="draftRemark"
         :title="title"
         :placeholder="ui(placeholderKey)"
-        :feedback-text="feedbackKey"
+        :paste-label="ui('Paste')"
+        :clear-label="ui('Clear')"
+        :feedback-text="ui(feedbackKey)"
         :confirm-label="ui('Confirm')"
         :boundary-selector="boundarySelector"
         :on-before-open="prepareRemarkDraft"
@@ -193,6 +213,7 @@ function onRemarkOnlyConfirm() {
     :symbol="gasFeeSymbol"
     :title="minerFeeTopToolTitle"
     :transaction-count="minerFeeTransactionCount"
+    :prefer-batch-total-summary="preferBatchTotalSummary"
     :boundary-selector="boundarySelector"
     :on-before-open="skipRemarkStep ? onBeforeOpen : undefined"
     @confirm="onGasFeeConfirm"
@@ -204,7 +225,9 @@ function onRemarkOnlyConfirm() {
         v-model="draftRemark"
         :title="title"
         :placeholder="ui(placeholderKey)"
-        :feedback-text="feedbackKey"
+        :paste-label="ui('Paste')"
+        :clear-label="ui('Clear')"
+        :feedback-text="ui(feedbackKey)"
         :confirm-label="ui('Confirm')"
         :boundary-selector="boundarySelector"
         :on-before-open="prepareRemarkDraft"
@@ -224,7 +247,9 @@ function onRemarkOnlyConfirm() {
     v-model="remarkModel"
     :title="title"
     :placeholder="ui(placeholderKey)"
-    :feedback-text="feedbackKey"
+    :paste-label="ui('Paste')"
+    :clear-label="ui('Clear')"
+    :feedback-text="ui(feedbackKey)"
     :confirm-label="ui('Confirm')"
     :boundary-selector="boundarySelector"
     :on-before-open="onBeforeOpen"

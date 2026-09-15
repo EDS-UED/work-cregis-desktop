@@ -8,6 +8,12 @@ import { isShellDebugUiElement } from './shellDebugUiScope';
 
 let installed = false;
 
+/** Guard 包装前保留原生 API — Dev Inspect picker 须绕过 wrapper，否则浮层点选永不触发 pin。 */
+export const nativeDocumentAddEventListener = document.addEventListener.bind(document);
+export const nativeDocumentRemoveEventListener = document.removeEventListener.bind(document);
+export const nativeWindowAddEventListener = window.addEventListener.bind(window);
+export const nativeWindowRemoveEventListener = window.removeEventListener.bind(window);
+
 function isCapture(options?: boolean | AddEventListenerOptions): boolean {
   if (options === true) return true;
   if (options && typeof options === 'object') return Boolean(options.capture);

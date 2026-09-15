@@ -1,3 +1,5 @@
+@import './inspect/shellDebugInspectCodeTokens.css';
+
 /*
  * Shell Debug · EgAnchoredPopover（top-tool）公共 chrome。
  * 仅隐藏 Popover 标题下分割线；不改各 capsule 内容布局。
@@ -15,5 +17,3 @@
   .eds-divider:not([aria-hidden='true']) {
   display: block;
 }
-
-@import './inspect/shellDebugInspectCodeTokens.css';

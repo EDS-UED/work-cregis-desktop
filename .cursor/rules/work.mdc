@@ -124,7 +124,7 @@ alwaysApply: true
 
 ### 2.5 Git 提交与推送（双仓库 + Pages CI）
 
-本仓库 Pages CI（`.github/workflows/deploy-pages.yml`）会 **按 SHA pin** 检出远程 `theyangsong/evergreen-design-system-desktop`。本地未推的 EDS 提交、或 pin 指向远程不存在的 SHA，都会让 Deploy 失败。
+本仓库 Pages CI（`.github/workflows/deploy-pages.yml`）会 **按 SHA pin** 检出远程 `EDS-UED/eds-desktop`。本地未推的 EDS 提交、或 pin 指向远程不存在的 SHA，都会让 Deploy 失败。
 
 **【禁止】** Agent 主动执行 `git push`（含 `--force`、upstream 首次推送）。用户说「推」之后：**只** 准备 commit 说明、预检命令、以及用户可复制的 `git push` 命令；**由用户在自己的终端推送**。
 

@@ -197,6 +197,7 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   Transactions: 'Transactions',
   Transfer: 'Sent',
   'Triggered Policy': 'Trigger Policy',
+  View: 'View',
   'View details': 'View Details',
   'View Reason': 'View Reason',
   WaaS: 'WaaS',

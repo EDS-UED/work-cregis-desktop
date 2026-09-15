@@ -17,6 +17,7 @@ function connectorStateBetween(
   to: SigningCustomPopupProgressStep,
 ): ConnectorVisualState {
   if (to.state === 'failed') return 'failed';
+  if (from.state === 'active' && to.state === 'pending') return 'animating';
   if (from.state === 'done' && to.state === 'active') return 'animating';
   if (from.state === 'done') return 'done';
   return 'pending';

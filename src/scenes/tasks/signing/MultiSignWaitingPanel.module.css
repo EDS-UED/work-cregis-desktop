@@ -85,14 +85,13 @@
 }
 
 .statusIconShell {
-  /* icon-lg (scale-5) + spacing-2 × 2 → 与就绪 content-box 外径一致 */
-  --status-icon-outer-size: calc(9 * var(--scale-base));
+  /* icon-lg + spacing-2 × 2 = avatar-lg，与就绪 content-box 外径一致 */
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--status-icon-outer-size);
-  height: var(--status-icon-outer-size);
+  width: var(--avatar-lg);
+  height: var(--avatar-lg);
   margin-bottom: var(--spacing-4);
 }
 
@@ -156,8 +155,8 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: var(--status-icon-outer-size);
-  height: var(--status-icon-outer-size);
+  width: var(--avatar-lg);
+  height: var(--avatar-lg);
   box-sizing: border-box;
   padding: 0;
   border: 3px solid var(--status-warning);
@@ -400,14 +399,44 @@
   display: inline-flex;
 }
 
-.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled)) {
-  background-color: var(--event-focus);
-}
-
 .systemBarClose :global(.eds-icon-button) {
   background-color: var(--material-hide);
 }
 
 .systemBarClose :global(.eds-icon-button > span) {
   color: var(--material-base-tertiary);
+}
+
+.systemBarClose :global(.eds-icon-button .eds-icon .eds-i-f),
+.systemBarClose :global(.eds-icon-button .eds-icon path) {
+  fill: currentColor;
+}
+
+.systemBarClose :global(.eds-icon-button:hover:not(:disabled):not(.isDisabled)),
+.systemBarClose :global(.eds-icon-button:focus-visible:not(:disabled):not(.isDisabled)),
+.systemBarClose :global(.eds-icon-button:active:not(:disabled):not(.isDisabled)) {
+  background-color: var(--event-hover);
+}
+
+.systemBarClose :global(.eds-icon-button:hover:not(:disabled):not(.isDisabled) > span),
+.systemBarClose :global(.eds-icon-button:focus-visible:not(:disabled):not(.isDisabled) > span) {
+  color: var(--material-base-secondary);
+}
+
+.systemBarClose :global(.eds-icon-button:active:not(:disabled):not(.isDisabled) > span) {
+  color: var(--material-base-tertiary);
+}
+
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled)),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):hover),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):focus-visible),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):active) {
+  background-color: var(--event-focus);
+}
+
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled) > span),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):hover > span),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):focus-visible > span),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):active > span) {
+  color: var(--material-base-secondary);
 }

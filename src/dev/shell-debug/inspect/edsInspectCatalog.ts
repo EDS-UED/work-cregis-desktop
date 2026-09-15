@@ -13,6 +13,7 @@ import {
   deriveDividerType,
 } from './buildDividerInspect';
 import { buildTooltipUsageSnippet } from './buildEffectSemanticInspect';
+import { resolveTooltipCatalogDisplayNameFromPanelKind } from './inspectTooltipPanelKind';
 import { resolveInspectPropLabel } from './inspectPropLabels';
 
 export type EdsPropSpec = {
@@ -53,15 +54,9 @@ export type EdsInspectCatalogEntry = {
  * Tooltip 的 `panelKind` 决定它在 Figma 里的角色 —— EgPopup / 预览壳复用了同一组件，
  * 都叫 Tooltip 会让弹窗壳与内容层重名。
  *
- * 真源：eds-desktop `Tooltip.vue` 的 `EFFECT_PANEL_CLASS`
- * + `packages/tokens/spec/effect/semantic.json` 的 `title`（Popup Box / Container Box）。
+ * 真源：`inspectTooltipPanelKind.ts`（对齐 eds-desktop `Tooltip.vue` EFFECT_PANEL_CLASS）。
  * 仅收录「盒子」角色；flotation → **FlotationBox**；subtle / molde 仍是 Tooltip 本职。
  */
-const TOOLTIP_PANEL_ROLE_NAMES: Readonly<Record<string, string>> = {
-  popup: 'PopupBox',
-  container: 'ContainerBox',
-  flotation: 'FlotationBox',
-};
 
 function formatBoolean(value: unknown): string {
   return value === true ? '是' : '否';
@@ -386,8 +381,7 @@ export const EDS_INSPECT_CATALOG: EdsInspectCatalogEntry[] = [
     displayName: 'Tooltip',
     priority: 60,
     vueNames: ['Tooltip', 'EgTooltipPanel', 'AnchoredTooltip', 'EgTooltip'],
-    resolveDisplayName: (props) =>
-      TOOLTIP_PANEL_ROLE_NAMES[String(props.panelKind ?? '')] ?? null,
+    resolveDisplayName: (props) => resolveTooltipCatalogDisplayNameFromPanelKind(props.panelKind),
     buildUsageSnippet: buildTooltipUsageSnippet,
     props: [
       { key: 'panelKind', label: '面板类型', defaultValue: 'flotation' },

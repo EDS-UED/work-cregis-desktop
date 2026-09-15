@@ -56,7 +56,6 @@
   border: none;
   border-radius: var(--radius-full);
   background: transparent;
-  cursor: pointer;
   font: inherit;
   color: inherit;
   composes: motion-ease is-paint from global;

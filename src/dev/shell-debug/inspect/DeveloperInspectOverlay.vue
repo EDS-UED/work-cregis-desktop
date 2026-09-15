@@ -8,6 +8,7 @@ import {
   inspectPinnedRect,
 } from './developerInspectSession';
 import { resolveInspectScopeRoot } from './inspectFloatLayerScope';
+import InspectLayoutMap from './InspectLayoutMap.vue';
 import InspectLayoutChrome from './InspectLayoutChrome.vue';
 import InspectEdgeMeasureChrome from './InspectEdgeMeasureChrome.vue';
 import { buildHoverMeasureModel } from './buildLayoutMeasurement';
@@ -87,6 +88,8 @@ const compareEdgeMeasures = computed(() => {
 <template>
   <Teleport to="body">
     <div v-if="developerInspectActive" data-dev-inspect-overlay :class="styles.inspectOverlayRoot">
+      <InspectLayoutMap />
+
       <InspectLayoutChrome
         v-if="showPinnedChrome && inspectPinnedInfo && inspectPinnedRect && inspectChromeRoot"
         :preview="inspectChromeRoot"

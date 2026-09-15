@@ -1,0 +1,15 @@
+.host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.hostAlignEnd {
+  align-items: flex-end;
+  margin-left: auto;
+}

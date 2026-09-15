@@ -1,0 +1,299 @@
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  padding-bottom: var(--spacing-5);
+}
+
+.sectionDivider {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.tabsBlock {
+  padding: 0;
+}
+
+.tabsDivider {
+  margin: 0;
+}
+
+.linkRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-05);
+  padding: 0;
+  text-decoration: none;
+}
+
+.linkIcon {
+  flex-shrink: 0;
+}
+
+.apiDocRow {
+  padding: var(--spacing-3) var(--spacing-6) var(--spacing-2-5);
+}
+
+.creatorCluster {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.creatorText {
+  flex: 1 1 auto;
+  min-width: 0;
+  composes: typography-body-medium from global;
+  overflow: hidden;
+  color: var(--text-base-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusValue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.statusDot {
+  flex-shrink: 0;
+  width: var(--scale-2);
+  height: var(--scale-2);
+  border-radius: var(--radius-full);
+}
+
+.statusDotDisabled {
+  background-color: var(--status-danger);
+}
+
+.statusDotEnabled {
+  background-color: var(--status-success);
+}
+
+.apiKeyCluster {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.maskedValue {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.checkAction {
+  flex-shrink: 0;
+}
+
+.textAction {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  composes: typography-body-medium motion-ease is-paint from global;
+  color: var(--text-brand-primary);
+  cursor: pointer;
+}
+
+.interfaceBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2-5) var(--spacing-6) var(--spacing-3);
+}
+
+.interfaceMenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+}
+
+.interfaceMenuTitle {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.interfaceMenuDescription {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.policyCard {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--spacing-1);
+  margin-top: var(--spacing-1);
+}
+
+.policyBid {
+  flex-shrink: 0;
+  width: 3px;
+  padding: var(--spacing-1) 0;
+  box-sizing: border-box;
+}
+
+.policyBid::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-xs);
+  background: var(--material-card-moderate);
+}
+
+.policyBody {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-radius: var(--radius-sm);
+}
+
+.policyRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+}
+
+.policyWalletBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2) var(--spacing-2);
+}
+
+.policyWalletLabel {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.policyWalletRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  flex-wrap: wrap;
+}
+
+.policyLabel {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.policyValue {
+  composes: typography-body-small-strong from global;
+  color: var(--text-base-primary);
+}
+
+.policyValueMuted {
+  composes: typography-body-small from global;
+  color: var(--text-base-secondary);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-8) var(--spacing-5);
+  color: var(--text-base-tertiary);
+}
+
+.emptyTextBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1);
+  text-align: center;
+}
+
+.emptyTitle {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.emptyDescription {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+  max-width: 326px;
+}
+
+.notifyGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  margin-bottom: var(--spacing-2);
+}
+
+.notifyMembers {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  padding: 0 var(--spacing-5) var(--spacing-2);
+}
+
+.notifyMemberChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background: var(--box-subtle);
+}
+
+.notifyMemberName {
+  composes: typography-footnote from global;
+  color: var(--text-base-primary);
+}
+
+.notifyMoreButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--scale-9);
+  height: var(--scale-9);
+  padding: 0;
+  border: 1px dashed var(--stroke-base-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-base-secondary);
+  cursor: pointer;
+}
+
+.collectionHeading {
+  margin: 0;
+  padding: 0 var(--spacing-5);
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.collectionPlaceholder {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-5);
+}
+
+.merchantLogoRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-5);
+}
+
+.merchantLogoLabel {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}

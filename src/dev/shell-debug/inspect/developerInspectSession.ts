@@ -63,10 +63,17 @@ export function clearInspectSelection() {
 
 function syncPreviewInspectAttribute(active: boolean) {
   const preview = document.querySelector('.app-preview');
-  if (!(preview instanceof HTMLElement)) return;
+  if (preview instanceof HTMLElement) {
+    if (active) {
+      preview.setAttribute('data-dev-inspect-active', '');
+    } else {
+      preview.removeAttribute('data-dev-inspect-active');
+    }
+  }
+
   if (active) {
-    preview.setAttribute('data-dev-inspect-active', '');
+    document.body.setAttribute('data-dev-inspect-active', '');
     return;
   }
-  preview.removeAttribute('data-dev-inspect-active');
+  document.body.removeAttribute('data-dev-inspect-active');
 }

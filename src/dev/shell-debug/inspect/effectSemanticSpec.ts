@@ -186,14 +186,24 @@ export function resolveEffectSemanticClass(element: Element): string | null {
   return null;
 }
 
-/** Tooltip panelKind → effect 类（eds-desktop Tooltip.vue EFFECT_PANEL_CLASS） */
-export const TOOLTIP_PANEL_KIND_EFFECT_CLASS: Readonly<Record<string, string>> = {
-  container: 'effect-container-box',
-  flotation: 'effect-flotation-box',
-  popup: 'effect-popup-box',
-  subtle: 'effect-subtle-card',
-  molde: 'effect-molde-level',
+/**
+ * Effect 盒子容器展示名 —— effect 类兜底；panelKind 真源见 `inspectTooltipPanelKind.ts`。
+ * PopoverBox 来自 `effect-popover-box`（非 Tooltip panelKind）。
+ */
+export const EFFECT_BOX_CONTAINER_NAMES: Readonly<Record<string, string>> = {
+  'effect-container-box': 'ContainerBox',
+  'effect-flotation-box': 'FlotationBox',
+  'effect-popover-box': 'PopoverBox',
+  'effect-popup-box': 'PopupBox',
 };
+
+export function resolveEffectBoxContainerLabel(element: Element): string | null {
+  for (const className of element.classList) {
+    const label = EFFECT_BOX_CONTAINER_NAMES[className];
+    if (label) return label;
+  }
+  return null;
+}
 
 export function formatEffectSemanticStyleLine(spec: EffectSemanticSpec): string {
   return `class=".${spec.className}"`;

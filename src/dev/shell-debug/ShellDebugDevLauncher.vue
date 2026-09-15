@@ -112,12 +112,17 @@ function syncPopoverAlign() {
   hintPopoverAlign.value = resolvePopoverAlign(DEV_HINT_POPOVER_EST_WIDTH);
 }
 
-/** 直接 openPanel，绕过 EgAnchoredPopover.onTriggerClick 里的 closeAllAnchoredTooltips。 */
+/** 点选固定后：在 Dev 胶囊上方展开参数面板（定稿挂载点，勿改锚点）。 */
 function openDevPanel() {
   if (!inspectPinnedInfo.value) return;
+  markShellDebugUiInteraction(400);
   syncPopoverAlign();
   nextTick(() => {
-    anchorRef.value?.openPanel?.();
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        anchorRef.value?.openPanel?.();
+      });
+    });
   });
 }
 
@@ -226,6 +231,7 @@ watch(
       resetInspectScrollPosition();
     });
   },
+  { flush: 'post' },
 );
 
 onMounted(() => {
@@ -299,7 +305,7 @@ onBeforeUnmount(() => {
 
           <template #content>
             <EgPopover
-              v-if="pinnedInfo"
+              v-if="developerInspectActive && pinnedInfo"
               placement="top"
               :align="popoverAlign"
               width-mode="fixed"
@@ -315,6 +321,7 @@ onBeforeUnmount(() => {
                 class="shell-debug-popover-content shell-debug-dev-inspect-popover"
                 :class="styles.popoverContent"
                 data-dev-inspect-panel
+                @pointerdown.stop="markShellDebugUiInteraction()"
               >
                 <InspectDetailPanel :info="pinnedInfo" embedded />
               </div>

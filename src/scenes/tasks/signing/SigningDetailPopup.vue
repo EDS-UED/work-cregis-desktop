@@ -20,6 +20,7 @@ import { useDetailToolbarPageMotion } from '../shared/useDetailToolbarPageMotion
 import { buildSigningDetailSections } from './buildSigningDetailSections';
 import { addressEntriesIncludeAddressRisk } from '../shared/hasBlacklistAddressTags';
 import {
+  resolveDetailMinerFeePopoverContext,
   resolveMinerFeeProfileFromDetail,
 } from '../shared/minerFeeProfile';
 import type { MinerFeeSelection } from '../shared/minerFeeProfile';
@@ -171,6 +172,10 @@ const minerFeeProfile = computed(() =>
   props.detail ? resolveMinerFeeProfileFromDetail(props.detail) : null,
 );
 
+const detailMinerFeePopover = computed(() =>
+  props.detail ? resolveDetailMinerFeePopoverContext(props.detail) : null,
+);
+
 async function onMultiSignPassClick() {
   if (signingBlockedByBlacklist.value) return;
   try {
@@ -288,6 +293,9 @@ function onDetailClose() {
               :title="ui('Miner Fee')"
               remark=""
               :miner-fee-profile="minerFeeProfile"
+              :pending-transaction-count="detailMinerFeePopover?.pendingTransactionCount ?? 0"
+              :prefer-full-batch-stub="detailMinerFeePopover?.preferFullBatchStub ?? false"
+              :batch-stub-transaction-count="detailMinerFeePopover?.batchStubTransactionCount ?? 1"
               :on-before-open="onRemarkBeforeOpen"
               @confirm="emit('passConfirm', $event)"
             >

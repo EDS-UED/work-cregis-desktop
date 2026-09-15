@@ -1,4 +1,5 @@
 import { TYPOGRAPHY_TEXT_STYLE_ROLES } from './typographyTextStyles';
+import { TOOLTIP_PANEL_KINDS } from './inspectTooltipPanelKind';
 
 export type InspectCodeToken = {
   kind:
@@ -334,6 +335,56 @@ const MOTION_SEMANTIC_CLASS =
   /^\.motion-(?:ease|flotation|layout|deform|page|layout-deform|none)(?:\.is-(?:paint-fade|paint|enter-only|asym|active|hover-enter-only|hover|focus))*$/;
 const EDS_DOM_CLASS_VALUE = /^(?:eds-[\w-]+(?:\s+eds-[\w-]+)*)$/;
 
+/** HTML 标签名 / ARIA role / `as` 等元素类型 —— 属性面板品红 code 高亮。 */
+const MARKUP_CODE_VALUES = new Set([
+  'a',
+  'article',
+  'aside',
+  'button',
+  'checkbox',
+  'combobox',
+  'div',
+  'footer',
+  'form',
+  'grid',
+  'gridcell',
+  'group',
+  'header',
+  'img',
+  'input',
+  'label',
+  'li',
+  'link',
+  'listbox',
+  'main',
+  'menu',
+  'menuitem',
+  'navigation',
+  'nav',
+  'ol',
+  'option',
+  'p',
+  'radio',
+  'radiogroup',
+  'section',
+  'select',
+  'span',
+  'switch',
+  'tab',
+  'tablist',
+  'tabpanel',
+  'textarea',
+  'toolbar',
+  'tree',
+  'ul',
+]);
+
+const MARKUP_PROPERTY_LABELS = new Set(['元素类型']);
+
+function isMarkupCodeValue(value: string): boolean {
+  return MARKUP_CODE_VALUES.has(value.trim().toLowerCase());
+}
+
 function isMotionSemanticClassChain(value: string): boolean {
   return MOTION_SEMANTIC_CLASS.test(value.trim());
 }
@@ -363,6 +414,7 @@ function isHardcodedCodeValue(value: string): boolean {
   if (CSS_COLOR_FUNCTION.test(trimmed)) return true;
   if (CSS_HEX_COLOR.test(trimmed)) return true;
   if (CSS_KEYWORDS.has(trimmed)) return true;
+  if (isMarkupCodeValue(trimmed)) return true;
   if (CSS_VALUE_LITERAL.test(trimmed)) return true;
 
   const cssLine = trimmed.includes(':') && !trimmed.endsWith(';') ? `${trimmed};` : trimmed;
@@ -389,8 +441,11 @@ export function resolveInspectPropertyValueTone(
   if (!trimmed || trimmed === '—' || trimmed === '无') return 'plain';
   if (trimmed === '是' || trimmed === '否') return 'plain';
 
-  /** 祖先组件名走属性面板 token 黄色系，与 EDS 类名 / motion 等同列。 */
+  /** 祖先组件名走 token 黄色系；容器 raw panelKind 走 code 品红 keyword。 */
   if (context?.label === '祖先') return 'token';
+  if (context?.label === '容器') return 'code';
+
+  if (context?.label && MARKUP_PROPERTY_LABELS.has(context.label)) return 'code';
 
   if (referencesDesignToken(trimmed, context)) return 'token';
   if (isHardcodedCodeValue(trimmed)) return 'code';
@@ -457,9 +512,12 @@ export function tokenizeInspectPropertyTokenValue(value: string): InspectCodeTok
 }
 
 /** 属性面板硬编码 / 代码值高亮（品红系）。 */
-export function tokenizeInspectPropertyCodeValue(value: string): InspectCodeToken[] {
+export function tokenizeInspectPropertyCodeValue(
+  value: string,
+  context?: InspectPropertyValueContext,
+): InspectCodeToken[] {
   const trimmed = value.trim();
-  if (resolveInspectPropertyValueTone(trimmed) !== 'code') {
+  if (resolveInspectPropertyValueTone(trimmed, context) !== 'code') {
     return [{ kind: 'plain', text: value }];
   }
 
@@ -471,7 +529,11 @@ export function tokenizeInspectPropertyCodeValue(value: string): InspectCodeToke
     return tokenizeCssClassChain(trimmed);
   }
 
-  if (CSS_KEYWORDS.has(trimmed)) {
+  if (context?.label === '容器' && TOOLTIP_PANEL_KINDS.has(trimmed)) {
+    return [{ kind: 'keyword', text: trimmed }];
+  }
+
+  if (CSS_KEYWORDS.has(trimmed) || isMarkupCodeValue(trimmed)) {
     return [{ kind: 'keyword', text: trimmed }];
   }
 

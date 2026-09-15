@@ -103,6 +103,76 @@ export function resolveMinerFeeBatchTransactionCount(
   return Math.max(signable, pending, 1);
 }
 
+export type DetailMinerFeePopoverContext = {
+  /** 单发送方多接收方 / 多笔订单：Gas 档位 + 预计总矿工费。 */
+  pendingTransactionCount: number;
+  /** 多发送方且多接收方：整页 stub 说明（如 BTC 无法准确计算）。 */
+  preferFullBatchStub: boolean;
+  batchStubTransactionCount: number;
+};
+
+function detailHasMultipleSenders(detail: SigningDetail): boolean {
+  return detail.senderCount > 1 || (detail.senderOrderCount ?? 0) > 1;
+}
+
+function detailHasMultipleReceivers(detail: SigningDetail): boolean {
+  return detail.receiverCount > 1 || (detail.receiverOrderCount ?? 0) > 1;
+}
+
+/** Detail 矿工费 Popover：区分「单发送方 × 多接收方」与「多发送方 × 多接收方」。 */
+export function resolveDetailMinerFeePopoverContext(
+  detail: SigningDetail,
+): DetailMinerFeePopoverContext {
+  const multiSender = detailHasMultipleSenders(detail);
+  const multiReceiver = detailHasMultipleReceivers(detail);
+
+  if (multiSender && multiReceiver) {
+    return {
+      pendingTransactionCount: 0,
+      preferFullBatchStub: true,
+      batchStubTransactionCount: Math.max(
+        detail.senderCount,
+        detail.receiverCount,
+        detail.senderOrderCount ?? 0,
+        detail.receiverOrderCount ?? 0,
+        2,
+      ),
+    };
+  }
+
+  if (!multiSender) {
+    const receiverOrders = detail.receiverOrderCount ?? 0;
+    if (receiverOrders > 1) {
+      return {
+        pendingTransactionCount: receiverOrders,
+        preferFullBatchStub: false,
+        batchStubTransactionCount: 1,
+      };
+    }
+    if (detail.receiverCount > 1) {
+      return {
+        pendingTransactionCount: detail.receiverCount,
+        preferFullBatchStub: false,
+        batchStubTransactionCount: 1,
+      };
+    }
+    const senderOrders = detail.senderOrderCount ?? 0;
+    if (senderOrders > 1) {
+      return {
+        pendingTransactionCount: senderOrders,
+        preferFullBatchStub: false,
+        batchStubTransactionCount: 1,
+      };
+    }
+  }
+
+  return {
+    pendingTransactionCount: 0,
+    preferFullBatchStub: false,
+    batchStubTransactionCount: 1,
+  };
+}
+
 export function buildStubMinerFeeDisplay(profile: MinerFeeProfile): string {
   if (profile.kind === 'ton-xrp') {
     return buildTonLikeMinerFeeDisplay(profile.symbol);
