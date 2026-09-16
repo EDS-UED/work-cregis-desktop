@@ -56,11 +56,12 @@ function formatMetricCount(value: number) {
   <div :class="styles.progressPanel">
     <div :class="styles.headerCard">
       <div :class="styles.statusProgressGroup">
-        <span :class="styles.statusLabel">{{ ui(statusLabelKey) }}</span>
-        <EgProgress
-          :value="progressPercent"
-          :aria-label="ui(statusLabelKey)"
-        />
+        <div :class="styles.progressRow">
+          <EgProgress
+            :value="progressPercent"
+            :aria-label="ui(statusLabelKey)"
+          />
+        </div>
         <div :class="styles.metrics">
         <span :class="styles.metricItem">
           <span :class="styles.metricLabel">{{ ui('Runtime') }}:</span>

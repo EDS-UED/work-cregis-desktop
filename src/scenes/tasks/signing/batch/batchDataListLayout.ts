@@ -16,6 +16,8 @@ export const BATCH_WALLET_COMBO_COLUMN_MIN_WIDTH = '340px';
 export const BATCH_AMOUNT_COLUMN_MIN_WIDTH = '160px';
 /** 不可签名原因列最小宽度。 */
 export const BATCH_INELIGIBLE_REASON_COLUMN_MIN_WIDTH = '130px';
+/** 批签详情列表备注列最小宽度。 */
+export const BATCH_REMARK_COLUMN_MIN_WIDTH = '120px';
 
 export function computeBatchDataListHeight(
   rowCount: number,

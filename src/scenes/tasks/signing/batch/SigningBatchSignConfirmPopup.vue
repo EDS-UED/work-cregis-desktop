@@ -2,8 +2,6 @@
 import {
   computed,
   nextTick,
-  onMounted,
-  reactive,
   ref,
   toRef,
   watch,
@@ -15,11 +13,6 @@ import {
   EgPopup,
   EgStreamer,
   EgButton,
-  MOTION_LAYOUT_DEFORM_CONTENT,
-  MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
-  MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
-  useMotionLayoutDeformPageSwitch,
-  type MotionLayoutDeformPageSpec,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
@@ -85,26 +78,11 @@ const { popupMounted, popupOpen, onPopupClosed } = usePopupShellLifecycle({
 
 const { ui } = useAppI18n();
 
-const summaryContentRef = ref<HTMLElement | null>(null);
 const slotChromeRef = ref<InstanceType<typeof SigningBatchPopupSlotChrome> | null>(null);
 const gasFeePopoverRef = ref<{ close?: () => void } | null>(null);
 const batchStubAnchoredRef = ref<{ close?: () => void } | null>(null);
 
-const pageSpecs = reactive<Record<ConfirmPage, MotionLayoutDeformPageSpec>>({
-  summary: { shellHeight: 360 },
-  detail: { shellHeight: 360 },
-  reasons: { shellHeight: 360 },
-});
-
-const {
-  activePage,
-  shellHeight,
-  contentExiting,
-  contentEntering,
-  contentDirection,
-  switchTo,
-} = useMotionLayoutDeformPageSwitch<ConfirmPage>(pageSpecs, 'summary');
-
+const activePage = ref<ConfirmPage>('summary');
 const pageStackDirection = ref<'forward' | 'backward' | 'none'>('none');
 const detailDisplayRows = ref<SigningBatchRowModel[]>([]);
 const reasonsDisplayRows = ref<SigningBatchRowModel[]>([]);
@@ -113,9 +91,6 @@ const footerMotionKey = computed(() => activePage.value);
 const isSummaryPage = computed(() => activePage.value === 'summary');
 const isDetailPage = computed(() => activePage.value === 'detail');
 const isReasonsPage = computed(() => activePage.value === 'reasons');
-const deformUsesPixelHeight = computed(
-  () => contentExiting.value || contentEntering.value,
-);
 
 const ineligiblePaginatorItems = computed(() => {
   const sorted = sortIneligibleByReasonOrder(props.eligibility.ineligible);
@@ -201,131 +176,68 @@ const showSystemBarClose = computed(() => isSummaryPage.value);
 
 const toolbarConfirmDisabled = computed(() => !hasSignable.value);
 
-function measureSummaryShellHeight() {
-  const measured = summaryContentRef.value?.scrollHeight ?? 0;
-  return measured > 0 ? measured : 0;
+function resolvePageStackDirection(
+  from: ConfirmPage,
+  to: ConfirmPage,
+): 'forward' | 'backward' | 'none' {
+  if (from === 'summary' && to !== 'summary') {
+    return 'forward';
+  }
+  if (from !== 'summary' && to === 'summary') {
+    return 'backward';
+  }
+  return 'none';
 }
 
-function measureSubPageShellHeight() {
-  return slotChromeRef.value?.readScrollViewportHeight() ?? 0;
-}
-
-async function syncShellHeightForPage(page: ConfirmPage) {
-  await nextTick();
-  if (page === 'summary') {
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => resolve());
-    });
-    const summaryH = measureSummaryShellHeight();
-    if (summaryH > 0) {
-      pageSpecs.summary.shellHeight = summaryH;
-    }
+function setActivePage(next: ConfirmPage) {
+  if (next === activePage.value) {
     return;
   }
-
-  const viewportH = measureSubPageShellHeight();
-  if (viewportH > 0) {
-    pageSpecs.detail.shellHeight = viewportH;
-    pageSpecs.reasons.shellHeight = viewportH;
-    shellHeight.value = viewportH;
-  }
+  pageStackDirection.value = resolvePageStackDirection(activePage.value, next);
+  activePage.value = next;
 }
 
 function resetToSummary() {
   activePage.value = 'summary';
-  contentExiting.value = false;
-  contentEntering.value = false;
-  contentDirection.value = null;
   pageStackDirection.value = 'none';
   reasonsFilter.value = 'all';
-}
-
-async function bootstrapSummaryShell() {
-  resetToSummary();
-  await syncShellHeightForPage('summary');
 }
 
 watch(
   () => props.open,
   (open) => {
     if (open) {
-      void bootstrapSummaryShell();
+      resetToSummary();
     }
   },
 );
 
 watch(
   () => activePage.value,
-  async (page, previousPage) => {
-    if (previousPage != null) {
-      if (previousPage === 'summary' && page !== 'summary') {
-        pageStackDirection.value = 'forward';
-      } else if (previousPage !== 'summary' && page === 'summary') {
-        pageStackDirection.value = 'backward';
-      } else {
-        pageStackDirection.value = 'none';
-      }
-    }
-
-    await nextTick();
+  async () => {
     await nextTick();
     slotChromeRef.value?.scrollToTop?.();
-    await syncShellHeightForPage(page);
   },
 );
-
-watch(
-  () => [props.open, props.eligibility.signable.length] as const,
-  ([open]) => {
-    if (open && isSummaryPage.value) {
-      void syncShellHeightForPage('summary');
-    }
-  },
-);
-
-onMounted(() => {
-  if (props.open) {
-    void bootstrapSummaryShell();
-  }
-});
 
 function onClose() {
   popupOpen.value = false;
 }
 
-async function goToDetail() {
-  const summaryH = measureSummaryShellHeight();
-  if (summaryH > 0) {
-    pageSpecs.summary.shellHeight = summaryH;
-  }
-  const viewportH = measureSubPageShellHeight();
-  if (viewportH > 0) {
-    pageSpecs.detail.shellHeight = viewportH;
-    pageSpecs.reasons.shellHeight = viewportH;
-  }
-  switchTo('detail');
+function goToDetail() {
+  setActivePage('detail');
 }
 
-async function goToReasons() {
-  const summaryH = measureSummaryShellHeight();
-  if (summaryH > 0) {
-    pageSpecs.summary.shellHeight = summaryH;
-  }
-  const viewportH = measureSubPageShellHeight();
-  if (viewportH > 0) {
-    pageSpecs.detail.shellHeight = viewportH;
-    pageSpecs.reasons.shellHeight = viewportH;
-  }
-  switchTo('reasons');
+function goToReasons() {
+  setActivePage('reasons');
 }
 
-async function goBack() {
-  await syncShellHeightForPage('summary');
-  switchTo('summary');
+function goBack() {
+  setActivePage('summary');
 }
 
 function onSubPageBack() {
-  void goBack();
+  goBack();
 }
 
 function onMinerFeeToolbarClick(anchorClick: () => void) {
@@ -374,7 +286,6 @@ useBatchSignConfirmEscape({
       :content-fill="!isSummaryPage"
       content-inset-preset="xs"
       :footer-motion-key="footerMotionKey"
-      :page-stack-direction="pageStackDirection"
       :show-toolbar="isSummaryPage"
       :show-toolbar-cancel="false"
       :show-toolbar-confirm="showToolbarConfirm"
@@ -468,31 +379,25 @@ useBatchSignConfirmEscape({
         ]"
       >
         <div
-          class="motion-layout-deform"
+          class="motion-page-stack"
           :class="[
-            styles.batchPopupContentDeform,
-            isSummaryPage
-              ? styles.batchPopupContentDeformSummary
-              : styles.batchPopupContentDeformFill,
+            styles.batchPopupPageStack,
+            !isSummaryPage && styles.batchPopupPageStackFill,
           ]"
-          :style="deformUsesPixelHeight ? { height: `${shellHeight}px` } : undefined"
-          :data-batch-popup-page="footerMotionKey"
+          :data-page-direction="pageStackDirection"
+          :data-batch-popup-page="activePage"
         >
-          <div
-            :class="[
-              MOTION_LAYOUT_DEFORM_CONTENT,
-              styles.batchPopupDeformContent,
-              contentDirection,
-              contentExiting && MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
-              contentEntering && MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
-            ]"
-          >
+          <Transition name="motion-page">
             <div
-              v-if="isSummaryPage"
-              ref="summaryContentRef"
-              :class="styles.batchPopupPageSummary"
+              :key="activePage"
+              class="motion-page"
+              :class="[
+                isSummaryPage
+                  ? styles.batchPopupPageSummary
+                  : styles.batchPopupPageFill,
+              ]"
             >
-              <div :class="styles.batchSummaryStack">
+              <div v-if="isSummaryPage" :class="styles.batchSummaryStack">
                 <section :class="styles.detailHeadline">
                   <div :class="styles.detailHeadlineInner">
                     <div :class="styles.detailHeadlineTop">
@@ -582,36 +487,36 @@ useBatchSignConfirmEscape({
                   </div>
                 </section>
               </div>
+
+              <SigningBatchSignSubPageShell
+                v-else-if="isDetailPage"
+                enable-amount-sort
+                :class="styles.batchPopupPageFill"
+                :title="subPageTitle"
+                @back="onSubPageBack"
+              >
+                <SigningBatchSignDetailPanel :rows="detailDisplayRows" />
+              </SigningBatchSignSubPageShell>
+
+              <SigningBatchSignSubPageShell
+                v-else-if="isReasonsPage"
+                enable-amount-sort
+                :class="styles.batchPopupPageFill"
+                :title="subPageTitle"
+                @back="onSubPageBack"
+              >
+                <template #topActions>
+                  <SigningBatchIneligibleReasonFilterDecor />
+                </template>
+                <SigningBatchSignReasonsPanel
+                  :key="`reasons-panel-${reasonsFilter}`"
+                  v-model:filter="reasonsFilter"
+                  :eligibility="eligibility"
+                  :rows="reasonsDisplayRows"
+                />
+              </SigningBatchSignSubPageShell>
             </div>
-
-            <SigningBatchSignSubPageShell
-              v-else-if="isDetailPage"
-              enable-amount-sort
-              :class="styles.batchPopupPageFill"
-              :title="subPageTitle"
-              @back="onSubPageBack"
-            >
-              <SigningBatchSignDetailPanel :rows="detailDisplayRows" />
-            </SigningBatchSignSubPageShell>
-
-            <SigningBatchSignSubPageShell
-              v-else-if="isReasonsPage"
-              enable-amount-sort
-              :class="styles.batchPopupPageFill"
-              :title="subPageTitle"
-              @back="onSubPageBack"
-            >
-              <template #topActions>
-                <SigningBatchIneligibleReasonFilterDecor />
-              </template>
-              <SigningBatchSignReasonsPanel
-                :key="`reasons-panel-${reasonsFilter}`"
-                v-model:filter="reasonsFilter"
-                :eligibility="eligibility"
-                :rows="reasonsDisplayRows"
-              />
-            </SigningBatchSignSubPageShell>
-          </div>
+          </Transition>
         </div>
       </div>
 
