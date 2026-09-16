@@ -17,7 +17,7 @@
 6. **`pnpm sync` / 说「同步 eds-desktop」** 只更新 Desktop packages，与 showcase / Website 无关。
 7. **禁止复制**：所有业务页面（含后续新增）不得向用户提供复制能力；`installPageCopyGuard()` 拦截 `copy`/`cut`；`.app-preview` 与 teleport 到 `body` 的 `eds-tooltip-v-*` / `.eds-flotation-menu` 全局 `user-select: none`（`global.css`）。不得新增复制按钮、clipboard API、EDS 复制 Menu。
 8. **开发改动须 dev 实时生效**：UI/样式/交互改 `src/**` 或引用库时，须在 `pnpm dev` 下保存即 HMR/full-reload 可见；禁止只 `pnpm build` 不 dev。详见 `.cursor/rules/work.mdc` §2.3。
-9. **禁止主动 `git push`**：用户说推送后，只准备 commit 说明与终端命令，由用户自己推。推送必须是 **work-cregis-desktop + eds-desktop 截止当前的最新**；Pages CI 的 eds-desktop `ref` 必须等于 **远程已存在的 SHA**。推前验完 typecheck、Pages 同路径 preview（4174）、pin、工作区干净。详见 `.cursor/rules/work.mdc` §2.5。
+9. **禁止主动 `git push`**：用户说推送后，只准备 commit 说明与终端命令，由用户自己推。推送必须是 **work-cregis-desktop + eds-desktop 截止当前的最新**；Pages CI 的 eds-desktop `ref` 必须等于 **远程已存在的 SHA**。推前验完 typecheck、相关 verify、pin、工作区干净；**禁止** Agent 跑或等待 `pnpm preview:pages`。详见 `.cursor/rules/work.mdc` §2.5。
 
 ## 对齐引用库（硬约束）
 
