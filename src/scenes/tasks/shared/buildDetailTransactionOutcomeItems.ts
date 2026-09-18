@@ -3,6 +3,7 @@ import {
   type DetailItemData,
   type TagStatus,
 } from '@eds/desktop-components';
+import { resolveVerifiedTxHashForRow } from '@/scenes/tasks/list-field/listFieldCryptoSampleAddresses';
 
 export type DetailTransactionOutcomeFields = {
   transactionStatusLabel?: string;
@@ -10,21 +11,13 @@ export type DetailTransactionOutcomeFields = {
   transactionHash?: string;
 };
 
-function mockDetailTransactionHash(rowIndex: number): string {
-  const hex = Array.from({ length: 64 }, (_, offset) => {
-    const n = (rowIndex + 1) * 9973 + offset * 17;
-    return (n % 16).toString(16);
-  }).join('');
-  return `0x${hex}`;
-}
-
 export function buildDetailTransactionOutcomeFields(
   rowIndex: number,
 ): DetailTransactionOutcomeFields {
   return {
     transactionStatusLabel: 'Success',
     transactionStatusTag: 'success',
-    transactionHash: mockDetailTransactionHash(rowIndex),
+    transactionHash: resolveVerifiedTxHashForRow(rowIndex, 'evm'),
   };
 }
 

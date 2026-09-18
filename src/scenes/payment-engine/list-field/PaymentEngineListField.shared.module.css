@@ -13,3 +13,12 @@
   align-items: flex-end;
   margin-left: auto;
 }
+
+.callbackEventTitleRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  max-width: 100%;
+}

@@ -1,6 +1,18 @@
 import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 import { isChineseLocale, type AppLocale } from '@/composables/useAppLocale';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { UI_TEXT_ZH_CN } from '@/i18n/uiTextZhCN';
+import { UI_TEXT_ZH_TW } from '@/i18n/uiTextZhTW';
+import {
+  DEFAULT_PAYMENT_ENGINE_MENU_ITEM,
+  PAYMENT_ENGINE_RECORD_MENU_ITEMS,
+  PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+} from '@/scenes/payment-engine/paymentEngineMenuData';
+import {
+  DEFAULT_WAAS_MENU_ITEM,
+  WAAS_ORDER_MODE_MENU_ITEMS,
+  WAAS_SETTINGS_MENU_ITEM,
+} from '@/scenes/waas-project/waasMenuData';
 import {
   isTasksDataListMenuItem,
   normalizeTasksMenuLabel,
@@ -54,7 +66,186 @@ function readDataListToolbarTitle(preview: Element): string | null {
   return text ? normalizeModuleMenuLabel(text) : null;
 }
 
+function isReportModuleLabel(raw: string): boolean {
+  const normalized = normalizeModuleMenuLabel(raw);
+  return normalized === 'Report' || normalized === '交易记录' || normalized === '交易記錄';
+}
+
+function readActiveNavModuleLabel(preview: Element): string | null {
+  const activeNav = preview.querySelector(
+    '.eds-nav-bar-module button[aria-current="page"], .eds-nav-bar-module a[aria-current="page"]',
+  );
+  const activeLabel = activeNav?.getAttribute('aria-label')?.trim();
+  if (activeLabel) {
+    return activeLabel;
+  }
+
+  // EgNavBar 路由态用 aria-current；聚焦态用 aria-pressed（业务切模块时常见仅 pressed）。
+  const focusedNav = preview.querySelector(
+    '.eds-nav-bar-module button[aria-pressed="true"], .eds-nav-bar-module a[aria-pressed="true"]',
+  );
+  const focusedLabel = focusedNav?.getAttribute('aria-label')?.trim();
+  return focusedLabel || null;
+}
+
+function isPaymentEngineNavLabel(raw: string | null): boolean {
+  if (!raw) return false;
+  const normalized = normalizeModuleMenuLabel(raw);
+  return normalized === 'Payment Engine' || normalized === '支付引擎';
+}
+
+function isWaasNavLabel(raw: string | null): boolean {
+  if (!raw) return false;
+  const normalized = normalizeModuleMenuLabel(raw);
+  return normalized === 'WaaS' || normalized === 'WaaS项目' || normalized === 'WaaS項目';
+}
+
+function readModuleMenuCrumbText(preview: Element): string {
+  const crumb = preview.querySelector('.eds-module-menu [class*="crumb"]');
+  return crumb?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+}
+
+function isOrderModeModuleMenu(preview: Element): boolean {
+  const crumb = readModuleMenuCrumbText(preview);
+  return (
+    crumb.includes('批量转账记录')
+    || crumb.includes('批量轉賬記錄')
+    || crumb.includes('Bulk Transfer Record')
+  );
+}
+
+function resolveEnglishCatalogMenuItem(
+  raw: string,
+  locale: AppLocale,
+  catalogKeys: readonly string[],
+): string {
+  const normalized = normalizeModuleMenuLabel(raw);
+  const direct = catalogKeys.find((item) => item === normalized);
+  if (direct) return direct;
+
+  for (const item of catalogKeys) {
+    const zhCn = UI_TEXT_ZH_CN[item];
+    if (typeof zhCn === 'string' && normalizeModuleMenuLabel(zhCn) === normalized) {
+      return item;
+    }
+    if (locale === 'zh-TW') {
+      const zhTw = UI_TEXT_ZH_TW[item];
+      if (typeof zhTw === 'string' && normalizeModuleMenuLabel(zhTw) === normalized) {
+        return item;
+      }
+    }
+  }
+
+  return normalized;
+}
+
+const PAYMENT_ENGINE_MENU_ITEM_KEYS = [
+  ...PAYMENT_ENGINE_RECORD_MENU_ITEMS,
+  PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+] as const;
+
+const WAAS_MENU_ITEM_KEYS = [
+  DEFAULT_WAAS_MENU_ITEM,
+  ...WAAS_ORDER_MODE_MENU_ITEMS,
+  WAAS_SETTINGS_MENU_ITEM,
+] as const;
+
+function resolvePaymentEngineMenuItemLabel(preview: Element): string | null {
+  const locale = readAppLocale();
+  const menuLabel = readFocusedModuleMenuLabel(preview);
+  if (menuLabel) {
+    return resolveEnglishCatalogMenuItem(menuLabel, locale, PAYMENT_ENGINE_MENU_ITEM_KEYS);
+  }
+
+  const toolbarTitle = readDataListToolbarTitle(preview);
+  if (!toolbarTitle) return null;
+  return resolveEnglishCatalogMenuItem(toolbarTitle, locale, PAYMENT_ENGINE_MENU_ITEM_KEYS);
+}
+
+function resolveAmbiguousOrderRecordLabel(
+  raw: string,
+  locale: AppLocale,
+  preview: Element,
+): string | null {
+  const normalized = normalizeModuleMenuLabel(raw);
+  const orderRecordZhCn = UI_TEXT_ZH_CN['Order Record'];
+  const orderRecordZhTw = UI_TEXT_ZH_TW['Order Record'];
+  const paymentRecordZhCn = UI_TEXT_ZH_CN['Payment Record'];
+  const paymentRecordZhTw = UI_TEXT_ZH_TW['Payment Record'];
+
+  if (
+    normalized === 'Order Record'
+    || normalized === orderRecordZhCn
+    || normalized === orderRecordZhTw
+    || normalized === paymentRecordZhCn
+    || normalized === paymentRecordZhTw
+  ) {
+    return isOrderModeModuleMenu(preview) ? 'Order Record' : DEFAULT_WAAS_MENU_ITEM;
+  }
+
+  return null;
+}
+
+function resolveWaasMenuItemLabel(preview: Element): string | null {
+  const locale = readAppLocale();
+  const menuLabel = readFocusedModuleMenuLabel(preview);
+  if (menuLabel) {
+    const ambiguous = resolveAmbiguousOrderRecordLabel(menuLabel, locale, preview);
+    if (ambiguous) return ambiguous;
+    return resolveEnglishCatalogMenuItem(menuLabel, locale, WAAS_MENU_ITEM_KEYS);
+  }
+
+  const toolbarTitle = readDataListToolbarTitle(preview);
+  if (!toolbarTitle) return null;
+  const ambiguous = resolveAmbiguousOrderRecordLabel(toolbarTitle, locale, preview);
+  if (ambiguous) return ambiguous;
+  return resolveEnglishCatalogMenuItem(toolbarTitle, locale, WAAS_MENU_ITEM_KEYS);
+}
+
+function resolvePaymentEnginePageKeyFromPreview(preview: Element): ShellPageKey | null {
+  if (!isPaymentEngineNavLabel(readActiveNavModuleLabel(preview))) {
+    return null;
+  }
+
+  const menuItem = resolvePaymentEngineMenuItemLabel(preview);
+  return `Payment Engine:${menuItem ?? DEFAULT_PAYMENT_ENGINE_MENU_ITEM}`;
+}
+
+function resolveWaasPageKeyFromPreview(preview: Element): ShellPageKey | null {
+  if (!isWaasNavLabel(readActiveNavModuleLabel(preview))) {
+    return null;
+  }
+
+  const menuItem = resolveWaasMenuItemLabel(preview);
+  if (!menuItem) {
+    return isOrderModeModuleMenu(preview)
+      ? 'WaaS:Order Record'
+      : `WaaS:${DEFAULT_WAAS_MENU_ITEM}`;
+  }
+
+  return `WaaS:${menuItem}`;
+}
+
+function resolveReportPageKeyFromPreview(preview: Element): ShellPageKey | null {
+  const toolbarTitle = readDataListToolbarTitle(preview);
+  if (toolbarTitle && isReportModuleLabel(toolbarTitle)) {
+    return 'Report:Report';
+  }
+
+  const menuLabel = readFocusedModuleMenuLabel(preview);
+  if (menuLabel && isReportModuleLabel(menuLabel)) {
+    return 'Report:Report';
+  }
+
+  return null;
+}
+
 function resolveTasksPageKeyFromPreview(preview: Element): ShellPageKey {
+  const reportPageKey = resolveReportPageKeyFromPreview(preview);
+  if (reportPageKey) {
+    return reportPageKey;
+  }
+
   const menuLabel = readFocusedModuleMenuLabel(preview);
   if (menuLabel) {
     const item = resolveTasksMenuItemLabel(menuLabel);
@@ -78,6 +269,16 @@ export function resolvePageKeyFromDom(): ShellPageKey {
   const preview = document.querySelector('.app-preview');
   if (!preview) {
     return 'unknown:unknown';
+  }
+
+  const waasPageKey = resolveWaasPageKeyFromPreview(preview);
+  if (waasPageKey) {
+    return waasPageKey;
+  }
+
+  const paymentEnginePageKey = resolvePaymentEnginePageKeyFromPreview(preview);
+  if (paymentEnginePageKey) {
+    return paymentEnginePageKey;
   }
 
   if (preview.querySelector('.eds-data-list')) {
@@ -114,6 +315,14 @@ export function resolveShellPageDisplayName(
   const [module, page] = pageKey.split(':');
 
   if (module === 'Tasks' && isTasksDataListMenuItem(page)) {
+    return ui(page);
+  }
+
+  if (pageKey === 'Report:Report') {
+    return ui('Report');
+  }
+
+  if (module === 'Payment Engine' || module === 'WaaS') {
     return ui(page);
   }
 

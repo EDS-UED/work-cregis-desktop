@@ -6,24 +6,27 @@ import PreferencePage from '@/scenes/account-settings/PreferencePage.vue';
 import {
   DEFAULT_CREGIS_MODULE_MENU_BUSINESS_TITLE,
   navLabelShouldHideModuleMenu,
-  resolveNavChromeLabelToModuleMenuTitle,
+  resolveNavBarClickState,
   type CregisModuleMenuBusinessTitle,
 } from '@/presets/module-menu/businessModuleTitles';
 import { resolveEnglishUiText } from '@/i18n/translateUiText';
 import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
 import {
   DEFAULT_PAYMENT_ENGINE_MENU_ITEM,
-  DEFAULT_WAAS_MENU_ITEM,
   PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
 } from '@/scenes/payment-engine/paymentEngineMenuData';
+import { usePaymentEngineProjectStore } from '@/scenes/payment-engine/paymentEngineProjectStore';
 import {
   isPaymentEngineModuleTitle,
+  isReportModuleTitle,
   isWaasModuleTitle,
 } from '@/scenes/project/projectModuleTitles';
+import { registerWaasProjectShellApi } from '@/scenes/project/waasProjectShellApi';
 import { useWaasProjectStore } from '@/scenes/project/waasProjectStore';
 import TasksDataListPage from '@/scenes/tasks/TasksDataListPage.vue';
 import { setMultiSignCollaborationModuleActive } from '@/scenes/tasks/signing/multiSignInvitation/multiSignInvitationStore';
 import { useTasksModuleMenuGroups } from '@/scenes/tasks/useTasksModuleMenuGroups';
+import TransactionRecordsDataListPage from '@/scenes/transaction-records/TransactionRecordsDataListPage.vue';
 import {
   DEFAULT_TASKS_DATA_LIST_MENU_ITEM,
   isTasksDataListMenuItem,
@@ -31,17 +34,33 @@ import {
   type TasksDataListMenuItemLabel,
 } from '@/scenes/tasks/tasksDataListPageData';
 import WaasModuleContentPage from '@/scenes/waas-project/WaasModuleContentPage.vue';
+import WaasOrderModeDataListPage from '@/scenes/waas-project/WaasOrderModeDataListPage.vue';
 import WaasProjectCreatePage from '@/scenes/waas-project/WaasProjectCreatePage.vue';
 import WaasProjectEmptyPage from '@/scenes/waas-project/WaasProjectEmptyPage.vue';
+import {
+  isWaasMenuItemValidForProject,
+  isWaasOrderModeMenuItem,
+  isWaasOrderModeProject,
+  resolveDefaultWaasMenuItem,
+  WAAS_SETTINGS_MENU_ITEM,
+} from '@/scenes/waas-project/waasMenuData';
+import { useWaasModuleMenuGroups } from '@/scenes/waas-project/useWaasModuleMenuGroups';
 import PaymentEngineProjectSettingsPage from '@/scenes/payment-engine/PaymentEngineProjectSettingsPage.vue';
 import WaasProjectSettingsPage from '@/scenes/waas-project/WaasProjectSettingsPage.vue';
 
 const { messages, ui, locale } = useAppI18n();
 const {
   hasProjects: waasHasProjects,
+  selectedProject: waasSelectedProject,
   shellView: waasShellView,
+  titleFlotationItems: waasTitleFlotationItems,
+  titleFlotationSelectedIndex: waasTitleFlotationSelectedIndex,
   openCreateProject: openWaasCreateProject,
   syncShellViewFromProjects: syncWaasShellViewFromProjects,
+  resetWaasProjectsForDemo,
+  clearWaasProjectsForQa,
+  selectProject: selectWaasProjectById,
+  selectProjectByFlotationIndex: selectWaasProjectByFlotationIndex,
 } = useWaasProjectStore();
 
 function translateModuleMenu(text: string) {
@@ -58,6 +77,7 @@ const activeModuleMenuItem = ref<string | null>(null);
 
 const isWaasModule = computed(() => isWaasModuleTitle(activeModuleTitle.value));
 const isPaymentEngineModule = computed(() => isPaymentEngineModuleTitle(activeModuleTitle.value));
+const showReportPage = computed(() => isReportModuleTitle(activeModuleTitle.value));
 
 const showModuleMenu = computed(() => {
   if (navLabelShouldHideModuleMenu(activeNavLabel.value)) return false;
@@ -92,16 +112,28 @@ const showWaasSettings = computed(
     isWaasModule.value &&
     waasHasProjects.value &&
     waasShellView.value === 'content' &&
-    activeModuleMenuItem.value === PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+    activeModuleMenuItem.value === WAAS_SETTINGS_MENU_ITEM,
 );
 
-const showWaasContent = computed(
+const showWaasOrderModeList = computed(
+  () =>
+    isWaasModule.value &&
+    waasHasProjects.value &&
+    waasShellView.value === 'content' &&
+    isWaasOrderModeProject(waasSelectedProject.value) &&
+    activeModuleMenuItem.value !== null &&
+    activeModuleMenuItem.value !== WAAS_SETTINGS_MENU_ITEM &&
+    isWaasOrderModeMenuItem(activeModuleMenuItem.value),
+);
+
+const showWaasStandardContent = computed(
   () =>
     isWaasModule.value &&
     waasHasProjects.value &&
     waasShellView.value === 'content' &&
     activeModuleMenuItem.value !== null &&
-    activeModuleMenuItem.value !== PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+    activeModuleMenuItem.value !== WAAS_SETTINGS_MENU_ITEM &&
+    !showWaasOrderModeList.value,
 );
 
 const showPaymentEngineSettings = computed(
@@ -118,6 +150,54 @@ const showPaymentEngineContent = computed(
 );
 
 const tasksModuleMenuGroups = useTasksModuleMenuGroups();
+const waasModuleMenuGroups = useWaasModuleMenuGroups();
+const {
+  titleFlotationItems: paymentEngineTitleFlotationItems,
+  titleFlotationSelectedIndex: paymentEngineTitleFlotationSelectedIndex,
+  selectProjectByFlotationIndex,
+} = usePaymentEngineProjectStore();
+
+const moduleMenuGroups = computed(() => {
+  if (activeModuleTitle.value === 'Tasks') return tasksModuleMenuGroups.value;
+  if (isWaasModule.value) return waasModuleMenuGroups.value;
+  return undefined;
+});
+
+const moduleMenuRemountKey = computed(() => {
+  if (isWaasModule.value) {
+    const mode = waasSelectedProject.value?.depositMode ?? 'sub-address';
+    return `waas:${mode}`;
+  }
+  if (isPaymentEngineModule.value) {
+    return 'payment-engine';
+  }
+  return activeModuleTitle.value;
+});
+
+watch(
+  isWaasModule,
+  (active) => {
+    if (!active) {
+      registerWaasProjectShellApi(null);
+      return;
+    }
+    registerWaasProjectShellApi({
+      setProjectsEmpty: (empty) => {
+        if (empty) {
+          clearWaasProjectsForQa();
+          return;
+        }
+        resetWaasProjectsForDemo();
+      },
+      activateWaasModule: () => {
+        activeNavLabel.value = 'WaaS';
+        activeModuleTitle.value = 'WaaS';
+      },
+      selectProjectById: selectWaasProjectById,
+    });
+  },
+  { immediate: true },
+);
 
 watch(activeModuleTitle, (title) => {
   if (title === 'Tasks') {
@@ -129,12 +209,16 @@ watch(activeModuleTitle, (title) => {
     return;
   }
   if (title === 'WaaS') {
-    activeModuleMenuItem.value = DEFAULT_WAAS_MENU_ITEM;
+    activeModuleMenuItem.value = resolveDefaultWaasMenuItem(waasSelectedProject.value);
     syncWaasShellViewFromProjects();
     return;
   }
   if (title === 'Payment Engine') {
     activeModuleMenuItem.value = DEFAULT_PAYMENT_ENGINE_MENU_ITEM;
+    return;
+  }
+  if (title === 'Report') {
+    activeModuleMenuItem.value = null;
     return;
   }
   activeModuleMenuItem.value = null;
@@ -148,16 +232,37 @@ watch(
   { immediate: true },
 );
 
+watch(waasSelectedProject, (project, previousProject) => {
+  if (!isWaasModule.value || !project) return;
+
+  const previousMode = previousProject?.depositMode ?? 'sub-address';
+  const nextMode = project.depositMode;
+  const currentItem = activeModuleMenuItem.value;
+
+  if (
+    previousMode !== nextMode
+    || !isWaasMenuItemValidForProject(currentItem, project)
+  ) {
+    activeModuleMenuItem.value = resolveDefaultWaasMenuItem(project);
+  }
+});
+
 function onNavClick(event: MouseEvent) {
   const button = (event.target as HTMLElement | null)?.closest('button');
   if (!button?.closest('.eds-nav-bar')) return;
 
   const label = button.getAttribute('aria-label') ?? '';
+  const navState = resolveNavBarClickState(label, ui);
+  if (navState) {
+    activeNavLabel.value = navState.navLabel;
+    if (navState.moduleTitle) {
+      activeModuleTitle.value = navState.moduleTitle;
+    }
+    return;
+  }
+
   const englishLabel = resolveEnglishUiText(locale.value, label);
   if (englishLabel.trim()) activeNavLabel.value = englishLabel;
-
-  const title = resolveNavChromeLabelToModuleMenuTitle(englishLabel);
-  if (title) activeModuleTitle.value = title;
 }
 
 function onModuleMenuItemSelect(label: string) {
@@ -183,6 +288,16 @@ function onModuleMenuTitleAdd() {
     openWaasCreateProject();
   }
 }
+
+function onModuleMenuTitleFlotationItemSelect(_label: string, index: number) {
+  if (isPaymentEngineModuleTitle(activeModuleTitle.value)) {
+    selectProjectByFlotationIndex(index);
+    return;
+  }
+  if (isWaasModuleTitle(activeModuleTitle.value)) {
+    selectWaasProjectByFlotationIndex(index);
+  }
+}
 </script>
 
 <template>
@@ -195,11 +310,27 @@ function onModuleMenuTitleAdd() {
 
     <template v-if="showModuleMenu" #moduleMenu>
       <EgCregisModuleMenu
+        :key="moduleMenuRemountKey"
         :title="activeModuleTitle"
         :translate="translateModuleMenu"
-        :groups="activeModuleTitle === 'Tasks' ? tasksModuleMenuGroups : undefined"
+        :groups="moduleMenuGroups"
+        :title-flotation-items="
+          isPaymentEngineModule
+            ? paymentEngineTitleFlotationItems
+            : isWaasModule
+              ? waasTitleFlotationItems
+              : undefined
+        "
+        :title-flotation-selected-index="
+          isPaymentEngineModule
+            ? paymentEngineTitleFlotationSelectedIndex
+            : isWaasModule
+              ? waasTitleFlotationSelectedIndex
+              : undefined
+        "
         @item-select="onModuleMenuItemSelect"
         @title-add="onModuleMenuTitleAdd"
+        @title-flotation-item-select="onModuleMenuTitleFlotationItemSelect"
       />
     </template>
 
@@ -214,9 +345,14 @@ function onModuleMenuTitleAdd() {
       <WaasProjectEmptyPage v-if="showWaasEmpty" />
       <WaasProjectCreatePage v-else-if="showWaasCreate" />
       <WaasProjectSettingsPage v-else-if="showWaasSettings" />
+      <WaasOrderModeDataListPage
+        v-else-if="showWaasOrderModeList && activeModuleMenuItem"
+        :key="`${waasSelectedProject?.id ?? 'default'}:${activeModuleMenuItem}`"
+        :menu-item="activeModuleMenuItem"
+      />
       <WaasModuleContentPage
-        v-else-if="showWaasContent && activeModuleMenuItem"
-        :key="activeModuleMenuItem"
+        v-else-if="showWaasStandardContent && activeModuleMenuItem"
+        :key="`${waasSelectedProject?.id ?? 'default'}:${activeModuleMenuItem}`"
         :menu-item="activeModuleMenuItem"
       />
     </template>
@@ -225,10 +361,12 @@ function onModuleMenuTitleAdd() {
       <PaymentEngineProjectSettingsPage v-if="showPaymentEngineSettings" />
       <PaymentEngineDataListPage
         v-else-if="showPaymentEngineContent && activeModuleMenuItem"
-        :key="activeModuleMenuItem"
+        :key="`${paymentEngineTitleFlotationSelectedIndex}:${activeModuleMenuItem}`"
         :menu-item="activeModuleMenuItem"
       />
     </template>
+
+    <TransactionRecordsDataListPage v-else-if="showReportPage" />
 
     <div v-else class="app-shell-main">
       <p class="app-shell-main__hint">{{ messages.appShellMainHint }}</p>

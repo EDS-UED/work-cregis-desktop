@@ -3,9 +3,7 @@ import {
   EgButton,
   EgIcon,
   EgIconButton,
-  MOTION_LAYOUT_DEFORM_CONTENT,
-  MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
-  MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
+  EgMotionLayoutContent,
   useMotionLayoutDeformPageSwitch,
   type DetailItemData,
   type MotionLayoutDeformPageSpec,
@@ -99,11 +97,8 @@ const deformShellStyle = computed(() =>
 );
 
 const deformContentClass = computed(() => [
-  MOTION_LAYOUT_DEFORM_CONTENT,
   styles.deformContent,
   contentDirection.value,
-  contentExiting.value && MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
-  contentEntering.value && MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
 ]);
 
 const isSigningBodyPage = computed(() => activePage.value === 'signing');
@@ -268,7 +263,11 @@ watch(
         :style="deformShellStyle"
         :data-signing-body-page="activePage"
       >
-        <div :class="deformContentClass">
+        <EgMotionLayoutContent
+          :class="deformContentClass"
+          :content-exiting="contentExiting"
+          :content-entering="contentEntering"
+        >
           <div :class="styles.pageShell">
             <div
               ref="scrollRef"
@@ -333,7 +332,7 @@ watch(
               </template>
             </SigningFooterLatencyToolbar>
           </div>
-        </div>
+        </EgMotionLayoutContent>
       </div>
 
       <div :class="styles.measureHost" aria-hidden="true">

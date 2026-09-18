@@ -21,3 +21,11 @@
   box-sizing: border-box;
   padding-top: var(--eds-layout-chrome-inset-top, 0);
 }
+
+/** motion-page 内联 ToolBar 时正文滚动，不用 EgLayout chrome inset。 */
+.layoutChromeBodyScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}

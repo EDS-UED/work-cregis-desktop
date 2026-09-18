@@ -34,6 +34,8 @@ export const I18N_NAV_MODULE_MENU_CATALOG_KEYS = new Set<string>([
   'About Cregis',
   // Payment Engine menu
   'Order Record',
+  'Payment Record',
+  'Settlement Record',
   'Bulk Transfer Record',
   'Refund Record',
   'Payment Exception Record',
@@ -54,6 +56,14 @@ export const I18N_NAV_MODULE_MENU_CATALOG_KEYS = new Set<string>([
   'Role',
   'Team Security',
   'API Manage',
+  // Risk Control menu
+  'Policy Settings',
+  'Automation',
+  'AML',
+  'Logs',
+  'Address Book',
+  'Whitelist',
+  'Blacklist',
   // WaaS menu
   'Sub-Address Payout',
   'History',

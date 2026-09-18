@@ -36,6 +36,26 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
 
   // Payment Engine menu
   'Order Record': '訂單記錄',
+  'Payment Record': '訂單記錄',
+  'Settlement Record': '結算記錄',
+  'Settlement Number': '結算編號',
+  'Settlement ID': '結算編號',
+  'Settlement Currency': '結算幣種',
+  'Settlement Status': '結算狀態',
+  'Settlement Time': '結算時間',
+  'Total Settlement Amount': '總結算金額',
+  'Total Successful Payment Count': '總成功支付筆數',
+  'Total Transaction Amount': '總交易金額',
+  'Total Fee': '總手續費',
+  'Settlement Address': '結算地址',
+  Settling: '結算中',
+  Settled: '已結算',
+  'Bulk Transfer Record': '批量轉賬記錄',
+  'Refund Record': '退款記錄',
+  'New Order': '新訂單',
+  'Additional Payment Required': '需補款',
+  Paid: '已支付',
+  Transferred: '已轉賬',
   'Payment Exception Record': '異常支付單記錄',
   'Payout Record': '提幣記錄',
   'Wallet Payout': '錢包提幣',
@@ -55,6 +75,14 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   Role: '角色',
   'Team Security': '團隊安全',
   'API Manage': '團隊API',
+
+  // Risk Control menu
+  'Policy Settings': '策略',
+  Automation: '自動化',
+  AML: 'AML',
+  Logs: '日誌',
+  'Address Book': '地址簿',
+  Whitelist: '白名單',
 
   // WaaS menu
   'Sub-Address': '子地址',
@@ -216,6 +244,8 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   'Miner fee tron resources title': '本次交易所需資源',
   'Miner fee tron energy mode': '能量模式',
   'Advanced mode': '高級模式',
+  'Affiliated wallet column hint':
+    '您僅可查看自己有查看權限的團隊錢包。基於您目前的權限，可查看的錢包如下：',
   Back: '返回',
   Save: '儲存',
   'Signing in progress': '簽名中',

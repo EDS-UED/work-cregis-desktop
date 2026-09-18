@@ -1,0 +1,57 @@
+---
+description: work-cregis-desktop Agent 入口 — 硬约束速查、协作方式；详案见 work.mdc
+globs: **/*
+alwaysApply: true
+---
+
+# Agent 入口
+
+**Desktop 客户端**（非 Showcase / 文档站）。详案 → `work.mdc`（本目录）；EDS → `../eds-desktop/.cursor/rules/work.mdc`。
+
+## 协作
+
+每动作（读搜改验）带一两句逻辑；收尾两三句；禁五段式（= EDS `work.mdc` §0.1）。
+
+## 硬约束速查（违反即错）
+
+| # | 约束 | 详 |
+|---|------|-----|
+| 1 | 仅用 `@eds/desktop-tokens`、`animations`、`components`（及未来 patterns/workflows） | `work.mdc` §1 |
+| 2 | 禁 `@eds/website-*`、Website 排版/壳层 CSS | §1 |
+| 3 | 禁从 `eds-desktop/apps/showcase/**` 抄样式/token/集成 | §1 |
+| 4 | 排版 `.typography-*`；`--eds-*` 仅单轴；禁 `--eds-footnote-medium-*` 等 spec 外 token | §1 |
+| 5 | dev/build alias EDS 源码；禁 `@import '@eds/desktop-components/style.css'` | §1、§2.3 |
+| 6 | 「同步 eds-desktop」仅 Desktop packages，不含 showcase/Website | §2.1 |
+| 7 | **禁复制**：`installPageCopyGuard`；OverflowText 无复制；禁 clipboard/复制 Menu | §1.2 |
+| 8 | UI 改须 `pnpm dev` HMR 验收；禁只 build 不 dev | §2.3 |
+| 9 | EgDataList mock→`egDataListMockData.ts`；币种 0–7 固定、状态 showcase 后完成态、真实地址/hash | §7.8 |
+| 10 | 禁主动 `git push`；「推/推送」= 全量 GitHub+Pages 一点不剩；用户终端推 | §2.5 |
+
+## 对齐引用库
+
+引用库 = `../eds-desktop/packages/{tokens,animations,components}`。组件行为与 Showcase 不一致 → **先读引用库再改业务**。
+
+| 改 | 哪里 | 不要 |
+|----|------|------|
+| EDS 组件行为 | `packages/components/**` | 业务手搓平行实现 |
+| list-field 薄封装 | 业务 `src/**`，对齐 `ListFieldPreviewPanel.vue` | HashLikeLine 渲染普通文本/复制侧栏 |
+| 可 sync list-field | sync 或手动 diff 合并 | 整文件覆盖 `listFieldCryptoSampleAddresses.ts` |
+
+验收：对照引用库同名 props/模板；wrapper 与 Showcase 一致，仅差 i18n/数据。详 §2.1、§2.4。
+
+## Showcase 陷阱
+
+Showcase 外层 **Website token 壳**会继承无效 token，预览仍「凑合能看」。本仓**无 Website 壳**，无效 token 直接失效——须在 Desktop spec 找正确 token 名。
+
+## 高频专题 → work.mdc
+
+| 主题 | § |
+|------|---|
+| DOM / EgPopup 挂载 | §3、§7.1 |
+| 场景组件 / 废弃 API | §4 |
+| i18n | §5 |
+| scrim / Layout 整页详情 / Apply_Item / 网络名 | §6 |
+| 批签 / DataList / Shell Debug | §7 |
+| 校验 PR | §8 |
+
+其他：`README.md` 集成脚本；EDS Popup 真源 `../eds-desktop/.cursor/rules/work.mdc` §7。

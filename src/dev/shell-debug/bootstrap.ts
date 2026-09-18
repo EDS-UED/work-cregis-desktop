@@ -1,5 +1,23 @@
 import './scenarios/commonScenarioPack';
+import './scenarios/waasScenarioPack';
 import './scenarios/signingScenarioPack';
+import './scenarios/transactionRecordScenarioPack';
+import './scenarios/waasOrderRecordScenarioPack';
+import './scenarios/callbackErrorScenarioPack';
+import './scenarios/historyCallbackScenarioPack';
+import './scenarios/waasBulkTransferScenarioPack';
+import './scenarios/waasWalletPayoutScenarioPack';
+import './scenarios/waasCallbackErrorScenarioPack';
+import './scenarios/waasHistoryCallbackScenarioPack';
 
 export { registerCommonScenarioPack } from './scenarios/commonScenarioPack';
+export { registerWaasScenarioPack } from './scenarios/waasScenarioPack';
 export { registerSigningScenarioPack } from './scenarios/signingScenarioPack';
+export { registerTransactionRecordScenarioPack } from './scenarios/transactionRecordScenarioPack';
+export { registerWaasOrderRecordScenarioPack } from './scenarios/waasOrderRecordScenarioPack';
+export { registerCallbackErrorScenarioPack } from './scenarios/callbackErrorScenarioPack';
+export { registerHistoryCallbackScenarioPack } from './scenarios/historyCallbackScenarioPack';
+export { registerWaasBulkTransferScenarioPack } from './scenarios/waasBulkTransferScenarioPack';
+export { registerWaasWalletPayoutScenarioPack } from './scenarios/waasWalletPayoutScenarioPack';
+export { registerWaasCallbackErrorScenarioPack } from './scenarios/waasCallbackErrorScenarioPack';
+export { registerWaasHistoryCallbackScenarioPack } from './scenarios/waasHistoryCallbackScenarioPack';

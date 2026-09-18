@@ -7,6 +7,7 @@ import {
 import { signingBatchFlowRegistry } from '@/scenes/tasks/signing/batch/signingBatchFlowContext';
 import { signingFlowRegistry } from '@/scenes/tasks/signing/signingFlowContext';
 import { recordDetailFlowRegistry } from './recordDetailFlowContext';
+import { transactionRecordDetailFlowRegistry } from '@/scenes/transaction-records/transactionRecordDetailFlowContext';
 
 /** 任一客户端 EgPopup 是否处于打开态（非 flow 是否注册）。 */
 export function isClientPopupActive(): boolean {
@@ -61,6 +62,11 @@ export function isClientPopupActive(): boolean {
       || recordDetail.viewMoreOpen.value
     )
   ) {
+    return true;
+  }
+
+  const transactionRecordDetail = transactionRecordDetailFlowRegistry.value;
+  if (transactionRecordDetail?.detailOpen.value) {
     return true;
   }
 

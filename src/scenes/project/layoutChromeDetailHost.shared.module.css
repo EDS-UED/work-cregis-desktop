@@ -1,0 +1,64 @@
+/**
+ * 整页详情内嵌 EgDetail（非 Popup）：外层 scroll 由 layoutChromeScroll 承担；
+ * 解除 Popup 语境下 height:100% + flex 子项 min-height:0 导致的塌高与 overflow:clip 裁切。
+ */
+.layoutChromeDetailHost {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.layoutChromeDetailHost :global(.eds-detail) {
+  height: auto;
+  min-height: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+
+/* Popup system bar 关闭钮；整页详情由 EgToolBar show-back 承担。 */
+.layoutChromeDetailHost :global(.eds-detail > div:first-child) {
+  display: none;
+}
+
+.layoutChromeDetailHost :global(.eds-detail [class*='headline']) {
+  padding-top: var(--spacing-2);
+}
+
+.layoutChromeDetailHost :global(.eds-detail [class*='scroll']) {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.layoutChromeDetailHost :global(.eds-detail [class*='scrollContent']),
+.layoutChromeDetailHost :global(.eds-detail [class*='scrollBody']),
+.layoutChromeDetailHost :global(.eds-detail [class*='scrollPageHost']) {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
+}
+
+/*
+ * 整页详情 stack 走文档流（EDS motion-page 为 grid 叠层），由外层 layoutChromeScroll 滚动。
+ */
+.layoutChromeDetailHost :global(.eds-detail .motion-page-stack) {
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
+}
+
+.layoutChromeDetailHost :global(.eds-detail .motion-page) {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  will-change: auto;
+}
+
+.layoutChromeDetailHost :global(.eds-detail .motion-layout-content) {
+  height: auto;
+  will-change: auto;
+}

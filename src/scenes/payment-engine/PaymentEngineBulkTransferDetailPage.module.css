@@ -1,0 +1,89 @@
+.pageRoot {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--box-page);
+}
+
+.pageRootEmbedded {
+  composes: layoutChromeBodyScroll from '../project/layoutChromePage.shared.module.css';
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.pageRootStandalone {
+  composes: layoutChromeScroll from '../project/layoutChromePage.shared.module.css';
+}
+
+.detailHost {
+  composes: layoutChromeDetailHost from '../project/layoutChromeDetailHost.shared.module.css';
+  width: 100%;
+  min-width: 0;
+}
+
+/* Headline 与创建时间 meta 区收紧间距。 */
+.detailHost :global(.eds-detail [class*='sections']) {
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-3);
+}
+
+.detailHost :global(.eds-detail [class*='sections'] > [class*='sectionContent']:first-of-type) {
+  gap: var(--spacing-0);
+}
+
+.detailHost :global(.eds-detail [class*='sections'] > [class*='sectionContent']:first-of-type [class*='itemRow']) {
+  padding-top: var(--spacing-0);
+}
+
+/* 批量转账详情卡片：浮动底 + 圆角。 */
+.detailHost :global(.eds-detail [class*='sections'] > [class*='sectionContent']:last-of-type:not(:only-child)) {
+  background: var(--box-flotation);
+  border-radius: var(--radius-md);
+  padding-block: var(--spacing-2);
+  box-sizing: border-box;
+}
+
+.detailHost :global(.eds-detail [class*='sections'] > [class*='sectionContent']:last-of-type:not(:only-child) [class*='sectionTitle']) {
+  padding-bottom: var(--spacing-3);
+}
+
+.detailHost :global(.eds-detail [class*='sections']) {
+  padding-bottom: var(--spacing-0);
+}
+
+.recordsRegion {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-5);
+  width: 100%;
+  padding: var(--spacing-4) var(--spacing-3) var(--spacing-5);
+  box-sizing: border-box;
+}
+
+.recordsDivider {
+  flex-shrink: 0;
+  width: calc(100% - 2 * var(--spacing-3));
+  margin-inline: var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.recordsTab {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.recordsTable {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.recordsPaginer {
+  flex-shrink: 0;
+  width: 100%;
+}

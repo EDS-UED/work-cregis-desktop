@@ -1,0 +1,66 @@
+/* 勿设 display:flex — 须保留全局 .motion-page-stack 的 grid 叠层，否则 motion-page 不进出场。 */
+.pageStack {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 整页列表↔详情：motion-page 须撑满 stack，与 batchSigning.batchPopupPageStackFill 一致。 */
+.pageStack > :global(.motion-page) {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: var(--box-page);
+}
+
+.pageContent {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* 整页 motion-page：ToolBar + 正文 + Paginer 同壳，不走 EgLayout overlay inset。 */
+.pageChrome {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: var(--box-page);
+}
+
+.pageChromeToolbar {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.pageChromeBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.pageChromePaginer {
+  flex-shrink: 0;
+  width: 100%;
+}

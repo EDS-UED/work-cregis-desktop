@@ -52,6 +52,19 @@
   min-width: 0;
 }
 
+/*
+ * 摘要停态由正文撑高；motion-page 全局 absolute+height:100% 在 slot 未定高时会塌成 0。
+ * 用「非 Fill」判定停态，避免 Pop 结束后 direction 仍卡在 backward 时摘要不渲染。
+ */
+.batchPopupPageStack[data-batch-popup-page='summary']:not(.batchPopupPageStackFill)
+  > :global(.motion-page) {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  will-change: auto;
+}
+
 .batchPopupPageStackFill {
   flex: 1 1 auto;
   min-height: 0;
@@ -241,6 +254,63 @@
 
 .batchPopupSubPageTopOverlay > :global(*) {
   pointer-events: auto;
+}
+
+/*
+ * Popup motion-page 整页壳：正文 + 底栏（ToolBar / Paginer）须在同一 motion-page 内同步进出场。
+ * 对齐 LayoutChromePageStack.pageChrome；禁止底栏挂在 motion-page-stack 外瞬时切换。
+ */
+.batchPopupMotionPageChrome {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: var(--box-page);
+}
+
+.batchPopupMotionPageBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.batchPopupMotionPageBodyScroll {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.batchPopupMotionPageBodyScroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.batchPopupMotionPageBodyScrollFadeTop {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--spacing-4));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--spacing-4));
+  transition: var(--motion-recipe-scroll-fade);
+}
+
+.batchPopupMotionPageFooter {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
+  background: var(--box-page);
+  transition: var(--motion-recipe-scroll-fade-background);
+  overflow: hidden;
 }
 
 .batchSummaryStack {
@@ -605,6 +675,13 @@
   min-width: 0;
   height: 100%;
   box-sizing: border-box;
+}
+
+/* 按行定高子表：勿让 EgDataList 100% 撑满父级后补 blank 行。 */
+.batchDetailDataListSized :global(.eds-data-list) {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 0;
 }
 
 .batchDetailDataList :global(.eds-data-list) {

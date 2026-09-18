@@ -1,5 +1,7 @@
 import {
   cregisModuleMenuBusinessTitles,
+  cregisNavBarAppEntries,
+  cregisNavBarModules,
   DEFAULT_CREGIS_MODULE_MENU_BUSINESS_TITLE,
   type CregisModuleMenuBusinessTitle,
 } from '@eds/desktop-components';
@@ -30,6 +32,46 @@ export function resolveNavChromeLabelToModuleMenuTitle(
 
   if ((cregisModuleMenuBusinessTitles as readonly string[]).includes(trimmed)) {
     return trimmed as CregisModuleMenuBusinessTitle;
+  }
+
+  return null;
+}
+
+export type NavBarClickState = {
+  /** Module Menu / 主内容路由用英文 key。 */
+  navLabel: string;
+  moduleTitle: CregisModuleMenuBusinessTitle | null;
+};
+
+/**
+ * Nav 模块点击：用 preset 英文 key 正向匹配，避免「交易记录」等重复译文
+ * 被 resolveEnglishUiText 误解析为 Notifications 的 Transactions。
+ */
+export function resolveNavBarClickState(
+  ariaLabel: string,
+  translate: (key: string) => string,
+): NavBarClickState | null {
+  const trimmed = ariaLabel.trim();
+  if (!trimmed) return null;
+
+  const chromeMapped = NAV_CHROME_LABEL_TO_MODULE_TITLE[trimmed];
+  if (chromeMapped) {
+    return { navLabel: chromeMapped, moduleTitle: chromeMapped };
+  }
+
+  for (const entry of [...cregisNavBarModules, ...cregisNavBarAppEntries]) {
+    const key = entry.label;
+    if (trimmed !== key && trimmed !== translate(key)) continue;
+
+    const moduleTitle = (cregisModuleMenuBusinessTitles as readonly string[]).includes(key)
+      ? (key as CregisModuleMenuBusinessTitle)
+      : null;
+    return { navLabel: key, moduleTitle };
+  }
+
+  const moduleTitle = resolveNavChromeLabelToModuleMenuTitle(trimmed);
+  if (moduleTitle) {
+    return { navLabel: moduleTitle, moduleTitle };
   }
 
   return null;

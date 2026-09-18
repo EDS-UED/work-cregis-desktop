@@ -36,6 +36,11 @@ const props = withDefaults(
     contentInsetPreset?: PopupSlotContentInsetPreset;
     /** 与内容区 deform 同步的 footer 页（summary / detail / reasons）；仅切换内容，不做 motion-page。 */
     footerMotionKey?: string;
+    /**
+     * motion-page-stack 已集成 ToolBar / Paginer（整页同壳进出场）时禁用 slot chrome 外置 footer。
+     * 对齐 LayoutChromePageStack · SigningBatchPopupMotionPageChrome。
+     */
+    integratedPageStack?: boolean;
     /** contentFill 时内层滚动容器仍有内容被裁切（驱动 footer scrim）。 */
     nestedScrollOverflows?: boolean;
     contentFill?: boolean;
@@ -57,6 +62,7 @@ const props = withDefaults(
     contentInsetPreset: 'md',
     nestedScrollOverflows: false,
     contentFill: false,
+    integratedPageStack: false,
     systemBarCloseIcon: 'eds-close-circle-fill',
     systemBarCloseDisabled: false,
     scrollFadeTopEnabled: true,
@@ -82,6 +88,9 @@ const scrollFadeTop = ref(false);
 let scrollResizeObserver: ResizeObserver | undefined;
 
 const showChromeFooter = computed(() => {
+  if (props.integratedPageStack) {
+    return false;
+  }
   if (props.footerMotionKey) {
     return true;
   }

@@ -1,4 +1,5 @@
 import { computed, ref, watch, type Ref } from 'vue';
+import type { DataListBatchActionResult } from '@eds/desktop-components';
 import {
   DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
   DATA_LIST_FIGMA_PAGINER,
@@ -21,19 +22,23 @@ import {
 export const PAYMENT_ENGINE_COLUMN_HEIGHT = 66;
 export const PAYMENT_ENGINE_HEADER_HEIGHT = 32;
 
-type ToolbarActionKey = 'filter' | 'refresh' | 'export';
+type ToolbarActionKey = 'batch' | 'filter' | 'refresh' | 'export';
 
 export function usePaymentEngineDataListPage<T>(options: {
   rows: Ref<readonly T[]>;
   showExport: Ref<boolean>;
+  showBatchSelect: Ref<boolean>;
   filterBadge: Ref<number>;
 }) {
   const customize = ref<Record<string, unknown>>({
+    ...iconButtonProItemDefaults('batch', { label: 'Batch Processing', icon: 'eds-batch' }),
     ...iconButtonProItemDefaults('filter', { label: 'Filter', icon: 'eds-filter' }),
     ...iconButtonProItemDefaults('refresh', { label: 'Refresh', icon: 'eds-arrow-refresh' }),
     ...iconButtonProItemDefaults('export', { label: 'Export', icon: 'eds-arrow-download' }),
     ...paginerPaginationDefaults(),
     loading: false,
+    selectMode: false,
+    showBatch: false,
   });
 
   const settingsLevelIndex = ref(0);
@@ -45,6 +50,15 @@ export function usePaymentEngineDataListPage<T>(options: {
     (badge) => {
       customize.value.filterShowBadge = badge > 0;
       customize.value.filterBadge = String(badge);
+    },
+    { immediate: true },
+  );
+
+  watch(
+    options.showBatchSelect,
+    (enabled) => {
+      customize.value.showBatch = enabled;
+      if (!enabled) customize.value.selectMode = false;
     },
     { immediate: true },
   );
@@ -73,19 +87,62 @@ export function usePaymentEngineDataListPage<T>(options: {
     return readIconButtonProItem(customize.value, 'export');
   });
 
+  const batchButton = computed(() => {
+    trackSingleIconButton('batch');
+    return readIconButtonProItem(customize.value, 'batch');
+  });
+
   const toolbarActionButtons = computed(() => {
     trackSingleIconButton('filter');
     trackSingleIconButton('refresh');
-    const buttons: Array<{ key: ToolbarActionKey; item: ReturnType<typeof readIconButtonProItem> }> = [
+    const buttons: Array<{ key: ToolbarActionKey; item: ReturnType<typeof readIconButtonProItem> }> = [];
+    if (options.showBatchSelect.value) {
+      trackSingleIconButton('batch');
+      buttons.push({ key: 'batch', item: batchButton.value });
+    }
+    buttons.push(
       { key: 'filter', item: filterButton.value },
       { key: 'refresh', item: refreshButton.value },
-    ];
+    );
     if (options.showExport.value) {
       trackSingleIconButton('export');
       buttons.push({ key: 'export', item: exportButton.value });
     }
     return buttons;
   });
+
+  const toolbarBatchButton = computed(() =>
+    toolbarActionButtons.value.find((button) => button.key === 'batch'),
+  );
+
+  const toolbarSectionButtons = computed(() =>
+    toolbarActionButtons.value.filter((button) => button.key !== 'batch'),
+  );
+
+  const dataListBatchActions = computed(() => [
+    { key: 'ignore', label: 'Ignore' },
+    { key: 'retry', label: 'Retry' },
+  ]);
+
+  async function onBatchAction(
+    key: string,
+    _rows: Array<Record<string, unknown> & { _index: number }>,
+  ): Promise<DataListBatchActionResult | void> {
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 600);
+    });
+    if (key === 'ignore' || key === 'retry') {
+      customize.value.selectMode = false;
+    }
+  }
+
+  function onBatchClick() {
+    customize.value.selectMode = !customize.value.selectMode;
+  }
+
+  function setSelectMode(next: boolean) {
+    customize.value.selectMode = next;
+  }
 
   const pageSize = computed(() => {
     const label =
@@ -253,6 +310,10 @@ export function usePaymentEngineDataListPage<T>(options: {
   }
 
   function onToolbarActionClick(key: ToolbarActionKey) {
+    if (key === 'batch') {
+      onBatchClick();
+      return;
+    }
     if (key === 'refresh') {
       onRefreshClick();
     }
@@ -263,6 +324,7 @@ export function usePaymentEngineDataListPage<T>(options: {
     DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
     currentPage,
     customize,
+    dataListBatchActions,
     exportButton,
     filterButton,
     firstPagination,
@@ -276,9 +338,11 @@ export function usePaymentEngineDataListPage<T>(options: {
     manyPageItems,
     nextNavDisabled,
     nextPagination,
+    onBatchAction,
     onManyPageItemClick,
     onSettingsJump,
     onToolbarActionClick,
+    setSelectMode,
     pagePagination,
     paginatedRows,
     prevNavDisabled,
@@ -287,6 +351,8 @@ export function usePaymentEngineDataListPage<T>(options: {
     settingsJumpValue,
     settingsLevelIndex,
     toolbarActionButtons,
+    toolbarBatchButton,
+    toolbarSectionButtons,
     totalRowCount,
   };
 }

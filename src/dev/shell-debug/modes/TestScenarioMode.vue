@@ -11,10 +11,8 @@ import {
 import {
   EgButton,
   EgIcon,
+  EgMotionLayoutContent,
   EgSegmented,
-  MOTION_LAYOUT_DEFORM_CONTENT,
-  MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
-  MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
   useMotionLayoutDeformPageSwitch,
   type MotionLayoutDeformPageSpec,
 } from '@eds/desktop-components';
@@ -81,11 +79,8 @@ const emptyStateText = computed(() =>
 );
 
 const deformContentClass = computed(() => [
-  MOTION_LAYOUT_DEFORM_CONTENT,
   styles.deformContent,
   contentDirection.value,
-  contentExiting.value && MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
-  contentEntering.value && MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
 ]);
 
 const scrollViewportMax = computed(() => {
@@ -272,7 +267,11 @@ async function applyScenario(id: string, apply: () => void | Promise<void>) {
       :data-shell-ready="shellMeasureReady || undefined"
       :style="deformShellStyle"
     >
-      <div :class="deformContentClass">
+      <EgMotionLayoutContent
+        :class="deformContentClass"
+        :content-exiting="contentExiting"
+        :content-entering="contentEntering"
+      >
         <div
           ref="scrollRef"
           :class="[
@@ -317,7 +316,7 @@ async function applyScenario(id: string, apply: () => void | Promise<void>) {
             </li>
           </ul>
         </div>
-      </div>
+      </EgMotionLayoutContent>
     </div>
 
     <p v-if="lastAppliedId" ref="metaRef" :class="styles.meta">上次执行：{{ lastAppliedId }}</p>

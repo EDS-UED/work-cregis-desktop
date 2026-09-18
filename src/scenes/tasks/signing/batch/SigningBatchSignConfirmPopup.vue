@@ -40,7 +40,9 @@ import {
   BATCH_SIGN_CONFIRM_POPUP_WIDTH,
 } from './batchSigning.constants';
 import SigningBatchDataListPaginerBar from './SigningBatchDataListPaginerBar.vue';
+import SigningBatchPopupMotionPageChrome from './SigningBatchPopupMotionPageChrome.vue';
 import SigningBatchPopupSlotChrome from './SigningBatchPopupSlotChrome.vue';
+import SigningBatchPopupSlotFooterBody from './SigningBatchPopupSlotFooterBody.vue';
 import SigningBatchSignDetailPanel from './SigningBatchSignDetailPanel.vue';
 import SigningBatchSignReasonsPanel from './SigningBatchSignReasonsPanel.vue';
 import SigningBatchIneligibleReasonFilterDecor from './SigningBatchIneligibleReasonFilterDecor.vue';
@@ -79,15 +81,18 @@ const { popupMounted, popupOpen, onPopupClosed } = usePopupShellLifecycle({
 const { ui } = useAppI18n();
 
 const slotChromeRef = ref<InstanceType<typeof SigningBatchPopupSlotChrome> | null>(null);
+const motionPageChromeRef = ref<InstanceType<typeof SigningBatchPopupMotionPageChrome> | null>(null);
 const gasFeePopoverRef = ref<{ close?: () => void } | null>(null);
 const batchStubAnchoredRef = ref<{ close?: () => void } | null>(null);
 
 const activePage = ref<ConfirmPage>('summary');
 const pageStackDirection = ref<'forward' | 'backward' | 'none'>('none');
+const motionTransitionPending = ref(0);
+/** 固定高度 Popup：stack 始终 fill，子页 DataList 与整页 motion 共用 bounded 高度。 */
+const popupContentFill = computed(() => true);
 const detailDisplayRows = ref<SigningBatchRowModel[]>([]);
 const reasonsDisplayRows = ref<SigningBatchRowModel[]>([]);
 const reasonsFilter = ref<BatchIneligibleReasonFilter>('all');
-const footerMotionKey = computed(() => activePage.value);
 const isSummaryPage = computed(() => activePage.value === 'summary');
 const isDetailPage = computed(() => activePage.value === 'detail');
 const isReasonsPage = computed(() => activePage.value === 'reasons');
@@ -200,7 +205,23 @@ function setActivePage(next: ConfirmPage) {
 function resetToSummary() {
   activePage.value = 'summary';
   pageStackDirection.value = 'none';
+  motionTransitionPending.value = 0;
   reasonsFilter.value = 'all';
+}
+
+function onMotionPageBeforeEnter() {
+  motionTransitionPending.value += 1;
+}
+
+function onMotionPageBeforeLeave() {
+  motionTransitionPending.value += 1;
+}
+
+function settleMotionPageTransition() {
+  motionTransitionPending.value = Math.max(0, motionTransitionPending.value - 1);
+  if (motionTransitionPending.value === 0) {
+    pageStackDirection.value = 'none';
+  }
 }
 
 watch(
@@ -216,7 +237,7 @@ watch(
   () => activePage.value,
   async () => {
     await nextTick();
-    slotChromeRef.value?.scrollToTop?.();
+    motionPageChromeRef.value?.scrollToTop?.();
   },
 );
 
@@ -282,122 +303,46 @@ useBatchSignConfirmEscape({
   >
     <SigningBatchPopupSlotChrome
       ref="slotChromeRef"
+      integrated-page-stack
       :show-system-bar-close="showSystemBarClose"
-      :content-fill="!isSummaryPage"
+      :content-fill="popupContentFill"
       content-inset-preset="xs"
-      :footer-motion-key="footerMotionKey"
-      :show-toolbar="isSummaryPage"
-      :show-toolbar-cancel="false"
-      :show-toolbar-confirm="showToolbarConfirm"
-      :toolbar-confirm-disabled="toolbarConfirmDisabled"
-      :toolbar-confirm-label="ui('Confirm')"
-      :toolbar-divider-pinned="isSummaryPage"
+      :show-toolbar="false"
       @close="onClose"
-      @toolbar-confirm="onToolbarConfirm"
     >
-      <template v-if="hasSignable" #toolbar-leading>
-        <DetailToolbarRemarkTrigger
-          :model-value="remark"
-          @update:model-value="emit('update:remark', $event)"
-        />
-      </template>
-      <template v-if="minerFeeProfile && gasFeeNetwork" #toolbar-confirm>
-        <EgGasFeePopover
-          ref="gasFeePopoverRef"
-          :network="gasFeeNetwork"
-          :translate="ui"
-          :symbol="minerFeeProfile.symbol"
-          :title="minerFeeSectionTitle"
-          :transaction-count="minerFeeTransactionCount"
-          boundary-selector=".eds-popup"
-          @confirm="onGasFeeConfirm"
-        >
-          <template #trigger="{ active, onClick }">
-            <span
-              :class="[
-                remarkTriggerStyles.remarkTrigger,
-                active && remarkTriggerStyles.remarkTriggerPassPressed,
-              ]"
-            >
-              <EgButton
-                tone="decor"
-                variant="solid"
-                size="md"
-                :disabled="toolbarConfirmDisabled"
-                :aria-expanded="active"
-                @click.stop="onMinerFeeToolbarClick(onClick)"
-              >
-                {{ ui('Confirm') }}
-              </EgButton>
-            </span>
-          </template>
-        </EgGasFeePopover>
-      </template>
-      <template v-else-if="minerFeeProfile && showBatchStubOnly" #toolbar-confirm>
-        <EgAnchoredPopover
-          ref="batchStubAnchoredRef"
-          boundary-selector=".eds-popup"
-          :top-tool-title="minerFeeSectionTitle"
-          top-tool
-          top-tool-closable
-          width-mode="fixed"
-          height-mode="adaptive"
-        >
-          <template #trigger="{ active, onClick }">
-            <span
-              :class="[
-                remarkTriggerStyles.remarkTrigger,
-                active && remarkTriggerStyles.remarkTriggerPassPressed,
-              ]"
-            >
-              <EgButton
-                tone="decor"
-                variant="solid"
-                size="md"
-                :disabled="toolbarConfirmDisabled"
-                :aria-expanded="active"
-                @click.stop="onMinerFeeToolbarClick(onClick)"
-              >
-                {{ ui('Confirm') }}
-              </EgButton>
-            </span>
-          </template>
-          <EgMinerFeeBatchStubPanel
-            v-if="minerFeeProfile"
-            :translate="ui"
-            :symbol="minerFeeProfile.symbol"
-            :profile-kind="minerFeeProfile.kind"
-            :transaction-count="minerFeeTransactionCount"
-            @confirm="onGasFeeConfirm"
-          />
-        </EgAnchoredPopover>
-      </template>
       <div
         :class="[
           styles.batchPopupContent,
-          !isSummaryPage && styles.batchPopupContentFill,
+          popupContentFill && styles.batchPopupContentFill,
         ]"
       >
         <div
           class="motion-page-stack"
           :class="[
             styles.batchPopupPageStack,
-            !isSummaryPage && styles.batchPopupPageStackFill,
+            styles.batchPopupPageStackFill,
           ]"
           :data-page-direction="pageStackDirection"
           :data-batch-popup-page="activePage"
         >
-          <Transition name="motion-page">
+          <Transition
+            name="motion-page"
+            @before-enter="onMotionPageBeforeEnter"
+            @before-leave="onMotionPageBeforeLeave"
+            @after-enter="settleMotionPageTransition"
+            @after-leave="settleMotionPageTransition"
+          >
             <div
               :key="activePage"
               class="motion-page"
-              :class="[
-                isSummaryPage
-                  ? styles.batchPopupPageSummary
-                  : styles.batchPopupPageFill,
-              ]"
+              :class="styles.batchPopupPageFill"
             >
-              <div v-if="isSummaryPage" :class="styles.batchSummaryStack">
+              <SigningBatchPopupMotionPageChrome
+                ref="motionPageChromeRef"
+                :body-scroll="isSummaryPage"
+                :footer-scrim="isSummaryPage"
+              >
+                <div v-if="isSummaryPage" :class="styles.batchSummaryStack">
                 <section :class="styles.detailHeadline">
                   <div :class="styles.detailHeadlineInner">
                     <div :class="styles.detailHeadlineTop">
@@ -515,25 +460,152 @@ useBatchSignConfirmEscape({
                   :rows="reasonsDisplayRows"
                 />
               </SigningBatchSignSubPageShell>
+
+                <template #footer>
+                  <SigningBatchPopupSlotFooterBody
+                    v-if="isSummaryPage"
+                    show-toolbar-divider
+                    :show-paginer-row="false"
+                    show-toolbar-row
+                    :show-toolbar-cancel="false"
+                    :show-toolbar-confirm="showToolbarConfirm"
+                    :toolbar-confirm-disabled="toolbarConfirmDisabled"
+                    :toolbar-confirm-label="ui('Confirm')"
+                    toolbar-cancel-label=""
+                    toolbar-cancel-tone="decor"
+                    toolbar-cancel-variant="text"
+                    toolbar-confirm-tone="decor"
+                    @toolbar-confirm="onToolbarConfirm"
+                  >
+                    <template v-if="hasSignable" #toolbar-leading>
+                      <DetailToolbarRemarkTrigger
+                        :model-value="remark"
+                        @update:model-value="emit('update:remark', $event)"
+                      />
+                    </template>
+                    <template v-if="minerFeeProfile && gasFeeNetwork" #toolbar-confirm>
+                      <EgGasFeePopover
+                        ref="gasFeePopoverRef"
+                        :network="gasFeeNetwork"
+                        :translate="ui"
+                        :symbol="minerFeeProfile.symbol"
+                        :title="minerFeeSectionTitle"
+                        :transaction-count="minerFeeTransactionCount"
+                        boundary-selector=".eds-popup"
+                        @confirm="onGasFeeConfirm"
+                      >
+                        <template #trigger="{ active, onClick }">
+                          <span
+                            :class="[
+                              remarkTriggerStyles.remarkTrigger,
+                              active && remarkTriggerStyles.remarkTriggerPassPressed,
+                            ]"
+                          >
+                            <EgButton
+                              tone="decor"
+                              variant="solid"
+                              size="md"
+                              :disabled="toolbarConfirmDisabled"
+                              :aria-expanded="active"
+                              @click.stop="onMinerFeeToolbarClick(onClick)"
+                            >
+                              {{ ui('Confirm') }}
+                            </EgButton>
+                          </span>
+                        </template>
+                      </EgGasFeePopover>
+                    </template>
+                    <template v-else-if="minerFeeProfile && showBatchStubOnly" #toolbar-confirm>
+                      <EgAnchoredPopover
+                        ref="batchStubAnchoredRef"
+                        boundary-selector=".eds-popup"
+                        :top-tool-title="minerFeeSectionTitle"
+                        top-tool
+                        top-tool-closable
+                        width-mode="fixed"
+                        height-mode="adaptive"
+                      >
+                        <template #trigger="{ active, onClick }">
+                          <span
+                            :class="[
+                              remarkTriggerStyles.remarkTrigger,
+                              active && remarkTriggerStyles.remarkTriggerPassPressed,
+                            ]"
+                          >
+                            <EgButton
+                              tone="decor"
+                              variant="solid"
+                              size="md"
+                              :disabled="toolbarConfirmDisabled"
+                              :aria-expanded="active"
+                              @click.stop="onMinerFeeToolbarClick(onClick)"
+                            >
+                              {{ ui('Confirm') }}
+                            </EgButton>
+                          </span>
+                        </template>
+                        <EgMinerFeeBatchStubPanel
+                          v-if="minerFeeProfile"
+                          :translate="ui"
+                          :symbol="minerFeeProfile.symbol"
+                          :profile-kind="minerFeeProfile.kind"
+                          :transaction-count="minerFeeTransactionCount"
+                          @confirm="onGasFeeConfirm"
+                        />
+                      </EgAnchoredPopover>
+                    </template>
+                  </SigningBatchPopupSlotFooterBody>
+
+                  <SigningBatchPopupSlotFooterBody
+                    v-else-if="isDetailPage"
+                    :show-toolbar-divider="false"
+                    show-paginer-row
+                    :show-toolbar-row="false"
+                    :show-toolbar-cancel="false"
+                    :show-toolbar-confirm="false"
+                    :toolbar-confirm-disabled="false"
+                    toolbar-confirm-label=""
+                    toolbar-cancel-label=""
+                    toolbar-cancel-tone="decor"
+                    toolbar-cancel-variant="text"
+                    toolbar-confirm-tone="decor"
+                  >
+                    <template #footer>
+                      <SigningBatchDataListPaginerBar
+                        :items="eligibility.signable"
+                        @paginated-change="detailDisplayRows = $event"
+                      />
+                    </template>
+                  </SigningBatchPopupSlotFooterBody>
+
+                  <SigningBatchPopupSlotFooterBody
+                    v-else-if="isReasonsPage"
+                    :show-toolbar-divider="false"
+                    show-paginer-row
+                    :show-toolbar-row="false"
+                    :show-toolbar-cancel="false"
+                    :show-toolbar-confirm="false"
+                    :toolbar-confirm-disabled="false"
+                    toolbar-confirm-label=""
+                    toolbar-cancel-label=""
+                    toolbar-cancel-tone="decor"
+                    toolbar-cancel-variant="text"
+                    toolbar-confirm-tone="decor"
+                  >
+                    <template #footer>
+                      <SigningBatchDataListPaginerBar
+                        :key="`reasons-${reasonsFilter}`"
+                        :items="ineligiblePaginatorItems"
+                        @paginated-change="reasonsDisplayRows = $event"
+                      />
+                    </template>
+                  </SigningBatchPopupSlotFooterBody>
+                </template>
+              </SigningBatchPopupMotionPageChrome>
             </div>
           </Transition>
         </div>
       </div>
-
-      <template v-if="isDetailPage" #footer>
-        <SigningBatchDataListPaginerBar
-          :items="eligibility.signable"
-          @paginated-change="detailDisplayRows = $event"
-        />
-      </template>
-
-      <template v-else-if="isReasonsPage" #footer>
-        <SigningBatchDataListPaginerBar
-          :key="`reasons-${reasonsFilter}`"
-          :items="ineligiblePaginatorItems"
-          @paginated-change="reasonsDisplayRows = $event"
-        />
-      </template>
     </SigningBatchPopupSlotChrome>
   </EgPopup>
 </template>

@@ -62,6 +62,7 @@ export function resetShellDebugScenarioBaseline() {
   }
 
   tasksDataListShellApiRegistry.value?.setListEmpty(false);
+  tasksDataListShellApiRegistry.value?.setListIniting(false);
   tasksDataListShellApiRegistry.value?.setListLoading(false);
 }
 

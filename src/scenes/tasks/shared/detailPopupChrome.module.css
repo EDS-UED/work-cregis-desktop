@@ -1,11 +1,41 @@
 .detailHost {
   position: relative;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   width: 100%;
   min-width: 0;
   height: 100%;
   min-height: 0;
+}
+
+.detailPageStack {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.detailPageStack > :global(.motion-page-stack) {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  align-content: start;
+}
+
+.detailPageStack > :global(.motion-page-stack) > :global(.motion-page) {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: var(--box-page);
 }
 
 .headlineFiat {
@@ -77,8 +107,11 @@
   background: var(--stroke-divider-module);
 }
 
-/* 交易信息分区与 append 第二分区衔接：去掉 sections 底 padding，由 append 顶 padding 承接 sections gap-4。 */
-.detailHost :global(.eds-detail [class*='sections']) {
+/*
+ * 有 append 第二分区（审批进度等）时去掉 sections 底 padding，由 append 顶 padding 承接 gap-4。
+ * 无 append 的详情（如交易记录）须保留 EDS Detail `.sections` 默认 padding。
+ */
+.detailHost:has(:global(.eds-detail [class*='append'])) :global(.eds-detail [class*='sections']) {
   padding-bottom: 0;
 }
 

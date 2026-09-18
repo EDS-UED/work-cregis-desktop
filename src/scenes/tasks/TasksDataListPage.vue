@@ -84,6 +84,7 @@ import {
   type TasksDataListCustomizeState,
 } from './tasksDataListPageData';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import { useListRegionInteractionBlock } from '@/composables/useListRegionInteractionBlock';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
 import ApprovalRemarkPopoverPanel from './approval/ApprovalRemarkPopoverPanel.vue';
@@ -636,8 +637,12 @@ onMounted(() => {
     setListEmpty: (empty) => {
       if (empty) {
         customize.loading = false;
+        customize.initing = false;
       }
       customize.empty = empty;
+    },
+    setListIniting: (initing) => {
+      customize.initing = initing;
     },
     setListLoading: (loading) => {
       customize.loading = loading;
@@ -816,7 +821,9 @@ function onAmountSort(order: TasksDataListSortOrder | null) {
 }
 
 /** 批处理过滤已在 useTasksDataListPage.sortedDataList 全量应用，勿再滤当前页。 */
-const displayDataList = computed(() => paginatedDataList.value);
+const { contentReady } = useDeferredContentMount();
+
+const displayDataList = computed(() => (contentReady.value ? paginatedDataList.value : []));
 
 useDataListSelectAllShortcut({
   selectMode: computed(() => Boolean(customize.selectMode)),
@@ -1038,7 +1045,8 @@ const displayBatchActions = computed(() => {
           :header-height="DATA_LIST_FIGMA_HEADER_HEIGHT"
           :column-height="columnHeight"
           :loading="Boolean(customize.loading)"
-          :initing="Boolean(customize.initing)"
+          :initing="Boolean(customize.initing) || !contentReady"
+          :initing-text="ui('Loading')"
           :skid-open="skidOpen"
           :batch-actions="displayBatchActions"
           :on-batch-action="onBatchAction"
