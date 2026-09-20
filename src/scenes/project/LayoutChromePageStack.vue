@@ -74,6 +74,17 @@ defineExpose({
               <slot name="detail" />
             </div>
           </div>
+          <div v-else-if="props.pageKey === 'create'" :class="styles.pageChrome">
+            <div :class="styles.pageChromeToolbar">
+              <slot name="create-toolbar" />
+            </div>
+            <div :class="styles.pageChromeBody">
+              <slot name="create" />
+            </div>
+            <div :class="styles.pageChromePaginer">
+              <slot name="create-footer" />
+            </div>
+          </div>
           <div v-else :class="styles.pageChrome">
             <div :class="styles.pageChromeToolbar">
               <slot name="list-toolbar" />

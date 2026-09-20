@@ -36,7 +36,7 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
 
   // Payment Engine menu
   'Order Record': '訂單記錄',
-  'Payment Record': '訂單記錄',
+  'Payment Record': '支付記錄',
   'Settlement Record': '結算記錄',
   'Settlement Number': '結算編號',
   'Settlement ID': '結算編號',

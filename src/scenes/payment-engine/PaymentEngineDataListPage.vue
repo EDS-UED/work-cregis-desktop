@@ -20,6 +20,7 @@ import PaymentEngineBulkTransferDetailPage from './PaymentEngineBulkTransferDeta
 import PaymentEngineRecordListPaginer from './PaymentEngineRecordListPaginer.vue';
 import PaymentEngineRecordListTable from './PaymentEngineRecordListTable.vue';
 import PaymentEngineRecordListToolbar from './PaymentEngineRecordListToolbar.vue';
+import type { PaymentEngineRecordSortTarget } from './paymentEngineRecordSort';
 import styles from './PaymentEngineDataListPage.module.css';
 
 const props = defineProps<{
@@ -44,6 +45,7 @@ const displayToolbarTitle = computed(() => ui(props.menuItem));
 const {
   DATA_LIST_FIGMA_PAGINER,
   DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
+  activeSort,
   currentPage,
   customize,
   dataListBatchActions,
@@ -62,6 +64,7 @@ const {
   onManyPageItemClick,
   onSettingsJump,
   onToolbarActionClick,
+  setColumnSort,
   pagePagination,
   paginatedRows,
   prevNavDisabled,
@@ -77,6 +80,7 @@ const {
   showExport: computed(() => pageConfig.value.showExport),
   showBatchSelect: computed(() => Boolean(pageConfig.value.showBatchSelect)),
   filterBadge: computed(() => pageConfig.value.filterBadge ?? 0),
+  toolbarPreset: computed(() => pageConfig.value.toolbarPreset),
 });
 
 const showBatchButton = computed(() => Boolean(pageConfig.value.showBatchSelect));
@@ -166,6 +170,10 @@ const paginerStatistics = computed(() => {
     number: item.value,
   }));
 });
+
+function onColumnSortChange(next: PaymentEngineRecordSortTarget | null) {
+  setColumnSort(next);
+}
 
 function recordRow(data: DataListItem): PaymentEngineRecordRow {
   return data as PaymentEngineRecordRow;
@@ -271,7 +279,9 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
             :initing="!contentReady"
             :batch-actions="displayBatchActions"
             :on-batch-action="onBatchAction"
+            :active-sort="activeSort"
             @row-click="onRowClick"
+            @sort-change="onColumnSortChange"
           />
         </template>
       </LayoutChromePageStack>
@@ -290,7 +300,9 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
           :initing="!contentReady"
           :batch-actions="displayBatchActions"
           :on-batch-action="onBatchAction"
+          :active-sort="activeSort"
           @row-click="onRowClick"
+          @sort-change="onColumnSortChange"
         />
       </LayoutChromePageStack>
 

@@ -38,6 +38,8 @@ import {
   type PaymentEngineRecordColumnConfig,
   type PaymentEngineRecordRow,
 } from './paymentEngineRecordConfigs';
+import type { PaymentEngineRecordSortTarget } from './paymentEngineRecordSort';
+import type { TasksDataListSortOrder } from '@/scenes/tasks/tasksDataListSort';
 import { buildPaymentEngineRecordStatusCustomize } from './paymentEngineRecordStatusCustomize';
 import {
   PAYMENT_ENGINE_COLUMN_HEIGHT,
@@ -56,11 +58,13 @@ const props = defineProps<{
     key: string,
     rows: Array<Record<string, unknown> & { _index: number }>,
   ) => Promise<DataListBatchActionResult | void>;
+  activeSort?: PaymentEngineRecordSortTarget | null;
 }>();
 
 const emit = defineEmits<{
   'update:selectMode': [value: boolean];
   'row-click': [data: DataListItem];
+  'sort-change': [value: PaymentEngineRecordSortTarget | null];
 }>();
 
 const selectMode = defineModel<boolean>('selectMode', { default: false });
@@ -122,7 +126,30 @@ function columnHeaderAlign(column: PaymentEngineRecordColumnConfig): 'start' | '
   return column.align === 'end' ? 'end' : 'start';
 }
 
-const isHeaderSortDisabled = computed(() => props.loading);
+function resolveSortOrder(
+  column: PaymentEngineRecordColumnConfig,
+  segment: 'primary' | 'secondary',
+): TasksDataListSortOrder | '' {
+  const activeSort = props.activeSort;
+  if (!activeSort) return '';
+  if (activeSort.columnKey !== column.key || activeSort.segment !== segment) return '';
+  return activeSort.order;
+}
+
+function onColumnSortChange(
+  column: PaymentEngineRecordColumnConfig,
+  segment: 'primary' | 'secondary',
+  order: TasksDataListSortOrder | null,
+) {
+  emit(
+    'sort-change',
+    order ? { columnKey: column.key, segment, order } : null,
+  );
+}
+
+const isHeaderSortDisabled = computed(
+  () => props.loading || props.rows.length === 0 || selectMode.value,
+);
 </script>
 
 <template>
@@ -173,6 +200,8 @@ const isHeaderSortDisabled = computed(() => props.loading);
                     :label="column.labelKey"
                     :align="columnHeaderAlign(column)"
                     :disabled="isHeaderSortDisabled"
+                    :active-order="resolveSortOrder(column, 'primary')"
+                    @sort-change="(order) => onColumnSortChange(column, 'primary', order)"
                   />
                 </div>
                 <EgDivider type="navigator" direction="vertical" />
@@ -190,6 +219,8 @@ const isHeaderSortDisabled = computed(() => props.loading);
                     :label="column.secondaryLabelKey ?? ''"
                     :align="columnHeaderAlign(column)"
                     :disabled="isHeaderSortDisabled"
+                    :active-order="resolveSortOrder(column, 'secondary')"
+                    @sort-change="(order) => onColumnSortChange(column, 'secondary', order)"
                   />
                 </div>
               </div>
@@ -215,6 +246,8 @@ const isHeaderSortDisabled = computed(() => props.loading);
                     :label="column.labelKey"
                     :align="columnHeaderAlign(column)"
                     :disabled="isHeaderSortDisabled"
+                    :active-order="resolveSortOrder(column, 'primary')"
+                    @sort-change="(order) => onColumnSortChange(column, 'primary', order)"
                   />
                 </div>
               </div>

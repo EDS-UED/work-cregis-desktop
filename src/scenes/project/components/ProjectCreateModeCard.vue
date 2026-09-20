@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { EgRadio } from '@eds/desktop-components';
-import rowStyles from '@/scenes/tasks/signing/SigningCustomPopupItemRow.module.css';
 import styles from './ProjectCreateModeCard.module.css';
 
 defineProps<{
@@ -19,7 +18,7 @@ const emit = defineEmits<{
 <template>
   <div :class="styles.option">
     <div
-      :class="[rowStyles.itemRow, styles.itemRow, selected && styles.itemRowSelected]"
+      :class="[styles.itemRow, selected && styles.itemRowSelected]"
       role="radio"
       tabindex="0"
       :aria-checked="selected"
@@ -27,19 +26,17 @@ const emit = defineEmits<{
       @keydown.enter.prevent="emit('select')"
       @keydown.space.prevent="emit('select')"
     >
-      <div :class="[rowStyles.itemTitle, styles.itemTitleRadio]">
-        <EgRadio
-          :class="styles.radio"
-          :model-value="selected"
-          :name="radioName"
-          :value="radioValue"
-          tabindex="-1"
-          aria-hidden="true"
-        />
-      </div>
-      <div :class="[rowStyles.itemValue, styles.itemValueStack]">
-        <span :class="[rowStyles.itemValueText, styles.modeTitle]">{{ title }}</span>
-        <span :class="[rowStyles.itemValueText, styles.modeDescription]">{{ description }}</span>
+      <EgRadio
+        :class="styles.radio"
+        :model-value="selected"
+        :name="radioName"
+        :value="radioValue"
+        tabindex="-1"
+        aria-hidden="true"
+      />
+      <div :class="styles.itemValueStack">
+        <span :class="styles.modeTitle">{{ title }}</span>
+        <span :class="styles.modeDescription">{{ description }}</span>
       </div>
     </div>
     <div v-if="selected && $slots.default" :class="styles.body">

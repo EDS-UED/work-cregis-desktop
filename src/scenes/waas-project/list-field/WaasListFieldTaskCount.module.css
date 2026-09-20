@@ -1,0 +1,13 @@
+.host {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+}
+
+.countText {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+  white-space: nowrap;
+}

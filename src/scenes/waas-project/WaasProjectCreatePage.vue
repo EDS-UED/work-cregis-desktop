@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import {
   EgButton,
   EgComboInput,
-  EgComboPageButton,
+  EgDivider,
   EgFlotation,
   EgFlotationMenu,
   EgFlotationMenuItem,
@@ -20,6 +20,16 @@ import ProjectCreateModeCard from '@/scenes/project/components/ProjectCreateMode
 import { useWaasProjectStore } from '@/scenes/project/waasProjectStore';
 import type { WaasProjectDepositMode } from '@/scenes/project/types';
 import styles from './WaasProjectCreatePage.module.css';
+
+const props = withDefaults(
+  defineProps<{
+    /** motion-page 内联 stack 时 true。 */
+    embeddedInPageStack?: boolean;
+  }>(),
+  {
+    embeddedInPageStack: false,
+  },
+);
 
 const { ui } = useAppI18n();
 const { cancelCreateProject, createProject } = useWaasProjectStore();
@@ -48,6 +58,8 @@ const payoutWalletLabel = computed(() => {
     .filter(Boolean);
   return labels.join(', ');
 });
+
+const canSubmit = computed(() => projectName.value.trim().length >= 2);
 
 function onCancel() {
   cancelCreateProject();
@@ -81,7 +93,10 @@ function setPayoutWalletChecked(walletId: string, checked: boolean) {
 </script>
 
 <template>
-  <div class="desktopTokens" :class="styles.page">
+  <div
+    class="desktopTokens"
+    :class="[styles.page, props.embeddedInPageStack && styles.pageEmbedded]"
+  >
     <EgLayout type="empty" show-toolbar>
       <template #toolbar>
         <EgToolBar
@@ -92,7 +107,11 @@ function setPayoutWalletChecked(walletId: string, checked: boolean) {
         />
       </template>
 
-      <div :class="styles.scrollBody">
+      <div
+        :class="
+          props.embeddedInPageStack ? styles.scrollBodyEmbedded : styles.scrollBody
+        "
+      >
         <div :class="styles.formRow">
           <div :class="styles.formBlock">
             <div :class="styles.fieldItem">
@@ -261,13 +280,23 @@ function setPayoutWalletChecked(walletId: string, checked: boolean) {
         </div>
       </div>
 
-      <EgComboPageButton
-        :confirm-label="ui('Create')"
-        :cancel-label="ui('Cancel')"
-        divider
-        @confirm="onConfirm"
-        @cancel="onCancel"
-      />
+      <footer :class="styles.pageFooter">
+        <EgDivider type="page" direction="horizontal" hide />
+        <div :class="styles.pageFooterActions">
+          <EgButton
+            tone="decor"
+            variant="solid"
+            size="md"
+            :disabled="!canSubmit"
+            @click="onConfirm"
+          >
+            {{ ui('Create') }}
+          </EgButton>
+          <EgButton tone="subtle" variant="text" size="md" @click="onCancel">
+            {{ ui('Cancel') }}
+          </EgButton>
+        </div>
+      </footer>
     </EgLayout>
   </div>
 </template>

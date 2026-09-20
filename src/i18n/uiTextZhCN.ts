@@ -42,7 +42,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
 
   // Payment Engine menu
   'Order Record': '订单记录',
-  'Payment Record': '订单记录',
+  'Payment Record': '支付记录',
   'Settlement Record': '结算记录',
   'Settlement Number': '结算编号',
   'Settlement ID': '结算编号',

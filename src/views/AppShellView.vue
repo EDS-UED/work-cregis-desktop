@@ -33,20 +33,14 @@ import {
   resolveTasksModuleMenuDisplayLabel,
   type TasksDataListMenuItemLabel,
 } from '@/scenes/tasks/tasksDataListPageData';
-import WaasModuleContentPage from '@/scenes/waas-project/WaasModuleContentPage.vue';
-import WaasOrderModeDataListPage from '@/scenes/waas-project/WaasOrderModeDataListPage.vue';
-import WaasProjectCreatePage from '@/scenes/waas-project/WaasProjectCreatePage.vue';
-import WaasProjectEmptyPage from '@/scenes/waas-project/WaasProjectEmptyPage.vue';
+import WaasProjectShell from '@/scenes/waas-project/WaasProjectShell.vue';
 import {
   isWaasMenuItemValidForProject,
-  isWaasOrderModeMenuItem,
   isWaasOrderModeProject,
   resolveDefaultWaasMenuItem,
-  WAAS_SETTINGS_MENU_ITEM,
 } from '@/scenes/waas-project/waasMenuData';
 import { useWaasModuleMenuGroups } from '@/scenes/waas-project/useWaasModuleMenuGroups';
 import PaymentEngineProjectSettingsPage from '@/scenes/payment-engine/PaymentEngineProjectSettingsPage.vue';
-import WaasProjectSettingsPage from '@/scenes/waas-project/WaasProjectSettingsPage.vue';
 
 const { messages, ui, locale } = useAppI18n();
 const {
@@ -97,43 +91,6 @@ const showTasksDataList = computed(
 
 const showPreferencePage = computed(
   () => activeModuleTitle.value === 'Account Settings' && activeModuleMenuItem.value === 'Preference',
-);
-
-const showWaasEmpty = computed(
-  () => isWaasModule.value && !waasHasProjects.value && waasShellView.value !== 'create',
-);
-
-const showWaasCreate = computed(
-  () => isWaasModule.value && waasShellView.value === 'create',
-);
-
-const showWaasSettings = computed(
-  () =>
-    isWaasModule.value &&
-    waasHasProjects.value &&
-    waasShellView.value === 'content' &&
-    activeModuleMenuItem.value === WAAS_SETTINGS_MENU_ITEM,
-);
-
-const showWaasOrderModeList = computed(
-  () =>
-    isWaasModule.value &&
-    waasHasProjects.value &&
-    waasShellView.value === 'content' &&
-    isWaasOrderModeProject(waasSelectedProject.value) &&
-    activeModuleMenuItem.value !== null &&
-    activeModuleMenuItem.value !== WAAS_SETTINGS_MENU_ITEM &&
-    isWaasOrderModeMenuItem(activeModuleMenuItem.value),
-);
-
-const showWaasStandardContent = computed(
-  () =>
-    isWaasModule.value &&
-    waasHasProjects.value &&
-    waasShellView.value === 'content' &&
-    activeModuleMenuItem.value !== null &&
-    activeModuleMenuItem.value !== WAAS_SETTINGS_MENU_ITEM &&
-    !showWaasOrderModeList.value,
 );
 
 const showPaymentEngineSettings = computed(
@@ -341,21 +298,10 @@ function onModuleMenuTitleFlotationItemSelect(_label: string, index: number) {
     />
     <PreferencePage v-else-if="showPreferencePage" />
 
-    <template v-else-if="isWaasModule">
-      <WaasProjectEmptyPage v-if="showWaasEmpty" />
-      <WaasProjectCreatePage v-else-if="showWaasCreate" />
-      <WaasProjectSettingsPage v-else-if="showWaasSettings" />
-      <WaasOrderModeDataListPage
-        v-else-if="showWaasOrderModeList && activeModuleMenuItem"
-        :key="`${waasSelectedProject?.id ?? 'default'}:${activeModuleMenuItem}`"
-        :menu-item="activeModuleMenuItem"
-      />
-      <WaasModuleContentPage
-        v-else-if="showWaasStandardContent && activeModuleMenuItem"
-        :key="`${waasSelectedProject?.id ?? 'default'}:${activeModuleMenuItem}`"
-        :menu-item="activeModuleMenuItem"
-      />
-    </template>
+    <WaasProjectShell
+      v-else-if="isWaasModule"
+      :menu-item="activeModuleMenuItem"
+    />
 
     <template v-else-if="isPaymentEngineModule">
       <PaymentEngineProjectSettingsPage v-if="showPaymentEngineSettings" />

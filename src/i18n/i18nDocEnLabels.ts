@@ -119,6 +119,7 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Optional, up to 256 characters.': 'Optional, up to 256 characters.',
   'Order Management': 'Order Management',
   'Order Record': 'Order Record',
+  'Payment Record': 'Payment Record',
   Outbound: 'Withdrawal',
   'Outbound Wallet': 'Payout Wallets',
   'Outbound wallets': 'Payout Wallets',

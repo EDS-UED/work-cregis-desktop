@@ -16,6 +16,7 @@ import {
   EgToolBar,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import ProjectSettingsCopyValue from '@/scenes/project/components/ProjectSettingsCopyValue.vue';
 import ProjectSettingsItem from '@/scenes/project/components/ProjectSettingsItem.vue';
 import ProjectSettingsSection from '@/scenes/project/components/ProjectSettingsSection.vue';
 import sharedStyles from '@/scenes/waas-project/settings/waasSettings.shared.module.css';
@@ -70,7 +71,7 @@ const notificationGroups = computed(() => [
           <div :class="sharedStyles.tabsBlock">
             <EgTabs v-model="tabIndex" :labels="tabLabels" horizontal-gap="xl" vertical-gap="md" />
           </div>
-          <EgDivider :class="sharedStyles.tabsDivider" type="module" direction="horizontal" />
+          <EgDivider :class="sharedStyles.tabsDivider" type="page" direction="horizontal" />
         </div>
 
         <div :class="styles.scrollBody">
@@ -83,7 +84,7 @@ const notificationGroups = computed(() => [
                   show-value-copy
                 >
                   <template #actions>
-                    <EgButton tone="decor" variant="solid" size="sm">
+                    <EgButton tone="decor" variant="solid" size="md">
                       {{ ui('Edit') }}
                     </EgButton>
                   </template>
@@ -125,7 +126,7 @@ const notificationGroups = computed(() => [
                 </ProjectSettingsItem>
               </ProjectSettingsSection>
 
-              <EgDivider :class="sharedStyles.sectionDivider" type="module" direction="horizontal" />
+              <EgDivider :class="sharedStyles.sectionDivider" type="page" direction="horizontal" />
 
               <ProjectSettingsSection :title="ui('Developer Center')">
                 <ProjectSettingsItem
@@ -138,10 +139,10 @@ const notificationGroups = computed(() => [
                     <span :class="sharedStyles.maskedValue">****************************</span>
                   </template>
                   <template #actions>
-                    <EgButton tone="subtle" variant="text" size="sm" :class="sharedStyles.checkAction">
+                    <EgButton tone="subtle" variant="text" size="md" :class="sharedStyles.checkAction">
                       {{ ui('Check') }}
                     </EgButton>
-                    <EgButton tone="decor" variant="solid" size="sm">
+                    <EgButton tone="decor" variant="solid" size="md">
                       {{ ui('Reset') }}
                     </EgButton>
                   </template>
@@ -162,11 +163,11 @@ const notificationGroups = computed(() => [
                 </div>
               </ProjectSettingsSection>
 
-              <EgDivider :class="sharedStyles.sectionDivider" type="module" direction="horizontal" />
+              <EgDivider :class="sharedStyles.sectionDivider" type="page" direction="horizontal" />
 
               <ProjectSettingsSection :title="ui('Interface Type')" interface-heading>
                 <template #action>
-                  <EgButton tone="decor" variant="solid" size="sm">
+                  <EgButton tone="decor" variant="solid" size="md">
                     {{ ui('Edit') }}
                   </EgButton>
                 </template>
@@ -184,7 +185,9 @@ const notificationGroups = computed(() => [
                         <span :class="sharedStyles.policyLabel">{{ ui('Policy') }}</span>
                         <span :class="sharedStyles.policyValue">Opus ESG Investment</span>
                       </div>
-                      <EgDivider type="module" direction="horizontal" />
+                      <div :class="sharedStyles.policyInnerDivider">
+                        <EgDivider type="page" direction="horizontal" />
+                      </div>
                       <div :class="sharedStyles.policyWalletBlock">
                         <span :class="sharedStyles.policyWalletLabel">{{ ui('Payment wallet') }}</span>
                         <div :class="sharedStyles.policyWalletRow">
@@ -192,16 +195,30 @@ const notificationGroups = computed(() => [
                           <EgColorfulTag colorful-style="apricot" size="sm">
                             {{ ui('Default Payout') }}
                           </EgColorfulTag>
-                          <EgDivider type="module" direction="vertical" />
-                          <span :class="sharedStyles.policyValueMuted">ID: 1234567890</span>
+                          <EgDivider
+                            :class="sharedStyles.policyWalletDivider"
+                            type="page"
+                            direction="vertical"
+                          />
+                          <ProjectSettingsCopyValue
+                            display="ID: 1234567890"
+                            copy-value="1234567890"
+                          />
                         </div>
                         <div :class="sharedStyles.policyWalletRow">
                           <span :class="sharedStyles.policyValue">CregisFAT-2031</span>
                           <EgColorfulTag colorful-style="grass" size="sm">
                             {{ ui('Default Payment') }}
                           </EgColorfulTag>
-                          <EgDivider type="module" direction="vertical" />
-                          <span :class="sharedStyles.policyValueMuted">ID: 1234567890</span>
+                          <EgDivider
+                            :class="sharedStyles.policyWalletDivider"
+                            type="page"
+                            direction="vertical"
+                          />
+                          <ProjectSettingsCopyValue
+                            display="ID: 1234567890"
+                            copy-value="1234567890"
+                          />
                         </div>
                       </div>
                     </div>

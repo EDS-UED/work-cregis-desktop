@@ -21,7 +21,8 @@
   background-color: var(--event-hover);
 }
 
-.rootInteractive {
+.rootInteractive,
+.rootCopyable {
   cursor: pointer;
 }
 
@@ -69,8 +70,19 @@
   white-space: nowrap;
 }
 
-.valueCopyButton {
+.copyButton {
+  display: inline-flex;
   flex-shrink: 0;
+  align-items: center;
+}
+
+.copyButtonCopied :global(.eds-icon-button .symbol) {
+  color: var(--status-success);
+}
+
+.copyButtonCopied :global(.eds-icon .eds-i-f),
+.copyButtonCopied :global(.eds-icon path) {
+  fill: var(--status-success);
 }
 
 .actions {

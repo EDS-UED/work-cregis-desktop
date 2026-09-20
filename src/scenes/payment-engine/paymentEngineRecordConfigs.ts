@@ -149,6 +149,24 @@ export type PaymentEngineRecordRow = {
   callbackErrorRecordDetail?: PaymentEngineCallbackErrorDetailRecord;
   /** 支付记录列表 · 详情 Popup 派生数据。 */
   settlementRecordDetail?: PaymentEngineSettlementRecordDetail;
+  /** WaaS 规则配置 · 规则名。 */
+  ruleName?: string;
+  /** WaaS 规则配置 · 编号。 */
+  ruleNumber?: string;
+  /** WaaS 规则配置 · 金额区间 i18n key 或展示文案。 */
+  collectionAmountRangeKey?: string;
+  /** WaaS 规则配置 · 启用开关。 */
+  ruleEnabled?: boolean;
+  /** WaaS 任务记录 · 开始时间。 */
+  taskStartAt?: string;
+  /** WaaS 任务记录 · 结束时间。 */
+  taskEndAt?: string;
+  /** WaaS 任务记录 · 笔数。 */
+  taskTransactionCount?: string;
+  /** WaaS 归集记录 · 归集编号。 */
+  collectionId?: string;
+  /** WaaS 归集历史 · 完成时间。 */
+  completionTime?: string;
 };
 
 export type PaymentEngineSettlementRecordDetail = {
@@ -226,7 +244,23 @@ export type PaymentEngineRecordColumnKey =
   | 'callbackAmount'
   | 'callbackStatus'
   | 'callbackTime'
-  | 'callbackUrl';
+  | 'callbackUrl'
+  | 'ruleNameId'
+  | 'collectionCurrencyRange'
+  | 'ruleEnabled'
+  | 'ruleActions'
+  | 'taskCurrencyId'
+  | 'taskStatus'
+  | 'taskDateRange'
+  | 'taskAmount'
+  | 'taskCount'
+  | 'collectionHistoryMeta';
+
+export type PaymentEngineDataListToolbarPreset =
+  | 'default'
+  | 'filter-refresh'
+  | 'batch-filter-refresh'
+  | 'rule-configuration';
 
 export type PaymentEngineColumnAlign = 'start' | 'center' | 'end';
 
@@ -252,6 +286,7 @@ export type PaymentEngineRecordPageConfig = {
   filterBadge?: number;
   showBatchSelect?: boolean;
   rowCount?: number;
+  toolbarPreset?: PaymentEngineDataListToolbarPreset;
   columns: PaymentEngineRecordColumnConfig[];
   statistics?: Array<{ labelKey: string; value: string }>;
 };

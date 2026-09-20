@@ -6,8 +6,15 @@
 }
 
 .itemRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-3);
   width: 100%;
-  border-radius: var(--radius-md);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-sm);
+  background: var(--material-card-subtle);
+  box-sizing: border-box;
 }
 
 .itemRow:hover:not(.itemRowSelected) {
@@ -21,7 +28,7 @@
 .itemTitleRadio {
   width: auto;
   min-width: auto;
-  align-self: flex-start;
+  align-self: center;
   pointer-events: none;
 }
 
@@ -32,31 +39,31 @@
 
 .itemRowSelected,
 .itemRowSelected:hover {
-  background-color: var(--event-focus-brand-weaken);
+  background-color: var(--material-card-subtle);
 }
 
 .itemValueStack {
+  display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
   align-items: flex-start;
   gap: var(--spacing-05);
+  flex: 1 1 auto;
+  min-width: 0;
   pointer-events: none;
 }
 
 .modeTitle {
+  composes: typography-body-medium from global;
   color: var(--text-base-primary);
-  font-size: var(--eds-body-medium-size);
-  font-weight: var(--eds-body-medium-weight);
-  line-height: var(--eds-body-medium-line-height);
 }
 
 .modeDescription {
+  composes: typography-footnote from global;
   color: var(--text-base-secondary);
-  font-size: var(--eds-footnote-size);
-  font-weight: var(--eds-footnote-weight);
-  line-height: var(--eds-footnote-line-height);
 }
 
 .body {
-  padding: var(--spacing-2) var(--spacing-3) var(--spacing-3) calc(var(--spacing-3) + var(--icon-md) + var(--spacing-2));
+  padding: var(--spacing-0) var(--spacing-3) var(--spacing-0)
+    calc(var(--spacing-3) + var(--icon-md) + var(--spacing-3));
 }

@@ -99,7 +99,9 @@ const displayRows = computed(() => {
 
 const listIniting = computed(() => qaInitingHeld.value || !contentReady.value);
 
-const isHeaderSortDisabled = computed(() => Boolean(customize.value.loading));
+const isHeaderSortDisabled = computed(
+  () => Boolean(customize.value.loading) || displayRows.value.length === 0,
+);
 
 const detailFlow = useTransactionRecordDetailFlow();
 

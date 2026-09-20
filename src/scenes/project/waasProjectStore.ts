@@ -3,7 +3,7 @@ import {
   cregisModuleMenuTitleFlotationItems,
   type FlotationMenuItemPreset,
 } from '@eds/desktop-components';
-import type { ProjectShellView, WaasProject, WaasProjectDepositMode } from './types';
+import type { ProjectShellView, WaasCreateReturnView, WaasProject, WaasProjectDepositMode } from './types';
 
 export const WAAS_ORDER_MODE_DEMO_PROJECT_ID = 'waas-cascade';
 
@@ -91,6 +91,7 @@ const DEMO_WAAS_PROJECTS: WaasProject[] = [
 const projects = ref<WaasProject[]>([...DEMO_WAAS_PROJECTS]);
 const selectedProjectId = ref<string | null>(DEMO_WAAS_PROJECTS[0]!.id);
 const shellView = ref<ProjectShellView>('content');
+const createReturnView = ref<WaasCreateReturnView>('content');
 
 const selectedProject = computed(() =>
   projects.value.find((project) => project.id === selectedProjectId.value) ?? null,
@@ -124,11 +125,13 @@ function syncShellViewFromProjects() {
 }
 
 function openCreateProject() {
+  createReturnView.value =
+    shellView.value === 'empty' || projects.value.length === 0 ? 'empty' : 'content';
   shellView.value = 'create';
 }
 
 function cancelCreateProject() {
-  syncShellViewFromProjects();
+  shellView.value = createReturnView.value;
 }
 
 function createProject(input: {
@@ -188,6 +191,7 @@ export function useWaasProjectStore() {
     selectedProject,
     hasProjects,
     shellView,
+    createReturnView,
     titleFlotationItems,
     titleFlotationSelectedIndex,
     openCreateProject,

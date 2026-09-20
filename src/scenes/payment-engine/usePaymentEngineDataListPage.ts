@@ -18,23 +18,44 @@ import {
   isManyPageItemSelected,
   type PaginerManyPageItem,
 } from '@/scenes/tasks/paginerManyPagination';
+import type { TasksDataListSortOrder } from '@/scenes/tasks/tasksDataListSort';
+import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
+import type { PaymentEngineDataListToolbarPreset } from './paymentEngineRecordConfigs';
+import {
+  sortPaymentEngineRecordRows,
+  type PaymentEngineRecordSortTarget,
+} from './paymentEngineRecordSort';
 
 export const PAYMENT_ENGINE_COLUMN_HEIGHT = 66;
 export const PAYMENT_ENGINE_HEADER_HEIGHT = 32;
 
-type ToolbarActionKey = 'batch' | 'filter' | 'refresh' | 'export';
+type ToolbarActionKey =
+  | 'batch'
+  | 'filter'
+  | 'refresh'
+  | 'export'
+  | 'quickCollection'
+  | 'automation'
+  | 'addNew';
 
 export function usePaymentEngineDataListPage<T>(options: {
   rows: Ref<readonly T[]>;
   showExport: Ref<boolean>;
   showBatchSelect: Ref<boolean>;
   filterBadge: Ref<number>;
+  toolbarPreset: Ref<PaymentEngineDataListToolbarPreset | undefined>;
 }) {
   const customize = ref<Record<string, unknown>>({
     ...iconButtonProItemDefaults('batch', { label: 'Batch Processing', icon: 'eds-batch' }),
     ...iconButtonProItemDefaults('filter', { label: 'Filter', icon: 'eds-filter' }),
     ...iconButtonProItemDefaults('refresh', { label: 'Refresh', icon: 'eds-arrow-refresh' }),
     ...iconButtonProItemDefaults('export', { label: 'Export', icon: 'eds-arrow-download' }),
+    ...iconButtonProItemDefaults('quickCollection', {
+      label: 'Quick Collection',
+      icon: 'eds-gather',
+    }),
+    ...iconButtonProItemDefaults('automation', { label: 'Automation', icon: 'eds-clocks' }),
+    ...iconButtonProItemDefaults('addNew', { label: 'Add New', icon: 'eds-add' }),
     ...paginerPaginationDefaults(),
     loading: false,
     selectMode: false,
@@ -44,6 +65,7 @@ export function usePaymentEngineDataListPage<T>(options: {
   const settingsLevelIndex = ref(0);
   const settingsJumpValue = ref('');
   const currentPage = ref(1);
+  const activeSort = ref<PaymentEngineRecordSortTarget | null>(null);
 
   watch(
     options.filterBadge,
@@ -92,10 +114,59 @@ export function usePaymentEngineDataListPage<T>(options: {
     return readIconButtonProItem(customize.value, 'batch');
   });
 
+  const quickCollectionButton = computed(() => {
+    trackSingleIconButton('quickCollection');
+    return readIconButtonProItem(customize.value, 'quickCollection');
+  });
+
+  const automationButton = computed(() => {
+    trackSingleIconButton('automation');
+    return readIconButtonProItem(customize.value, 'automation');
+  });
+
+  const addNewButton = computed(() => {
+    trackSingleIconButton('addNew');
+    return readIconButtonProItem(customize.value, 'addNew');
+  });
+
+  const resolvedToolbarPreset = computed(
+    (): PaymentEngineDataListToolbarPreset => options.toolbarPreset.value ?? 'default',
+  );
+
   const toolbarActionButtons = computed(() => {
+    const preset = resolvedToolbarPreset.value;
+    const buttons: Array<{ key: ToolbarActionKey; item: ReturnType<typeof readIconButtonProItem> }> = [];
+
+    if (preset === 'rule-configuration') {
+      buttons.push(
+        { key: 'quickCollection', item: quickCollectionButton.value },
+        { key: 'automation', item: automationButton.value },
+        { key: 'filter', item: filterButton.value },
+        { key: 'addNew', item: addNewButton.value },
+      );
+      return buttons;
+    }
+
+    if (preset === 'filter-refresh') {
+      buttons.push(
+        { key: 'filter', item: filterButton.value },
+        { key: 'refresh', item: refreshButton.value },
+      );
+      return buttons;
+    }
+
+    if (preset === 'batch-filter-refresh') {
+      trackSingleIconButton('batch');
+      buttons.push({ key: 'batch', item: batchButton.value });
+      buttons.push(
+        { key: 'filter', item: filterButton.value },
+        { key: 'refresh', item: refreshButton.value },
+      );
+      return buttons;
+    }
+
     trackSingleIconButton('filter');
     trackSingleIconButton('refresh');
-    const buttons: Array<{ key: ToolbarActionKey; item: ReturnType<typeof readIconButtonProItem> }> = [];
     if (options.showBatchSelect.value) {
       trackSingleIconButton('batch');
       buttons.push({ key: 'batch', item: batchButton.value });
@@ -115,9 +186,41 @@ export function usePaymentEngineDataListPage<T>(options: {
     toolbarActionButtons.value.find((button) => button.key === 'batch'),
   );
 
-  const toolbarSectionButtons = computed(() =>
-    toolbarActionButtons.value.filter((button) => button.key !== 'batch'),
-  );
+  const toolbarFunctionalButtons = computed(() => {
+    const preset = resolvedToolbarPreset.value;
+    if (preset === 'rule-configuration') {
+      return toolbarActionButtons.value.filter(
+        (button) => button.key === 'quickCollection' || button.key === 'automation',
+      );
+    }
+    if (preset === 'batch-filter-refresh') {
+      return toolbarBatchButton.value ? [toolbarBatchButton.value] : [];
+    }
+    return [];
+  });
+
+  const toolbarSectionButtons = computed(() => {
+    const preset = resolvedToolbarPreset.value;
+    if (preset === 'rule-configuration') {
+      return toolbarActionButtons.value.filter(
+        (button) => button.key === 'filter' || button.key === 'addNew',
+      );
+    }
+    if (preset === 'filter-refresh' || preset === 'batch-filter-refresh') {
+      return toolbarActionButtons.value.filter(
+        (button) => button.key === 'filter' || button.key === 'refresh',
+      );
+    }
+    return toolbarActionButtons.value.filter((button) => button.key !== 'batch');
+  });
+
+  const showToolbarSection = computed(() => {
+    const preset = resolvedToolbarPreset.value;
+    return preset === 'rule-configuration'
+      || preset === 'filter-refresh'
+      || preset === 'batch-filter-refresh'
+      || options.showBatchSelect.value;
+  });
 
   const dataListBatchActions = computed(() => [
     { key: 'ignore', label: 'Ignore' },
@@ -154,6 +257,14 @@ export function usePaymentEngineDataListPage<T>(options: {
 
   const totalRowCount = computed(() => options.rows.value.length);
 
+  const sortedRows = computed(() => {
+    if (!activeSort.value) return [...options.rows.value];
+    return sortPaymentEngineRecordRows(
+      options.rows.value as readonly PaymentEngineRecordRow[],
+      activeSort.value,
+    );
+  });
+
   const totalPages = computed(() => {
     if (totalRowCount.value === 0) return 1;
     return Math.ceil(totalRowCount.value / pageSize.value);
@@ -162,8 +273,13 @@ export function usePaymentEngineDataListPage<T>(options: {
   const paginatedRows = computed(() => {
     if (totalRowCount.value === 0) return [];
     const start = (currentPage.value - 1) * pageSize.value;
-    return options.rows.value.slice(start, start + pageSize.value);
+    return sortedRows.value.slice(start, start + pageSize.value);
   });
+
+  function setColumnSort(next: PaymentEngineRecordSortTarget | null) {
+    activeSort.value = next;
+    navigateManyPage(1);
+  }
 
   const isManyPagination = computed(() => totalPages.value > 1);
   const manyWindowStart = ref(defaultManyWindowStart(currentPage.value, totalPages.value));
@@ -291,6 +407,7 @@ export function usePaymentEngineDataListPage<T>(options: {
   });
 
   watch(options.rows, () => {
+    activeSort.value = null;
     navigateManyPage(1);
   });
 
@@ -302,6 +419,7 @@ export function usePaymentEngineDataListPage<T>(options: {
       refreshTimer = undefined;
     }
     navigateManyPage(1);
+    activeSort.value = null;
     customize.value.loading = true;
     refreshTimer = window.setTimeout(() => {
       customize.value.loading = false;
@@ -322,6 +440,7 @@ export function usePaymentEngineDataListPage<T>(options: {
   return {
     DATA_LIST_FIGMA_PAGINER,
     DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
+    activeSort,
     currentPage,
     customize,
     dataListBatchActions,
@@ -342,6 +461,7 @@ export function usePaymentEngineDataListPage<T>(options: {
     onManyPageItemClick,
     onSettingsJump,
     onToolbarActionClick,
+    setColumnSort,
     setSelectMode,
     pagePagination,
     paginatedRows,
@@ -352,7 +472,9 @@ export function usePaymentEngineDataListPage<T>(options: {
     settingsLevelIndex,
     toolbarActionButtons,
     toolbarBatchButton,
+    toolbarFunctionalButtons,
     toolbarSectionButtons,
+    showToolbarSection,
     totalRowCount,
   };
 }

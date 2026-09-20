@@ -14,7 +14,7 @@ defineProps<{
     <EgDivider
       v-if="showDivider"
       :class="styles.divider"
-      type="module"
+      type="page"
       direction="horizontal"
     />
     <div :class="[styles.headingRow, interfaceHeading && styles.headingRowInterface]">
