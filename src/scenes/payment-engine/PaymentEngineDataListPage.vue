@@ -68,8 +68,14 @@ import {
   QUERY_RECORDS_FILTER_OPERATORS,
   buildQueryRecordsRecordFilterFields,
 } from '@/scenes/risk-control/filter/queryRecordsRecordFilterFields';
+import { buildAddressBookRecordFilterRowSnapshot } from '@/scenes/risk-control/filter/buildAddressBookRecordFilterRowSnapshot';
+import {
+  ADDRESS_BOOK_RECORD_FILTER_OPERATORS,
+  buildAddressBookRecordFilterFields,
+} from '@/scenes/risk-control/filter/addressBookRecordFilterFields';
 import {
   riskControlDataListShowsEgFilter,
+  shouldUseAddressBookRecordEgFilterSchema,
   shouldUseAutoRulesRecordEgFilterSchema,
   shouldUseLogsRecordEgFilterSchema,
   shouldUsePolicySettingsRecordEgFilterSchema,
@@ -173,6 +179,9 @@ const usesAutomationRecordEgFilter = computed(() =>
 const usesQueryRecordsRecordEgFilter = computed(() =>
   shouldUseQueryRecordsRecordEgFilterSchema(props.menuItem),
 );
+const usesAddressBookRecordEgFilter = computed(() =>
+  shouldUseAddressBookRecordEgFilterSchema(props.menuItem),
+);
 const usesPaymentRecordEgFilter = computed(() =>
   shouldUsePaymentRecordEgFilterSchema(props.menuItem),
 );
@@ -195,7 +204,8 @@ function resolveWaasFilterSourceRowCount(): number {
     || usesAutoRulesRecordEgFilter.value
     || usesPolicySettingsRecordEgFilter.value
     || usesAutomationRecordEgFilter.value
-    || usesQueryRecordsRecordEgFilter.value;
+    || usesQueryRecordsRecordEgFilter.value
+    || usesAddressBookRecordEgFilter.value;
   const baseCount = usesPaymentEngineRowSource
     ? resolvePaymentEngineRecordRowCount(props.menuItem)
     : resolveWaasStandardRecordRowCount(props.menuItem);
@@ -227,6 +237,9 @@ function buildFilterRowSnapshot(rowIndex: number, row: PaymentEngineRecordRow) {
   if (usesQueryRecordsRecordEgFilter.value) {
     return buildQueryRecordsRecordFilterRowSnapshot(rowIndex, row);
   }
+  if (usesAddressBookRecordEgFilter.value) {
+    return buildAddressBookRecordFilterRowSnapshot(rowIndex, row);
+  }
   return buildWaasDataListFilterRowSnapshot(rowIndex, row, props.menuItem);
 }
 
@@ -257,6 +270,13 @@ const waasFilterFields = computed((): EgFilterField[] => {
   if (usesQueryRecordsRecordEgFilter.value) {
     return buildQueryRecordsRecordFilterFields((key) => ui(key), sourceRowCount);
   }
+  if (usesAddressBookRecordEgFilter.value) {
+    return buildAddressBookRecordFilterFields(
+      props.menuItem,
+      (key) => ui(key),
+      sourceRowCount,
+    );
+  }
   return buildWaasDataListFilterFields(
     props.menuItem,
     (key) => ui(key),
@@ -274,6 +294,7 @@ const waasFilterOperators = computed(() => {
   if (usesPolicySettingsRecordEgFilter.value) return POLICY_SETTINGS_RECORD_FILTER_OPERATORS;
   if (usesAutomationRecordEgFilter.value) return AUTOMATION_RECORD_FILTER_OPERATORS;
   if (usesQueryRecordsRecordEgFilter.value) return QUERY_RECORDS_FILTER_OPERATORS;
+  if (usesAddressBookRecordEgFilter.value) return ADDRESS_BOOK_RECORD_FILTER_OPERATORS;
   return WAAS_DATA_LIST_FILTER_OPERATORS;
 });
 

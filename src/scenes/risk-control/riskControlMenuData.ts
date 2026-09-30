@@ -66,6 +66,11 @@ export function isRiskControlLogsMenuItem(menuItem: string): boolean {
   return resolveRiskControlRecordMenuItem(menuItem) === 'Logs';
 }
 
+export function isRiskControlAddressBookMenuItem(menuItem: string): boolean {
+  const resolvedMenuItem = resolveRiskControlRecordMenuItem(menuItem);
+  return resolvedMenuItem === 'Whitelist' || resolvedMenuItem === 'Blacklist';
+}
+
 /** 风控列表 · 整行点击是否打开详情（与 Action 列按钮可见性对齐）。 */
 export function shouldOpenRiskControlDetailOnRowClick(
   menuItem: string,

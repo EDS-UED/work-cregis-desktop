@@ -52,7 +52,6 @@ import WaasListFieldRuleActions from '@/scenes/waas-project/list-field/WaasListF
 import RiskControlListFieldPolicyActions from '@/scenes/risk-control/list-field/RiskControlListFieldPolicyActions.vue';
 import RiskControlListFieldAutomationActions from '@/scenes/risk-control/list-field/RiskControlListFieldAutomationActions.vue';
 import RiskControlListFieldAddressBookAddress from '@/scenes/risk-control/list-field/RiskControlListFieldAddressBookAddress.vue';
-import RiskControlListFieldAddressBookCurrency from '@/scenes/risk-control/list-field/RiskControlListFieldAddressBookCurrency.vue';
 import RiskControlListFieldAddressBookActions from '@/scenes/risk-control/list-field/RiskControlListFieldAddressBookActions.vue';
 import RiskControlListFieldLogEvent from '@/scenes/risk-control/list-field/RiskControlListFieldLogEvent.vue';
 import RiskControlListFieldLogActions from '@/scenes/risk-control/list-field/RiskControlListFieldLogActions.vue';
@@ -550,12 +549,6 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 <PaymentEngineListFieldCallbackUrl
                   :url="recordRow(data).callbackUrl ?? ''"
                   :align-end="column.align === 'end'"
-                />
-              </template>
-
-              <template v-else-if="column.key === 'crypto' && menuItem === 'Whitelist'">
-                <RiskControlListFieldAddressBookCurrency
-                  :customize="cryptoCustomize(recordRow(data), column)"
                 />
               </template>
 

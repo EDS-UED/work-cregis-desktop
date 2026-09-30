@@ -1,4 +1,5 @@
 import {
+  isRiskControlAddressBookMenuItem,
   isRiskControlAmlMenuItem,
   isRiskControlAutoRulesMenuItem,
 } from '@/scenes/risk-control/riskControlMenuData';
@@ -10,7 +11,8 @@ export function riskControlDataListShowsEgFilter(menuItem: string | undefined): 
     || item === 'Automation'
     || item === 'Logs'
     || isRiskControlAutoRulesMenuItem(item)
-    || isRiskControlAmlMenuItem(item);
+    || isRiskControlAmlMenuItem(item)
+    || isRiskControlAddressBookMenuItem(item);
 }
 
 export function shouldUsePolicySettingsRecordEgFilterSchema(menuItem: string): boolean {
@@ -31,4 +33,8 @@ export function shouldUseAutoRulesRecordEgFilterSchema(menuItem: string): boolea
 
 export function shouldUseQueryRecordsRecordEgFilterSchema(menuItem: string): boolean {
   return isRiskControlAmlMenuItem(menuItem);
+}
+
+export function shouldUseAddressBookRecordEgFilterSchema(menuItem: string): boolean {
+  return isRiskControlAddressBookMenuItem(menuItem);
 }
