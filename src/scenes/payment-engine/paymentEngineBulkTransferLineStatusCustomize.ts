@@ -6,7 +6,7 @@ const BULK_TRANSFER_LINE_STATUS_MAP: Record<
   { status: TagStatus; labelKey: string }
 > = {
   pending: { status: 'warning', labelKey: 'Transferring' },
-  success: { status: 'success', labelKey: 'Success' },
+  success: { status: 'success', labelKey: 'Transfer Successful' },
   failed: { status: 'danger', labelKey: 'Transfer Failed' },
 };
 

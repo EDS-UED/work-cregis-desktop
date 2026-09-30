@@ -191,13 +191,15 @@
 }
 
 .avatar {
-  flex-shrink: 0;
+  composes: listFieldInlineAvatar from './listFieldInlineIcon.shared.module.css';
 }
 
-.appIcon {
-  flex-shrink: 0;
-  width: var(--avatar-xs);
-  height: var(--avatar-xs);
+.appIconXl {
+  composes: listFieldInlineAppIconXl from './listFieldInlineIcon.shared.module.css';
+}
+
+.appIconLg {
+  composes: listFieldInlineAppIconLg from './listFieldInlineIcon.shared.module.css';
 }
 
 .singleStack {

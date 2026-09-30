@@ -1,0 +1,60 @@
+.tooltip {
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.infoButton {
+  flex-shrink: 0;
+}
+
+.infoButton:global(.eds-icon-button:hover),
+.infoButton:global(.eds-icon-button:active) {
+  background-color: var(--event-hover);
+}
+
+.infoButton:global(.eds-icon-button:focus-visible),
+.tooltip :global([data-eds-tooltip-open]) .infoButton:global(.eds-icon-button) {
+  background-color: var(--event-focus);
+}
+
+.iconOutline,
+.iconFill {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.iconFill {
+  display: none;
+}
+
+.infoButton:hover .iconOutline,
+.tooltip :global([data-eds-tooltip-open]) .iconOutline {
+  display: none;
+}
+
+.infoButton:hover .iconFill,
+.tooltip :global([data-eds-tooltip-open]) .iconFill {
+  display: inline-flex;
+}
+
+.tooltipPanel :global(.eds-tooltip-panel) {
+  padding: var(--spacing-1) var(--spacing-2);
+}
+
+.hintContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-025);
+}
+
+.hintLine {
+  margin: 0;
+  color: var(--text-base-primary);
+  font-family: var(--eds-family-sans);
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+  white-space: normal;
+  word-break: break-word;
+}

@@ -35,7 +35,7 @@ function memberDisplayName(member: ApprovalProgressMember): string {
       <span v-if="index > 0" :class="styles.pendingMemberSeparator" aria-hidden="true">/</span>
       <span :class="styles.pendingMember">
         <EgAvatar
-          size="xs"
+          size="sm"
           :name="member.avatarName"
           :variant="member.avatarVariant ?? 'initials'"
         />
@@ -58,7 +58,7 @@ function memberDisplayName(member: ApprovalProgressMember): string {
       <div :class="styles.memberMain">
         <div :class="styles.memberLead">
           <EgAvatar
-            size="xs"
+            size="sm"
             :name="member.avatarName"
             :variant="member.avatarVariant ?? 'initials'"
           />

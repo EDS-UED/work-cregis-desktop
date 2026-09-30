@@ -14,8 +14,8 @@ type ToolbarButton = {
 
 defineProps<{
   title: string;
-  showBatchButton: boolean;
-  toolbarBatchButton: ToolbarButton | null | undefined;
+  showToolbarSection: boolean;
+  toolbarFunctionalButtons: ToolbarButton[];
   toolbarSectionButtons: ToolbarButton[];
   toolbarActionButtons: ToolbarButton[];
   translate: (key: string) => string;
@@ -31,21 +31,27 @@ const emit = defineEmits<{
     :title="title"
     :show-operation="true"
     :show-divider="true"
-    :show-section="showBatchButton"
+    :show-section="showToolbarSection"
   >
-    <template v-if="showBatchButton && toolbarBatchButton" #functional>
+    <template v-if="$slots.title" #title>
+      <slot name="title" />
+    </template>
+    <template v-if="showToolbarSection" #functional>
       <EgIconProButton
-        :label="translate(toolbarBatchButton.item.label)"
-        :badge="toolbarBatchButton.item.badge"
-        :show-badge="toolbarBatchButton.item.showBadge"
-        :show-reddot="toolbarBatchButton.item.showReddot"
-        :disabled="toolbarBatchButton.item.disabled"
-        @click="emit('toolbar-action', 'batch')"
+        v-for="button in toolbarFunctionalButtons"
+        :key="`functional-${button.key}`"
+        :label="translate(button.item.label)"
+        :badge="button.item.badge"
+        :show-badge="button.item.showBadge"
+        :show-reddot="button.item.showReddot"
+        :disabled="button.item.disabled"
+        @click="emit('toolbar-action', button.key)"
       >
-        <EgIcon :name="toolbarBatchButton.item.icon" size="sm" />
+        <EgIcon :name="button.item.icon" size="sm" />
       </EgIconProButton>
     </template>
-    <template v-if="showBatchButton" #section>
+    <template v-if="showToolbarSection" #section>
+      <slot name="section-prefix" />
       <EgIconProButton
         v-for="button in toolbarSectionButtons"
         :key="button.key"
@@ -60,6 +66,7 @@ const emit = defineEmits<{
       </EgIconProButton>
     </template>
     <template v-else #functional>
+      <slot name="functional-prefix" />
       <EgIconProButton
         v-for="button in toolbarActionButtons"
         :key="`functional-${button.key}`"

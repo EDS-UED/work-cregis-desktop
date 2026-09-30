@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import {
   EgDataList,
   EgDataListCellOverflow,
@@ -14,9 +14,19 @@ import {
   EgPaginationGroupButton,
   EgToolBar,
   type DataListItem,
+  type EgFilterCondition,
+  type EgFilterField,
+  type EgFilterLogicMode,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
+import {
+  applyEgFilterConditions,
+  hasActiveEgFilterConditions,
+  isActiveEgFilterCondition,
+} from '@/scenes/shared/applyEgFilterConditions';
+import { resolveDataListFilterSourceRowCount } from '@/scenes/shared/buildListDerivedFilterOptions';
+import TasksToolbarFilter from '@/scenes/tasks/filter/TasksToolbarFilter.vue';
 import DataListHeaderSortTrigger from '@/scenes/tasks/DataListHeaderSortTrigger.vue';
 import TasksListFieldAmount from '@/scenes/tasks/list-field/TasksListFieldAmount.vue';
 import TasksListFieldCurrency from '@/scenes/tasks/list-field/TasksListFieldCurrency.vue';
@@ -46,12 +56,61 @@ import {
   TRANSACTION_RECORDS_HEADER_HEIGHT,
   useTransactionRecordsDataListPage,
 } from './useTransactionRecordsDataListPage';
+import { buildTransactionRecordsFilterRowSnapshot } from './filter/buildTransactionRecordsFilterRowSnapshot';
+import {
+  TRANSACTION_RECORDS_FILTER_OPERATORS,
+  buildTransactionRecordsFilterFields,
+} from './filter/transactionRecordsFilterFields';
 import { registerTransactionRecordDetailFlow } from './transactionRecordDetailFlowContext';
 import { registerTransactionRecordsDataListShellApi } from './transactionRecordsDataListShellApi';
+import {
+  TRANSACTION_RECORDS_DEMO_TOTAL,
+  buildTransactionRecordRow,
+} from './transactionRecordData';
 import { useTransactionRecordDetailFlow } from './useTransactionRecordDetailFlow';
 import styles from './TransactionRecordsDataListPage.module.css';
 
 const { ui } = useAppI18n();
+
+const filterConditions = ref<EgFilterCondition[]>([]);
+const filterLogicMode = ref<EgFilterLogicMode>('all');
+
+const filterSourceRowCount = resolveDataListFilterSourceRowCount(
+  false,
+  TRANSACTION_RECORDS_DEMO_TOTAL,
+);
+
+const filterFields = computed((): EgFilterField[] =>
+  buildTransactionRecordsFilterFields((key) => ui(key), filterSourceRowCount),
+);
+
+const filteredIndices = computed(() => {
+  const allIndices = Array.from({ length: TRANSACTION_RECORDS_DEMO_TOTAL }, (_, index) => index);
+  if (!hasActiveEgFilterConditions(filterConditions.value)) {
+    return allIndices;
+  }
+
+  const conditions = filterConditions.value;
+  const fields = filterFields.value;
+  const logicMode = filterLogicMode.value;
+
+  return allIndices.filter((rowIndex) => {
+    try {
+      return applyEgFilterConditions({
+        snapshot: buildTransactionRecordsFilterRowSnapshot(buildTransactionRecordRow(rowIndex)),
+        conditions,
+        fields,
+        logicMode,
+      });
+    } catch {
+      return true;
+    }
+  });
+});
+
+const filterBadge = computed(
+  () => filterConditions.value.filter(isActiveEgFilterCondition).length,
+);
 
 const {
   DATA_LIST_FIGMA_PAGINER,
@@ -84,7 +143,16 @@ const {
   timeSortOrder,
   toolbarActionButtons,
   totalRowCount,
-} = useTransactionRecordsDataListPage();
+} = useTransactionRecordsDataListPage({
+  sourceIndices: filteredIndices,
+  filterBadge,
+});
+
+watch(filterConditions, () => {
+  if (hasActiveEgFilterConditions(filterConditions.value)) {
+    goFirstPage();
+  }
+}, { deep: true });
 
 const { contentReady, setContentReady } = useDeferredContentMount();
 const listForcedEmpty = ref(false);
@@ -152,6 +220,10 @@ function recordRow(data: DataListItem): TransactionRecordRow {
 function onRowClick(data: DataListItem) {
   detailFlow.openDetailForRow(recordRow(data));
 }
+
+const displayToolbarActionButtons = computed(() =>
+  toolbarActionButtons.value.filter((button) => button.key !== 'filter'),
+);
 </script>
 
 <template>
@@ -164,8 +236,14 @@ function onRowClick(data: DataListItem) {
           :show-divider="true"
         >
           <template #functional>
+            <TasksToolbarFilter
+              v-model="filterConditions"
+              v-model:logic-mode="filterLogicMode"
+              :fields="filterFields"
+              :operators="TRANSACTION_RECORDS_FILTER_OPERATORS"
+            />
             <EgIconProButton
-              v-for="button in toolbarActionButtons"
+              v-for="button in displayToolbarActionButtons"
               :key="button.key"
               :label="ui(button.item.label)"
               :badge="button.item.badge"

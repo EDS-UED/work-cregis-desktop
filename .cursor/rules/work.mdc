@@ -39,7 +39,7 @@ alwaysApply: true
 
 **【禁止】** 任何复制：`showValueCopy`、HashLikeLine/复制、`CryptoAddressSide`、clipboard、复制按钮/Menu；业务区 `user-select:text`（输入框等 `global.css` 白名单除外）。`installPageCopyGuard()` 拦截 copy/cut；`.app-preview` 与 teleport 的 tooltip/flotation 全局禁选。
 
-**【必须】** 哈希/编号/地址/金额只读；溢出→`EgListFieldOverflowText`/`EgTooltipOverflow`（无复制）；`copyOnRowHover=false`。`boundary-selector`/`close-on-scroll` 在引用库组件内配，业务勿重复。
+**【必须】** 哈希/编号/地址/金额只读；溢出→`EgListFieldOverflowText` / Tooltip 场景化：`EgFieldOvfTooltip`（字段）、`EgParagraphOvfTooltip`（段落）、`EgAddressOvfTooltip`（双地址）；业务禁复制。`copyOnRowHover=false`。`boundary-selector`/`close-on-scroll` 在引用库组件内配，业务勿重复。
 
 ---
 
@@ -224,7 +224,9 @@ min-width prop=硬下限；禁 flex 列 max-width；禁业务 CSS 盖 col。flex
 | 列 | 规则 |
 |----|------|
 | 币种 0–7 | USDT/BSC、TON、ZEC、AAVE/Base、MNT/Solana、GBG、1INCH、DEEP；8+→resolveCurrencyRowPreset |
-| 状态 | 前 N showcase 全集→resolveShowcaseThenCompletedStatus；其后全完成态 |
+| 状态 | 前 N 行按序展示**该页状态全集**（`resolveShowcaseThenCompletedStatus`），第 N+1 行起**全部为同一完成态**；禁交替/随机。Tag 映射→`paymentEngineRecordStatusCustomize.ts`。|
+| 状态 · 提币/API 归集类 | showcase 7 行序：待外部确认→已签名待确认→审批中→待签名→交易失败→驳回→已完成；其后 `completed`。`waasStandardRecordData` · `API_COLLECTION_STATUS_SHOWCASE` / `WALLET_PAYOUT_STATUS_SHOWCASE`。|
+| 状态 · 归集历史 | showcase 3 行序：失败→已取消→成功；其后 `success`。`COLLECTION_HISTORY_STATUS_SHOWCASE`。|
 | 金额 | resolveDemoAmountRowValues；前 8 preset，9+ seeded |
 | 地址/hash | 已验证池；禁随机 hex/全表同值 |
 | 编号/时间 | 按 rowIndex 派生 |

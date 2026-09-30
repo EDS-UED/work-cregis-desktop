@@ -6,7 +6,7 @@ import {
   EgListFieldAddressLine,
   EgListFieldOverflowText,
   EgTag,
-  EgTooltipOverflow,
+  EgFieldOvfTooltip,
   formatMoreTagLabel,
   hasAddressTags,
   splitTagsForDisplay,
@@ -158,7 +158,7 @@ function isColorfulTag(tag: (typeof inlineTags.value)[number]): boolean {
     </div>
 
     <div v-if="showWalletMetaRow" :class="walletMetaRowClass">
-      <EgTooltipOverflow
+      <EgFieldOvfTooltip
         v-if="showSecondaryText"
         :tooltip-text="model.address"
         :copy-value="model.address"
@@ -183,7 +183,7 @@ function isColorfulTag(tag: (typeof inlineTags.value)[number]): boolean {
         >
           {{ secondaryLineText }}
         </span>
-      </EgTooltipOverflow>
+      </EgFieldOvfTooltip>
 
       <span v-if="showTags || showMoreTag" :class="styles.walletMetaTags">
         <template v-for="(tag, index) in inlineTags" :key="`wallet-meta-tag-${index}`">
@@ -222,7 +222,7 @@ function isColorfulTag(tag: (typeof inlineTags.value)[number]): boolean {
   </div>
 
   <div v-else :class="[styles.aliasHost, alignEnd && styles.aliasHostAlignEnd]">
-    <EgTooltipOverflow
+    <EgFieldOvfTooltip
       :tooltip-text="model.address"
       :copy-value="model.address"
       :trigger="tooltipTrigger"
@@ -299,6 +299,6 @@ function isColorfulTag(tag: (typeof inlineTags.value)[number]): boolean {
           </EgTag>
         </div>
       </div>
-    </EgTooltipOverflow>
+    </EgFieldOvfTooltip>
   </div>
 </template>

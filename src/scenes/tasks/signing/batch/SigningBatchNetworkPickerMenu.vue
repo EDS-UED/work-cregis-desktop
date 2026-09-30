@@ -55,7 +55,7 @@ const { ui } = useAppI18n();
 const scrollRef = ref<HTMLElement | null>(null);
 const rowsRef = ref<HTMLElement | null>(null);
 
-const { topScrim, bottomScrim, update } = useScrollChromeScrim(scrollRef, {
+const { canScroll, topScrim, bottomScrim, update } = useScrollChromeScrim(scrollRef, {
   contentRef: rowsRef,
 });
 
@@ -91,14 +91,16 @@ function onProcess(group: BatchCurrencyGroup) {
       </header>
 
       <EgDivider
-        v-if="topScrim"
+        v-if="canScroll"
         type="module"
         direction="horizontal"
         :class="[
           comboActionStyles.divider,
           comboActionStyles.dividerAnimated,
+          !topScrim && comboActionStyles.dividerAnimatedHidden,
           'networkPickerHeaderDivider',
         ]"
+        :hide="!topScrim"
       />
 
       <div

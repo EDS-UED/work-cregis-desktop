@@ -1,13 +1,13 @@
 .host {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
+  min-width: 0;
 }
 
-.countText {
+.collectionIdText {
   composes: typography-body-medium from global;
   color: var(--text-base-primary);
-  white-space: nowrap;
 }

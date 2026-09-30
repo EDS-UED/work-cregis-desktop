@@ -18,10 +18,15 @@ const cellMinWidthStyle = computed(() => ({
   maxWidth: '100%',
   minWidth: '0',
 }));
+const alignEnd = computed(() => Boolean(props.customize.alignEnd));
 </script>
 
 <template>
-  <div class="desktopTokens list-field-time" :class="styles.host" :style="cellMinWidthStyle">
+  <div
+    class="desktopTokens list-field-time"
+    :class="[styles.host, alignEnd && styles.hostAlignEnd]"
+    :style="cellMinWidthStyle"
+  >
     <EgListFieldOverflowText
       :text="datetime"
       :size="isDoubleLine ? 'small' : 'medium'"

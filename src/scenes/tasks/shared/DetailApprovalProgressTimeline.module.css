@@ -283,11 +283,6 @@
   min-width: 0;
 }
 
-.memberLead :global(.eds-avatar) {
-  width: var(--icon-lg);
-  height: var(--icon-lg);
-}
-
 .memberText {
   display: inline-flex;
   flex-wrap: wrap;
@@ -335,11 +330,6 @@
   align-items: center;
   gap: var(--spacing-1);
   min-width: 0;
-}
-
-.pendingMember :global(.eds-avatar) {
-  width: var(--icon-lg);
-  height: var(--icon-lg);
 }
 
 .pendingMemberSeparator {

@@ -1,62 +1,179 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
   EgAvatar,
   EgButton,
-  EgColorfulTag,
   EgComboPageButton,
   EgDivider,
   EgIcon,
-  EgIconButton,
   EgLayout,
   EgLinkButton,
+  EgMotionLayoutContent,
   EgSwitch,
   EgTabs,
-  EgTag,
   EgToolBar,
+  useMotionLayoutContentSwitch,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
-import ProjectSettingsCopyValue from '@/scenes/project/components/ProjectSettingsCopyValue.vue';
+import type { WaasProjectDepositMode } from '@/scenes/project/types';
 import ProjectSettingsItem from '@/scenes/project/components/ProjectSettingsItem.vue';
+import ProjectSettingsCallbackPanel from '@/scenes/project/components/ProjectSettingsCallbackPanel.vue';
+import ProjectSettingsIpWhitelistPanel from '@/scenes/project/components/ProjectSettingsIpWhitelistPanel.vue';
+import ProjectSettingsMerchantActionFooter from '@/scenes/project/components/ProjectSettingsMerchantActionFooter.vue';
+import ProjectSettingsMerchantPanel from '@/scenes/project/components/ProjectSettingsMerchantPanel.vue';
+import ProjectSettingsNotificationPanel from '@/scenes/project/components/ProjectSettingsNotificationPanel.vue';
+import ProjectSettingsReceivingTransferPanel from '@/scenes/project/components/ProjectSettingsReceivingTransferPanel.vue';
+import ProjectSettingsPolicyWalletRow from '@/scenes/project/components/ProjectSettingsPolicyWalletRow.vue';
 import ProjectSettingsSection from '@/scenes/project/components/ProjectSettingsSection.vue';
 import sharedStyles from '@/scenes/waas-project/settings/waasSettings.shared.module.css';
 import styles from '@/scenes/waas-project/WaasProjectSettingsPage.module.css';
 
-const props = defineProps<{
-  projectName: string;
-}>();
+export type ProjectSettingsTabPreset = 'waas' | 'waas-order' | 'payment-engine';
+
+const WAAS_TAB_KEYS = [
+  'developer',
+  'ip-whitelist',
+  'callback-settings',
+  'notification',
+] as const;
+
+const WAAS_ORDER_TAB_KEYS = [
+  'developer',
+  'ip-whitelist',
+  'callback-settings',
+  'notification',
+  'receiving-transfer',
+  'merchant',
+] as const;
+
+const PAYMENT_ENGINE_TAB_KEYS = [
+  'developer',
+  'ip-whitelist',
+  'notification',
+  'payment-currency-settlement',
+  'merchant',
+  'order-processing',
+] as const;
+
+type ProjectSettingsTabKey =
+  | (typeof WAAS_TAB_KEYS)[number]
+  | (typeof WAAS_ORDER_TAB_KEYS)[number]
+  | (typeof PAYMENT_ENGINE_TAB_KEYS)[number];
+
+function resolveTabKeys(preset: ProjectSettingsTabPreset) {
+  if (preset === 'waas') return WAAS_TAB_KEYS;
+  if (preset === 'waas-order') return WAAS_ORDER_TAB_KEYS;
+  return PAYMENT_ENGINE_TAB_KEYS;
+}
+
+const props = withDefaults(
+  defineProps<{
+    projectName: string;
+    tabPreset?: ProjectSettingsTabPreset;
+    depositMode?: WaasProjectDepositMode;
+    /** QA: pass true to preview the IP whitelist empty state. */
+    ipWhitelistEmpty?: boolean;
+  }>(),
+  {
+    tabPreset: 'payment-engine',
+    ipWhitelistEmpty: false,
+  },
+);
 
 const { ui } = useAppI18n();
 
+const showGenerateSubAddressInterface = computed(
+  () => props.depositMode === 'sub-address',
+);
+
 const tabIndex = ref(0);
+const displayedTabIndex = ref(0);
+const scrollBodyRef = ref<HTMLElement | null>(null);
 const projectEnabled = ref(false);
 
-const tabLabels = computed(() => [
-  ui('Developer'),
-  ui('IP Whitelist'),
-  ui('Notification'),
-  ui('Receiving and Transfer'),
-  ui('Merchant information'),
-]);
+const {
+  contentExiting,
+  contentEntering,
+  switchContent,
+} = useMotionLayoutContentSwitch();
 
-const notificationGroups = computed(() => [
-  {
-    title: ui('Payment Notification'),
-    members: ['Nathan', 'Olivia Parker', 'Ethan Brooks', 'Sophia Lee', 'Liam Carter'],
+watch(tabIndex, (next, prev) => {
+  if (next === prev) return;
+  switchContent(() => {
+    displayedTabIndex.value = next;
+  });
+  scrollBodyRef.value?.scrollTo({ top: 0, behavior: 'instant' });
+});
+
+watch(
+  () => props.tabPreset,
+  () => {
+    tabIndex.value = 0;
+    displayedTabIndex.value = 0;
   },
-  {
-    title: ui('Callback Notification'),
-    members: ['Nathan', 'Olivia Parker'],
-  },
-  {
-    title: ui('Order Notification'),
-    members: [] as string[],
-  },
-  {
-    title: ui('Refund Notification'),
-    members: [] as string[],
-  },
-]);
+);
+
+const tabLabels = computed(() => {
+  if (props.tabPreset === 'waas') {
+    return [
+      ui('Developer'),
+      ui('IP Whitelist'),
+      ui('Callback Settings'),
+      ui('Notification Settings'),
+    ];
+  }
+
+  if (props.tabPreset === 'waas-order') {
+    return [
+      ui('Developer'),
+      ui('IP Whitelist'),
+      ui('Callback Settings'),
+      ui('Notification Settings'),
+      ui('Receiving and Transfer'),
+      ui('Merchant information'),
+    ];
+  }
+
+  return [
+    ui('Developer'),
+    ui('IP Whitelist'),
+    ui('Notification Settings'),
+    ui('Payment Currency and Settlement'),
+    ui('Merchant information'),
+    ui('Order Processing'),
+  ];
+});
+
+const activeTabKey = computed<ProjectSettingsTabKey>(() => {
+  const keys = resolveTabKeys(props.tabPreset);
+  return keys[displayedTabIndex.value] ?? keys[0];
+});
+
+const showDeveloperTab = computed(() => activeTabKey.value === 'developer');
+
+const showComboPageButton = computed(() => {
+  if (props.tabPreset === 'payment-engine') {
+    return activeTabKey.value === 'payment-currency-settlement';
+  }
+  if (props.tabPreset === 'waas-order') {
+    return activeTabKey.value === 'receiving-transfer';
+  }
+  return false;
+});
+
+const showMerchantActionFooter = computed(
+  () => activeTabKey.value === 'merchant',
+);
+
+const comboPageConfirmLabel = computed(() =>
+  ui(
+    activeTabKey.value === 'payment-currency-settlement'
+    || activeTabKey.value === 'receiving-transfer'
+      ? 'Confirm'
+      : 'Save',
+  ),
+);
+
 </script>
 
 <template>
@@ -71,12 +188,18 @@ const notificationGroups = computed(() => [
           <div :class="sharedStyles.tabsBlock">
             <EgTabs v-model="tabIndex" :labels="tabLabels" horizontal-gap="xl" vertical-gap="md" />
           </div>
-          <EgDivider :class="sharedStyles.tabsDivider" type="page" direction="horizontal" />
+          <div :class="sharedStyles.tabsDividerWrap">
+            <EgDivider type="page" direction="horizontal" />
+          </div>
         </div>
 
-        <div :class="styles.scrollBody">
+        <div ref="scrollBodyRef" :class="styles.scrollBody">
           <div class="desktopTokens" :class="styles.content">
-            <div v-if="tabIndex === 0" :class="sharedStyles.tabPanel">
+            <EgMotionLayoutContent
+              :content-exiting="contentExiting"
+              :content-entering="contentEntering"
+            >
+              <div v-if="showDeveloperTab" :class="sharedStyles.tabPanel">
               <ProjectSettingsSection :title="ui('Project Information')">
                 <ProjectSettingsItem
                   :label="ui('Project Name')"
@@ -126,7 +249,9 @@ const notificationGroups = computed(() => [
                 </ProjectSettingsItem>
               </ProjectSettingsSection>
 
-              <EgDivider :class="sharedStyles.sectionDivider" type="page" direction="horizontal" />
+              <div :class="sharedStyles.sectionDividerWrap">
+                <EgDivider type="page" direction="horizontal" />
+              </div>
 
               <ProjectSettingsSection :title="ui('Developer Center')">
                 <ProjectSettingsItem
@@ -163,7 +288,9 @@ const notificationGroups = computed(() => [
                 </div>
               </ProjectSettingsSection>
 
-              <EgDivider :class="sharedStyles.sectionDivider" type="page" direction="horizontal" />
+              <div :class="sharedStyles.sectionDividerWrap">
+                <EgDivider type="page" direction="horizontal" />
+              </div>
 
               <ProjectSettingsSection :title="ui('Interface Type')" interface-heading>
                 <template #action>
@@ -172,51 +299,57 @@ const notificationGroups = computed(() => [
                   </EgButton>
                 </template>
                 <div :class="sharedStyles.interfaceBody">
-                  <div :class="sharedStyles.interfaceMenu">
-                    <span :class="sharedStyles.interfaceMenuTitle">{{ ui('Payout') }}</span>
-                    <span :class="sharedStyles.interfaceMenuDescription">
-                      {{ ui('Payout full description') }}
-                    </span>
-                  </div>
-                  <div :class="sharedStyles.policyCard">
-                    <span :class="sharedStyles.policyBid" aria-hidden="true" />
-                    <div :class="sharedStyles.policyBody">
-                      <div :class="sharedStyles.policyRow">
-                        <span :class="sharedStyles.policyLabel">{{ ui('Policy') }}</span>
-                        <span :class="sharedStyles.policyValue">Opus ESG Investment</span>
-                      </div>
-                      <div :class="sharedStyles.policyInnerDivider">
-                        <EgDivider type="page" direction="horizontal" />
-                      </div>
-                      <div :class="sharedStyles.policyWalletBlock">
-                        <span :class="sharedStyles.policyWalletLabel">{{ ui('Payment wallet') }}</span>
-                        <div :class="sharedStyles.policyWalletRow">
+                  <div
+                    v-if="showGenerateSubAddressInterface"
+                    :class="sharedStyles.interfaceTypeItem"
+                  >
+                    <div :class="sharedStyles.interfaceMenu">
+                      <span :class="sharedStyles.interfaceMenuTitle">
+                        {{ ui('Generate Sub-Address') }}
+                      </span>
+                      <span :class="sharedStyles.interfaceMenuDescription">
+                        {{ ui('Generate Sub-Address full description') }}
+                      </span>
+                    </div>
+                    <div :class="sharedStyles.policyCard">
+                      <span :class="sharedStyles.policyBid" aria-hidden="true" />
+                      <div :class="sharedStyles.policyBody">
+                        <div :class="sharedStyles.policyRow">
+                          <span :class="sharedStyles.policyLabel">{{ ui('Wallet') }}</span>
                           <span :class="sharedStyles.policyValue">CregisFAT-2031</span>
-                          <EgColorfulTag colorful-style="apricot" size="sm">
-                            {{ ui('Default Payout') }}
-                          </EgColorfulTag>
-                          <EgDivider
-                            :class="sharedStyles.policyWalletDivider"
-                            type="page"
-                            direction="vertical"
-                          />
-                          <ProjectSettingsCopyValue
-                            display="ID: 1234567890"
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div :class="sharedStyles.interfaceTypeItem">
+                    <div :class="sharedStyles.interfaceMenu">
+                      <span :class="sharedStyles.interfaceMenuTitle">{{ ui('Payout') }}</span>
+                      <span :class="sharedStyles.interfaceMenuDescription">
+                        {{ ui('Payout full description') }}
+                      </span>
+                    </div>
+                    <div :class="sharedStyles.policyCard">
+                      <span :class="sharedStyles.policyBid" aria-hidden="true" />
+                      <div :class="sharedStyles.policyBody">
+                        <div :class="sharedStyles.policyRow">
+                          <span :class="sharedStyles.policyLabel">{{ ui('Policy') }}</span>
+                          <span :class="sharedStyles.policyValue">Opus ESG Investment</span>
+                        </div>
+                        <div :class="sharedStyles.policyInnerDivider">
+                          <EgDivider type="page" direction="horizontal" />
+                        </div>
+                        <div :class="sharedStyles.policyWalletBlock">
+                          <span :class="sharedStyles.policyWalletLabel">{{ ui('Payment wallet') }}</span>
+                          <ProjectSettingsPolicyWalletRow
+                            wallet-name="CregisFAT-2031"
+                            tag-key="Default Payout"
+                            tag-style="apricot"
                             copy-value="1234567890"
                           />
-                        </div>
-                        <div :class="sharedStyles.policyWalletRow">
-                          <span :class="sharedStyles.policyValue">CregisFAT-2031</span>
-                          <EgColorfulTag colorful-style="grass" size="sm">
-                            {{ ui('Default Payment') }}
-                          </EgColorfulTag>
-                          <EgDivider
-                            :class="sharedStyles.policyWalletDivider"
-                            type="page"
-                            direction="vertical"
-                          />
-                          <ProjectSettingsCopyValue
-                            display="ID: 1234567890"
+                          <ProjectSettingsPolicyWalletRow
+                            wallet-name="CregisFAT-2031"
+                            tag-key="Default Payment"
+                            tag-style="grass"
                             copy-value="1234567890"
                           />
                         </div>
@@ -227,76 +360,51 @@ const notificationGroups = computed(() => [
               </ProjectSettingsSection>
             </div>
 
-          <div v-else-if="tabIndex === 1" :class="sharedStyles.tabPanel">
-            <div :class="sharedStyles.emptyState">
-              <EgIcon name="eds-business-7" size="lg" />
-              <div :class="sharedStyles.emptyTextBlock">
-                <span :class="sharedStyles.emptyTitle">{{ ui('No data') }}</span>
-                <span :class="sharedStyles.emptyDescription">
-                  {{ ui('API whitelist empty description') }}
-                </span>
-              </div>
-              <EgButton tone="decor" variant="outline" size="sm">
-                {{ ui('Add IP') }}
-              </EgButton>
+            <div v-else-if="activeTabKey === 'ip-whitelist'" :class="sharedStyles.tabPanel">
+              <ProjectSettingsIpWhitelistPanel :empty="props.ipWhitelistEmpty" />
             </div>
-          </div>
 
-          <div v-else-if="tabIndex === 2" :class="sharedStyles.tabPanel">
+            <div v-else-if="activeTabKey === 'callback-settings'" :class="sharedStyles.tabPanel">
+              <ProjectSettingsCallbackPanel />
+            </div>
+
+            <div v-else-if="activeTabKey === 'notification'" :class="sharedStyles.tabPanel">
+              <ProjectSettingsNotificationPanel :tab-preset="tabPreset" />
+            </div>
+
             <div
-              v-for="group in notificationGroups"
-              :key="group.title"
-              :class="sharedStyles.notifyGroup"
+              v-else-if="
+                activeTabKey === 'payment-currency-settlement'
+                || activeTabKey === 'receiving-transfer'
+              "
+              :class="sharedStyles.tabPanel"
             >
-              <ProjectSettingsItem :label="group.title" />
-              <div v-if="group.members.length > 0" :class="sharedStyles.notifyMembers">
-                <span
-                  v-for="member in group.members"
-                  :key="member"
-                  :class="sharedStyles.notifyMemberChip"
-                >
-                  <EgAvatar :name="member" size="xs" />
-                  <span :class="sharedStyles.notifyMemberName">{{ member }}</span>
-                </span>
-                <EgIconButton
-                  :class="sharedStyles.notifyMoreButton"
-                  shape="rectangular"
-                  size="sm"
-                  :label="ui('Add Member')"
-                >
-                  <EgIcon name="eds-add" size="sm" />
-                </EgIconButton>
-              </div>
+              <ProjectSettingsReceivingTransferPanel />
             </div>
-          </div>
 
-          <div v-else-if="tabIndex === 3" :class="sharedStyles.tabPanel">
-            <h4 :class="sharedStyles.collectionHeading">{{ ui('Receiving Currency') }}</h4>
-            <div :class="sharedStyles.collectionPlaceholder">
-              <EgTag system-type="stroke-subtle" size="sm">USDT</EgTag>
-              <EgTag system-type="stroke-subtle" size="sm">USDC</EgTag>
-              <EgTag system-type="stroke-subtle" size="sm">ETH</EgTag>
+            <div v-else-if="activeTabKey === 'merchant'" :class="sharedStyles.tabPanel">
+              <ProjectSettingsMerchantPanel />
             </div>
-          </div>
 
-            <div v-else :class="sharedStyles.tabPanel">
-              <ProjectSettingsItem
-                :label="ui('Checkout Page Settings (Optional)')"
-                :value="props.projectName"
-                interactive
-              />
-              <div :class="sharedStyles.merchantLogoRow">
-                <span :class="sharedStyles.merchantLogoLabel">{{ ui('Merchant Logo') }}</span>
-                <EgAvatar name="M" size="md" />
-              </div>
+            <div v-else-if="activeTabKey === 'order-processing'" :class="sharedStyles.tabPanel">
+              <ProjectSettingsSection :title="ui('Order Processing')">
+                <ProjectSettingsItem
+                  :label="ui('Order Processing')"
+                  :value="ui('Please Select')"
+                  interactive
+                />
+              </ProjectSettingsSection>
             </div>
+            </EgMotionLayoutContent>
           </div>
         </div>
       </div>
 
+      <ProjectSettingsMerchantActionFooter v-if="showMerchantActionFooter" />
+
       <EgComboPageButton
-        v-if="tabIndex === 4"
-        :confirm-label="ui('Save')"
+        v-if="showComboPageButton"
+        :confirm-label="comboPageConfirmLabel"
         :cancel-label="ui('Cancel')"
         divider
       />

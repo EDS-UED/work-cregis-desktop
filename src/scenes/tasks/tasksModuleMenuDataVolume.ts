@@ -8,7 +8,7 @@ import {
 
 type TodoModuleMenuItemLabel = Extract<TasksDataListMenuItemLabel, 'Approval' | 'Signing'>;
 
-/** Module Menu EgMessage：跟列表数据量，与待办 / 批处理资格无关。 */
+/** Module Menu EgMessage：跟列表源数据量（不受 EgFilter 筛选影响），与批处理资格无关。 */
 export const tasksModuleMenuDataVolumes = ref<
   Record<TodoModuleMenuItemLabel, number>
 >({

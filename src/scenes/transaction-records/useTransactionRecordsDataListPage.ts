@@ -1,4 +1,4 @@
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import {
   DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
   DATA_LIST_FIGMA_PAGINER,
@@ -33,7 +33,10 @@ function buildDefaultIndices(): number[] {
   return Array.from({ length: TRANSACTION_RECORDS_DEMO_TOTAL }, (_, index) => index);
 }
 
-export function useTransactionRecordsDataListPage() {
+export function useTransactionRecordsDataListPage(options?: {
+  sourceIndices?: Ref<readonly number[]>;
+  filterBadge?: Ref<number>;
+}) {
   const customize = ref<Record<string, unknown>>({
     ...iconButtonProItemDefaults('filter', { label: 'Filter', icon: 'eds-filter' }),
     ...iconButtonProItemDefaults('refresh', { label: 'Refresh', icon: 'eds-arrow-refresh' }),
@@ -51,7 +54,22 @@ export function useTransactionRecordsDataListPage() {
   const currentPage = ref(1);
   const timeSortOrder = ref<TasksDataListSortOrder | ''>('');
   const amountSortOrder = ref<TasksDataListSortOrder | ''>('');
-  const sortedIndices = ref<number[]>(buildDefaultIndices());
+  const sortedIndices = ref<number[]>([...resolveSourceIndices()]);
+
+  function resolveSourceIndices(): number[] {
+    return [...(options?.sourceIndices?.value ?? buildDefaultIndices())];
+  }
+
+  if (options?.filterBadge) {
+    watch(
+      options.filterBadge,
+      (badge) => {
+        customize.value.filterShowBadge = badge > 0;
+        customize.value.filterBadge = String(badge);
+      },
+      { immediate: true },
+    );
+  }
 
   function trackSingleIconButton(prefix: string) {
     void customize.value[`${prefix}Label`];
@@ -78,7 +96,7 @@ export function useTransactionRecordsDataListPage() {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 100;
   });
 
-  const totalRowCount = computed(() => TRANSACTION_RECORDS_DEMO_TOTAL);
+  const totalRowCount = computed(() => resolveSourceIndices().length);
 
   const totalPages = computed(() => {
     if (totalRowCount.value === 0) return 1;
@@ -123,9 +141,10 @@ export function useTransactionRecordsDataListPage() {
   }
 
   function applySortState() {
+    const sourceIndices = resolveSourceIndices();
     if (timeSortOrder.value) {
       sortedIndices.value = sortTransactionRecordIndices(
-        buildDefaultIndices(),
+        sourceIndices,
         'time',
         timeSortOrder.value,
       );
@@ -133,13 +152,24 @@ export function useTransactionRecordsDataListPage() {
     }
     if (amountSortOrder.value) {
       sortedIndices.value = sortTransactionRecordIndices(
-        buildDefaultIndices(),
+        sourceIndices,
         'amount',
         amountSortOrder.value,
       );
       return;
     }
-    sortedIndices.value = buildDefaultIndices();
+    sortedIndices.value = sourceIndices;
+  }
+
+  if (options?.sourceIndices) {
+    watch(
+      options.sourceIndices,
+      () => {
+        applySortState();
+        navigateManyPage(1);
+      },
+      { deep: true },
+    );
   }
 
   function setTimeSort(order: TasksDataListSortOrder | null) {

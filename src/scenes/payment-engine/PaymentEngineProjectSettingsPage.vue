@@ -3,5 +3,8 @@ import ProjectSettingsPageContent from '@/scenes/project/components/ProjectSetti
 </script>
 
 <template>
-  <ProjectSettingsPageContent project-name="MetisDAO Ecosystem" />
+  <ProjectSettingsPageContent
+    tab-preset="payment-engine"
+    project-name="MetisDAO Ecosystem"
+  />
 </template>

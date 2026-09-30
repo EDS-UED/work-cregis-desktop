@@ -1,0 +1,164 @@
+.page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pageBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.scrollBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 711px;
+  margin-inline: auto;
+  padding: var(--spacing-8) var(--spacing-6) var(--spacing-5);
+}
+
+.heroCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-6);
+  border: 1px solid var(--stroke-base-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--box-page);
+  box-shadow: var(--eds-shadow-light);
+}
+
+.searchBar {
+  display: flex;
+  align-items: stretch;
+  min-height: var(--scale-7);
+  border: 1px solid var(--stroke-base-subtle);
+  border-radius: var(--radius-full);
+  background: var(--box-page);
+  overflow: hidden;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding-inline: var(--spacing-1);
+  gap: var(--spacing-025);
+}
+
+.filterTrigger {
+  max-width: 112px;
+}
+
+.filterDivider {
+  flex-shrink: 0;
+  width: 1px;
+  align-self: stretch;
+  margin-block: var(--spacing-2);
+  background: var(--stroke-base-subtle);
+}
+
+.inputShell {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  padding-inline: var(--spacing-2);
+}
+
+.inputShell :global(.eds-input) {
+  width: 100%;
+}
+
+.inputShell :global(.eds-input-field) {
+  min-height: auto;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.inputShell :global(.eds-input-field:focus-within) {
+  box-shadow: none;
+}
+
+.searchAction {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: var(--spacing-1);
+}
+
+.searchActionButton {
+  min-width: 96px;
+  border-radius: var(--radius-full);
+}
+
+.noticeSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.noticeList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  margin: 0;
+  padding-inline-start: var(--spacing-5);
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.noticeItem {
+  padding-inline-start: var(--spacing-05);
+}
+
+.footer {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-6) var(--spacing-5);
+}
+
+.footerInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 100%;
+  max-width: 711px;
+  margin-inline: auto;
+}
+
+.feeLine {
+  margin: 0;
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+  text-align: center;
+}
+
+.feeAmount {
+  composes: typography-footnote-strong from global;
+  color: var(--text-brand-primary);
+}
+
+.footerConfirm {
+  width: 100%;
+}

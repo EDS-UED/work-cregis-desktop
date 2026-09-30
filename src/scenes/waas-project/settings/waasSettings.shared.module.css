@@ -7,20 +7,14 @@
   padding-bottom: var(--spacing-5);
 }
 
-.sectionDivider {
-  flex-shrink: 0;
+.sectionDividerWrap,
+.tabsDividerWrap {
   box-sizing: border-box;
-  width: 100%;
-  padding: 0 var(--spacing-6);
+  padding-inline: var(--spacing-6);
 }
 
 .tabsBlock {
-  padding: 0;
-}
-
-.tabsDivider {
-  margin: 0;
-  padding: 0 var(--spacing-6);
+  padding-inline: var(--spacing-6);
 }
 
 .linkRow {
@@ -109,8 +103,15 @@
 .interfaceBody {
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-5);
+  padding: var(--spacing-2-5) var(--spacing-6) 0;
+}
+
+.interfaceTypeItem {
+  display: flex;
+  flex-direction: column;
   gap: var(--spacing-2);
-  padding: var(--spacing-2-5) var(--spacing-6) var(--spacing-3);
+  width: 100%;
 }
 
 .interfaceMenu {
@@ -134,7 +135,6 @@
   flex-direction: row;
   align-items: stretch;
   gap: var(--spacing-1);
-  margin-top: var(--spacing-2);
 }
 
 .policyBid {
@@ -154,57 +154,84 @@
 }
 
 .policyBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   border-radius: var(--radius-sm);
-  background: var(--material-card-subtle);
 }
 
 .policyRow {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--spacing-1);
-  min-height: var(--scale-8);
-  padding: var(--spacing-2) var(--spacing-2) var(--spacing-1);
+  gap: var(--spacing-1-5);
+  padding: var(--spacing-1) var(--spacing-3);
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  background-color: var(--material-hide);
+  composes: motion-ease is-paint from global;
+}
+
+.policyRow:hover {
+  background-color: var(--event-hover);
 }
 
 .policyInnerDivider {
   box-sizing: border-box;
   width: 100%;
-  padding: 0 var(--spacing-2);
+  padding: 0 var(--spacing-3);
 }
 
 .policyWalletBlock {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
-  padding: var(--spacing-1-5) var(--spacing-2) var(--spacing-2);
+  gap: 0;
+  padding: 0;
 }
 
 .policyWalletLabel {
-  composes: typography-footnote from global;
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--eds-body-small-size);
+  line-height: var(--eds-body-small-line-height);
   color: var(--text-base-secondary);
+  box-sizing: border-box;
 }
 
 .policyWalletRow {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--spacing-2);
-  min-height: var(--scale-8);
+  gap: var(--spacing-1-5);
+  padding: var(--spacing-1) var(--spacing-3);
+  box-sizing: border-box;
   flex-wrap: nowrap;
+  border-radius: var(--radius-sm);
+  background-color: var(--material-hide);
+  composes: motion-ease is-paint from global;
+}
+
+.policyWalletRow:hover {
+  background-color: var(--event-hover);
+}
+
+.policyWalletRowCopyable {
+  cursor: pointer;
 }
 
 .policyWalletDivider {
   flex-shrink: 0;
-  align-self: stretch;
-  min-height: var(--scale-4);
+  align-self: center;
+  height: var(--scale-2-5);
+  min-height: var(--scale-2-5);
+  max-height: var(--scale-2-5);
 }
 
 .policyLabel {
-  composes: typography-footnote from global;
+  font-size: var(--eds-body-small-size);
+  line-height: var(--eds-body-small-line-height);
   color: var(--text-base-secondary);
 }
 
@@ -297,17 +324,4 @@
   flex-wrap: wrap;
   gap: var(--spacing-2);
   padding: var(--spacing-3) var(--spacing-5);
-}
-
-.merchantLogoRow {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-2) var(--spacing-5);
-}
-
-.merchantLogoLabel {
-  composes: typography-footnote from global;
-  color: var(--text-base-secondary);
 }

@@ -44,8 +44,22 @@ function compareRows(
     return compareText(rowA.id, rowB.id);
   }
 
-  if (columnKey === 'createdAt' || columnKey === 'callbackTime') {
+  if (columnKey === 'callbackAmountTime') {
+    if (segment === 'secondary') {
+      return compareCreatedTime(rowA, rowB);
+    }
+    return compareAmountValue(rowA.orderAmount, rowB.orderAmount);
+  }
+
+  if (columnKey === 'createdAt' || columnKey === 'callbackTime' || columnKey === 'amlQueryTime') {
     return compareCreatedTime(rowA, rowB);
+  }
+
+  if (columnKey === 'amlRiskScore') {
+    if (segment === 'secondary') {
+      return compareAmountValue(rowA.amlRiskScore ?? '0', rowB.amlRiskScore ?? '0');
+    }
+    return compareText(rowA.amlRiskLabelKey ?? '', rowB.amlRiskLabelKey ?? '');
   }
 
   if (columnKey === 'refundMeta') {
@@ -66,7 +80,72 @@ function compareRows(
     columnKey === 'bulkAmount'
     || columnKey === 'refundAmount'
     || columnKey === 'callbackAmount'
+    || columnKey === 'taskAmount'
+    || columnKey === 'processingAmount'
   ) {
+    return compareAmountValue(rowA.orderAmount, rowB.orderAmount);
+  }
+
+  if (columnKey === 'ruleNameId') {
+    if (segment === 'secondary') {
+      return compareText(rowA.ruleNumber ?? rowA.merchantOrderId, rowB.ruleNumber ?? rowB.merchantOrderId);
+    }
+    return compareText(rowA.ruleName ?? rowA.id, rowB.ruleName ?? rowB.id);
+  }
+
+  if (columnKey === 'taskDateRange') {
+    if (segment === 'secondary') {
+      return compareCreatedTime({
+        ...rowA,
+        createdAt: rowA.taskEndAt ?? rowA.createdAt,
+      }, {
+        ...rowB,
+        createdAt: rowB.taskEndAt ?? rowB.createdAt,
+      });
+    }
+    return compareCreatedTime({
+      ...rowA,
+      createdAt: rowA.taskStartAt ?? rowA.createdAt,
+    }, {
+      ...rowB,
+      createdAt: rowB.taskStartAt ?? rowB.createdAt,
+    });
+  }
+
+  if (columnKey === 'processingMeta') {
+    if (segment === 'secondary') {
+      return compareText(rowA.collectionId ?? rowA.id, rowB.collectionId ?? rowB.id);
+    }
+    return compareCreatedTime(rowA, rowB);
+  }
+
+  if (columnKey === 'collectionHistoryMeta') {
+    if (segment === 'secondary') {
+      return compareText(rowA.collectionId ?? rowA.id, rowB.collectionId ?? rowB.id);
+    }
+    return compareCreatedTime({
+      ...rowA,
+      createdAt: rowA.completionTime ?? rowA.createdAt,
+    }, {
+      ...rowB,
+      createdAt: rowB.completionTime ?? rowB.createdAt,
+    });
+  }
+
+  if (columnKey === 'subAddressMeta') {
+    if (segment === 'secondary') {
+      return compareAmountValue(
+        rowA.subAddressBalance ?? rowA.orderAmount,
+        rowB.subAddressBalance ?? rowB.orderAmount,
+      );
+    }
+    return compareText(rowA.walletFromAddress ?? rowA.id, rowB.walletFromAddress ?? rowB.id);
+  }
+
+  if (columnKey === 'taskCurrencyId') {
+    if (segment === 'secondary') {
+      return compareText(rowA.taskTransactionCount ?? '0', rowB.taskTransactionCount ?? '0');
+    }
     return compareAmountValue(rowA.orderAmount, rowB.orderAmount);
   }
 

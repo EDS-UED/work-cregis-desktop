@@ -4,6 +4,7 @@ import {
   resolveEgDataListDemoRowIndex,
 } from '@/scenes/shared/egDataListMockData';
 import { resolveVerifiedTxHashForRow } from '@/scenes/tasks/list-field/listFieldCryptoSampleAddresses';
+import { resolveCallbackEventLabelKey } from './paymentEngineListFieldCustomize';
 import type {
   PaymentEngineCallbackErrorDetailRecord,
   PaymentEngineOrderStatus,
@@ -43,6 +44,10 @@ function buildThirdPartyBusinessNo(rowIndex: number): string {
   return `Coinbase_order_${800_389_028 + rowIndex}`;
 }
 
+function buildBlockNumber(rowIndex: number): string {
+  return String(482_016 + rowIndex * 137).padStart(6, '0').slice(-6);
+}
+
 function buildCallbackErrorRecordDetail(
   row: PaymentEngineRecordRow,
   rowIndex: number,
@@ -51,6 +56,7 @@ function buildCallbackErrorRecordDetail(
   const callbackEventStatus = CALLBACK_EVENT_STATUS_BY_TYPE[eventType];
   const currencyPreset = resolveCurrencyRowPreset(rowIndex);
   const addressOffset = rowIndex + 9;
+  const addressFamily = row.orderSymbol === 'TON' ? 'ton' as const : 'evm';
   const updateTime = `2031-12-23 ${String(10 + (rowIndex % 8)).padStart(2, '0')}:23:00`;
 
   const detail: PaymentEngineCallbackErrorDetailRecord = {
@@ -62,37 +68,36 @@ function buildCallbackErrorRecordDetail(
     orderId: buildCallbackRecordId(rowIndex + 11),
     merchantOrderId: row.merchantOrderId,
     callbackEventStatus,
+    businessTypeKey: resolveCallbackEventLabelKey(eventType),
+    thirdPartyBusinessNo: buildThirdPartyBusinessNo(rowIndex),
+    walletType: eventType === 'wallet-payout' ? 'SingleSig' : 'Treasury',
+    senderAddress: row.walletFromAddress
+      ?? resolveDemoWalletAddress(addressOffset, currencyPreset, 'from'),
+    receiverAddress: row.walletToAddress
+      ?? resolveDemoWalletAddress(addressOffset, currencyPreset, 'to'),
+    receiverAlias: rowIndex % 2 === 0 ? 'EverGreen' : '',
+    txHash: resolveVerifiedTxHashForRow(rowIndex + 73, addressFamily),
+    blockNumber: buildBlockNumber(rowIndex),
+    remark: rowIndex % 5 === 0 ? 'This is a text.' : '',
   };
 
   if (eventType === 'waas-refund') {
-    const addressFamily = row.orderSymbol === 'TON' ? 'ton' as const : 'evm';
     return {
       ...detail,
       callbackEventStatusLabelKey: 'Refunding',
       callbackEventStatusTagStatus: 'warning',
-      txHash: resolveVerifiedTxHashForRow(rowIndex + 73, addressFamily),
     };
   }
 
   if (eventType !== 'wallet-payout') {
-    const addressFamily = row.orderSymbol === 'TON' ? 'ton' as const : 'evm';
-    return {
-      ...detail,
-      txHash: resolveVerifiedTxHashForRow(rowIndex + 73, addressFamily),
-    };
+    return detail;
   }
 
   return {
     ...detail,
     walletType: 'SingleSig',
     payoutId: buildCallbackRecordId(rowIndex + 3),
-    thirdPartyBusinessNo: buildThirdPartyBusinessNo(rowIndex),
     transStatus: 'success',
-    senderAddress: row.walletFromAddress ?? resolveDemoWalletAddress(addressOffset, currencyPreset, 'from'),
-    receiverAddress: row.walletToAddress ?? resolveDemoWalletAddress(addressOffset, currencyPreset, 'to'),
-    receiverAlias: rowIndex % 2 === 0 ? 'EverGreen' : '',
-    remark: rowIndex % 5 === 0 ? 'This is a text.' : '',
-    txHash: resolveVerifiedTxHashForRow(rowIndex + 73, 'evm'),
   };
 }
 

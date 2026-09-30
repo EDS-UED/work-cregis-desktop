@@ -131,6 +131,210 @@ function buildPushMethodItem(
   };
 }
 
+function buildPushStatusItem(
+  row: PaymentEngineRecordRow,
+  menuItem: string,
+  translate: (key: string) => string,
+): DetailItemData {
+  const label = resolvePaymentEngineRecordStatusDetailLabel(row, menuItem, translate);
+
+  return {
+    ...createDetailApplyItemRow('status', {
+      key: 'history-callback-push-status',
+      title: translate('Push Status'),
+      tag: label,
+    }),
+    tagFamily: 'status',
+    tagStatus: resolvePaymentEngineRecordStatusDetailTagStatus(row, menuItem),
+    valueTagOnly: true,
+    value: '',
+  };
+}
+
+function buildHistoryCallbackOverviewItems(
+  row: PaymentEngineRecordRow,
+  translate: (key: string) => string,
+): DetailItemData[] {
+  const detail = resolvePaymentCallbackErrorRecordDetail(row);
+
+  return [
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'history-callback-wallet',
+        title: translate('Wallet'),
+        value: formatEmptyDisplayValue(detail.walletType),
+      }),
+      titleIcon: 'eds-wallet',
+    },
+    createDetailApplyItemRow('tripartite-number', {
+      key: 'history-callback-third-party-business-no',
+      title: translate('Third-party Reference'),
+      value: detail.thirdPartyBusinessNo ?? '',
+    }),
+    createDetailApplyItemRow('text', {
+      key: 'history-callback-business-type',
+      title: translate('Business Type'),
+      value: translate(detail.businessTypeKey ?? 'Withdrawal'),
+    }),
+    createPaymentEngineTransferBlockTimeRow({
+      key: 'history-callback-update-time',
+      title: translate('Update Time'),
+      value: detail.updateTime,
+    }),
+  ];
+}
+
+function buildHistoryCallbackTransferItems(
+  row: PaymentEngineRecordRow,
+  translate: (key: string) => string,
+): DetailItemData[] {
+  const detail = resolvePaymentCallbackErrorRecordDetail(row);
+
+  const items: DetailItemData[] = [
+    createDetailApplyItemRow('receiver', {
+      key: 'history-callback-receiver',
+      title: translate('Receiver'),
+      value: detail.receiverAddress ?? '',
+      tag: detail.receiverAlias ?? '',
+    }),
+  ];
+
+  if (detail.txHash) {
+    items.push(createDetailApplyItemRow('txid', {
+      key: 'history-callback-tx-hash',
+      title: translate('Transaction hash'),
+      value: detail.txHash,
+    }));
+  }
+
+  if (detail.blockNumber) {
+    items.push({
+      ...createDetailApplyItemRow('text', {
+        key: 'history-callback-block',
+        title: translate('Block'),
+        value: detail.blockNumber,
+      }),
+      titleIcon: 'eds-blockchain',
+    });
+  }
+
+  return items;
+}
+
+function buildHistoryCallbackMetaItems(
+  row: PaymentEngineRecordRow,
+  menuItem: string,
+  translate: (key: string) => string,
+): DetailItemData[] {
+  const detail = resolvePaymentCallbackErrorRecordDetail(row);
+
+  return [
+    buildPushMethodItem(row, translate),
+    buildPushStatusItem(row, menuItem, translate),
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'history-callback-callback-address',
+        title: translate('Callback Address'),
+        value: detail.callbackUrl,
+      }),
+      titleIcon: 'eds-link',
+    },
+    createDetailApplyItemRow('memo', {
+      key: 'history-callback-remark',
+      title: translate('Remark'),
+      value: formatEmptyDisplayValue(detail.remark),
+    }),
+  ];
+}
+
+function buildCallbackErrorOverviewItems(
+  row: PaymentEngineRecordRow,
+  translate: (key: string) => string,
+): DetailItemData[] {
+  const detail = resolvePaymentCallbackErrorRecordDetail(row);
+
+  return [
+    createDetailApplyItemRow('tripartite-number', {
+      key: 'callback-error-third-party-business-no',
+      title: translate('Third-party Reference'),
+      value: detail.thirdPartyBusinessNo ?? '',
+    }),
+    createDetailApplyItemRow('text', {
+      key: 'callback-error-business-type',
+      title: translate('Business Type'),
+      value: translate(detail.businessTypeKey ?? 'Withdrawal'),
+    }),
+    createPaymentEngineTransferBlockTimeRow({
+      key: 'callback-error-update-time',
+      title: translate('Update Time'),
+      value: detail.updateTime,
+    }),
+  ];
+}
+
+function buildCallbackErrorTransferItems(
+  row: PaymentEngineRecordRow,
+  translate: (key: string) => string,
+): DetailItemData[] {
+  const detail = resolvePaymentCallbackErrorRecordDetail(row);
+
+  return [
+    createDetailApplyItemRow('sender', {
+      key: 'callback-error-sender',
+      title: translate('Sender'),
+      value: detail.senderAddress ?? '',
+      tag: '',
+    }),
+    createDetailApplyItemRow('receiver', {
+      key: 'callback-error-receiver',
+      title: translate('Receiver'),
+      value: detail.receiverAddress ?? '',
+      tag: detail.receiverAlias ?? '',
+    }),
+    createDetailApplyItemRow('txid', {
+      key: 'callback-error-tx-hash',
+      title: translate('Transaction hash'),
+      value: detail.txHash ?? '',
+    }),
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'callback-error-block',
+        title: translate('Block'),
+        value: detail.blockNumber ?? '',
+      }),
+      titleIcon: 'eds-blockchain',
+    },
+  ];
+}
+
+function buildCallbackErrorMetaItems(
+  row: PaymentEngineRecordRow,
+  translate: (key: string) => string,
+): DetailItemData[] {
+  const detail = resolvePaymentCallbackErrorRecordDetail(row);
+
+  return [
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'callback-error-callback-address',
+        title: translate('Callback Address'),
+        value: detail.callbackUrl,
+      }),
+      titleIcon: 'eds-link',
+    },
+    createDetailApplyItemRow('memo', {
+      key: 'callback-error-remark',
+      title: translate('Remark'),
+      value: formatEmptyDisplayValue(detail.remark),
+    }),
+    createDetailApplyItemRow('reason', {
+      key: 'callback-error-failure-reason',
+      title: translate('Failure Reason'),
+      value: formatEmptyDisplayValue(detail.abnormalReason),
+    }),
+  ];
+}
+
 function buildCallbackTabItems(
   row: PaymentEngineRecordRow,
   menuItem: string,
@@ -311,6 +515,44 @@ export function buildPaymentEngineCallbackErrorDetailSections(
   translate: (key: string) => string,
   menuItem = 'Callback Error',
 ): DetailSectionData[] {
+  if (isCallbackErrorRecordMenuItem(menuItem)) {
+    return [
+      {
+        key: 'callback-error-overview',
+        showDivider: true,
+        items: buildCallbackErrorOverviewItems(row, translate),
+      },
+      {
+        key: 'callback-error-transfer',
+        showDivider: true,
+        items: buildCallbackErrorTransferItems(row, translate),
+      },
+      {
+        key: 'callback-error-meta',
+        items: buildCallbackErrorMetaItems(row, translate),
+      },
+    ];
+  }
+
+  if (isHistoryCallbackRecordMenuItem(menuItem)) {
+    return [
+      {
+        key: 'history-callback-overview',
+        showDivider: true,
+        items: buildHistoryCallbackOverviewItems(row, translate),
+      },
+      {
+        key: 'history-callback-transfer',
+        showDivider: true,
+        items: buildHistoryCallbackTransferItems(row, translate),
+      },
+      {
+        key: 'history-callback-meta',
+        items: buildHistoryCallbackMetaItems(row, menuItem, translate),
+      },
+    ];
+  }
+
   const tabKind = resolvePaymentEngineCallbackErrorDetailTabKinds(row)[activeTab] ?? 'callback';
   const sectionKeyPrefix = isHistoryCallbackRecordMenuItem(menuItem)
     ? 'history-callback'

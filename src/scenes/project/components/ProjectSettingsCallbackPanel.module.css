@@ -1,0 +1,146 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.generalGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.minimumGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-025);
+}
+
+.generalRowShell {
+  padding-inline: var(--spacing-3);
+}
+
+.generalRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-20);
+  box-sizing: border-box;
+  min-height: var(--scale-11);
+  padding: var(--spacing-1-5) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  background: var(--material-hide);
+  composes: motion-ease is-paint from global;
+}
+
+.generalRow:hover {
+  background: var(--event-hover);
+}
+
+.generalTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.generalActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-1);
+}
+
+.sectionDividerWrap {
+  box-sizing: border-box;
+  padding-inline: var(--spacing-6);
+}
+
+.minimumHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-20);
+  padding: var(--spacing-2-5) var(--spacing-6);
+}
+
+.minimumCopy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.minimumTitle {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.minimumDescription {
+  max-width: 336px;
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.searchWrap {
+  flex-shrink: 0;
+  width: 240px;
+  max-width: 100%;
+}
+
+.searchWrap :global(.eds-search) {
+  max-height: var(--scale-8);
+}
+
+.tokenRowShell {
+  padding-inline: var(--spacing-3);
+}
+
+.tokenRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-20);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  background: var(--material-hide);
+  composes: motion-ease is-paint from global;
+}
+
+.tokenRow:hover {
+  background: var(--event-hover);
+}
+
+.tokenMeta {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.cryptoIcon {
+  flex-shrink: 0;
+  width: var(--scale-9);
+  height: var(--scale-9);
+}
+
+.tokenCopy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.tokenSymbol {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.tokenHint {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.tokenActions {
+  flex-shrink: 0;
+}

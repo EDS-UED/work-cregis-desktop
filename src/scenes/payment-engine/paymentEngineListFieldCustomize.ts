@@ -3,6 +3,7 @@ import {
   buildCurrencyRowPresetCustomize,
   resolveEgDataListDemoRowIndex,
 } from '@/scenes/shared/egDataListMockData';
+import { resolveDataListCryptoName } from '@/scenes/shared/resolveDataListCryptoName';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 
 const CALLBACK_EVENT_LABEL_KEYS: Record<
@@ -104,6 +105,121 @@ export function buildBulkTransferCryptoCustomize(
   return buildPaymentEngineCurrencyCustomize(row, 'single-address');
 }
 
+function buildPaymentEngineAmountAddressCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth: string,
+  cryptoCustomize: Record<string, unknown>,
+  addressType: 'single' | 'double',
+): Record<string, unknown> {
+  const networkLabel = String(cryptoCustomize.networkLabel ?? '').trim();
+
+  return {
+    ...cryptoCustomize,
+    amountType: 'amount-address',
+    addressType,
+    cryptoValue: row.orderAmount,
+    cryptoSymbol: row.currencySymbol ?? row.orderSymbol ?? cryptoCustomize.symbol,
+    cryptoName: row.currencyCryptoName ?? cryptoCustomize.cryptoName,
+    showCryptoIcon: true,
+    showNetwork: Boolean(networkLabel),
+    networkLabel,
+    addressTooltipTrigger: 'hover',
+    minWidth: columnMinWidth,
+  };
+}
+
+export function buildBulkTransferAmountAddressCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+): Record<string, unknown> {
+  return buildPaymentEngineAmountAddressCustomize(
+    row,
+    columnMinWidth,
+    buildBulkTransferCryptoCustomize(row, columnMinWidth),
+    'single',
+  );
+}
+
+export function buildPaymentExceptionAmountAddressCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+): Record<string, unknown> {
+  return buildPaymentEngineAmountAddressCustomize(
+    row,
+    columnMinWidth,
+    buildPaymentExceptionCryptoCustomize(row, columnMinWidth),
+    'double',
+  );
+}
+
+export function buildWalletPayoutAmountAddressCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+): Record<string, unknown> {
+  return buildPaymentEngineAmountAddressCustomize(
+    row,
+    columnMinWidth,
+    buildWalletPayoutCryptoCustomize(row, columnMinWidth),
+    'double',
+  );
+}
+
+function resolveListFieldColumnMinWidth(minWidth?: string): string {
+  const matched = /^(\d+(?:\.\d+)?)/.exec(String(minWidth ?? '').trim());
+  return matched?.[1] ?? '';
+}
+
+/** 订单记录 combo 金额行 · EgListFieldAmount conversion（图标 + 金额 + 链 Tag + ≈法币）。 */
+export function buildPaymentEngineOrderAmountCustomize(options: {
+  cryptoAmount: string;
+  cryptoSymbol: string;
+  cryptoName?: string;
+  fiatAmount?: string;
+  networkLabel?: string;
+  approximateFiat?: boolean;
+  columnMinWidth?: string;
+  alignEnd?: boolean;
+}): Record<string, unknown> {
+  const networkLabel = String(options.networkLabel ?? '').trim();
+  const fiat = String(options.fiatAmount ?? '').trim().replace(/^≈\s*/, '');
+
+  return {
+    amountType: 'conversion',
+    cryptoValue: options.cryptoAmount,
+    cryptoSymbol: options.cryptoSymbol,
+    cryptoName: resolveDataListCryptoName(options.cryptoSymbol, options.cryptoName),
+    fiatValue: options.approximateFiat === false ? '' : fiat,
+    secondaryValue: options.approximateFiat === false ? fiat : '',
+    showCryptoIcon: true,
+    showNetwork: Boolean(networkLabel),
+    networkLabel,
+    alignEnd: options.alignEnd !== false,
+    minWidth: resolveListFieldColumnMinWidth(options.columnMinWidth),
+    tooltipTrigger: 'hover',
+  };
+}
+
+/** 退款记录金额列 · EgListFieldAmount conversion（图标 + 金额 + 链 Tag + 法币）。 */
+export function buildRefundAmountCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+): Record<string, unknown> {
+  const showNetwork = row.currencyShowNetwork ?? Boolean(String(row.currencyNetwork ?? '').trim());
+  const networkLabel = showNetwork
+    ? String(row.currencyNetwork ?? row.networkLabel ?? '').trim()
+    : '';
+
+  return buildPaymentEngineOrderAmountCustomize({
+    cryptoAmount: row.orderAmount,
+    cryptoSymbol: row.orderSymbol,
+    cryptoName: row.currencyCryptoName,
+    fiatAmount: row.orderFiat,
+    networkLabel,
+    columnMinWidth,
+    alignEnd: false,
+  });
+}
+
 export function buildWalletPayoutCryptoCustomize(
   row: PaymentEngineRecordRow,
   _columnMinWidth = '',
@@ -145,5 +261,15 @@ export function buildRefundTokenCryptoCustomize(
     entryBadgeMode: 'none',
     fromSideVisible: false,
     toSideVisible: false,
+  };
+}
+
+export function buildAddressBookCryptoCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+): Record<string, unknown> {
+  return {
+    ...buildRefundTokenCryptoCustomize(row, columnMinWidth),
+    minWidth: columnMinWidth,
   };
 }

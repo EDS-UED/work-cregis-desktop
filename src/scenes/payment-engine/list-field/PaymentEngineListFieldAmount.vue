@@ -8,7 +8,8 @@ import {
   type CryptoName,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
-import { resolveCryptoNameFromSymbol } from '@/scenes/tasks/list-field/listFieldCryptoResolve';
+import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
+import { resolveDataListCryptoName } from '@/scenes/shared/resolveDataListCryptoName';
 import amountStyles from '@/scenes/tasks/list-field/TasksListFieldAmount.module.css';
 
 const props = defineProps<{
@@ -20,6 +21,7 @@ const props = defineProps<{
   actionLabelKey?: string;
   alignEnd?: boolean;
   showCryptoIcon?: boolean;
+  showSymbol?: boolean;
   /** 默认 true（≈ 法币估值）；结算记录等独立法币字段传 false。 */
   approximateFiat?: boolean;
   /** 网络 Tag 挂载行；结算记录法币列用 secondary。 */
@@ -29,9 +31,13 @@ const props = defineProps<{
 const { ui } = useAppI18n();
 
 const hasPrimaryAmount = computed(() => String(props.cryptoAmount ?? '').trim().length > 0);
+const showAmountSymbol = computed(() => props.showSymbol !== false);
 const primaryText = computed(() => {
   if (!hasPrimaryAmount.value) return '';
-  return `${props.cryptoAmount} ${props.cryptoSymbol}`;
+  const formattedAmount = formatGroupedDecimalAmount(String(props.cryptoAmount ?? ''));
+  return showAmountSymbol.value
+    ? `${formattedAmount} ${props.cryptoSymbol}`
+    : formattedAmount;
 });
 const secondaryText = computed(() => {
   const fiat = String(props.fiatAmount ?? '').trim();
@@ -41,11 +47,9 @@ const secondaryText = computed(() => {
   }
   return fiat.startsWith('≈') ? fiat : `≈ ${fiat}`;
 });
-const resolvedCryptoName = computed((): CryptoName => {
-  const explicit = String(props.cryptoName ?? '').trim();
-  if (explicit) return explicit as CryptoName;
-  return resolveCryptoNameFromSymbol(props.cryptoSymbol) ?? 'eds-usdt-tether usd';
-});
+const resolvedCryptoName = computed((): CryptoName =>
+  resolveDataListCryptoName(props.cryptoSymbol, props.cryptoName),
+);
 const showAmountCryptoIcon = computed(() => props.showCryptoIcon !== false);
 const primaryNetworkLabel = computed(() => {
   const label = String(props.networkLabel ?? '').trim();
@@ -72,12 +76,12 @@ const cellMinWidthStyle = computed(() => ({
     :class="[amountStyles.amountPreview, alignEnd && amountStyles.amountPreviewAlignEnd]"
     :style="cellMinWidthStyle"
   >
-    <div :class="amountStyles.amountPrimaryRow">
+    <div class="list-field-amount-primary-row" :class="amountStyles.amountPrimaryRow">
       <EgCrypto
         v-if="showAmountCryptoIcon"
         :name="resolvedCryptoName"
         fit
-        :class="amountStyles.amountCryptoIcon"
+        :class="amountStyles.amountCryptoIconLg"
         :label="cryptoSymbol"
       />
       <EgListFieldOverflowText :text="primaryText" variant="primary" tabular />

@@ -7,6 +7,7 @@ import {
   reactive,
   ref,
   toRef,
+  unref,
   watch,
   type ComponentPublicInstance,
 } from 'vue';
@@ -27,6 +28,9 @@ import {
   EgToolBar,
   POPOVER_PRESET_WIDTH_BASE,
   closeAllAnchoredTooltips,
+  type EgFilterCondition,
+  type EgFilterField,
+  type EgFilterLogicMode,
 } from '@eds/desktop-components';
 import TasksDataListColumnCell from './list-field/TasksDataListColumnCell.vue';
 import SentRequestAmountListCell from './list-field/sentRequest/SentRequestAmountListCell.vue';
@@ -53,6 +57,7 @@ import {
   tasksDataListShowsExport,
   tasksDataListShowsAutomation,
   tasksDataListShowsBatch,
+  tasksDataListShowsEgFilter,
   tasksDataListShowsStatusColumn,
   tasksDataListAmountColumnAlign,
   tasksDataListAmountColumnFlexGrow,
@@ -128,6 +133,17 @@ import type {
   TasksDataListActiveSort,
   TasksDataListSortOrder,
 } from './tasksDataListSort';
+import {
+  applyEgFilterConditions,
+  hasActiveEgFilterConditions,
+} from '../shared/applyEgFilterConditions';
+import { resolveDataListFilterSourceRowCount } from '../shared/buildListDerivedFilterOptions';
+import { buildTasksDataListFilterRowSnapshot } from './filter/buildTasksDataListFilterRowSnapshot';
+import {
+  buildTasksDataListFilterFields,
+  TASKS_DATA_LIST_FILTER_OPERATORS,
+} from './filter/tasksDataListFilterFields';
+import TasksToolbarFilter from './filter/TasksToolbarFilter.vue';
 
 const props = defineProps<{
   toolbarTitle?: string;
@@ -263,6 +279,27 @@ const amountColumnMinWidth = computed(() =>
 );
 
 const isApprovalMenu = computed(() => menuItem.value === 'Approval');
+
+const usesTasksEgFilter = computed(() =>
+  tasksDataListShowsEgFilter(menuItem.value, locale.value),
+);
+
+const tasksFilterConditions = ref<EgFilterCondition[]>([]);
+const tasksFilterLogicMode = ref<EgFilterLogicMode>('all');
+
+const tasksFilterFields = computed((): EgFilterField[] => {
+  if (!usesTasksEgFilter.value) return [];
+  return buildTasksDataListFilterFields(
+    menuItem.value,
+    (key) => ui(key),
+    locale.value,
+    resolveDataListFilterSourceRowCount(
+      Boolean(customize.empty),
+      tasksDataListDefaultRowCount(menuItem.value),
+    ),
+  );
+});
+
 const isSigningMenu = computed(() => menuItem.value === 'Signing');
 const isSentRequestMenu = computed(
   () =>
@@ -539,6 +576,7 @@ const {
   skidContentLocked,
   statisticsItems,
   toolbarActionButtons,
+  sourceRowCount,
   totalRowCount,
 } = useTasksDataListPage(
   customizeRef,
@@ -546,12 +584,73 @@ const {
   activeSort,
   handleBatchAction,
   computed(() => {
-    if (!isSigningMenu.value || !customize.selectMode) return null;
-    return (row: Record<string, unknown>) =>
-      !signingBatchFlow.shouldFilterRow(Number(row.id));
+    const matchers: Array<(row: Record<string, unknown>) => boolean> = [];
+
+    if (isSigningMenu.value && customize.selectMode) {
+      matchers.push(
+        (row) => !signingBatchFlow.shouldFilterRow(Number(row.id)),
+      );
+    }
+
+    if (
+      usesTasksEgFilter.value
+      && hasActiveEgFilterConditions(tasksFilterConditions.value)
+    ) {
+      const conditions = tasksFilterConditions.value;
+      const fields = tasksFilterFields.value;
+      const logicMode = tasksFilterLogicMode.value;
+      matchers.push((row) => {
+        const rowIndex = Number(row.id);
+        if (!Number.isFinite(rowIndex)) return false;
+        try {
+          return applyEgFilterConditions({
+            snapshot: buildTasksDataListFilterRowSnapshot(rowIndex, {
+              translate: (key) => ui(key),
+              locale: locale.value,
+              menuItem: menuItem.value,
+            }),
+            conditions,
+            fields,
+            logicMode,
+          });
+        } catch {
+          return true;
+        }
+      });
+    }
+
+    if (matchers.length === 0) return null;
+    return (row: Record<string, unknown>) => matchers.every((match) => match(row));
   }),
   menuItem,
 );
+
+watch(
+  tasksFilterConditions,
+  () => {
+    if (hasActiveEgFilterConditions(tasksFilterConditions.value)) {
+      goFirstPage();
+    }
+  },
+  { deep: true },
+);
+
+watch(usesTasksEgFilter, (enabled) => {
+  if (!enabled) {
+    tasksFilterConditions.value = [];
+    tasksFilterLogicMode.value = 'all';
+  }
+});
+
+watch(menuItem, () => {
+  tasksFilterConditions.value = [];
+  tasksFilterLogicMode.value = 'all';
+});
+
+function resolveToolbarActionButtonsForMenu(usesEgFilter: boolean) {
+  const buttons = unref(toolbarActionButtons) ?? [];
+  return usesEgFilter ? buttons.filter((button) => button.key !== 'filter') : buttons;
+}
 
 const listRegionRef = ref<HTMLElement | null>(null);
 
@@ -725,7 +824,7 @@ watch(
 );
 
 watch(
-  [menuItem, totalRowCount, () => customize.empty],
+  [menuItem, sourceRowCount, () => customize.empty],
   ([item, rowCount, empty]) => {
     if (!item || !isTasksDataListMenuItem(item)) return;
     syncTasksModuleMenuDataVolume(item, empty ? 0 : rowCount);
@@ -753,9 +852,16 @@ const signingBatchPickerFlotationMaxHeight = computed(() =>
     : BATCH_CURRENCY_PICKER_MAX_HEIGHT,
 );
 
-/** 空列表：禁用批处理 / 自动化 / 筛选与表头排序。 */
+/** 空列表：禁用批处理 / 自动化与表头排序（含筛选后 0 条）。 */
 const isDataListEmpty = computed(
   () => Boolean(customize.empty) || totalRowCount.value === 0,
+);
+
+/** 筛选已生效时，即使结果为 0 条也须保持筛选钮可点以便修改/清空条件。 */
+const canEditTasksFilter = computed(
+  () =>
+    usesTasksEgFilter.value
+    && hasActiveEgFilterConditions(tasksFilterConditions.value),
 );
 
 const isBatchSelectModeActive = computed(() => Boolean(customize.selectMode));
@@ -779,7 +885,10 @@ const isToolbarAutomationDisabled = computed(
 );
 
 const isToolbarFilterDisabled = computed(
-  () => skidContentLocked.value || isDataListEmpty.value || isBatchSelectModeActive.value,
+  () =>
+    skidContentLocked.value
+    || isBatchSelectModeActive.value
+    || (isDataListEmpty.value && !canEditTasksFilter.value),
 );
 
 /** 待审批 / 待签名批处理时表头排序仍可用。 */
@@ -993,8 +1102,16 @@ const displayBatchActions = computed(() => {
             </EgIconProButton>
           </template>
           <template v-if="showToolBarSectionForMenu" #section>
+            <TasksToolbarFilter
+              v-if="usesTasksEgFilter"
+              v-model="tasksFilterConditions"
+              v-model:logic-mode="tasksFilterLogicMode"
+              :fields="tasksFilterFields"
+              :operators="TASKS_DATA_LIST_FILTER_OPERATORS"
+              :disabled="isToolbarFilterDisabled"
+            />
             <EgIconProButton
-              v-for="button in toolbarActionButtons"
+              v-for="button in resolveToolbarActionButtonsForMenu(usesTasksEgFilter)"
               :key="button.key"
               :label="ui(button.item.label)"
               :badge="button.item.badge"
@@ -1011,8 +1128,16 @@ const displayBatchActions = computed(() => {
             </EgIconProButton>
           </template>
           <template v-else #functional>
+            <TasksToolbarFilter
+              v-if="usesTasksEgFilter"
+              v-model="tasksFilterConditions"
+              v-model:logic-mode="tasksFilterLogicMode"
+              :fields="tasksFilterFields"
+              :operators="TASKS_DATA_LIST_FILTER_OPERATORS"
+              :disabled="isToolbarFilterDisabled"
+            />
             <EgIconProButton
-              v-for="button in toolbarActionButtons"
+              v-for="button in resolveToolbarActionButtonsForMenu(usesTasksEgFilter)"
               :key="`functional-${button.key}`"
               :label="ui(button.item.label)"
               :badge="button.item.badge"

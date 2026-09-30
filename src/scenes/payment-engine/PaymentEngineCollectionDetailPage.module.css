@@ -1,0 +1,184 @@
+.pageRoot {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--box-page);
+}
+
+.pageRootEmbedded {
+  composes: layoutChromeBodyScroll from '../project/layoutChromePage.shared.module.css';
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.pageRootStandalone {
+  composes: layoutChromeScroll from '../project/layoutChromePage.shared.module.css';
+}
+
+.detailHost {
+  composes: layoutChromeDetailHost from '../project/layoutChromeDetailHost.shared.module.css';
+  width: 100%;
+  min-width: 0;
+}
+
+.detailHost :global(.eds-detail [class*='sections']) {
+  padding-top: var(--spacing-0);
+  padding-bottom: var(--spacing-0);
+}
+
+.headlineRegion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-0) var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.headlineMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  width: 100%;
+}
+
+.headlineMetaItems {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  color: var(--text-secondary);
+}
+
+.metaItemText {
+  composes: typography-footnote from global;
+}
+
+.cardsRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.conditionCard,
+.progressCard {
+  background: var(--box-flotation);
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.conditionCard :global(.eds-detail [class*='sections']) {
+  padding: var(--spacing-0);
+}
+
+.conditionCard :global(.eds-detail [class*='sectionContent']) {
+  padding: var(--spacing-2) var(--spacing-3) var(--spacing-3);
+}
+
+.progressCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-3);
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.progressTitle {
+  composes: typography-subheadline from global;
+  color: var(--text-primary);
+}
+
+.progressRuntime {
+  composes: typography-footnote from global;
+  color: var(--text-secondary);
+}
+
+.progressBar {
+  width: 100%;
+}
+
+.progressPercent {
+  composes: typography-subheadline from global;
+  color: var(--text-primary);
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-3);
+}
+
+.metricBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.metricLabel {
+  composes: typography-footnote from global;
+  color: var(--text-secondary);
+}
+
+.metricValue {
+  composes: typography-subheadline from global;
+  color: var(--text-primary);
+}
+
+.metricValueFailed {
+  color: var(--text-danger);
+}
+
+.recordsRegion {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-5);
+  width: 100%;
+  padding: var(--spacing-4) var(--spacing-3) var(--spacing-5);
+  box-sizing: border-box;
+}
+
+.recordsDivider {
+  flex-shrink: 0;
+  width: calc(100% - 2 * var(--spacing-3));
+  margin-inline: var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.recordsTab {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.recordsTable {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.recordsPaginer {
+  flex-shrink: 0;
+  width: 100%;
+}

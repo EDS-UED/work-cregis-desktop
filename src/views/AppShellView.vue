@@ -35,12 +35,21 @@ import {
 } from '@/scenes/tasks/tasksDataListPageData';
 import WaasProjectShell from '@/scenes/waas-project/WaasProjectShell.vue';
 import {
+  isWaasMenuBranchOnlyItem,
   isWaasMenuItemValidForProject,
   isWaasOrderModeProject,
   resolveDefaultWaasMenuItem,
 } from '@/scenes/waas-project/waasMenuData';
 import { useWaasModuleMenuGroups } from '@/scenes/waas-project/useWaasModuleMenuGroups';
 import PaymentEngineProjectSettingsPage from '@/scenes/payment-engine/PaymentEngineProjectSettingsPage.vue';
+import RiskControlAmlQueryPage from '@/scenes/risk-control/RiskControlAmlQueryPage.vue';
+import RiskControlDataListPage from '@/scenes/risk-control/RiskControlDataListPage.vue';
+import {
+  DEFAULT_RISK_CONTROL_MENU_ITEM,
+  isRiskControlAmlQueryMenuItem,
+  isRiskControlDataListMenuItem,
+  isRiskControlModuleMenuItem,
+} from '@/scenes/risk-control/riskControlMenuData';
 
 const { messages, ui, locale } = useAppI18n();
 const {
@@ -71,6 +80,7 @@ const activeModuleMenuItem = ref<string | null>(null);
 
 const isWaasModule = computed(() => isWaasModuleTitle(activeModuleTitle.value));
 const isPaymentEngineModule = computed(() => isPaymentEngineModuleTitle(activeModuleTitle.value));
+const isRiskControlModule = computed(() => activeModuleTitle.value === 'Risk Control');
 const showReportPage = computed(() => isReportModuleTitle(activeModuleTitle.value));
 
 const showModuleMenu = computed(() => {
@@ -104,6 +114,20 @@ const showPaymentEngineContent = computed(
     isPaymentEngineModule.value &&
     activeModuleMenuItem.value !== null &&
     activeModuleMenuItem.value !== PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+);
+
+const showRiskControlAmlQueryPage = computed(
+  () =>
+    isRiskControlModule.value &&
+    activeModuleMenuItem.value !== null &&
+    isRiskControlAmlQueryMenuItem(activeModuleMenuItem.value),
+);
+
+const showRiskControlDataList = computed(
+  () =>
+    isRiskControlModule.value &&
+    activeModuleMenuItem.value !== null &&
+    isRiskControlDataListMenuItem(activeModuleMenuItem.value),
 );
 
 const tasksModuleMenuGroups = useTasksModuleMenuGroups();
@@ -174,6 +198,10 @@ watch(activeModuleTitle, (title) => {
     activeModuleMenuItem.value = DEFAULT_PAYMENT_ENGINE_MENU_ITEM;
     return;
   }
+  if (title === 'Risk Control') {
+    activeModuleMenuItem.value = DEFAULT_RISK_CONTROL_MENU_ITEM;
+    return;
+  }
   if (title === 'Report') {
     activeModuleMenuItem.value = null;
     return;
@@ -235,8 +263,21 @@ function onModuleMenuItemSelect(label: string) {
     return;
   }
 
-  if (isWaasModuleTitle(activeModuleTitle.value) || isPaymentEngineModuleTitle(activeModuleTitle.value)) {
+  if (isWaasModuleTitle(activeModuleTitle.value)) {
+    if (isWaasMenuBranchOnlyItem(label)) return;
     activeModuleMenuItem.value = label;
+    return;
+  }
+
+  if (isPaymentEngineModuleTitle(activeModuleTitle.value)) {
+    activeModuleMenuItem.value = label;
+    return;
+  }
+
+  if (activeModuleTitle.value === 'Risk Control') {
+    if (isRiskControlModuleMenuItem(label)) {
+      activeModuleMenuItem.value = label;
+    }
   }
 }
 
@@ -313,6 +354,14 @@ function onModuleMenuTitleFlotationItemSelect(_label: string, index: number) {
     </template>
 
     <TransactionRecordsDataListPage v-else-if="showReportPage" />
+
+    <RiskControlAmlQueryPage v-else-if="showRiskControlAmlQueryPage" />
+
+    <RiskControlDataListPage
+      v-else-if="showRiskControlDataList && activeModuleMenuItem"
+      :key="activeModuleMenuItem"
+      :menu-item="activeModuleMenuItem"
+    />
 
     <div v-else class="app-shell-main">
       <p class="app-shell-main__hint">{{ messages.appShellMainHint }}</p>

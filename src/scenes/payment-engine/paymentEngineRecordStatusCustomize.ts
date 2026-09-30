@@ -34,28 +34,6 @@ const WALLET_PAYOUT_RECORD_STATUS_MAP: Record<
   paid: { status: 'ready', label: 'Signed Pending Confirmation' },
 };
 
-const PAYMENT_EXCEPTION_RECORD_STATUS_MAP: Record<
-  PaymentEngineRecordRow['status'],
-  PaymentEngineRecordStatusCustomize
-> = {
-  pending: { status: 'danger', label: 'Pending' },
-  transferred: { status: 'success', label: 'Transferred' },
-  success: { status: 'success', label: 'Transferred' },
-  failed: { status: 'danger', label: 'Transaction Failed' },
-  'external-pending': { status: 'danger', label: 'Pending' },
-  approving: { status: 'danger', label: 'Pending' },
-  'signature-pending': { status: 'danger', label: 'Pending' },
-  'signed-pending-confirmation': { status: 'danger', label: 'Pending' },
-  completed: { status: 'success', label: 'Transferred' },
-  'transaction-failed': { status: 'success', label: 'Transferred' },
-  rejected: { status: 'success', label: 'Transferred' },
-  initiated: { status: 'danger', label: 'Pending' },
-  'additional-payment-required': { status: 'danger', label: 'Pending' },
-  expired: { status: 'success', label: 'Transferred' },
-  cancelled: { status: 'success', label: 'Transferred' },
-  paid: { status: 'success', label: 'Transferred' },
-};
-
 const REFUND_RECORD_STATUS_MAP: Record<
   PaymentEngineRecordRow['status'],
   PaymentEngineRecordStatusCustomize
@@ -100,26 +78,27 @@ const SETTLEMENT_RECORD_STATUS_MAP: Record<
   rejected: { status: 'success', label: 'Settled' },
 };
 
-const BULK_RECORD_STATUS_MAP: Record<
+/** 批量转账 / 异常支付单列表共用状态 Tag。 */
+const TRANSFER_RECORD_STATUS_MAP: Record<
   PaymentEngineRecordRow['status'],
   PaymentEngineRecordStatusCustomize
 > = {
+  initiated: { status: 'ready', label: 'Not Transferred' },
   pending: { status: 'warning', label: 'Transferring' },
-  success: { status: 'success', label: 'Success' },
-  failed: { status: 'danger', label: 'Partial Failure' },
-  initiated: { status: 'warning', label: 'Transferring' },
+  failed: { status: 'danger', label: 'Transfer Failed' },
+  success: { status: 'success', label: 'Transfer Successful' },
   'additional-payment-required': { status: 'warning', label: 'Transferring' },
-  expired: { status: 'danger', label: 'Partial Failure' },
-  cancelled: { status: 'danger', label: 'Partial Failure' },
-  paid: { status: 'success', label: 'Success' },
-  transferred: { status: 'success', label: 'Success' },
-  'external-pending': { status: 'warning', label: 'Transferring' },
+  expired: { status: 'danger', label: 'Transfer Failed' },
+  cancelled: { status: 'danger', label: 'Transfer Failed' },
+  paid: { status: 'success', label: 'Transfer Successful' },
+  transferred: { status: 'success', label: 'Transfer Successful' },
+  'external-pending': { status: 'ready', label: 'Not Transferred' },
   approving: { status: 'warning', label: 'Transferring' },
   'signature-pending': { status: 'warning', label: 'Transferring' },
   'signed-pending-confirmation': { status: 'warning', label: 'Transferring' },
-  completed: { status: 'success', label: 'Success' },
-  'transaction-failed': { status: 'danger', label: 'Partial Failure' },
-  rejected: { status: 'danger', label: 'Partial Failure' },
+  completed: { status: 'success', label: 'Transfer Successful' },
+  'transaction-failed': { status: 'danger', label: 'Transfer Failed' },
+  rejected: { status: 'danger', label: 'Transfer Failed' },
 };
 
 const CALLBACK_RECORD_STATUS_MAP: Record<
@@ -138,8 +117,12 @@ function isBulkTransferRecordMenuItem(menuItem: string): boolean {
   return menuItem === 'Bulk Transfer Record';
 }
 
+function isTransferRecordMenuItem(menuItem: string): boolean {
+  return isBulkTransferRecordMenuItem(menuItem) || isPaymentExceptionRecordMenuItem(menuItem);
+}
+
 function isWalletPayoutMenuItem(menuItem: string): boolean {
-  return menuItem === 'Wallet Payout';
+  return menuItem === 'Wallet Payout' || menuItem === 'Sub-Address Payout';
 }
 
 export function buildPaymentEngineRecordStatusCustomize(
@@ -153,8 +136,8 @@ export function buildPaymentEngineRecordStatusCustomize(
     if (item) return item;
   }
 
-  if (isPaymentExceptionRecordMenuItem(menuItem)) {
-    const item = PAYMENT_EXCEPTION_RECORD_STATUS_MAP[status];
+  if (isTransferRecordMenuItem(menuItem)) {
+    const item = TRANSFER_RECORD_STATUS_MAP[status];
     if (item) return item;
   }
 
@@ -168,9 +151,57 @@ export function buildPaymentEngineRecordStatusCustomize(
     if (item) return item;
   }
 
-  if (isBulkTransferRecordMenuItem(menuItem)) {
-    const item = BULK_RECORD_STATUS_MAP[status];
+  if (menuItem === 'Task Record') {
+    if (status === 'pending') {
+      return { status: 'warning', label: 'Collecting' };
+    }
+    return { status: 'invalid', label: 'Finished' };
+  }
+
+  if (menuItem === 'API Collection') {
+    const item = WALLET_PAYOUT_RECORD_STATUS_MAP[status];
     if (item) return item;
+  }
+
+  if (menuItem === 'History') {
+    if (status === 'failed' || status === 'transaction-failed') {
+      return { status: 'danger', label: 'Failed' };
+    }
+    if (status === 'cancelled') {
+      return { status: 'invalid', label: 'Canceled' };
+    }
+    return { status: 'success', label: 'Success' };
+  }
+
+  if (menuItem === 'Processing') {
+    if (status === 'pending') {
+      return { status: 'warning', label: 'Pending' };
+    }
+    if (status === 'success') {
+      return { status: 'success', label: 'Success' };
+    }
+  }
+
+  if (menuItem === 'Collection History') {
+    if (status === 'failed' || status === 'transaction-failed') {
+      return { status: 'danger', label: 'Failed' };
+    }
+    if (status === 'cancelled') {
+      return { status: 'invalid', label: 'Canceled' };
+    }
+    return { status: 'success', label: 'Success' };
+  }
+
+  if (menuItem === 'Collection Processing') {
+    if (status === 'pending') {
+      return { status: 'warning', label: 'Pending' };
+    }
+    if (status === 'success' || status === 'completed') {
+      return { status: 'success', label: 'Success' };
+    }
+    if (status === 'failed' || status === 'transaction-failed') {
+      return { status: 'danger', label: 'Transaction Failed' };
+    }
   }
 
   if (isPaymentCallbackRecordMenuItem(menuItem) && row.callbackStatus) {
@@ -185,9 +216,22 @@ export function buildPaymentEngineRecordStatusCustomize(
     };
   }
 
+  if (status === 'success') {
+    return { status: 'success', label: 'Success' };
+  }
+  if (status === 'completed') {
+    return { status: 'success', label: 'Transaction Completed' };
+  }
+  if (status === 'pending') {
+    return { status: 'warning', label: 'Pending' };
+  }
+  if (status === 'failed' || status === 'transaction-failed') {
+    return { status: 'danger', label: 'Transaction Failed' };
+  }
+
   return {
     status: 'success',
-    label: status,
+    label: 'Success',
   };
 }
 
@@ -201,8 +245,8 @@ export function resolvePaymentEngineRecordStatusDetailLabel(
     return translate(item?.label ?? row.status);
   }
 
-  if (isPaymentExceptionRecordMenuItem(menuItem)) {
-    const item = PAYMENT_EXCEPTION_RECORD_STATUS_MAP[row.status];
+  if (isTransferRecordMenuItem(menuItem)) {
+    const item = TRANSFER_RECORD_STATUS_MAP[row.status];
     return translate(item?.label ?? row.status);
   }
 
@@ -216,9 +260,23 @@ export function resolvePaymentEngineRecordStatusDetailLabel(
     return translate(item?.label ?? row.status);
   }
 
-  if (isBulkTransferRecordMenuItem(menuItem)) {
-    const item = BULK_RECORD_STATUS_MAP[row.status];
-    return translate(item?.label ?? row.status);
+  if (menuItem === 'History') {
+    if (row.status === 'failed' || row.status === 'transaction-failed') {
+      return translate('Failed');
+    }
+    if (row.status === 'cancelled') {
+      return translate('Canceled');
+    }
+    return translate('Success');
+  }
+
+  if (menuItem === 'Processing') {
+    if (row.status === 'pending') {
+      return translate('Pending');
+    }
+    if (row.status === 'success') {
+      return translate('Success');
+    }
   }
 
   if (isPaymentCallbackRecordMenuItem(menuItem) && row.callbackStatus) {
@@ -241,8 +299,8 @@ export function resolvePaymentEngineRecordStatusDetailTagStatus(
     return REFUND_RECORD_STATUS_MAP[row.status]?.status ?? 'success';
   }
 
-  if (isPaymentExceptionRecordMenuItem(menuItem)) {
-    return PAYMENT_EXCEPTION_RECORD_STATUS_MAP[row.status]?.status ?? 'success';
+  if (isTransferRecordMenuItem(menuItem)) {
+    return TRANSFER_RECORD_STATUS_MAP[row.status]?.status ?? 'success';
   }
 
   if (isWalletPayoutMenuItem(menuItem)) {
@@ -253,8 +311,15 @@ export function resolvePaymentEngineRecordStatusDetailTagStatus(
     return SETTLEMENT_RECORD_STATUS_MAP[row.status]?.status ?? 'success';
   }
 
-  if (isBulkTransferRecordMenuItem(menuItem)) {
-    return BULK_RECORD_STATUS_MAP[row.status]?.status ?? 'success';
+  if (menuItem === 'History') {
+    if (row.status === 'failed' || row.status === 'transaction-failed') return 'danger';
+    if (row.status === 'cancelled') return 'invalid';
+    return 'success';
+  }
+
+  if (menuItem === 'Processing') {
+    if (row.status === 'pending') return 'warning';
+    return 'success';
   }
 
   if (isPaymentCallbackRecordMenuItem(menuItem) && row.callbackStatus) {

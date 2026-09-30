@@ -49,6 +49,14 @@
   color: var(--text-base-primary);
 }
 
+.cellOverflowText {
+  composes: typography-body-medium from global;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-base-primary);
+}
+
 .cellSecondary {
   composes: typography-footnote from global;
   color: var(--text-base-secondary);

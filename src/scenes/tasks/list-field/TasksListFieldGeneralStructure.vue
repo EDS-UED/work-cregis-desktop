@@ -217,11 +217,11 @@ const hashLikeMinWidthStyle = computed(() => {
             v-if="showAppIcon"
             :name="appIconName"
             fit
-            :class="styles.appIcon"
+            :class="styles.appIconLg"
           />
           <EgAvatar
             v-else-if="showAvatar"
-            size="xs"
+            size="sm"
             :name="avatarDisplayName"
             :color-seed="avatarColorSeed"
             :class="styles.avatar"
@@ -307,11 +307,11 @@ const hashLikeMinWidthStyle = computed(() => {
           v-if="showAppIcon"
           :name="appIconName"
           fit
-          :class="styles.appIcon"
+          :class="styles.appIconXl"
         />
         <EgAvatar
           v-else-if="showAvatar"
-          size="xs"
+          size="sm"
           :name="avatarDisplayName"
           :color-seed="avatarColorSeed"
           :class="styles.avatar"
@@ -342,11 +342,11 @@ const hashLikeMinWidthStyle = computed(() => {
             v-if="showAppIcon"
             :name="appIconName"
             fit
-            :class="styles.appIcon"
+            :class="styles.appIconLg"
           />
           <EgAvatar
             v-else-if="showAvatar"
-            size="xs"
+            size="sm"
             :name="avatarDisplayName"
             :color-seed="avatarColorSeed"
             :class="styles.avatar"
@@ -419,11 +419,11 @@ const hashLikeMinWidthStyle = computed(() => {
             v-if="showAppIcon"
             :name="appIconName"
             fit
-            :class="styles.appIcon"
+            :class="styles.appIconXl"
           />
           <EgAvatar
             v-else-if="showAvatar"
-            size="xs"
+            size="sm"
             :name="avatarDisplayName"
             :color-seed="avatarColorSeed"
             :class="styles.avatar"

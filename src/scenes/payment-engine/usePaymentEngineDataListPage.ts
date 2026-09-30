@@ -27,6 +27,10 @@ import {
 } from './paymentEngineRecordSort';
 
 export const PAYMENT_ENGINE_COLUMN_HEIGHT = 66;
+/** EDS DataList Xl 行高（Showcase：66）。 */
+export const DATA_LIST_COLUMN_HEIGHT_XL = PAYMENT_ENGINE_COLUMN_HEIGHT;
+/** EDS DataList Md 行高（Showcase：48）。 */
+export const DATA_LIST_COLUMN_HEIGHT_MD = 48;
 export const PAYMENT_ENGINE_HEADER_HEIGHT = 32;
 
 type ToolbarActionKey =
@@ -155,6 +159,24 @@ export function usePaymentEngineDataListPage<T>(options: {
       return buttons;
     }
 
+    if (preset === 'filter-refresh-add-export') {
+      buttons.push(
+        { key: 'filter', item: filterButton.value },
+        { key: 'refresh', item: refreshButton.value },
+        { key: 'addNew', item: addNewButton.value },
+        { key: 'export', item: exportButton.value },
+      );
+      return buttons;
+    }
+
+    if (preset === 'filter-add') {
+      buttons.push(
+        { key: 'filter', item: filterButton.value },
+        { key: 'addNew', item: addNewButton.value },
+      );
+      return buttons;
+    }
+
     if (preset === 'batch-filter-refresh') {
       trackSingleIconButton('batch');
       buttons.push({ key: 'batch', item: batchButton.value });
@@ -206,7 +228,16 @@ export function usePaymentEngineDataListPage<T>(options: {
         (button) => button.key === 'filter' || button.key === 'addNew',
       );
     }
-    if (preset === 'filter-refresh' || preset === 'batch-filter-refresh') {
+    if (preset === 'filter-refresh' || preset === 'filter-refresh-add-export') {
+      return toolbarActionButtons.value.filter(
+        (button) =>
+          button.key === 'filter'
+          || button.key === 'refresh'
+          || button.key === 'addNew'
+          || button.key === 'export',
+      );
+    }
+    if (preset === 'batch-filter-refresh') {
       return toolbarActionButtons.value.filter(
         (button) => button.key === 'filter' || button.key === 'refresh',
       );
@@ -216,8 +247,8 @@ export function usePaymentEngineDataListPage<T>(options: {
 
   const showToolbarSection = computed(() => {
     const preset = resolvedToolbarPreset.value;
+    if (preset === 'filter-refresh' || preset === 'filter-refresh-add-export') return false;
     return preset === 'rule-configuration'
-      || preset === 'filter-refresh'
       || preset === 'batch-filter-refresh'
       || options.showBatchSelect.value;
   });
@@ -427,7 +458,7 @@ export function usePaymentEngineDataListPage<T>(options: {
     }, 1200);
   }
 
-  function onToolbarActionClick(key: ToolbarActionKey) {
+  function onToolbarActionClick(key: ToolbarActionKey | string) {
     if (key === 'batch') {
       onBatchClick();
       return;

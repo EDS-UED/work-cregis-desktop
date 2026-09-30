@@ -1,0 +1,41 @@
+.host {
+  align-items: center;
+}
+
+.primaryInlineRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.primaryInlineRow > :global(*) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.operatorNameSegment {
+  max-width: 136px;
+  min-width: 0;
+}
+
+.operatorNameSegment :global([class*='textPrimary']) {
+  font-weight: var(--weight-medium);
+}
+
+.actionText {
+  flex: 0 0 auto;
+}
+
+.actionText :global([class*='textSecondary']) {
+  font-size: var(--eds-body-medium-size);
+  line-height: var(--eds-body-medium-line-height);
+  font-weight: var(--eds-body-medium-weight);
+}
+
+.strategyNameSegment {
+  flex: 1 1 auto;
+  min-width: 0;
+}

@@ -4,21 +4,25 @@ import {
   resolveEgDataListDemoRowIndex,
 } from '@/scenes/shared/egDataListMockData';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
-import { buildRefundTokenCryptoCustomize } from '@/scenes/payment-engine/paymentEngineListFieldCustomize';
 import { buildWalletPayoutCryptoCustomize } from '@/scenes/payment-engine/paymentEngineListFieldCustomize';
 
 export function buildWaasRuleCollectionCurrencyCustomize(
   row: PaymentEngineRecordRow,
   columnMinWidth = '',
 ): Record<string, unknown> {
-  const customize = buildRefundTokenCryptoCustomize(row, columnMinWidth);
-  return {
-    ...customize,
-    symbol: row.currencySymbol ?? customize.symbol,
-    cryptoName: row.currencyCryptoName ?? customize.cryptoName,
-    showNetwork: row.currencyShowNetwork ?? true,
-    networkLabel: row.currencyNetwork ?? customize.networkLabel,
-  };
+  const rowIndex = resolveEgDataListDemoRowIndex(row);
+  const customize = buildCurrencyRowPresetCustomize(rowIndex);
+  return applyCurrencyRowTagVisibility(
+    {
+      ...customize,
+      comboMode: 'currency-only',
+      entryBadgeMode: 'none',
+      fromSideVisible: false,
+      toSideVisible: false,
+      minWidth: columnMinWidth,
+    },
+    -1,
+  );
 }
 
 export function buildWaasTaskCurrencyCustomize(
@@ -50,3 +54,29 @@ export function buildWaasCollectionAddressCryptoCustomize(
 ): Record<string, unknown> {
   return buildWalletPayoutCryptoCustomize(row, columnMinWidth);
 }
+
+export function buildWaasAmountAddressCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+): Record<string, unknown> {
+  const cryptoCustomize = buildWalletPayoutCryptoCustomize(row, columnMinWidth);
+  const networkLabel = String(cryptoCustomize.networkLabel ?? '').trim();
+
+  return {
+    ...cryptoCustomize,
+    amountType: 'amount-address',
+    addressType: 'double',
+    cryptoValue: row.orderAmount,
+    cryptoSymbol: row.orderSymbol ?? cryptoCustomize.symbol,
+    cryptoName: row.currencyCryptoName ?? cryptoCustomize.cryptoName,
+    fiatValue: row.orderFiat,
+    showCryptoIcon: true,
+    showNetwork: Boolean(networkLabel),
+    networkLabel,
+    addressTooltipTrigger: 'hover',
+    minWidth: columnMinWidth,
+  };
+}
+
+/** @deprecated Use buildWaasAmountAddressCustomize */
+export const buildWaasProcessingAmountCustomize = buildWaasAmountAddressCustomize;

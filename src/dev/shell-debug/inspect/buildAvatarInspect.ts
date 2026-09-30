@@ -9,7 +9,7 @@ import {
 
 const AVATAR_GRAPHIC_ICON_NAME_RE = /^(eds-application-\d+|eds-business-\d+)$/i;
 
-const AVATAR_SIZE_ORDER = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
+const AVATAR_SIZE_ORDER = ['xs', 'sm', 'md', 'lg', 'xl', '2xl'] as const;
 type AvatarSizeName = (typeof AVATAR_SIZE_ORDER)[number];
 
 const AVATAR_SIZE_TOKEN: Record<AvatarSizeName, string> = {
@@ -18,6 +18,7 @@ const AVATAR_SIZE_TOKEN: Record<AvatarSizeName, string> = {
   md: '--avatar-md',
   lg: '--avatar-lg',
   xl: '--avatar-xl',
+  '2xl': '--avatar-2xl',
 };
 
 export function isAvatarGraphicAssetName(name: string | null | undefined): boolean {

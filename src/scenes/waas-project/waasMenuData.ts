@@ -7,6 +7,9 @@ import type { WaasProject } from '@/scenes/project/types';
 
 export const WAAS_SETTINGS_MENU_ITEM = 'Settings';
 
+/** tier-2 分组父级：仅展开子菜单，无独立列表页。 */
+export const WAAS_MENU_BRANCH_ONLY_ITEMS = new Set(['Collection Record']);
+
 export const WAAS_STANDARD_MENU_ITEMS = flattenModuleMenuPresetItemLabels(
   cregisWaasModuleMenuGroups,
 ) as readonly string[];
@@ -30,6 +33,10 @@ export function isWaasOrderModeMenuItem(label: string): label is WaasOrderModeMe
 
 export function isWaasStandardMenuItem(label: string): boolean {
   return (WAAS_STANDARD_MENU_ITEMS as readonly string[]).includes(label);
+}
+
+export function isWaasMenuBranchOnlyItem(label: string): boolean {
+  return WAAS_MENU_BRANCH_ONLY_ITEMS.has(label);
 }
 
 export function resolveDefaultWaasMenuItem(project: WaasProject | null | undefined): string {

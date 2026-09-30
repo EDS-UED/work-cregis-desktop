@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import {
   EgCrypto,
+  EgCryptoAddress,
   EgDivider,
   EgListFieldOverflowText,
   EgTag,
@@ -15,6 +16,12 @@ import {
 } from '../shared/expiryCountdownUtils';
 import { splitBusinessTypeSecondaryKey } from './businessTypeDisplay';
 import { resolveCryptoNameFromSymbol } from './listFieldCryptoResolve';
+import {
+  buildCurrencySideAddressData,
+  resolveCurrencySideVisible,
+} from './listFieldCurrencyAddressCustomize';
+import { truncateAddressMiddle } from './listFieldAddressLineModel';
+import { buildCurrencySideTagsList } from './listFieldCurrencyTagCustomize';
 import styles from './TasksListFieldAmount.module.css';
 
 const props = defineProps<{
@@ -29,18 +36,41 @@ function parsePreviewMinWidth(customize: Record<string, unknown>): number | unde
 }
 
 const amountType = computed(() => String(props.customize.amountType ?? 'conversion'));
-const fiatValue = computed(() =>
-  formatGroupedDecimalAmount(String(props.customize.fiatValue ?? '$10')),
-);
-const cryptoValue = computed(() =>
-  formatGroupedDecimalAmount(String(props.customize.cryptoValue ?? '12,500.000001')),
-);
 const cryptoSymbol = computed(() => {
   if (amountType.value === 'crypto') {
     return String(props.customize.cryptoSymbol ?? 'BTC');
   }
   return String(props.customize.cryptoSymbol ?? 'USDT');
 });
+const amountAddressType = computed(() => String(props.customize.addressType ?? 'double'));
+const amountAddressState = computed(() => ({
+  ...props.customize,
+  symbol: cryptoSymbol.value,
+}));
+const amountFromAddress = computed(() => buildCurrencySideAddressData('from', amountAddressState.value));
+const amountToAddress = computed(() => buildCurrencySideAddressData('to', amountAddressState.value));
+const amountFromTagsList = computed(() =>
+  amountType.value === 'amount-address' && amountAddressType.value === 'double'
+    ? buildCurrencySideTagsList('from', amountAddressState.value)
+    : undefined,
+);
+const amountToTagsList = computed(() =>
+  amountType.value === 'amount-address' && amountAddressType.value === 'double'
+    ? buildCurrencySideTagsList('to', amountAddressState.value)
+    : undefined,
+);
+const amountSingleAddressDisplayText = computed(() => {
+  const alias = amountFromAddress.value.alias.trim();
+  if (alias) return alias;
+  return truncateAddressMiddle(amountFromAddress.value.address);
+});
+const addressMinWidth = computed(() => parsePreviewMinWidth(props.customize));
+const fiatValue = computed(() =>
+  formatGroupedDecimalAmount(String(props.customize.fiatValue ?? '$10')),
+);
+const cryptoValue = computed(() =>
+  formatGroupedDecimalAmount(String(props.customize.cryptoValue ?? '12,500.000001')),
+);
 const cryptoPrimaryText = computed(() => `${cryptoValue.value} ${cryptoSymbol.value}`);
 const showAmountCryptoIcon = computed(() => props.customize.showCryptoIcon !== false);
 const cryptoName = computed((): CryptoName => {
@@ -122,7 +152,7 @@ const cellMinWidthStyle = computed(() => {
         v-if="showAmountCryptoIcon"
         :name="cryptoName"
         fit
-        :class="styles.amountCryptoIcon"
+        :class="styles.amountCryptoIconXl"
         :label="cryptoSymbol"
       />
       <EgListFieldOverflowText
@@ -142,6 +172,63 @@ const cellMinWidthStyle = computed(() => {
     </div>
   </div>
   <div
+    v-else-if="amountType === 'amount-address'"
+    class="list-field-amount"
+    :class="[styles.amountPreview, alignEnd && styles.amountPreviewAlignEnd]"
+    :style="cellMinWidthStyle"
+  >
+    <div :class="styles.amountPrimaryRow">
+      <EgCrypto
+        v-if="showAmountCryptoIcon"
+        :name="cryptoName"
+        fit
+        :class="styles.amountCryptoIconLg"
+        :label="cryptoSymbol"
+      />
+      <EgListFieldOverflowText
+        :text="cryptoPrimaryText"
+        variant="primary"
+        tabular
+        :tooltip-trigger="tooltipTrigger"
+      />
+      <EgTag
+        v-if="showNetworkTag && networkTagLabel"
+        size="sm"
+        system-type="stroke-subtle"
+        truncate
+      >
+        {{ networkTagLabel }}
+      </EgTag>
+    </div>
+    <div class="desktopTokens">
+      <EgListFieldOverflowText
+        v-if="amountAddressType === 'single'"
+        :text="amountFromAddress.address"
+        :display-text="amountSingleAddressDisplayText"
+        variant="secondary"
+        :tooltip-trigger="tooltipTrigger"
+      />
+      <EgCryptoAddress
+        v-else
+        address-mode="double"
+        :from-text="amountFromAddress.address"
+        :from-alias="amountFromAddress.alias || undefined"
+        :to-text="amountToAddress.address"
+        :to-alias="amountToAddress.alias || undefined"
+        :from-address-count="amountFromAddress.count"
+        :to-address-count="amountToAddress.count"
+        :from-addresses="amountFromAddress.addresses"
+        :to-addresses="amountToAddress.addresses"
+        :from-tags-list="amountFromTagsList"
+        :to-tags-list="amountToTagsList"
+        :show-from="resolveCurrencySideVisible('from', customize)"
+        :show-to="resolveCurrencySideVisible('to', customize)"
+        :min-width="addressMinWidth"
+        :address-tooltip-trigger="tooltipTrigger"
+      />
+    </div>
+  </div>
+  <div
     v-else
     class="list-field-amount"
     :class="[styles.amountPreview, alignEnd && styles.amountPreviewAlignEnd]"
@@ -152,7 +239,7 @@ const cellMinWidthStyle = computed(() => {
         v-if="showAmountCryptoIcon"
         :name="cryptoName"
         fit
-        :class="styles.amountCryptoIcon"
+        :class="styles.amountCryptoIconLg"
         :label="cryptoSymbol"
       />
       <EgListFieldOverflowText

@@ -7,11 +7,15 @@ import {
   isWaasOrderModeMenuItem,
   WAAS_SETTINGS_MENU_ITEM,
 } from './waasMenuData';
+import {
+  isWaasStandardDataListMenuItem,
+} from './waasStandardMenuData';
 import WaasModuleContentPage from './WaasModuleContentPage.vue';
 import WaasOrderModeDataListPage from './WaasOrderModeDataListPage.vue';
 import WaasProjectCreatePage from './WaasProjectCreatePage.vue';
 import WaasProjectEmptyPage from './WaasProjectEmptyPage.vue';
 import WaasProjectSettingsPage from './WaasProjectSettingsPage.vue';
+import WaasStandardDataListPage from './WaasStandardDataListPage.vue';
 import styles from './WaasProjectShell.module.css';
 
 const props = defineProps<{
@@ -49,13 +53,24 @@ const showWaasOrderModeList = computed(
     isWaasOrderModeMenuItem(props.menuItem),
 );
 
+const showWaasStandardDataList = computed(
+  () =>
+    hasProjects.value &&
+    shellView.value === 'content' &&
+    !isWaasOrderModeProject(selectedProject.value) &&
+    props.menuItem !== null &&
+    props.menuItem !== WAAS_SETTINGS_MENU_ITEM &&
+    isWaasStandardDataListMenuItem(props.menuItem),
+);
+
 const showWaasStandardContent = computed(
   () =>
     hasProjects.value &&
     shellView.value === 'content' &&
     props.menuItem !== null &&
     props.menuItem !== WAAS_SETTINGS_MENU_ITEM &&
-    !showWaasOrderModeList.value,
+    !showWaasOrderModeList.value &&
+    !showWaasStandardDataList.value,
 );
 
 watch(shellView, (next, previous) => {
@@ -83,6 +98,12 @@ watch(shellView, (next, previous) => {
         <WaasOrderModeDataListPage
           v-if="showWaasOrderModeList && menuItem"
           v-show="showWaasOrderModeList"
+          :key="`${selectedProject?.id ?? 'default'}:${menuItem}`"
+          :menu-item="menuItem"
+        />
+        <WaasStandardDataListPage
+          v-if="showWaasStandardDataList && menuItem"
+          v-show="showWaasStandardDataList"
           :key="`${selectedProject?.id ?? 'default'}:${menuItem}`"
           :menu-item="menuItem"
         />

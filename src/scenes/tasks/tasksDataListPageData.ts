@@ -338,6 +338,22 @@ export function tasksDataListShowsBatch(menuItem: string | undefined): boolean {
   return menuItem === 'Approval' || menuItem === 'Signing';
 }
 
+/** Tasks 列表工具栏 EgFilter（各子菜单字段集不同）。 */
+export function tasksDataListShowsEgFilter(
+  menuItem: string | undefined,
+  locale: AppLocale = 'en',
+): boolean {
+  const resolved = resolveTasksDataListMenuItem(menuItem, locale) ?? menuItem;
+  return (
+    resolved === 'Approval'
+    || resolved === 'Signing'
+    || resolved === 'Approved'
+    || resolved === 'Signed'
+    || resolved === 'All Records'
+    || resolved === 'Sent Request'
+  );
+}
+
 /** 待签名工具栏「自动化」入口；仅 Signing。 */
 export function tasksDataListShowsAutomation(menuItem: string | undefined): boolean {
   return menuItem === 'Signing';

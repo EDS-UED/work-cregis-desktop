@@ -169,6 +169,32 @@ export const EDS_INSPECT_CATALOG: EdsInspectCatalogEntry[] = [
     ],
   },
   {
+    displayName: 'Filter',
+    priority: 84,
+    vueNames: ['Filter', 'EgFilter'],
+    domClass: 'eds-filter',
+    props: [
+      { key: 'triggerLabel', label: '触发标签', defaultValue: '筛选' },
+      { key: 'showTriggerBadge', label: '显示角标', defaultValue: true, format: formatBoolean },
+      { key: 'disabled', label: '禁用', defaultValue: false, format: formatBoolean },
+      { key: 'placement', label: '方向', defaultValue: 'bottom' },
+      { key: 'align', label: '对齐', defaultValue: 'start' },
+      { key: 'maxConditions', label: '最大条件数', defaultValue: 10 },
+      { key: 'logicMode', label: '逻辑模式', defaultValue: 'all' },
+    ],
+  },
+  {
+    displayName: 'FilterTooltip',
+    priority: 83,
+    vueNames: ['Tooltip', 'EgTooltip'],
+    domClass: 'eds-filter-tooltip',
+    props: [
+      { key: 'placement', label: '方向', defaultValue: 'bottom' },
+      { key: 'align', label: '对齐', defaultValue: 'start' },
+      { key: 'disabled', label: '禁用', defaultValue: false, format: formatBoolean },
+    ],
+  },
+  {
     displayName: 'Button',
     priority: 80,
     vueNames: ['Button', 'EgButton'],
@@ -394,12 +420,32 @@ export const EDS_INSPECT_CATALOG: EdsInspectCatalogEntry[] = [
     ],
   },
   {
-    displayName: 'TextOverflowTooltip',
+    displayName: 'FieldOvfTooltip',
     priority: 55,
-    vueNames: ['TextOverflowTooltip', 'EgTooltipOverflow'],
+    vueNames: ['TextOverflowTooltip', 'EgTooltipOverflow', 'FieldOvfTooltip', 'EgFieldOvfTooltip'],
     props: [
-      { key: 'content', label: '内容', format: formatOptionalText },
-      { key: 'placement', label: '位置' },
+      { key: 'tooltipText', label: '内容', format: formatOptionalText },
+      { key: 'trigger', label: '触发', defaultValue: 'hover' },
+    ],
+  },
+  {
+    displayName: 'ParagraphOvfTooltip',
+    priority: 54,
+    vueNames: ['ParagraphOverflowTooltip', 'EgParagraphOvfTooltip'],
+    props: [
+      { key: 'text', label: '文本', format: formatOptionalText },
+      { key: 'trigger', label: '触发', defaultValue: 'hover' },
+      { key: 'lineClamp', label: '行数', defaultValue: 2 },
+    ],
+  },
+  {
+    displayName: 'AddressOvfTooltip',
+    priority: 53,
+    vueNames: ['AddressOvfTooltip', 'EgAddressOvfTooltip'],
+    props: [
+      { key: 'fromText', label: 'From', format: formatOptionalText },
+      { key: 'toText', label: 'To', format: formatOptionalText },
+      { key: 'addressTooltipTrigger', label: '触发', defaultValue: 'hover' },
     ],
   },
   {
@@ -767,6 +813,13 @@ export const EDS_INSPECT_CATALOG: EdsInspectCatalogEntry[] = [
     priority: 68,
     vueNames: ['Input', 'EgInput'],
     domClass: 'eds-input-field',
+    props: [],
+  },
+  {
+    displayName: 'InputOverflowPopover',
+    priority: 67,
+    vueNames: ['InputOverflowPopover'],
+    domClass: 'eds-input-overflow-popover',
     props: [],
   },
   {

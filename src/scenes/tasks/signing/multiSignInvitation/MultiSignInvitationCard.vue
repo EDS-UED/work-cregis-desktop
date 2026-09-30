@@ -4,7 +4,7 @@ import {
   EgButton,
   EgListFieldOverflowText,
   EgTag,
-  EgTooltipOverflow,
+  EgFieldOvfTooltip,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import batchStyles from '../batch/batchSigning.shared.module.css';
@@ -55,7 +55,7 @@ function addressCopyLabel(address: string): string {
     <div :class="styles.cardHeadlineRow">
       <span :class="styles.taskAvatar">
         <EgAvatar
-          size="lg"
+          size="xl"
           :name="invitation.inviterName"
           :color-index="invitation.taskAvatarColorIndex"
           :color-seed="invitation.id"
@@ -127,7 +127,7 @@ function addressCopyLabel(address: string): string {
                   >
                     {{ invitation.sender.alias }}
                   </EgTag>
-                  <EgTooltipOverflow
+                  <EgFieldOvfTooltip
                     :tooltip-text="invitation.sender.address"
                     :copy-value="invitation.sender.address"
                     :copy-label="addressCopyLabel(invitation.sender.address)"
@@ -150,7 +150,7 @@ function addressCopyLabel(address: string): string {
                     >
                       {{ truncateAddressMiddle(invitation.sender.address) }}
                     </span>
-                  </EgTooltipOverflow>
+                  </EgFieldOvfTooltip>
                 </span>
               </span>
             </div>
@@ -170,7 +170,7 @@ function addressCopyLabel(address: string): string {
                   >
                     {{ invitation.receiver.alias }}
                   </EgTag>
-                  <EgTooltipOverflow
+                  <EgFieldOvfTooltip
                     :tooltip-text="invitation.receiver.address"
                     :copy-value="invitation.receiver.address"
                     :copy-label="addressCopyLabel(invitation.receiver.address)"
@@ -193,7 +193,7 @@ function addressCopyLabel(address: string): string {
                     >
                       {{ truncateAddressMiddle(invitation.receiver.address) }}
                     </span>
-                  </EgTooltipOverflow>
+                  </EgFieldOvfTooltip>
                 </span>
               </span>
             </div>

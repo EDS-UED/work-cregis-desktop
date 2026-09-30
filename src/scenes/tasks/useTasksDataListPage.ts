@@ -231,6 +231,7 @@ export function useTasksDataListPage(
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 20;
   });
 
+  const sourceRowCount = computed(() => allDataList.value.length);
   const totalRowCount = computed(() => sortedDataList.value.length);
 
   const totalPages = computed(() => {
@@ -481,6 +482,7 @@ export function useTasksDataListPage(
     skidContentLocked,
     statisticsItems,
     toolbarActionButtons,
+    sourceRowCount,
     totalRowCount,
   };
 }

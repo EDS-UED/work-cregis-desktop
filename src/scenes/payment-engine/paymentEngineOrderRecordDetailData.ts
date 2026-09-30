@@ -31,7 +31,7 @@ const ORDER_RECORD_HYPE = {
 
 const ORDER_RECORD_ADDRESS_PRESET: CurrencyRowPreset = {
   symbol: ORDER_RECORD_HYPE.symbol,
-  cryptoName: 'eds-ethereum-ethereum',
+  cryptoName: 'eds-hype-hyperliquid',
   showNetwork: true,
   networkLabel: ORDER_RECORD_HYPE.network,
   addressFamily: 'evm',
@@ -336,7 +336,11 @@ export function enrichPaymentOrderRecordForDetail(
   const seed = resolvePaymentOrderRecordSeedByIndex(rowIndex);
   const orderFiat = row.orderFiat ?? '';
   const receivedAmount = resolveOrderRecordReceivedAmount(seed, row.orderAmount);
-  const cryptoName = resolveCryptoNameFromSymbol(ORDER_RECORD_HYPE.symbol) ?? 'eds-ethereum-ethereum';
+  const orderSymbol = row.orderSymbol ?? ORDER_RECORD_HYPE.symbol;
+  const cryptoName =
+    row.currencyCryptoName
+    ?? resolveCryptoNameFromSymbol(orderSymbol)
+    ?? 'eds-hype-hyperliquid';
   const settlement = resolveOrderRecordSettlement(seed, rowIndex, row.id, row.orderAmount);
   const refundStatus = options?.refundStatus;
 
@@ -348,7 +352,7 @@ export function enrichPaymentOrderRecordForDetail(
     exchangeRate: buildOrderRecordExchangeRate(
       seed.orderCryptoAmount,
       seed.orderFiatAmount,
-      ORDER_RECORD_HYPE.symbol,
+      orderSymbol,
       seed.orderFiatSymbol,
     ),
     orderPayments: buildOrderRecordPayments(seed, rowIndex, row.id, row.orderAmount),

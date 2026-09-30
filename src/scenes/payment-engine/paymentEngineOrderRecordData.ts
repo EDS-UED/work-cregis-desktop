@@ -45,14 +45,37 @@ export const PAYMENT_SETTLEMENT_RECORD_MENU_ITEMS = new Set(['Settlement Record'
 
 export const PAYMENT_BULK_TRANSFER_RECORD_MENU_ITEMS = new Set(['Bulk Transfer Record']);
 
+/** 列表「金额｜地址」合并列（EgListFieldAmount amount-address）。 */
+export const PAYMENT_ENGINE_AMOUNT_ADDRESS_MENU_ITEMS = new Set([
+  'Bulk Transfer Record',
+  'Payment Exception Record',
+  'Wallet Payout',
+]);
+
 export const PAYMENT_REFUND_RECORD_MENU_ITEMS = new Set([
   'Refund Record',
 ]);
 
-const ORDER_RECORD_HYPE = {
-  symbol: 'HYPE',
-  network: 'Base',
-} as const;
+export const PAYMENT_WALLET_PAYOUT_RECORD_MENU_ITEMS = new Set([
+  'Wallet Payout',
+  'Sub-Address Payout',
+]);
+
+export const PAYMENT_TRANSACTION_RECORD_MENU_ITEMS = new Set([
+  'History',
+  'Processing',
+]);
+
+export const PAYMENT_RULE_CONFIGURATION_MENU_ITEMS = new Set(['Rule Configuration']);
+
+export const PAYMENT_API_COLLECTION_MENU_ITEMS = new Set(['API Collection']);
+
+export const PAYMENT_COLLECTION_DETAIL_MENU_ITEMS = new Set(['Task Record']);
+
+export const PAYMENT_COLLECTION_RECORD_MENU_ITEMS = new Set([
+  'Collection History',
+  'Collection Processing',
+]);
 
 /** 订单记录 showcase 行 index（0-based，与列表前 6 行状态 showcase 对齐）。 */
 export const PAYMENT_ORDER_RECORD_INITIATED_SHOWCASE_ROW_INDEX = 0;
@@ -71,20 +94,22 @@ const SETTLEMENT_STATUS_SHOWCASE: readonly PaymentEngineRecordRow['status'][] = 
   'pending',
 ];
 
-/** 批量转账：前 3 行展示转账中 / 完成 / 失败，其余均为完成。 */
+/** 批量转账：前 4 行展示未转账 / 转账中 / 转账失败 / 转账成功，其余均为转账成功。 */
 const BULK_TRANSFER_STATUS_SHOWCASE: readonly PaymentEngineRecordRow['status'][] = [
+  'initiated',
   'pending',
-  'success',
   'failed',
+  'success',
 ];
 
-/** 钱包提币：前 6 行依次展示完整状态；第 7 行起均为已完成。 */
+/** 钱包提币：前 7 行依次展示完整状态；第 8 行起均为已完成。 */
 const WALLET_PAYOUT_STATUS_SHOWCASE: readonly PaymentEngineRecordRow['status'][] = [
   'external-pending',
   'approving',
   'signature-pending',
   'signed-pending-confirmation',
   'transaction-failed',
+  'rejected',
   'completed',
 ];
 
@@ -101,8 +126,13 @@ const WALLET_PAYOUT_ALIASES = [
   { from: '0x55e8...d31c38', to: '0xf30b...d25f12' },
 ] as const;
 
-/** 异常支付单：前 5 行待处理，其余均为已转账。 */
-const PAYMENT_EXCEPTION_PENDING_SHOWCASE_COUNT = 5;
+/** 异常支付单：前 4 行展示未转账 / 转账中 / 转账失败 / 转账成功，其余均为转账成功。 */
+const PAYMENT_EXCEPTION_STATUS_SHOWCASE: readonly PaymentEngineRecordRow['status'][] = [
+  'initiated',
+  'pending',
+  'failed',
+  'success',
+];
 
 /** 异常支付单目标地址别名（按行 index；无别名则展示地址）。 */
 const PAYMENT_EXCEPTION_TO_ALIASES: readonly (string | undefined)[] = [
@@ -208,7 +238,6 @@ const PAYMENT_ORDER_RECORD_SHOWCASE_SEEDS: readonly PaymentOrderRecordRowSeed[] 
     orderCryptoAmount: '330',
     orderFiatAmount: '194172.76',
     orderFiatSymbol: 'USDT',
-    networkLabel: ORDER_RECORD_HYPE.network,
   },
   {
     orderIdSuffix: 530,
@@ -267,23 +296,87 @@ function refundCryptoPreset(index: number) {
   return mapPaymentEngineCryptoPreset(index);
 }
 
-function mapPaymentOrderRecordSeed(seed: PaymentOrderRecordRowSeed): PaymentEngineRecordRow {
+function parseOrderRecordDecimalAmount(value: string): number {
+  const parsed = Number.parseFloat(value.replace(/,/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function resolveOrderRecordListReceivedAmount(
+  seed: PaymentOrderRecordRowSeed,
+  orderAmount: string,
+): string {
+  const totalCrypto = parseOrderRecordDecimalAmount(seed.orderCryptoAmount);
+
+  if (
+    seed.status === 'initiated'
+    || seed.status === 'cancelled'
+    || seed.status === 'expired'
+  ) {
+    return '';
+  }
+
+  if (seed.status === 'additional-payment-required') {
+    return formatAmount(String(totalCrypto * 0.55));
+  }
+
+  if (seed.status === 'paid' || seed.status === 'transferred') {
+    return orderAmount;
+  }
+
+  return '';
+}
+
+function resolveOrderRecordListReceivedFiat(
+  seed: PaymentOrderRecordRowSeed,
+  receivedAmount: string,
+  orderFiat: string,
+): string | undefined {
+  if (!receivedAmount.trim()) return undefined;
+
+  const match = /^([\d,.]+)\s+(\S+)$/.exec(orderFiat.trim());
+  if (!match) return undefined;
+
+  const totalFiat = parseOrderRecordDecimalAmount(match[1]!);
+  const fiatSymbol = match[2]!;
+  const totalCrypto = parseOrderRecordDecimalAmount(seed.orderCryptoAmount);
+  const receivedCrypto = parseOrderRecordDecimalAmount(receivedAmount);
+  if (totalCrypto <= 0 || receivedCrypto <= 0) return undefined;
+
+  const receivedFiat = totalFiat * (receivedCrypto / totalCrypto);
+  return `${formatAmount(String(receivedFiat))} ${fiatSymbol}`;
+}
+
+function mapPaymentOrderRecordSeed(
+  seed: PaymentOrderRecordRowSeed,
+  rowIndex: number,
+): PaymentEngineRecordRow {
+  const preset = resolveCurrencyRowPreset(rowIndex);
   const orderAmount = formatAmount(seed.orderCryptoAmount);
   const fiatAmount = formatAmount(seed.orderFiatAmount);
+  const orderFiat = `${fiatAmount} ${seed.orderFiatSymbol}`;
+  const networkLabel = String(seed.networkLabel ?? preset.networkLabel ?? '').trim();
+  const showNetwork = Boolean(preset.showNetwork && networkLabel);
+  const receivedAmount = resolveOrderRecordListReceivedAmount(seed, orderAmount);
+  const receivedFiat = receivedAmount
+    ? resolveOrderRecordListReceivedFiat(seed, receivedAmount, orderFiat)
+    : undefined;
 
   return {
     id: seed.orderIdSuffix === null ? '--' : `po1442856738070${seed.orderIdSuffix}`,
     merchantOrderId: seed.merchantOrderId,
     status: seed.status,
     createdAt: '2032-10-23 12:22:54',
-    receivedAmount: '',
-    receivedSymbol: ORDER_RECORD_HYPE.symbol,
+    receivedAmount,
+    receivedSymbol: preset.symbol,
+    receivedFiat,
     orderAmount,
-    orderSymbol: ORDER_RECORD_HYPE.symbol,
-    orderFiat: `${fiatAmount} ${seed.orderFiatSymbol}`,
-    networkLabel: seed.networkLabel,
-    currencySymbol: ORDER_RECORD_HYPE.symbol,
-    currencyNetwork: ORDER_RECORD_HYPE.network,
+    orderSymbol: preset.symbol,
+    orderFiat,
+    networkLabel: showNetwork ? networkLabel : undefined,
+    currencySymbol: preset.symbol,
+    currencyNetwork: showNetwork ? networkLabel : undefined,
+    currencyCryptoName: preset.cryptoName,
+    currencyShowNetwork: showNetwork,
   };
 }
 
@@ -327,12 +420,12 @@ function buildTransferredOrderRecordSeed(index: number): PaymentOrderRecordRowSe
 }
 
 function buildPaymentOrderRecordRows(count = PAYMENT_ENGINE_RECORD_ROW_COUNT): PaymentEngineRecordRow[] {
-  const rows = PAYMENT_ORDER_RECORD_SHOWCASE_SEEDS.map((seed) =>
-    mapPaymentOrderRecordSeed(seed),
+  const rows = PAYMENT_ORDER_RECORD_SHOWCASE_SEEDS.map((seed, rowIndex) =>
+    mapPaymentOrderRecordSeed(seed, rowIndex),
   );
 
   for (let index = rows.length; index < count; index += 1) {
-    rows.push(mapPaymentOrderRecordSeed(buildTransferredOrderRecordSeed(index)));
+    rows.push(mapPaymentOrderRecordSeed(buildTransferredOrderRecordSeed(index), index));
   }
 
   return rows.slice(0, count);
@@ -426,7 +519,11 @@ function buildPaymentExceptionRows(
     return {
       id: `PE-${88001 + index}`,
       merchantOrderId: buildDemoHexRecordId(index + 60),
-      status: index < PAYMENT_EXCEPTION_PENDING_SHOWCASE_COUNT ? 'pending' : 'transferred',
+      status: resolveShowcaseThenCompletedStatus(
+        index,
+        PAYMENT_EXCEPTION_STATUS_SHOWCASE,
+        'success',
+      ),
       createdAt: '2032-10-23 12:22:54',
       receivedAmount: amount,
       receivedSymbol: crypto.symbol,
@@ -539,8 +636,36 @@ export function isPaymentBulkTransferRecordMenuItem(menuItem: string): boolean {
   return PAYMENT_BULK_TRANSFER_RECORD_MENU_ITEMS.has(menuItem);
 }
 
+export function isPaymentEngineAmountAddressMenuItem(menuItem: string): boolean {
+  return PAYMENT_ENGINE_AMOUNT_ADDRESS_MENU_ITEMS.has(menuItem);
+}
+
 export function isPaymentRefundRecordMenuItem(menuItem: string): boolean {
   return PAYMENT_REFUND_RECORD_MENU_ITEMS.has(menuItem);
+}
+
+export function isWalletPayoutRecordMenuItem(menuItem: string): boolean {
+  return PAYMENT_WALLET_PAYOUT_RECORD_MENU_ITEMS.has(menuItem);
+}
+
+export function isTransactionRecordDetailMenuItem(menuItem: string): boolean {
+  return PAYMENT_TRANSACTION_RECORD_MENU_ITEMS.has(menuItem);
+}
+
+export function isRuleConfigurationRecordMenuItem(menuItem: string): boolean {
+  return PAYMENT_RULE_CONFIGURATION_MENU_ITEMS.has(menuItem);
+}
+
+export function isApiCollectionRecordMenuItem(menuItem: string): boolean {
+  return PAYMENT_API_COLLECTION_MENU_ITEMS.has(menuItem);
+}
+
+export function isPaymentCollectionDetailMenuItem(menuItem: string): boolean {
+  return PAYMENT_COLLECTION_DETAIL_MENU_ITEMS.has(menuItem);
+}
+
+export function isCollectionRecordDetailMenuItem(menuItem: string): boolean {
+  return PAYMENT_COLLECTION_RECORD_MENU_ITEMS.has(menuItem);
 }
 
 export function resolvePaymentEngineRecordRowCount(_menuItem?: string): number {

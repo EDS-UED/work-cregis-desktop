@@ -17,18 +17,53 @@ import {
   resolvePaymentEngineOrderRecordTabLabels,
 } from './buildPaymentEngineOrderRecordDetailSections';
 import { buildPaymentEngineAmountHeadline } from './paymentEngineDetail';
+import { resolveCallbackEventLabelKey } from './paymentEngineListFieldCustomize';
 import {
   isCallbackRecordDetailMenuItem,
+  isCallbackErrorRecordMenuItem,
   isPaymentExceptionRecordMenuItem,
   isPaymentOrderRecordMenuItem,
   isPaymentRefundRecordMenuItem,
   isPaymentSettlementRecordMenuItem,
+  isWalletPayoutRecordMenuItem,
+  isTransactionRecordDetailMenuItem,
+  isApiCollectionRecordMenuItem,
+  isCollectionRecordDetailMenuItem,
+  isRuleConfigurationRecordMenuItem,
 } from './paymentEngineOrderRecordData';
 import {
   resolvePaymentEngineRecordStatusDetailLabel,
   resolvePaymentEngineRecordStatusDetailTagStatus,
 } from './paymentEngineRecordStatusCustomize';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
+import {
+  AML_QUERY_RESULT_ENTITY_TAGS_ITEM_KEY,
+  AML_QUERY_RESULT_RISK_RATING_ITEM_KEY,
+  buildRiskControlAmlRecordDetailSections,
+  resolveRiskControlAmlRecordDetailTabLabels,
+} from '@/scenes/risk-control/buildRiskControlAmlRecordDetailSections';
+import { resolveRiskControlAmlQueryRecordDetail } from '@/scenes/risk-control/riskControlAmlQueryRecordDetailData';
+import RiskControlAmlRecordDetailEntityTags from '@/scenes/risk-control/RiskControlAmlRecordDetailEntityTags.vue';
+import RiskControlAmlRecordDetailRiskRatingValue from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskRatingValue.vue';
+import RiskControlAmlRecordDetailRiskScoreEyebrowPortal from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskScoreEyebrowPortal.vue';
+import RiskControlAmlRecordDetailRiskTracePanel from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskTracePanel.vue';
+import { applyDetailCurrencyExpand } from '@/scenes/risk-control/applyDetailCurrencyExpand';
+import {
+  AUTO_RULE_CURRENCIES_ITEM_KEY,
+  buildAutoRuleExpandedCurrencyValueEntries,
+} from '@/scenes/risk-control/buildRiskControlAutoRuleDetailSections';
+import {
+  buildLogExpandedCurrencyValueEntries,
+  LOG_CURRENCIES_ITEM_KEY,
+  resolveRiskControlLogRecordHeadline,
+} from '@/scenes/risk-control/buildRiskControlLogDetailSections';
+import { resolveRiskControlLogRecordDetail } from '@/scenes/risk-control/riskControlLogDetailData';
+import { resolveRiskControlAutoRuleRecordDetail } from '@/scenes/risk-control/riskControlAutoRuleDetailData';
+import {
+  isRiskControlAmlMenuItem,
+  isRiskControlAutoRulesMenuItem,
+  isRiskControlLogsMenuItem,
+} from '@/scenes/risk-control/riskControlMenuData';
 
 const props = withDefaults(
   defineProps<{
@@ -49,6 +84,8 @@ const emit = defineEmits<{
 
 const { ui, locale } = useAppI18n();
 
+const detailHostRef = ref<HTMLElement | null>(null);
+
 const { popupMounted, popupOpen, onPopupClosed } = usePopupShellLifecycle({
   open: toRef(props, 'open'),
   onClosed: () => {
@@ -64,6 +101,16 @@ const isPaymentExceptionRecordDetail = computed(
 );
 const isCallbackRecordDetail = computed(() => isCallbackRecordDetailMenuItem(props.menuItem));
 const isSettlementRecordDetail = computed(() => isPaymentSettlementRecordMenuItem(props.menuItem));
+const isWalletPayoutRecordDetail = computed(() => isWalletPayoutRecordMenuItem(props.menuItem));
+const isTransactionRecordDetail = computed(() => isTransactionRecordDetailMenuItem(props.menuItem));
+const isApiCollectionRecordDetail = computed(() => isApiCollectionRecordMenuItem(props.menuItem));
+const isCollectionRecordDetail = computed(() => isCollectionRecordDetailMenuItem(props.menuItem));
+const isRuleConfigurationRecordDetail = computed(
+  () => isRuleConfigurationRecordMenuItem(props.menuItem),
+);
+const isAmlRecordDetail = computed(() => isRiskControlAmlMenuItem(props.menuItem));
+const isAutoRuleRecordDetail = computed(() => isRiskControlAutoRulesMenuItem(props.menuItem));
+const isLogsRecordDetail = computed(() => isRiskControlLogsMenuItem(props.menuItem));
 
 const orderRecordTabLabels = computed(() => {
   void locale.value;
@@ -81,17 +128,29 @@ const callbackRecordTabLabels = computed(() => {
   return resolvePaymentEngineCallbackErrorDetailTabLabels(props.detail, ui);
 });
 
-const showCallbackRecordTabs = computed(
-  () => isCallbackRecordDetail.value && callbackRecordTabLabels.value.length > 1,
+const showCallbackRecordTabs = computed(() => false);
+
+const amlRecordTabLabels = computed(() => {
+  void locale.value;
+  if (!isAmlRecordDetail.value) return [];
+  return resolveRiskControlAmlRecordDetailTabLabels(ui);
+});
+
+const showAmlRecordTabs = computed(
+  () => isAmlRecordDetail.value && amlRecordTabLabels.value.length > 1,
 );
 
 const showDetailTabs = computed(
-  () => showOrderRecordTabs.value || showCallbackRecordTabs.value,
+  () =>
+    showOrderRecordTabs.value
+    || showCallbackRecordTabs.value
+    || showAmlRecordTabs.value,
 );
 
 const detailTabLabels = computed(() => {
   if (isOrderRecordDetail.value) return orderRecordTabLabels.value;
   if (isCallbackRecordDetail.value) return callbackRecordTabLabels.value;
+  if (isAmlRecordDetail.value) return amlRecordTabLabels.value;
   return [];
 });
 
@@ -123,7 +182,11 @@ watch(
   ] as const,
   () => {
     if (!props.detail) return;
-    if (isOrderRecordDetail.value || isCallbackRecordDetail.value) {
+    if (
+      isOrderRecordDetail.value
+      || isCallbackRecordDetail.value
+      || isAmlRecordDetail.value
+    ) {
       clampDetailActiveTab(props.initialActiveTab);
     }
   },
@@ -132,7 +195,11 @@ watch(
 
 watch(detailTabLabels, () => {
   if (!props.detail) return;
-  if (isOrderRecordDetail.value || isCallbackRecordDetail.value) {
+  if (
+    isOrderRecordDetail.value
+    || isCallbackRecordDetail.value
+    || isAmlRecordDetail.value
+  ) {
     clampDetailActiveTab(props.initialActiveTab);
   }
 });
@@ -151,8 +218,26 @@ const settlementHeadlineParts = computed(() => {
   };
 });
 
+const amlRecordDetail = computed(() => {
+  if (!props.detail || !isAmlRecordDetail.value) return null;
+  return resolveRiskControlAmlQueryRecordDetail(props.detail);
+});
+
+const amlRiskTraceTabActive = computed(
+  () => isAmlRecordDetail.value && activeTab.value === 2,
+);
+
 const headline = computed(() => {
   if (!props.detail) return '';
+  if (isLogsRecordDetail.value) {
+    return resolveRiskControlLogRecordHeadline(props.detail, ui);
+  }
+  if (isAmlRecordDetail.value) {
+    return amlRecordDetail.value?.riskScore ?? props.detail.amlRiskScore ?? '0.0';
+  }
+  if (isAutoRuleRecordDetail.value || isRuleConfigurationRecordDetail.value) {
+    return props.detail.ruleName?.trim() || props.detail.ruleNumber || props.detail.id;
+  }
   if (settlementHeadlineParts.value) {
     const parts = settlementHeadlineParts.value;
     return parts.fiat ? `${parts.primary}${parts.fiat}` : parts.primary;
@@ -199,11 +284,60 @@ const settlementRecordHeadlineStatus = computed(() => {
   };
 });
 
-const detailEyebrowKey = computed(() => {
-  if (isSettlementRecordDetail.value) return 'Total Settlement Amount';
-  if (isOrderRecordDetail.value) return 'Order Amount';
-  if (isRefundRecordDetail.value) return 'Refund Amount';
-  return 'Amount';
+const walletPayoutRecordHeadlineStatus = computed(() => {
+  void locale.value;
+  if (
+    !props.detail
+    || !(isWalletPayoutRecordDetail.value
+      || isApiCollectionRecordDetail.value
+      || isCollectionRecordDetail.value)
+  ) {
+    return null;
+  }
+  return {
+    label: ui(resolvePaymentEngineRecordStatusDetailLabel(props.detail, props.menuItem, ui)),
+    status: resolvePaymentEngineRecordStatusDetailTagStatus(props.detail, props.menuItem),
+  };
+});
+
+const transactionRecordHeadlineStatus = computed(() => {
+  void locale.value;
+  if (!props.detail || !isTransactionRecordDetail.value) return null;
+  return {
+    label: ui(resolvePaymentEngineRecordStatusDetailLabel(props.detail, props.menuItem, ui)),
+    status: resolvePaymentEngineRecordStatusDetailTagStatus(props.detail, props.menuItem),
+  };
+});
+
+const callbackRecordHeadlineStatus = computed(() => {
+  void locale.value;
+  if (!props.detail || !isCallbackRecordDetail.value) return null;
+  if (isCallbackErrorRecordMenuItem(props.menuItem)) {
+    return {
+      label: ui(resolveCallbackEventLabelKey(props.detail.callbackEventType)),
+      status: 'warning' as const,
+    };
+  }
+  return {
+    label: ui(resolvePaymentEngineRecordStatusDetailLabel(props.detail, props.menuItem, ui)),
+    status: resolvePaymentEngineRecordStatusDetailTagStatus(props.detail, props.menuItem),
+  };
+});
+
+const ruleConfigurationHeadlineStatus = computed(() => {
+  void locale.value;
+  if (!props.detail || !isRuleConfigurationRecordDetail.value) return null;
+  return props.detail.ruleEnabled
+    ? { label: ui('Enabled'), status: 'success' as const }
+    : { label: ui('Disabled'), status: 'invalid' as const };
+});
+
+const autoRuleRecordHeadlineStatus = computed(() => {
+  void locale.value;
+  if (!props.detail || !isAutoRuleRecordDetail.value) return null;
+  return props.detail.ruleEnabled
+    ? { label: ui('Enabled'), status: 'success' as const }
+    : { label: ui('Disabled'), status: 'invalid' as const };
 });
 
 const detailHeadlineStatus = computed(
@@ -211,12 +345,44 @@ const detailHeadlineStatus = computed(
     orderRecordHeadlineStatus.value
     ?? refundRecordHeadlineStatus.value
     ?? paymentExceptionRecordHeadlineStatus.value
-    ?? settlementRecordHeadlineStatus.value,
+    ?? settlementRecordHeadlineStatus.value
+    ?? walletPayoutRecordHeadlineStatus.value
+    ?? transactionRecordHeadlineStatus.value
+    ?? callbackRecordHeadlineStatus.value
+    ?? ruleConfigurationHeadlineStatus.value
+    ?? autoRuleRecordHeadlineStatus.value,
 );
 
-const showDetailHeadlineStatus = computed(() => detailHeadlineStatus.value != null);
+const showDetailEyebrow = computed(
+  () =>
+    !isRuleConfigurationRecordDetail.value
+    && !isAutoRuleRecordDetail.value
+    && !isLogsRecordDetail.value
+    && !isAmlRecordDetail.value,
+);
 
-const sections = computed(() => {
+const detailEyebrowKey = computed(() => {
+  if (isAmlRecordDetail.value) return 'Risk Score';
+  if (isSettlementRecordDetail.value) return 'Total Settlement Amount';
+  if (isOrderRecordDetail.value) return 'Order Amount';
+  if (isRefundRecordDetail.value) return 'Refund Amount';
+  return 'Amount';
+});
+
+const showDetailHeadlineStatus = computed(
+  () => !isAmlRecordDetail.value && detailHeadlineStatus.value != null,
+);
+
+const expandedDetailItemKeys = ref(new Set<string>());
+
+watch(
+  () => [props.detail?.id, props.open] as const,
+  () => {
+    expandedDetailItemKeys.value = new Set();
+  },
+);
+
+const baseSections = computed(() => {
   void locale.value;
   if (!props.detail) return [];
   if (isOrderRecordDetail.value) {
@@ -234,8 +400,62 @@ const sections = computed(() => {
       props.menuItem,
     );
   }
+  if (isAmlRecordDetail.value) {
+    return buildRiskControlAmlRecordDetailSections(
+      props.detail,
+      activeTab.value,
+      ui,
+    );
+  }
   return buildPaymentEngineDetailSections(props.detail, props.menuItem, ui);
 });
+
+const sections = computed(() => {
+  const result = baseSections.value;
+  if (!props.detail || expandedDetailItemKeys.value.size === 0) {
+    return result;
+  }
+
+  const expandedEntriesByKey = new Map<string, ReturnType<typeof buildAutoRuleExpandedCurrencyValueEntries>>();
+
+  if (
+    isAutoRuleRecordDetail.value
+    && expandedDetailItemKeys.value.has(AUTO_RULE_CURRENCIES_ITEM_KEY)
+  ) {
+    const detail = resolveRiskControlAutoRuleRecordDetail(props.detail);
+    expandedEntriesByKey.set(
+      AUTO_RULE_CURRENCIES_ITEM_KEY,
+      buildAutoRuleExpandedCurrencyValueEntries(detail, ui),
+    );
+  }
+
+  if (
+    isLogsRecordDetail.value
+    && expandedDetailItemKeys.value.has(LOG_CURRENCIES_ITEM_KEY)
+  ) {
+    const detail = resolveRiskControlLogRecordDetail(props.detail);
+    expandedEntriesByKey.set(
+      LOG_CURRENCIES_ITEM_KEY,
+      buildLogExpandedCurrencyValueEntries(detail, ui),
+    );
+  }
+
+  if (expandedEntriesByKey.size === 0) {
+    return result;
+  }
+
+  return applyDetailCurrencyExpand(
+    result,
+    expandedDetailItemKeys.value,
+    expandedEntriesByKey,
+  );
+});
+
+function onItemValueLinkClick(key: string) {
+  if (key === AUTO_RULE_CURRENCIES_ITEM_KEY || key === LOG_CURRENCIES_ITEM_KEY) {
+    expandedDetailItemKeys.value = new Set([key]);
+  }
+}
 
 function onDetailClose() {
   popupOpen.value = false;
@@ -248,7 +468,7 @@ function onDetailClose() {
     v-model:open="popupOpen"
     @close="onPopupClosed"
   >
-    <div :class="detailChromeStyles.detailHost">
+    <div ref="detailHostRef" :class="detailChromeStyles.detailHost">
       <EgDetail
         v-if="detail"
         v-model:active-tab="activeTab"
@@ -257,7 +477,7 @@ function onDetailClose() {
         :toolbar-current="activeTab"
         :eyebrow="ui(detailEyebrowKey)"
         :headline="headline"
-        :show-eyebrow="true"
+        :show-eyebrow="showDetailEyebrow"
         :show-status-tag="showDetailHeadlineStatus"
         :status-tag="detailHeadlineStatus?.label ?? ''"
         status-tag-size="lg"
@@ -270,7 +490,12 @@ function onDetailClose() {
         :value-address-book-label="ui('Add to address book')"
         :value-aml-search-label="ui('AML Search')"
         :value-browser-label="ui('Block explorer')"
+        :value-device-info-label="ui('Device information')"
+        :value-device-type-label="ui('Device Type')"
+        :value-device-id-label="ui('Device ID')"
+        :value-device-ip-label="ui('IP')"
         @close="onDetailClose"
+        @item-value-link-click="onItemValueLinkClick"
       >
         <template #headline-text>
           {{ headlineParts.primary }}<span
@@ -278,7 +503,33 @@ function onDetailClose() {
             :class="detailChromeStyles.headlineFiat"
           >{{ headlineParts.fiat }}</span>
         </template>
+        <template
+          v-if="amlRecordDetail"
+          #[`item-value-${AML_QUERY_RESULT_RISK_RATING_ITEM_KEY}`]
+        >
+          <RiskControlAmlRecordDetailRiskRatingValue
+            :label-key="amlRecordDetail.riskLabelKey"
+            :custom-style="amlRecordDetail.riskCustomStyle"
+          />
+        </template>
+        <template
+          v-if="amlRecordDetail"
+          #[`item-value-${AML_QUERY_RESULT_ENTITY_TAGS_ITEM_KEY}`]
+        >
+          <RiskControlAmlRecordDetailEntityTags :tags="amlRecordDetail.entityTags" />
+        </template>
+        <template v-if="amlRecordDetail && amlRiskTraceTabActive" #append>
+          <RiskControlAmlRecordDetailRiskTracePanel
+            :source-trace="amlRecordDetail.sourceTrace"
+            :destination-trace="amlRecordDetail.destinationTrace"
+          />
+        </template>
       </EgDetail>
+      <RiskControlAmlRecordDetailRiskScoreEyebrowPortal
+        v-if="amlRecordDetail"
+        :host-ref="detailHostRef"
+        :page-key="detailToolbarPageKey"
+      />
     </div>
   </EgDetailPopup>
 </template>

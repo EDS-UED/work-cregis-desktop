@@ -1,0 +1,11 @@
+.actionCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+}
+
+.emptyDisplay {
+  color: var(--text-secondary);
+}
