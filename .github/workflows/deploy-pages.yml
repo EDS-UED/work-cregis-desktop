@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: EDS-UED/eds-desktop
-          ref: 239b9928c7608d8ce9a83b3fe3b4f36c9b25d5a8
+          ref: ef47c8b29a9daabd34e358fffe7ba04866f9cd86
           fetch-depth: 0
           path: eds-desktop
 
