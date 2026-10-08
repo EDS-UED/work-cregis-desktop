@@ -105,7 +105,7 @@ const LOG_OPERATOR_SHOWCASE = [
   'Hoskinson Enterprise',
   'Buterin',
   'Lubin',
-  'Zhao',
+  'Testing for Member Name Overflow',
 ] as const;
 
 const LOG_OPERATOR_POOL = [
@@ -163,6 +163,11 @@ const LOG_TEAM_API_COMPLETED_ACTION = 'disabled API' as const;
 const LOG_OVERFLOW_DEMO_ROW_INDEX = 4;
 const LOG_OVERFLOW_STRATEGY_NAME =
   'Wd_Test_003 Cross-Chain Multi-Signature Treasury Sweep Validation Policy Extended Rule Set';
+
+/** Logs Event 列 · 第 8 行演示策略名溢出（操作人见 LOG_OPERATOR_SHOWCASE[7]）。 */
+const LOG_STRATEGY_NAME_OVERFLOW_DEMO_ROW_INDEX = 7;
+const LOG_STRATEGY_NAME_OVERFLOW_DEMO =
+  'Test Strategy Number Name Overflow';
 
 const AML_NETWORK_SHOWCASE = [
   'Bitcoin',
@@ -345,6 +350,9 @@ function resolveDemoLogStrategyName(rowIndex: number): string {
   }
   if (rowIndex === LOG_OVERFLOW_DEMO_ROW_INDEX) {
     return LOG_OVERFLOW_STRATEGY_NAME;
+  }
+  if (rowIndex === LOG_STRATEGY_NAME_OVERFLOW_DEMO_ROW_INDEX) {
+    return LOG_STRATEGY_NAME_OVERFLOW_DEMO;
   }
   return resolveDemoPolicyName(rowIndex);
 }
