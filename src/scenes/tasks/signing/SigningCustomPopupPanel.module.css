@@ -282,16 +282,3 @@
   justify-content: flex-end;
   margin-left: auto;
 }
-
-.toolbarConfirmTrigger {
-  display: inline-flex;
-  align-items: center;
-}
-
-/* 对齐 Detail「驳回」danger text：点击/展开仅变色，无 event-focus / card 底色。 */
-.toolbarConfirmTrigger :global(.eds-button:not(:disabled)),
-.toolbarConfirmTrigger :global(.eds-button:not(:disabled):hover),
-.toolbarConfirmTrigger :global(.eds-button:not(:disabled):active),
-.toolbarConfirmTrigger :global(.eds-button.active:not(:disabled)) {
-  background-color: var(--material-hide);
-}

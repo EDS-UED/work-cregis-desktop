@@ -10,7 +10,7 @@
   color: var(--text-base-secondary);
 }
 
-/** Popover 展开时保持 EgButton 点按态（同 :active；非 active 展开态 / event-focus）。 */
+/** Popover 展开：danger text 点按文字色（背景由 EgButton :active → event-focus）。 */
 .remarkTriggerRejectPressed :global(.eds-button:not(:disabled)) {
   color: var(--event-active-danger);
 }

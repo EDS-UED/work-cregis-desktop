@@ -28,7 +28,6 @@ import SigningFooterLatencyToolbar from './SigningFooterLatencyToolbar.vue';
 import SigningMpcNetworkErrorPanel from './SigningMpcNetworkErrorPanel.vue';
 import type { SigningCustomPopupProgressStep } from './signingCustomPopupProgress.types';
 import { useSigningCustomPopupHost } from './useSigningCustomPopupHost';
-import remarkTriggerStyles from '@/scenes/tasks/shared/remarkPopoverTrigger.module.css';
 import styles from './SigningCustomPopupPanel.module.css';
 
 type ProgressBodyPage = 'signing' | 'sign-failed';
@@ -383,23 +382,16 @@ watch(
                   @confirm="requestClose"
                 >
                   <template #trigger="{ onClick, active }">
-                    <span
-                      :class="[
-                        styles.toolbarConfirmTrigger,
-                        remarkTriggerStyles.remarkTrigger,
-                        active && remarkTriggerStyles.remarkTriggerRejectPressed,
-                      ]"
+                    <EgButton
+                      tone="danger"
+                      variant="text"
+                      size="md"
+                      :active="active"
+                      :aria-expanded="active"
+                      @click.stop="onClick"
                     >
-                      <EgButton
-                        tone="danger"
-                        variant="text"
-                        size="md"
-                        :aria-expanded="active"
-                        @click.stop="onClick"
-                      >
-                        {{ ui('Cancel transaction') }}
-                      </EgButton>
-                    </span>
+                      {{ ui('Cancel transaction') }}
+                    </EgButton>
                   </template>
                 </EgConfirmPopover>
               </template>
