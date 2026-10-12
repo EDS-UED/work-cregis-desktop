@@ -216,6 +216,20 @@ export function applySigningFailedScenario() {
   flow.progressOpen.value = true;
 }
 
+/** 单签 · 656×480 进度弹窗 · 签名步进行中（不启动自动推进定时器）。 */
+export function applySingleSignSigningScenario() {
+  resetShellDebugScenarioBaseline();
+  const flow = signingFlowRegistry.value;
+  if (!flow) return;
+
+  const rowIndex = 2;
+  flow.openDetailForRow({ id: rowIndex });
+  flow.detailOpen.value = false;
+  flow.multiSignOpen.value = false;
+  flow.progressPhase.value = 'signing';
+  flow.progressOpen.value = true;
+}
+
 function readShellDebugAppLocale(): AppLocale {
   const lang = document.documentElement.lang.trim();
   if (lang === 'zh-CN' || lang === 'zh-TW') return lang;

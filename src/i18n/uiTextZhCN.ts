@@ -860,6 +860,9 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'After stopping, transactions that have not yet been signed will no longer be signed, while transactions that have already been signed will not be affected. Are you sure you want to stop the current batch signing task?':
     '停止后，尚未完成签名的交易将不再继续签名，已完成签名的交易不受影响。是否确定停止当前批量签名任务？',
   'Warm reminder': '温馨提示',
+  'Cancel transaction': '取消交易',
+  'After closing, this transaction will not be fully signed. Are you sure you want to close?':
+    '关闭后，本次交易将无法完成签名，是否确定关闭？',
   'Insufficient Withdrawal Limit': '提币额度不足',
   'Withdrawal quota exceeded': '超出提币额度',
   'Team withdrawal quota remaining ${remaining}. A 0.1% over-quota service fee applies to the excess. This transaction will incur ${overageFee} in over-quota service fees. We recommend upgrading your team plan or expanding your withdrawal package to waive over-quota fees and enjoy a higher withdrawal limit.':

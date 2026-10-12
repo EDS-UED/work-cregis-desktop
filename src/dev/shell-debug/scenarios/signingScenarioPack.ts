@@ -12,11 +12,22 @@ import {
   applySigningBatchNoEligibleDataScenario,
   applySigningBatchQuotaAlertScenario,
   applySigningFailedScenario,
+  applySingleSignSigningScenario,
   applyWalletShardMissingScenario,
 } from './signingScenarioActions';
 
 export function registerSigningScenarioPack() {
   replaceShellDebugScenariosForPage('Tasks:Signing', [
+    // —— 单签 ——
+    {
+      id: 'single-sign-signing',
+      pageKey: 'Tasks:Signing',
+      label: '单签（签名中）',
+      description:
+        '单签进度弹窗 · 签名步进行中（底栏取消交易、关闭二次确认）。',
+      apply: applySingleSignSigningScenario,
+    },
+
     // —— 多签 · 签名人 ——
     {
       id: 'multi-sign-waiting',
