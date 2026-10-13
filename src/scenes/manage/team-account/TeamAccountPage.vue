@@ -22,18 +22,15 @@ import {
   type DataListItem,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
-import ConditionFilterTrigger from '@/components/condition-filter/ConditionFilterTrigger.vue';
 import DataListHeaderSortTrigger from '@/scenes/tasks/DataListHeaderSortTrigger.vue';
+import TasksToolbarFilter from '@/scenes/tasks/filter/TasksToolbarFilter.vue';
 import {
   DATA_LIST_FIGMA_HEADER_HEIGHT,
   DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
 } from '@/scenes/tasks/tasksDataListPageData';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
 import { txDisplayTitleKey, type MonthlyBill } from './teamAccountData';
-import {
-  TEAM_ACCOUNT_FILTER_DEFAULT_KEYS,
-  TEAM_ACCOUNT_FILTER_FIELDS,
-} from './teamAccountFilter';
+import { TEAM_ACCOUNT_FILTER_OPERATORS } from './teamAccountFilter';
 import { useTeamAccountPage } from './useTeamAccountPage';
 import styles from './TeamAccountPage.module.css';
 
@@ -42,7 +39,9 @@ const DATA_LIST_COLUMN_HEIGHT = 66;
 const { ui, locale } = useAppI18n();
 const {
   state,
-  appliedFilterConditions,
+  filterConditions,
+  filterLogicMode,
+  filterFields,
   txDataList,
   billYearGroups,
   yearMenuItems,
@@ -76,7 +75,6 @@ const {
   openStatement,
   openSend,
   pagedTx,
-  billMeta,
   billListTitle,
   billListTitleCompact,
   timeSortOrder,
@@ -85,7 +83,9 @@ const {
   onAmountSort,
 } = useTeamAccountPage();
 
-const billMetaCompact = computed(() => `${state.statementTz}...`);
+const billToolbarTzLabel = computed(
+  () => `${ui('Financial Time Zone')}: ${state.statementTz}`,
+);
 
 function onYearSelect(label: string, close: () => void) {
   setYear(Number(label));
@@ -226,12 +226,11 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
               show-divider
             >
               <template #functional>
-                <ConditionFilterTrigger
-                  :label="ui('Filter')"
-                  icon="eds-filter"
-                  :fields="TEAM_ACCOUNT_FILTER_FIELDS"
-                  :default-field-keys="TEAM_ACCOUNT_FILTER_DEFAULT_KEYS"
-                  v-model:applied="appliedFilterConditions"
+                <TasksToolbarFilter
+                  v-model="filterConditions"
+                  v-model:logic-mode="filterLogicMode"
+                  :fields="filterFields"
+                  :operators="TEAM_ACCOUNT_FILTER_OPERATORS"
                 />
                 <EgIconButtonPro :label="ui('Export')" @click="exportTx">
                   <EgIcon name="eds-arrow-download" size="sm" />
@@ -241,106 +240,106 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
           </template>
 
           <div :class="styles.listRegion">
-            <div :class="styles.listFill">
-            <EgDataList
-              :data-list="txDataList"
-              :header-height="DATA_LIST_FIGMA_HEADER_HEIGHT"
-              :column-height="DATA_LIST_COLUMN_HEIGHT"
-              :loading="false"
-              :initing="false"
-              :empty-text="ui('No matching records')"
-              @row-click="onTxRowClick"
-            >
-              <EgDataListColumn
-                prop="type"
-                :label="ui('Operation Type')"
-                min-width="168px"
-                :sortable="false"
+            <div :class="[styles.listFill, styles.txListFill]">
+              <EgDataList
+                :data-list="txDataList"
+                :header-height="DATA_LIST_FIGMA_HEADER_HEIGHT"
+                :column-height="DATA_LIST_COLUMN_HEIGHT"
+                :loading="false"
+                :initing="false"
+                :empty-text="ui('No matching records')"
+                @row-click="onTxRowClick"
               >
-                <template #header>
-                  <div :class="styles.comboHeader">
-                    <div :class="styles.comboHeaderSegment">
-                      <div :class="styles.comboHeaderSegmentTextWrap">
-                        <EgDataListCellOverflow
-                          :content-class="styles.comboHeaderSegmentText"
-                          context="header"
-                        >
-                          {{ ui('Operation Type') }}
-                        </EgDataListCellOverflow>
+                <EgDataListColumn
+                  prop="type"
+                  :label="ui('Operation Type')"
+                  min-width="168px"
+                  :sortable="false"
+                >
+                  <template #header>
+                    <div :class="styles.comboHeader">
+                      <div :class="styles.comboHeaderSegment">
+                        <div :class="styles.comboHeaderSegmentTextWrap">
+                          <EgDataListCellOverflow
+                            :content-class="styles.comboHeaderSegmentText"
+                            context="header"
+                          >
+                            {{ ui('Operation Type') }}
+                          </EgDataListCellOverflow>
+                        </div>
+                      </div>
+                      <EgDivider type="navigator" direction="vertical" />
+                      <div :class="styles.comboHeaderSegment">
+                        <div :class="styles.comboHeaderSegmentTextWrap">
+                          <EgDataListCellOverflow
+                            :content-class="styles.comboHeaderSegmentText"
+                            context="header"
+                          >
+                            {{ ui('Time') }}
+                          </EgDataListCellOverflow>
+                        </div>
+                        <DataListHeaderSortTrigger
+                          label="Time"
+                          :active-order="timeSortOrder"
+                          @sort-change="onTimeSort"
+                        />
                       </div>
                     </div>
-                    <EgDivider type="navigator" direction="vertical" />
-                    <div :class="styles.comboHeaderSegment">
-                      <div :class="styles.comboHeaderSegmentTextWrap">
-                        <EgDataListCellOverflow
-                          :content-class="styles.comboHeaderSegmentText"
-                          context="header"
+                  </template>
+                  <template #default="{ data }">
+                    <div :class="styles.comboCell">
+                      <div :class="styles.comboPrimary">
+                        <span
+                          :class="[styles.dirIcon, data.dir === 'out' ? styles.dirOut : styles.dirIn]"
+                          aria-hidden="true"
                         >
-                          {{ ui('Time') }}
-                        </EgDataListCellOverflow>
-                      </div>
-                      <DataListHeaderSortTrigger
-                        label="Time"
-                        :active-order="timeSortOrder"
-                        @sort-change="onTimeSort"
-                      />
-                    </div>
-                  </div>
-                </template>
-                <template #default="{ data }">
-                  <div :class="styles.comboCell">
-                    <div :class="styles.comboPrimary">
-                      <span
-                        :class="[styles.dirIcon, data.dir === 'out' ? styles.dirOut : styles.dirIn]"
-                        aria-hidden="true"
-                      >
-                        <span :class="styles.dirIconGlyph">
-                          <EgIcon
-                            :name="data.dir === 'out' ? 'eds-arrow-outflow' : 'eds-arrow-entry'"
-                            fit
+                          <span :class="styles.dirIconGlyph">
+                            <EgIcon
+                              :name="data.dir === 'out' ? 'eds-arrow-outflow' : 'eds-arrow-entry'"
+                              fit
+                            />
+                          </span>
+                        </span>
+                        <span :class="styles.txType">
+                          <EgListFieldOverflowText
+                            :text="ui(txDisplayTitleKey(String(data.type)))"
+                            size="medium"
+                            boundary-selector=".app-preview"
                           />
                         </span>
-                      </span>
-                      <span :class="styles.txType">
-                        <EgListFieldOverflowText
-                          :text="ui(txDisplayTitleKey(String(data.type)))"
-                          size="medium"
-                          boundary-selector=".app-preview"
-                        />
-                      </span>
-                    </div>
-                    <span :class="styles.comboSecondary">{{ String(data.time) }}</span>
-                  </div>
-                </template>
-              </EgDataListColumn>
-              <EgDataListColumn
-                prop="amount"
-                :label="ui('Amount')"
-                min-width="180px"
-                align="right"
-                :sortable="false"
-              >
-                <template #header>
-                  <div :class="[styles.comboHeader, styles.comboHeaderAlignEnd]">
-                    <div :class="styles.comboHeaderSegment">
-                      <div :class="styles.comboHeaderSegmentTextWrap">
-                        <EgDataListCellOverflow
-                          :content-class="styles.comboHeaderSegmentText"
-                          context="header"
-                        >
-                          {{ ui('Amount') }}
-                        </EgDataListCellOverflow>
                       </div>
-                      <DataListHeaderSortTrigger
-                        label="Amount"
-                        :active-order="amountSortOrder"
-                        @sort-change="onAmountSort"
-                      />
+                      <span :class="styles.comboSecondary">{{ String(data.time) }}</span>
                     </div>
-                  </div>
-                </template>
-              </EgDataListColumn>
-            </EgDataList>
+                  </template>
+                </EgDataListColumn>
+                <EgDataListColumn
+                  prop="amount"
+                  :label="ui('Amount')"
+                  min-width="180px"
+                  align="right"
+                  :sortable="false"
+                >
+                  <template #header>
+                    <div :class="[styles.comboHeader, styles.comboHeaderAlignEnd]">
+                      <div :class="styles.comboHeaderSegment">
+                        <div :class="styles.comboHeaderSegmentTextWrap">
+                          <EgDataListCellOverflow
+                            :content-class="styles.comboHeaderSegmentText"
+                            context="header"
+                          >
+                            {{ ui('Amount') }}
+                          </EgDataListCellOverflow>
+                        </div>
+                        <DataListHeaderSortTrigger
+                          label="Amount"
+                          :active-order="amountSortOrder"
+                          @sort-change="onAmountSort"
+                        />
+                      </div>
+                    </div>
+                  </template>
+                </EgDataListColumn>
+              </EgDataList>
             </div>
           </div>
 
@@ -479,7 +478,15 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
                   :class="styles.yearBar"
                   :style="{ height: `${DATA_LIST_FIGMA_HEADER_HEIGHT}px` }"
                 >
-                  {{ group.year }}
+                  <span :class="styles.yearBarYear">{{ group.year }}</span>
+                  <span :class="styles.yearBarTz">
+                    <EgListFieldOverflowText
+                      :text="billToolbarTzLabel"
+                      size="small"
+                      variant="secondary"
+                      boundary-selector=".app-preview"
+                    />
+                  </span>
                 </div>
                 <div
                   v-for="bill in group.bills"
@@ -505,23 +512,6 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
                           :text="billListTitle(bill)"
                           :display-text="billListTitleCompact(bill)"
                           size="small"
-                          boundary-selector=".app-preview"
-                        />
-                      </span>
-                    </span>
-                    <span :class="styles.billMeta">
-                      <span :class="styles.billTextFull">
-                        <EgListFieldOverflowText
-                          :text="billMeta()"
-                          variant="secondary"
-                          boundary-selector=".app-preview"
-                        />
-                      </span>
-                      <span :class="styles.billTextCompact">
-                        <EgListFieldOverflowText
-                          :text="billMeta()"
-                          :display-text="billMetaCompact"
-                          variant="secondary"
                           boundary-selector=".app-preview"
                         />
                       </span>

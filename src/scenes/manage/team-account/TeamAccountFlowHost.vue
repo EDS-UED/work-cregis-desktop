@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import {
+  EgButton,
   EgCheckbox,
   EgComboActionFlotation,
   EgComboActionPopupWindow,
@@ -16,6 +17,7 @@ import {
 } from '@eds/desktop-components';
 import chromeScrimStyles from '@eds/desktop-components/styles/popupChromeScrim.module.css';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { isChineseLocale } from '@/composables/useAppLocale';
 import { navigateAppShell } from '@/composables/useAppShellNavigation';
 import { usePopupShellLifecycle } from '@/scenes/tasks/shared/usePopupShellLifecycle';
 import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
@@ -38,8 +40,9 @@ import { teamAccountState, useTeamAccountPage, sanitizeUsdThreshold } from './us
 import rechargeQr from './recharge-qr.svg';
 import styles from './TeamAccountOverlays.module.css';
 
-const { ui } = useAppI18n();
+const { ui, locale } = useAppI18n();
 const page = useTeamAccountPage();
+const rechargeNoteMinSingleLine = computed(() => isChineseLocale(locale.value));
 
 function applyAlertThreshold(raw: string, input?: HTMLInputElement) {
   const sanitized = sanitizeUsdThreshold(raw);
@@ -180,7 +183,7 @@ function onBillSettingConfirm() {
   billSettingConfirmOpen.value = true;
 }
 
-function onTxDetailValueLinkClick() {
+function onViewTransferRecordsClick() {
   // Close detail (logical), then route shell to WaaS → Bulk Transfer Record.
   teamAccountState.txDetailOpen = false;
   navigateAppShell({
@@ -363,7 +366,15 @@ function onSendMemberClick(id: string) {
             </div>
           </div>
           <p :class="styles.rechargeAddr">{{ RECHARGE_ADDR }}</p>
-          <p :class="styles.rechargeNote">{{ rechargeNoteMin }}</p>
+          <p
+            :class="[
+              styles.rechargeNote,
+              styles.rechargeNoteMin,
+              rechargeNoteMinSingleLine && styles.rechargeNoteMinSingleLine,
+            ]"
+          >
+            {{ rechargeNoteMin }}
+          </p>
           <p :class="styles.rechargeNote">{{ rechargeNoteRate }}</p>
         </div>
       </div>
@@ -390,9 +401,19 @@ function onSendMemberClick(id: string) {
       :show-status-tag="false"
       :sections="page.txSections.value"
       :show-toolbar="false"
-      @item-value-link-click="onTxDetailValueLinkClick"
       @close="txDetailShell.popupOpen.value = false"
-    />
+    >
+      <template #item-value-batch-transfer-id="{ item }">
+        <span :class="styles.txDetailBatchId">{{ item.value }}</span>
+        <EgButton
+          variant="outline"
+          size="sm"
+          @click="onViewTransferRecordsClick"
+        >
+          {{ ui('View Transfer Records') }}
+        </EgButton>
+      </template>
+    </EgDetail>
   </EgPopup>
 
   <EgPopup

@@ -4,6 +4,16 @@
   gap: var(--spacing-3);
 }
 
+/* Align with EgDetail itemValueText for Batch Transfer ID + outline CTA. */
+.txDetailBatchId {
+  min-width: 0;
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+  word-break: break-word;
+}
+
 /* Figma Echo Solt 1624:22005 — pt 20 / pb 24 / px 20 / gap 12 over EgDialog composeBody 16. */
 .billSettingBody {
   display: flex;
@@ -346,6 +356,15 @@
   font-weight: var(--eds-footnote-weight);
   line-height: var(--eds-footnote-line-height);
   text-align: center;
+}
+
+/* zh-CN / zh-TW min-deposit line is long; use full content width + nowrap. */
+.rechargeNoteMin {
+  max-width: 100%;
+}
+
+.rechargeNoteMinSingleLine {
+  white-space: nowrap;
 }
 
 .stmtHost {

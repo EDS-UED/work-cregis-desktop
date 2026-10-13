@@ -2,14 +2,18 @@ import {
   computed,
   reactive,
   ref,
+  watch,
 } from 'vue';
 import { createDetailApplyItemRow } from '@eds/desktop-components';
 import type {
   DataListItem,
   DetailSectionData,
+  EgFilterCondition,
+  EgFilterLogicMode,
   FlotationMenuItemPreset,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { hasActiveEgFilterConditions } from '@/scenes/shared/applyEgFilterConditions';
 import type { TasksDataListSortOrder } from '@/scenes/tasks/tasksDataListSort';
 import { useDataListPaginer } from '@/scenes/tasks/useDataListPaginer';
 import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
@@ -33,8 +37,8 @@ import {
   type StatementLang,
 } from './teamAccountData';
 import {
-  defaultTeamAccountFilterRows,
-  txMatchesFilterConditions,
+  buildTeamAccountFilterFields,
+  txMatchesEgFilterConditions,
 } from './teamAccountFilter';
 
 export const yearItems: FlotationMenuItemPreset[] = [
@@ -102,12 +106,19 @@ export function useTeamAccountPage() {
     { label: '繁體中文' },
   ];
 
-  const appliedFilterConditions = ref(defaultTeamAccountFilterRows());
+  const filterConditions = ref<EgFilterCondition[]>([]);
+  const filterLogicMode = ref<EgFilterLogicMode>('all');
+  const filterFields = computed(() => buildTeamAccountFilterFields(ui));
   const activeSort = ref<{ key: 'time' | 'amount'; order: TasksDataListSortOrder } | null>(null);
 
   const filteredTx = computed(() =>
     BALANCE_TX.filter((tx) =>
-      txMatchesFilterConditions(tx, appliedFilterConditions.value, ui),
+      txMatchesEgFilterConditions(
+        tx,
+        filterConditions.value,
+        filterFields.value,
+        filterLogicMode.value,
+      ),
     ),
   );
   const sortedTx = computed(() => {
@@ -161,6 +172,16 @@ export function useTeamAccountPage() {
       amount: tx.amount,
       dir: tx.dir,
     })),
+  );
+
+  watch(
+    filterConditions,
+    () => {
+      if (hasActiveEgFilterConditions(filterConditions.value)) {
+        goFirstPage();
+      }
+    },
+    { deep: true },
   );
 
   const yearMenuItems = computed(() =>
@@ -292,10 +313,6 @@ export function useTeamAccountPage() {
     showToast(ui('Statement download started'));
   }
 
-  function billMeta() {
-    return teamAccountState.statementTz;
-  }
-
   function billListTitle(bill: MonthlyBill) {
     const p = billPeriod(bill);
     const monthPart = locale.value === 'en' ? p.name : String(p.month);
@@ -323,7 +340,9 @@ export function useTeamAccountPage() {
 
   return {
     state: teamAccountState,
-    appliedFilterConditions,
+    filterConditions,
+    filterLogicMode,
+    filterFields,
     draftThreshold,
     setDraftThreshold,
     draftNotify,
@@ -382,7 +401,6 @@ export function useTeamAccountPage() {
     confirmSend,
     pageLabel,
     printStatement,
-    billMeta,
     billListTitle,
     billListTitleCompact,
     memberShortName,
@@ -470,6 +488,7 @@ function txDetailItems(tx: BalanceTx, ui: (key: string) => string) {
           valueSymbolAvatarName: operatorDisplayName(operator),
           valueSecondary: '',
         }),
+        titleIcon: 'eds-user-pointer',
         valueDeviceInfo: undefined,
       };
     }
@@ -488,8 +507,6 @@ function txDetailItems(tx: BalanceTx, ui: (key: string) => string) {
         }),
         // Desktop forbids copy affordances; brand-number preset enables copy by default.
         showValueCopy: false,
-        showValueLink: true,
-        valueLinkLabel: ui('View Transfer Records'),
       };
     }
     if (key === 'card') {
