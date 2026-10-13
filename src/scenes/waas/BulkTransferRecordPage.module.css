@@ -1,0 +1,60 @@
+.listRegion {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.comboHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  width: 100%;
+}
+
+.comboHeaderSegment {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.comboHeaderSegmentText {
+  min-width: 0;
+}
+
+.tokenCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.tokenIcon {
+  flex: 0 0 auto;
+  width: var(--avatar-md);
+  height: var(--avatar-md);
+}
+
+.tokenBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.comboPrimary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.comboSecondary {
+  min-width: 0;
+  color: var(--text-base-secondary);
+}

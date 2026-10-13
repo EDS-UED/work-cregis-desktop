@@ -165,6 +165,8 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Rule Configuration': 'Rule Configuration',
   Runtime: 'Runtime',
   Save: 'Save',
+  'Send Now': 'Send',
+  'Statement for {month} {year}': 'Statement for {month} {year}',
   Sender: 'Sender',
   'Sent Request': 'Sent Request',
   Settings: 'Settings',

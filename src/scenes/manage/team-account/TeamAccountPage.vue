@@ -29,7 +29,7 @@ import {
   DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
 } from '@/scenes/tasks/tasksDataListPageData';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
-import { type MonthlyBill } from './teamAccountData';
+import { txDisplayTitleKey, type MonthlyBill } from './teamAccountData';
 import {
   TEAM_ACCOUNT_FILTER_DEFAULT_KEYS,
   TEAM_ACCOUNT_FILTER_FIELDS,
@@ -116,8 +116,9 @@ let billToolbarResizeObserver: ResizeObserver | undefined;
 function queryBillToolbarEls() {
   const panel = billPanelRef.value;
   const toolbar = panel?.querySelector('.eds-tool-bar');
-  if (!toolbar) return { titleEl: null, yearEl: null };
+  if (!toolbar) return { titleRow: null, titleEl: null, yearEl: null };
   return {
+    titleRow: toolbar.querySelector<HTMLElement>('.eds-tool-bar-title'),
     titleEl: toolbar.querySelector<HTMLElement>('.eds-tool-bar-title p'),
     yearEl: toolbar.querySelector<HTMLElement>('.eds-flotation'),
   };
@@ -141,11 +142,12 @@ function measureFullBillTitleWidth(sample: HTMLElement) {
 }
 
 function updateBillToolbarTitleCompact() {
-  const { titleEl, yearEl } = queryBillToolbarEls();
-  if (!titleEl || !yearEl) return;
-  const titleBox = titleEl.getBoundingClientRect();
+  const { titleRow, titleEl, yearEl } = queryBillToolbarEls();
+  if (!titleRow || !titleEl || !yearEl) return;
+  const titleBox = titleRow.getBoundingClientRect();
   const yearBox = yearEl.getBoundingClientRect();
-  const available = yearBox.left - titleBox.left;
+  const gap = 8;
+  const available = yearBox.left - titleBox.left - gap;
   if (available <= 0) {
     billTitleCompact.value = true;
     return;
@@ -153,26 +155,32 @@ function updateBillToolbarTitleCompact() {
   billTitleCompact.value = measureFullBillTitleWidth(titleEl) >= available;
 }
 
-onMounted(() => {
+function scheduleBillToolbarTitleCompact() {
   void nextTick(() => {
-    updateBillToolbarTitleCompact();
-    const panel = billPanelRef.value;
-    if (!panel || typeof ResizeObserver === 'undefined') return;
+    requestAnimationFrame(updateBillToolbarTitleCompact);
+  });
+}
+
+onMounted(() => {
+  scheduleBillToolbarTitleCompact();
+  const panel = billPanelRef.value;
+  if (panel && typeof ResizeObserver !== 'undefined') {
     billToolbarResizeObserver = new ResizeObserver(() => {
       updateBillToolbarTitleCompact();
     });
     billToolbarResizeObserver.observe(panel);
-  });
+  }
+  window.addEventListener('resize', updateBillToolbarTitleCompact);
 });
 
 onBeforeUnmount(() => {
   billToolbarResizeObserver?.disconnect();
   billToolbarResizeObserver = undefined;
+  window.removeEventListener('resize', updateBillToolbarTitleCompact);
 });
 
-watch(locale, () => {
-  void nextTick(updateBillToolbarTitleCompact);
-});
+watch(locale, scheduleBillToolbarTitleCompact);
+watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
 </script>
 
 <template>
@@ -210,7 +218,7 @@ watch(locale, () => {
     </div>
 
     <div :class="styles.panels">
-      <section :class="styles.panel">
+      <section :class="[styles.panel, styles.txPanel]">
         <EgLayout type="empty" show-toolbar show-paginer :class="styles.panelLayout">
           <template #toolbar>
             <EgToolBar
@@ -225,7 +233,7 @@ watch(locale, () => {
                   :default-field-keys="TEAM_ACCOUNT_FILTER_DEFAULT_KEYS"
                   v-model:applied="appliedFilterConditions"
                 />
-                <EgIconButtonPro :label="ui('Export CSV')" @click="exportTx">
+                <EgIconButtonPro :label="ui('Export')" @click="exportTx">
                   <EgIcon name="eds-arrow-download" size="sm" />
                 </EgIconButtonPro>
               </template>
@@ -245,7 +253,7 @@ watch(locale, () => {
             >
               <EgDataListColumn
                 prop="type"
-                :label="ui('Type')"
+                :label="ui('Operation Type')"
                 min-width="168px"
                 :sortable="false"
               >
@@ -257,7 +265,7 @@ watch(locale, () => {
                           :content-class="styles.comboHeaderSegmentText"
                           context="header"
                         >
-                          {{ ui('Type') }}
+                          {{ ui('Operation Type') }}
                         </EgDataListCellOverflow>
                       </div>
                     </div>
@@ -293,7 +301,13 @@ watch(locale, () => {
                           />
                         </span>
                       </span>
-                      <span :class="styles.txType">{{ ui(String(data.type)) }}</span>
+                      <span :class="styles.txType">
+                        <EgListFieldOverflowText
+                          :text="ui(txDisplayTitleKey(String(data.type)))"
+                          size="medium"
+                          boundary-selector=".app-preview"
+                        />
+                      </span>
                     </div>
                     <span :class="styles.comboSecondary">{{ String(data.time) }}</span>
                   </div>

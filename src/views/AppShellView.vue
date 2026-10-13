@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { EgLayout, EgNavBar } from '@eds/desktop-components';
 import CregisModuleMenu from '@/components/CregisModuleMenu.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useAppShellNavigation } from '@/composables/useAppShellNavigation';
 import PreferencePage from '@/scenes/account-settings/PreferencePage.vue';
 import TeamAccountPage from '@/scenes/manage/team-account/TeamAccountPage.vue';
 import {
@@ -27,8 +28,10 @@ import {
   type TasksDataListMenuItemLabel,
 } from '@/scenes/tasks/tasksDataListPageData';
 import TransactionRecordsDataListPage from '@/scenes/transaction-records/TransactionRecordsDataListPage.vue';
+import BulkTransferRecordPage from '@/scenes/waas/BulkTransferRecordPage.vue';
 
 const { messages, ui } = useAppI18n();
+const { state: shellNavState } = useAppShellNavigation();
 
 const navBarAttrs = computed(() => ({
   ...cregisNavBarDeclarativeAttrs,
@@ -79,7 +82,16 @@ const showPaymentEnginePage = computed(
 /** Report has no module menu — open transaction records directly. */
 const showReportPage = computed(() => activeModuleTitle.value === 'Report');
 
+const showWaasBulkTransferPage = computed(
+  () =>
+    activeModuleTitle.value === 'WaaS'
+    && activeModuleMenuItem.value === 'Bulk Transfer Record',
+);
+
 const tasksModuleMenuGroups = useTasksModuleMenuGroups();
+
+/** When set, module-title watcher applies this item instead of the module default. */
+let pendingShellMenuItem: string | null = null;
 
 const moduleMenuGroups = computed(() => {
   if (activeModuleTitle.value === 'Tasks') {
@@ -89,6 +101,11 @@ const moduleMenuGroups = computed(() => {
 });
 
 watch(activeModuleTitle, (title) => {
+  if (pendingShellMenuItem != null) {
+    activeModuleMenuItem.value = pendingShellMenuItem;
+    pendingShellMenuItem = null;
+    return;
+  }
   if (title === 'Tasks') {
     activeModuleMenuItem.value = DEFAULT_TASKS_DATA_LIST_MENU_ITEM;
     return;
@@ -103,6 +120,10 @@ watch(activeModuleTitle, (title) => {
   }
   if (title === 'Payment Engine') {
     activeModuleMenuItem.value = DEFAULT_PAYMENT_ENGINE_MENU_ITEM;
+    return;
+  }
+  if (title === 'WaaS') {
+    activeModuleMenuItem.value = 'Order Record';
     return;
   }
   if (title === 'Report') {
@@ -156,8 +177,74 @@ function onModuleMenuItemSelect(label: string) {
     if (isPaymentEngineMenuItem(label)) {
       activeModuleMenuItem.value = label;
     }
+    return;
+  }
+
+  if (activeModuleTitle.value === 'WaaS') {
+    activeModuleMenuItem.value = label;
   }
 }
+
+function findNavBarButton(navLabel: string): HTMLButtonElement | null {
+  const nav = document.querySelector('.eds-nav-bar');
+  if (!nav) return null;
+  const translated = ui(navLabel);
+  for (const button of nav.querySelectorAll('button[aria-label]')) {
+    const label = button.getAttribute('aria-label') ?? '';
+    if (label === navLabel || label === translated) {
+      return button as HTMLButtonElement;
+    }
+  }
+  return null;
+}
+
+/** EgModuleMenuItem focus is internal (first item default); click syncs highlight to target. */
+function syncModuleMenuItemFocus(menuItem: string) {
+  const translated = ui(menuItem);
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    'button.eds-module-menu-item',
+  )) {
+    const text = button.textContent?.trim() ?? '';
+    if (text !== menuItem && text !== translated) continue;
+    if (button.getAttribute('aria-pressed') === 'true') return;
+    button.click();
+    return;
+  }
+}
+
+watch(
+  () => shellNavState.requestId,
+  async () => {
+    const target = shellNavState.target;
+    if (!target) return;
+
+    const navLabel = target.navLabel ?? target.moduleTitle;
+    pendingShellMenuItem = target.menuItem;
+    activeNavLabel.value = navLabel;
+
+    await nextTick();
+    const navButton = findNavBarButton(navLabel);
+    const navAlreadyFocused = navButton?.getAttribute('aria-pressed') === 'true';
+
+    if (navButton && !navAlreadyFocused) {
+      // Sync NavBar focus; capture handler updates module title, watcher applies pending menu.
+      navButton.click();
+    } else if (activeModuleTitle.value !== target.moduleTitle) {
+      activeModuleTitle.value = target.moduleTitle;
+    } else {
+      activeModuleMenuItem.value = target.menuItem;
+      pendingShellMenuItem = null;
+    }
+
+    await nextTick();
+    if (pendingShellMenuItem != null) {
+      activeModuleMenuItem.value = pendingShellMenuItem;
+      pendingShellMenuItem = null;
+    }
+    await nextTick();
+    syncModuleMenuItemFocus(target.menuItem);
+  },
+);
 </script>
 
 <template>
@@ -184,6 +271,7 @@ function onModuleMenuItemSelect(label: string) {
     />
     <PreferencePage v-else-if="showPreferencePage" />
     <TeamAccountPage v-else-if="showTeamAccountPage" />
+    <BulkTransferRecordPage v-else-if="showWaasBulkTransferPage" />
     <PaymentEnginePage
       v-else-if="showPaymentEnginePage && activeModuleMenuItem"
       :key="activeModuleMenuItem"

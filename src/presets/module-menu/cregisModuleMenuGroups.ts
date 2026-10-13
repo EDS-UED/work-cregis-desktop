@@ -120,10 +120,18 @@ const cregisManageModuleMenuGroups: ModuleMenuPresetGroup[] = [
 /** Cregis WaaS — 业务定稿菜单。 */
 export const cregisWaasModuleMenuGroups: ModuleMenuPresetGroup[] = [
   {
+    items: [
+      { label: 'Order Record', icon: 'eds-text-journal' },
+      { label: 'Bulk Transfer Record', icon: 'eds-convert' },
+      { label: 'Refund Record', icon: 'eds-arrow-reply-all-email' },
+      { label: 'Payment Exception Record', icon: 'eds-text-abnormal' },
+    ],
+  },
+  {
     items: [{ label: 'Sub-Address', icon: 'eds-address-books' }],
   },
   {
-    title: 'Payout Record',
+    title: 'Payouts',
     items: [
       { label: 'Wallet Payout', icon: 'eds-arrow-launch-square' },
       { label: 'Sub-Address Payout', icon: 'eds-payor-book' },

@@ -1,7 +1,16 @@
 import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
 
 export type TxDir = 'in' | 'out';
-export type TxField = 'hash' | 'time' | 'plan' | 'order' | 'operator' | 'provider' | 'card' | 'token';
+export type TxField =
+  | 'hash'
+  | 'time'
+  | 'plan'
+  | 'order'
+  | 'operator'
+  | 'provider'
+  | 'card'
+  | 'token'
+  | 'batch';
 export type StatementLang = 'English' | '简体中文' | '繁體中文';
 export type StatementHeader = 'team' | 'kyb';
 
@@ -19,6 +28,7 @@ export type BalanceTx = {
   card?: string;
   tokenSymbol?: string;
   tokenNetwork?: string;
+  batchTransferId?: string;
 };
 
 export type MonthlyBill = {
@@ -79,6 +89,7 @@ export const RECHARGE_ADDR = 'TCogAdKNMyU2P4HA4aiuj7ZqyZPzE2Hx2r';
 export const RECHARGE_NETWORKS = ['USDT-TRC20#Shasta', 'USDT-BEP20#Testnet'] as const;
 export const AVAILABLE_BALANCE = '$999,910,983.35';
 
+/** Internal type keys that exist on the client (docx §6 客户端存在=是). */
 export const TX_TYPES = [
   'Recharge',
   'System Recharge',
@@ -93,15 +104,53 @@ export const TX_TYPES = [
   'Token Listing Rejection Refund',
   'Over-limit Service Fee',
   'Custom Solution',
+  'Custom Solution - Other',
   'Tron Activation Fee',
   'Tron Energy Fee',
   'Tron Bandwidth Fee',
-  'AML Query',
+  'AML Manual Query',
+  'AML Auto Query',
+  'Acquiring Service Fee',
   'Card Issuance Fee',
   'Card Transfer',
   'Card Replacement Fee',
 ];
 
+/**
+ * Client display title catalog key (docx §6 客户端展示类型 / §8 操作类型).
+ * Multiple internal types may share one display title (e.g. AML Manual/Auto → AML Query).
+ */
+export const TX_DISPLAY_TITLE_KEY: Record<string, string> = {
+  Recharge: 'Recharge',
+  'System Recharge': 'System Recharge',
+  'System Refund': 'System Refund',
+  'Team Subscription Upgrade': 'Team Subscription Upgrade',
+  'Team Subscription Renewal': 'Team Subscription Renewal',
+  'Benefits Renewal': 'Benefits Renewal',
+  'Benefits Upgrade': 'Benefits Upgrade',
+  'Automation Feature Activation': 'Automation Feature Activation',
+  'Benefits Expansion': 'Benefits Expansion',
+  'Token Listing Application Fee': 'Token Listing Application Fee',
+  'Token Listing Rejection Refund': 'Token Listing Rejection Refund',
+  'Over-limit Service Fee': 'Over-limit Service Fee',
+  'Custom Solution': 'Custom Solution',
+  'Custom Solution - Other': 'Custom Solution',
+  'Tron Activation Fee': 'Tron Activation Fee',
+  'Tron Energy Fee': 'Tron Energy Fee',
+  'Tron Bandwidth Fee': 'Tron Bandwidth Fee',
+  'AML Manual Query': 'AML Query',
+  'AML Auto Query': 'AML Query',
+  'Acquiring Service Fee': 'Acquiring Service Fee',
+  'Card Issuance Fee': 'Card Issuance Fee',
+  'Card Transfer': 'Card Transfer',
+  'Card Replacement Fee': 'Card Replacement Fee',
+};
+
+export function txDisplayTitleKey(type: string): string {
+  return TX_DISPLAY_TITLE_KEY[type] ?? type;
+}
+
+/** Detail fields from docx §6 客户端额外需展示的字段. */
 export const TX_DETAIL_FIELDS: Record<string, TxField[]> = {
   Recharge: ['hash', 'time'],
   'System Recharge': ['time'],
@@ -115,7 +164,9 @@ export const TX_DETAIL_FIELDS: Record<string, TxField[]> = {
   'Tron Activation Fee': ['order', 'hash', 'operator', 'time'],
   'Tron Energy Fee': ['order', 'hash', 'operator', 'time'],
   'Tron Bandwidth Fee': ['order', 'hash', 'operator', 'time'],
-  'AML Query': ['plan', 'provider', 'order', 'operator', 'time'],
+  'AML Manual Query': ['plan', 'provider', 'order', 'operator', 'time'],
+  'AML Auto Query': ['plan', 'provider', 'order', 'operator', 'time'],
+  'Acquiring Service Fee': ['plan', 'batch', 'operator', 'time'],
   'Card Issuance Fee': ['card', 'order', 'time'],
   'Card Transfer': ['card', 'order', 'time'],
   'Card Replacement Fee': ['card', 'order', 'time'],
@@ -123,6 +174,7 @@ export const TX_DETAIL_FIELDS: Record<string, TxField[]> = {
   'Token Listing Application Fee': ['token', 'order', 'operator', 'time'],
   'Token Listing Rejection Refund': ['token', 'order', 'time'],
   'Custom Solution': ['plan', 'order', 'time'],
+  'Custom Solution - Other': ['plan', 'order', 'time'],
 };
 
 const BALANCE_TX_SEED: BalanceTx[] = [
@@ -138,7 +190,9 @@ const BALANCE_TX_SEED: BalanceTx[] = [
   { id: 't9', type: 'Tron Activation Fee', dir: 'out', amount: '-$12.00', time: DEMO_TIME, operator: OP_SAM, orderNo: 'TRON-ACT-8821', txid: DEMO_HASH },
   { id: 't10', type: 'Tron Energy Fee', dir: 'out', amount: '-$8.50', time: '2027-04-10  11:22:00', operator: OP_SAM, orderNo: 'TRON-ENG-4410', txid: 'a91b22aa0091c8ef7795722130666a4c' },
   { id: 't11', type: 'Tron Bandwidth Fee', dir: 'out', amount: '-$3.20', time: '2027-04-09  10:08:17', operator: OP_SAM, orderNo: 'TRON-BW-4409', txid: 'c0de88f177acb12a009155bb1122aabb' },
-  { id: 't12', type: 'AML Query', dir: 'out', amount: '-$12.00', time: '2027-06-14  11:40:18', operator: OP_SAM, plan: 'Manual query (address / tx hash)', provider: 'Chainalysis', orderNo: 'AML-889477D7' },
+  { id: 't12', type: 'AML Manual Query', dir: 'out', amount: '-$12.00', time: '2027-06-14  11:40:18', operator: OP_SAM, provider: 'Chainalysis', orderNo: 'AML-889477D7' },
+  { id: 't12b', type: 'AML Auto Query', dir: 'out', amount: '-$6.00', time: '2027-06-13  09:12:00', operator: 'System', provider: 'Chainalysis', orderNo: 'AML-AUTO-7712' },
+  { id: 't12e', type: 'Acquiring Service Fee', dir: 'out', amount: '-$45.00', time: '2027-06-10  10:00:00', operator: 'System', plan: 'Acquiring settlement', batchTransferId: 'BATCH-TRF-20270610', orderNo: 'ACQ-20270610' },
   { id: 't13', type: 'Card Issuance Fee', dir: 'out', amount: '-$20.00', time: DEMO_TIME, card: 'Visa ·•• 4421', orderNo: 'CARD-ISS-4421' },
   { id: 't14', type: 'Card Transfer', dir: 'out', amount: '-$5.00', time: '2027-03-12  14:22:05', card: 'Visa ·•• 4421', orderNo: 'CARD-TRF-4421' },
   { id: 't15', type: 'Card Replacement Fee', dir: 'out', amount: '-$15.00', time: '2027-03-01  09:15:02', card: 'Visa ·•• 8830', orderNo: 'CARD-REP-8830' },
@@ -146,6 +200,7 @@ const BALANCE_TX_SEED: BalanceTx[] = [
   { id: 't17', type: 'Token Listing Application Fee', dir: 'out', amount: '-$20,000.00', time: DEMO_TIME, operator: OP_SAM, orderNo: DEMO_ORDER, tokenSymbol: 'USDC', tokenNetwork: 'Bitcoin' },
   { id: 't18', type: 'Token Listing Rejection Refund', dir: 'in', amount: '+$20,000.00', time: DEMO_TIME, orderNo: DEMO_ORDER, tokenSymbol: 'USDC', tokenNetwork: 'Bitcoin' },
   { id: 't19', type: 'Custom Solution', dir: 'out', amount: '-$20,000.00', time: DEMO_TIME, plan: 'Pro → Enterprise', orderNo: 'CUS-20311223' },
+  { id: 't20', type: 'Custom Solution - Other', dir: 'out', amount: '-$9,800.00', time: '2027-02-18  12:30:00', plan: 'Customized solution', orderNo: 'CUS-OTH-20311223' },
 ];
 
 const TX_DEMO_TOTAL = 56;
@@ -229,11 +284,20 @@ export const STATEMENT_LANG: StatementLang[] = ['English', '简体中文', '繁�
 export const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 export const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+const STATEMENT_DISCLAIMER_EN =
+  'This monthly account statement is generated by Cregis\' system based on the user\'s configured "Accounting Timezone", which shall be conclusive and final in all respects. The usage is calculated on a calendar month basis. Should you wish to dispute any usage or charges herein, please provide us with proofs and details within 7 days from the date of issue, otherwise request to verify usage or dispute charges will not be accepted.\n\nAll the services and products offered are provided in accordance with the Cregis\' Standard Terms and Conditions as amended and published on our App and/or official website from time to time without prior notice.\n\nYou are deemed to accept and comply with the Cregis\' Standard Terms and Conditions when you subscribe to or use any of our services or products.';
+
+const STATEMENT_DISCLAIMER_ZH_CN =
+  '本月度账单由 Cregis 系统根据用户设定之“财务时区”自动生成，该时区应被视为最终且具决定性的依据。使用量按自然月计算。如您对本账单中的任何使用量或费用有异议，请于账单出具之日起 7 日内提供相关证明及详情，否则我们将不接受任何核实用量或争议费用的请求。\n\n我们提供的所有服务与产品，均依据 Cregis 标准条款与条件提供，该等条款与条件可能不时修订并在我们的 App 及/或官方网站上发布，恕不另行通知。\n\n当您订阅或使用我们的任何服务或产品时，即视为您已接受并同意遵守 Cregis 标准条款与条件。';
+
+const STATEMENT_DISCLAIMER_ZH_TW =
+  '本月度賬單由 Cregis 系統根據用戶設定之「財務時區」自動生成，該時區應被視為最終且具決定性的依據。使用量按自然月計算。如您對本賬單中的任何使用量或費用有異議，請於賬單出具之日起 7 日內提供相關證明及詳情，否則我們將不接受任何核實用量或爭議費用的請求。\n\n我們提供的所有服務與產品，均依據 Cregis 標準條款與條件提供，該等條款與條件可能不時修訂並在我們的 App 及/或官方網站上發布，恕不另行通知。\n\n當您訂閱或使用我們的任何服務或產品時，即視為您已接受並同意遵守 Cregis 標準條款與條件。';
+
 export const STATEMENT_COPY: Record<StatementLang, StatementCopy> = {
   English: {
     docTitle: 'Monthly Statement',
     docKicker: 'Account Statement',
-    client: 'Client Information',
+    client: 'Customer Information',
     teamName: 'Team Name',
     teamId: 'Team ID',
     period: 'Statement Period',
@@ -246,7 +310,7 @@ export const STATEMENT_COPY: Record<StatementLang, StatementCopy> = {
     ending: 'Closing Balance',
     details: 'Transaction Details',
     colDate: 'Date',
-    colType: 'Type',
+    colType: 'Operation Type',
     colIn: 'Credit',
     colOut: 'Debit',
     colBal: 'Balance',
@@ -256,52 +320,27 @@ export const STATEMENT_COPY: Record<StatementLang, StatementCopy> = {
     close: 'Close',
     rights: 'All rights reserved.',
     pageOf: 'Page {n} of {total}',
-    notes: [
-      {
-        title: 'Data Basis & Timezone',
-        body: 'This statement is generated by the Cregis system based on the user\'s configured "Accounting Timezone". All transaction record timestamps are presented in this timezone ({tz}).',
-      },
-      {
-        title: 'Pricing Unit & Asset Conversion',
-        body: 'All amounts in this statement are denominated in USD. Team top-ups are recorded on a "stablecoin basis": 1 USDT is treated as 1 USD for ledgering purposes. Cregis does not provide fiat currency exchange services. The user acknowledges and agrees that Cregis does not assume FX fluctuation risk between cryptocurrencies and fiat currencies, and is not responsible for the market value stability of decentralized assets.',
-      },
-      {
-        title: 'Service Fees & Charges',
-        body: 'All fees listed in this statement (including but not limited to team subscription fees and AML compliance screening fees) are charged in accordance with the Cregis service agreement. Once an AML screening is triggered and recorded as completed, the associated fee is irreversible and will not be refunded or offset regardless of the screening result.',
-      },
-      {
-        title: 'Legal Effect & Dispute Handling',
-        body: 'This statement is a transaction summary generated from existing system data and is provided for internal corporate reconciliation only. It does not constitute an audit report, tax filing evidence, or any legally binding financial certificate. If you dispute any content, please contact Cregis support within 30 days from the statement generation date; failure to submit a written dispute within this period will be deemed as confirmation and acceptance of the entire statement.',
-      },
-      {
-        title: 'Blockchain Disclaimer',
-        body: 'Due to the decentralized nature of blockchain networks, uncontrollable factors such as network congestion, node delays, or consensus mechanism adjustments may occur. Cregis is not responsible for transaction time deviations or data synchronization delays caused by such factors. For on-chain asset transfers, the final outcome shall be subject to the original data shown on the relevant blockchain explorer.',
-      },
-      {
-        title: 'Confidentiality & Data Security',
-        body: 'This statement contains sensitive corporate financial data and is highly confidential. Cregis is only responsible for sending it to the secure email addresses designated by the user. Cregis shall not be liable for any data leakage or damages caused by improper access control on the user side, mailbox compromise, or unauthorized forwarding.',
-      },
-    ],
+    notes: STATEMENT_DISCLAIMER_EN.split('\n\n').map((body) => ({ title: '', body })),
   },
   简体中文: {
     docTitle: '月度账单',
-    docKicker: '账户账单',
+    docKicker: '账单',
     client: '客户信息',
     teamName: '团队名称',
     teamId: '团队编号',
     period: '账单周期',
     billInfo: '账单信息',
     generated: '生成时间',
-    timezone: '账务时区',
+    timezone: '财务时区',
     currency: '结算币种',
-    topup: '充值合计',
-    spend: '消费合计',
+    topup: '本期充值',
+    spend: '本期消费',
     ending: '期末结余',
     details: '交易明细',
     colDate: '日期',
-    colType: '类型',
-    colIn: '收入',
-    colOut: '支出',
+    colType: '操作类型',
+    colIn: '充值',
+    colOut: '消费',
     colBal: '结余',
     total: '本期合计',
     disclaimer: '免责声明',
@@ -309,52 +348,27 @@ export const STATEMENT_COPY: Record<StatementLang, StatementCopy> = {
     close: '关闭',
     rights: '版权所有。',
     pageOf: '第 {n} 页，共 {total} 页',
-    notes: [
-      {
-        title: '数据基准与时区',
-        body: '本账单由 Cregis 系统依据用户配置的「账务时区」自动生成。所有交易记录时间戳均按该时区（{tz}）展示。',
-      },
-      {
-        title: '计价单位与资产折算',
-        body: '本账单全部金额以 USD 计价。团队充值按「稳定币平价」入账：1 USDT 记为 1 USD。Cregis 不提供法币兑换服务。用户知悉并同意，Cregis 不承担加密资产与法币之间的汇率波动风险，亦不对去中心化资产的市值稳定性负责。',
-      },
-      {
-        title: '服务费用与扣费',
-        body: '本账单所列费用（包括但不限于团队订阅费、AML 合规筛查费）均按 Cregis 服务协议收取。AML 筛查一经触发并记录为完成，相关费用不可撤销，不论筛查结果如何均不予退款或抵扣。',
-      },
-      {
-        title: '法律效力与异议处理',
-        body: '本账单系根据系统既有数据生成的交易汇总，仅供企业内部对账参考，不构成审计报告、报税凭证或任何具法律约束力的财务证明。如对内容有异议，请自账单生成日起 30 日内联系 Cregis 支持；逾期未提交书面异议，视为确认并接受本账单全部内容。',
-      },
-      {
-        title: '区块链免责',
-        body: '因区块链网络去中心化特性，可能出现网络拥堵、节点延迟或共识机制调整等不可控因素。Cregis 不对因此导致的交易时间偏差或数据同步延迟承担责任。链上资产转移最终结果以相应区块链浏览器原始数据为准。',
-      },
-      {
-        title: '保密与数据安全',
-        body: '本账单含企业敏感财务数据，属高度机密。Cregis 仅负责发送至用户指定的安全邮箱。因用户侧访问控制不当、邮箱被盗或擅自转发造成的数据泄露或损失，Cregis 不承担责任。',
-      },
-    ],
+    notes: STATEMENT_DISCLAIMER_ZH_CN.split('\n\n').map((body) => ({ title: '', body })),
   },
   繁體中文: {
     docTitle: '月度賬單',
-    docKicker: '賬戶賬單',
+    docKicker: '賬單',
     client: '客戶資訊',
     teamName: '團隊名稱',
     teamId: '團隊編號',
     period: '賬單週期',
     billInfo: '賬單資訊',
     generated: '生成時間',
-    timezone: '帳務時區',
+    timezone: '財務時區',
     currency: '結算幣種',
-    topup: '充值合計',
-    spend: '消費合計',
+    topup: '本期充值',
+    spend: '本期消費',
     ending: '期末結餘',
     details: '交易明細',
     colDate: '日期',
-    colType: '類型',
-    colIn: '收入',
-    colOut: '支出',
+    colType: '操作類型',
+    colIn: '充值',
+    colOut: '消費',
     colBal: '結餘',
     total: '本期合計',
     disclaimer: '免責聲明',
@@ -362,32 +376,7 @@ export const STATEMENT_COPY: Record<StatementLang, StatementCopy> = {
     close: '關閉',
     rights: '版權所有。',
     pageOf: '第 {n} 頁，共 {total} 頁',
-    notes: [
-      {
-        title: '數據基準與時區',
-        body: '本賬單由 Cregis 系統依據用戶配置的「帳務時區」自動生成。所有交易記錄時間戳均按該時區（{tz}）展示。',
-      },
-      {
-        title: '計價單位與資產折算',
-        body: '本賬單全部金額以 USD 計價。團隊充值按「穩定幣平價」入賬：1 USDT 記為 1 USD。Cregis 不提供法幣兌換服務。用戶知悉並同意，Cregis 不承擔加密資產與法幣之間的匯率波動風險，亦不對去中心化資產的市值穩定性負責。',
-      },
-      {
-        title: '服務費用與扣費',
-        body: '本賬單所列費用（包括但不限於團隊訂閱費、AML 合規篩查費）均按 Cregis 服務協議收取。AML 篩查一經觸發並記錄為完成，相關費用不可撤銷，不論篩查結果如何均不予退款或抵扣。',
-      },
-      {
-        title: '法律效力與異議處理',
-        body: '本賬單係根據系統既有數據生成的交易彙總，僅供企業內部對賬參考，不構成審計報告、報稅憑證或任何具法律約束力的財務證明。如對內容有異議，請自賬單生成日起 30 日內聯繫 Cregis 支援；逾期未提交書面異議，視為確認並接受本賬單全部內容。',
-      },
-      {
-        title: '區塊鏈免責',
-        body: '因區塊鏈網絡去中心化特性，可能出現網絡擁堵、節點延遲或共識機制調整等不可控因素。Cregis 不對因此導致的交易時間偏差或數據同步延遲承擔責任。鏈上資產轉移最終結果以相應區塊鏈瀏覽器原始數據為準。',
-      },
-      {
-        title: '保密與數據安全',
-        body: '本賬單含企業敏感財務數據，屬高度機密。Cregis 僅負責發送至用戶指定的安全郵箱。因用戶側訪問控制不當、郵箱被盜或擅自轉發造成的數據洩露或損失，Cregis 不承擔責任。',
-      },
-    ],
+    notes: STATEMENT_DISCLAIMER_ZH_TW.split('\n\n').map((body) => ({ title: '', body })),
   },
 };
 
@@ -395,7 +384,7 @@ export const STMT_TYPE: Record<string, StmtTypeMeta> = {
   recharge: { English: 'Recharge', 简体中文: '充值', 繁體中文: '充值', kind: 'in' },
   tron: { English: 'Tron Energy Fee', 简体中文: 'Tron 能量费', 繁體中文: 'Tron 能量費', kind: 'out' },
   renew: { English: 'Team Subscription Renewal', 简体中文: '团队版本续费', 繁體中文: '團隊版本續費', kind: 'out' },
-  aml: { English: 'AML Query', 简体中文: 'AML 查询', 繁體中文: 'AML 查詢', kind: 'out' },
+  aml: { English: 'AML Query', 简体中文: 'AML查询', 繁體中文: 'AML 查詢', kind: 'out' },
   upgrade: { English: 'Team Subscription Upgrade', 简体中文: '团队版本升级', 繁體中文: '團隊版本升級', kind: 'out' },
 };
 

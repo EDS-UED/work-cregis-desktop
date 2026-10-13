@@ -16,10 +16,20 @@ import {
 } from '@eds/desktop-components';
 import chromeScrimStyles from '@eds/desktop-components/styles/popupChromeScrim.module.css';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { navigateAppShell } from '@/composables/useAppShellNavigation';
 import { usePopupShellLifecycle } from '@/scenes/tasks/shared/usePopupShellLifecycle';
 import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
 import '@/styles/popup-inner-backdrop.css';
-import { ALERT_MEMBERS, ALERT_NOTIFY_VISIBLE_COUNT, RECHARGE_ADDR, RECHARGE_NETWORKS, stmtMoney, stmtTypeLabel, type StatementLang } from './teamAccountData';
+import {
+  ALERT_MEMBERS,
+  ALERT_NOTIFY_VISIBLE_COUNT,
+  RECHARGE_ADDR,
+  RECHARGE_NETWORKS,
+  stmtMoney,
+  stmtTypeLabel,
+  txDisplayTitleKey,
+  type StatementLang,
+} from './teamAccountData';
 import {
   POPUP_CUSTOM_BOX_LG_HEIGHT,
   POPUP_CUSTOM_BOX_LG_WIDTH,
@@ -151,10 +161,14 @@ const rechargeNetworkMenuItems = computed(() =>
     focused: label === selectedRechargeNetwork.value,
   })),
 );
-  const rechargeNote = computed(() =>
-  ui(
-    'Each single deposit must be no less than 0.01 {network}; otherwise, it will not be credited. USDT deposits will be credited as USD at a 1:1 ratio (1 USDT = 1 USD).',
-  ).replace('{network}', selectedRechargeNetwork.value),
+const rechargeNoteMin = computed(() =>
+  ui('Each single deposit must be no less than 0.01 {network}; otherwise, it will not be credited.').replace(
+    '{network}',
+    selectedRechargeNetwork.value,
+  ),
+);
+const rechargeNoteRate = computed(() =>
+  ui('USDT deposits will be credited as USD at a 1:1 ratio (1 USDT = 1 USD).'),
 );
 
 function onAlertConfirm() {
@@ -164,6 +178,16 @@ function onAlertConfirm() {
 
 function onBillSettingConfirm() {
   billSettingConfirmOpen.value = true;
+}
+
+function onTxDetailValueLinkClick() {
+  // Close detail (logical), then route shell to WaaS → Bulk Transfer Record.
+  teamAccountState.txDetailOpen = false;
+  navigateAppShell({
+    moduleTitle: 'WaaS',
+    menuItem: 'Bulk Transfer Record',
+    navLabel: 'WaaS',
+  });
 }
 
 function onBillSettingEditConfirm() {
@@ -219,7 +243,7 @@ function onSendMemberClick(id: string) {
     <EgDialog
       type="standard"
       :title="ui('Balance Alert Settings')"
-      :confirm-label="ui('Save Settings')"
+      :confirm-label="ui('Save')"
       :cancel-label="ui('Cancel')"
       :show-secondary-text="false"
       toolbar-tone="decor"
@@ -339,7 +363,8 @@ function onSendMemberClick(id: string) {
             </div>
           </div>
           <p :class="styles.rechargeAddr">{{ RECHARGE_ADDR }}</p>
-          <p :class="styles.rechargeNote">{{ rechargeNote }}</p>
+          <p :class="styles.rechargeNote">{{ rechargeNoteMin }}</p>
+          <p :class="styles.rechargeNote">{{ rechargeNoteRate }}</p>
         </div>
       </div>
       <EgComboActionPopupWindow
@@ -360,11 +385,12 @@ function onSendMemberClick(id: string) {
   >
     <EgDetail
       v-if="page.activeTx.value"
-      :eyebrow="ui(page.activeTx.value.type)"
+      :eyebrow="ui(txDisplayTitleKey(page.activeTx.value.type))"
       :headline="page.activeTx.value.amount"
       :show-status-tag="false"
       :sections="page.txSections.value"
       :show-toolbar="false"
+      @item-value-link-click="onTxDetailValueLinkClick"
       @close="txDetailShell.popupOpen.value = false"
     />
   </EgPopup>
@@ -380,7 +406,7 @@ function onSendMemberClick(id: string) {
       type="compose"
       :title="ui('Team Monthly Statements Settings')"
       :secondary-text="ui('Team monthly statements will be generated at the beginning of each month based on this time zone and language. Underlying system records remain unaffected.')"
-      :confirm-label="ui('Save Settings')"
+      :confirm-label="ui('Save')"
       :cancel-label="ui('Cancel')"
       toolbar-tone="decor"
       toolbar-divider-pinned
@@ -475,9 +501,9 @@ function onSendMemberClick(id: string) {
   >
     <EgDialog
       type="symbol"
-      :title="ui('Confirm Financial Time Zone Changes')"
-      :secondary-text="ui('After updating the financial time zone, the system will automatically regenerate statements for the past 12 months. Older statements will be generated in real time upon viewing. Are you sure you want to proceed?')"
-      :confirm-label="ui('Confirm Changes')"
+      :title="ui('Confirm Statement Settings Change')"
+      :secondary-text="ui('After the change, the system will automatically regenerate statements for the most recent 12 months based on the new settings. Earlier statements will be generated in real time when you view them. Are you sure you want to proceed?')"
+      :confirm-label="ui('Confirm')"
       :cancel-label="ui('Cancel')"
       toolbar-tone="decor"
       @confirm="onBillSettingEditConfirm"
@@ -684,33 +710,18 @@ function onSendMemberClick(id: string) {
             </section>
             <section :class="styles.stmtDisc">
               <h2 :class="styles.stmtDiscTitle">{{ page.copy.value.disclaimer }}</h2>
-              <p :class="styles.stmtDiscItem">
-                <b>1. {{ page.copy.value.notes[0].title }}.</b>
-                {{ page.copy.value.notes[0].body.replace('{tz}', page.doc.value.tz) }}
+              <p
+                v-for="(note, index) in page.copy.value.notes"
+                :key="`disc-${index}`"
+                :class="styles.stmtDiscItem"
+              >
+                {{ note.body }}
               </p>
             </section>
             <footer :class="styles.stmtPageFoot">
               <span>Cregis © {{ page.doc.value.year }}. {{ page.copy.value.rights }}</span>
               <span>{{ page.doc.value.teamId }} · {{ page.doc.value.period }} · {{ page.doc.value.tz }}</span>
               <span>{{ page.pageLabel(1) }}</span>
-            </footer>
-          </article>
-          <article :class="[styles.stmtPage, styles.stmtPageNotes]">
-            <p :class="styles.stmtRun">Cregis - {{ page.doc.value.period }}</p>
-            <section :class="[styles.stmtDisc, styles.stmtDiscCont]">
-              <p
-                v-for="(note, index) in page.copy.value.notes.slice(1)"
-                :key="note.title"
-                :class="styles.stmtDiscItem"
-              >
-                <b>{{ index + 2 }}. {{ note.title }}.</b>
-                {{ note.body.replace('{tz}', page.doc.value.tz) }}
-              </p>
-            </section>
-            <footer :class="styles.stmtPageFoot">
-              <span>Cregis © {{ page.doc.value.year }}. {{ page.copy.value.rights }}</span>
-              <span>{{ page.doc.value.teamId }} · {{ page.doc.value.period }} · {{ page.doc.value.tz }}</span>
-              <span>{{ page.pageLabel(2) }}</span>
             </footer>
           </article>
         </div>

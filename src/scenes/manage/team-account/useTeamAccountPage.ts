@@ -18,6 +18,7 @@ import {
   AVAILABLE_BALANCE,
   BALANCE_TX,
   TX_DETAIL_FIELDS,
+  txDisplayTitleKey,
   billYearGroups as buildBillYearGroups,
   findBill,
   statementDoc,
@@ -398,6 +399,12 @@ export function sanitizeUsdThreshold(raw: string): string {
   return `${whole}.${fraction}`;
 }
 
+function operatorDisplayName(operator: string): string {
+  const trimmed = operator.trim();
+  const paren = trimmed.indexOf(' (');
+  return paren > 0 ? trimmed.slice(0, paren) : trimmed;
+}
+
 function parseTxTime(time: string): number {
   const parsed = Date.parse(time.trim().replace(/ {2}/g, ' ').replace(' ', 'T'));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -410,6 +417,22 @@ function parseTxAmount(amount: string): number {
   return Number.isFinite(parsed) ? sign * parsed : 0;
 }
 
+function resolveOperatorDisplay(operator: string | undefined, ui: (key: string) => string): string {
+  const raw = (operator ?? '').trim();
+  if (!raw || raw === 'System') return ui('System');
+  return raw;
+}
+
+function resolvePlanDisplay(tx: BalanceTx, ui: (key: string) => string): string {
+  if (tx.type === 'AML Manual Query') {
+    return ui('Manual query (address / tx hash)');
+  }
+  if (tx.type === 'AML Auto Query') {
+    return ui('Automatic query (address / tx hash)');
+  }
+  return tx.plan ?? '';
+}
+
 function txDetailItems(tx: BalanceTx, ui: (key: string) => string) {
   const fields = TX_DETAIL_FIELDS[tx.type] ?? ['hash', 'time'];
   return fields.map((key) => {
@@ -420,19 +443,54 @@ function txDetailItems(tx: BalanceTx, ui: (key: string) => string) {
       });
     }
     if (key === 'time') {
-      return createDetailApplyItemRow('time', { value: tx.time.replace(/ {2}/g, ' ') });
+      return createDetailApplyItemRow('time', {
+        title: ui('Time'),
+        value: tx.time.replace(/ {2}/g, ' '),
+      });
     }
     if (key === 'plan') {
-      return createDetailApplyItemRow('text', { title: ui('Plan'), value: tx.plan ?? '' });
+      return createDetailApplyItemRow('text', {
+        title: ui('Plan'),
+        value: resolvePlanDisplay(tx, ui),
+      });
     }
     if (key === 'order') {
-      return createDetailApplyItemRow('brand-number', { title: ui('Order ID'), value: tx.orderNo ?? '' });
+      return createDetailApplyItemRow('brand-number', {
+        title: ui('Order ID'),
+        value: tx.orderNo ?? '',
+      });
     }
     if (key === 'operator') {
-      return createDetailApplyItemRow('initiated-by', { title: ui('Operator'), value: tx.operator ?? '' });
+      const operator = resolveOperatorDisplay(tx.operator, ui);
+      // Clear catalog demo email + device tooltip; name already includes email when present.
+      return {
+        ...createDetailApplyItemRow('initiated-by', {
+          title: ui('Operator'),
+          value: operator,
+          valueSymbolAvatarName: operatorDisplayName(operator),
+          valueSecondary: '',
+        }),
+        valueDeviceInfo: undefined,
+      };
     }
     if (key === 'provider') {
-      return createDetailApplyItemRow('text', { title: ui('Acquiring Service Fee'), value: tx.provider ?? '' });
+      return createDetailApplyItemRow('text', {
+        title: ui('Service Provider'),
+        value: tx.provider ?? '',
+      });
+    }
+    if (key === 'batch') {
+      return {
+        ...createDetailApplyItemRow('brand-number', {
+          key: 'batch-transfer-id',
+          title: ui('Batch Transfer ID'),
+          value: tx.batchTransferId ?? '',
+        }),
+        // Desktop forbids copy affordances; brand-number preset enables copy by default.
+        showValueCopy: false,
+        showValueLink: true,
+        valueLinkLabel: ui('View Transfer Records'),
+      };
     }
     if (key === 'card') {
       return createDetailApplyItemRow('text', { title: ui('Crypto Card'), value: tx.card ?? '' });

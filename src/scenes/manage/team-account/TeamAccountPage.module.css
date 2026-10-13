@@ -92,10 +92,31 @@
   background: var(--box-page);
 }
 
+/* Title yields to actions; fill available width so ellipsis can apply (not parent-clip). */
+.panel :global(.eds-tool-bar-title) {
+  flex: 1 1 auto;
+  min-width: var(--scale-14);
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .panel :global(.eds-tool-bar-title p) {
+  flex: 1 1 auto;
+  width: 100%;
   font-size: var(--eds-body-medium-size);
   font-weight: var(--eds-body-medium-weight);
   line-height: var(--eds-body-medium-line-height);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Left list title takes remaining toolbar width before Filter/Export. */
+.txPanel :global(.eds-tool-bar-title) {
+  flex: 1 1 0%;
+  min-width: var(--scale-20);
 }
 
 .panelLayout {
@@ -376,10 +397,11 @@
 }
 
 .txType {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
   color: var(--text-base-primary);
-  font-size: var(--eds-body-medium-size);
-  font-weight: var(--eds-body-medium-weight);
-  line-height: var(--eds-body-medium-line-height);
 }
 
 .billActions {
