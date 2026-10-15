@@ -13,7 +13,7 @@ export type InspectCodeToken = {
   text: string;
 };
 
-const CSS_LINE = /^([\w-]+)(\s*:\s*)(.+?)(;?\s*)$/;
+const CSS_LINE = /^([\w-]+)(\s*:\s*)(.+?)(;?)(\s*\/\*.*\*\/)?(\s*)$/;
 
 const CSS_KEYWORDS = new Set([
   'absolute',
@@ -125,11 +125,13 @@ export function tokenizeCssLine(line: string): InspectCodeToken[] {
   const match = line.match(CSS_LINE);
   if (!match) return [{ kind: 'plain', text: line }];
 
-  const [, prop, colon, value, tail] = match;
+  const [, prop, colon, value, semicolon, comment, tail] = match;
   return [
     { kind: 'prop', text: prop },
     { kind: 'punct', text: colon },
     ...tokenizeCssValue(value),
+    ...(semicolon ? [{ kind: 'punct', text: semicolon } as InspectCodeToken] : []),
+    ...(comment ? [{ kind: 'plain', text: comment } as InspectCodeToken] : []),
     ...(tail ? [{ kind: 'punct', text: tail } as InspectCodeToken] : []),
   ];
 }

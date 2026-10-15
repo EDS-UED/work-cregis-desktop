@@ -11,6 +11,8 @@ export type TransactionRecordsExportHistoryStatus = 'loading' | 'ready';
 export type TransactionRecordsExportHistoryItem = {
   id: string;
   title: string;
+  /** Optional second line (e.g. monthly statement timezone). */
+  subtitle?: string;
   operator: string;
   exportedAt: string;
   status?: TransactionRecordsExportHistoryStatus;

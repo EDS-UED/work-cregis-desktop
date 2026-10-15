@@ -8,6 +8,24 @@
   overflow: hidden;
 }
 
+/* Teleported under .app-preview — same host as Team Account / Team Security toast. */
+.toastHost {
+  position: absolute;
+  top: var(--spacing-10);
+  left: 50%;
+  z-index: 1200;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toastFadeActive {
+  transition: var(--motion-recipe-fade);
+}
+
+.toastFadeFrom {
+  opacity: var(--motion-opacity-hidden);
+}
+
 .dataListNest :deep(.eds-layout) {
   flex: 1 1 auto;
   min-height: 0;
@@ -107,21 +125,17 @@
   background: var(--event-hover);
 }
 
-.addressSuggestAlias,
+.addressSuggestAlias {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .addressSuggestAddress {
   display: block;
   width: 100%;
   min-width: 0;
-}
-
-.addressSuggestAlias {
-  color: var(--text-base-primary);
-  font-size: var(--eds-body-medium-size);
-  font-weight: var(--eds-body-medium-weight);
-  line-height: var(--eds-body-medium-line-height);
-}
-
-.addressSuggestAddress {
   color: var(--text-base-secondary);
   font-size: var(--eds-body-small-size);
   font-weight: var(--eds-body-small-weight);
@@ -146,7 +160,8 @@
   flex-direction: column;
 }
 
-.currencyAddressCell {
+.currencyAddressCell,
+.tokenCell {
   display: flex;
   flex-direction: column;
   align-items: flex-start;

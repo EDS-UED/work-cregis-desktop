@@ -29,6 +29,7 @@ import {
 } from '@/scenes/tasks/tasksDataListPageData';
 import TransactionRecordsDataListPage from '@/scenes/transaction-records/TransactionRecordsDataListPage.vue';
 import BulkTransferRecordPage from '@/scenes/waas/BulkTransferRecordPage.vue';
+import { customerServiceState } from '@/scenes/customer-service/customerServiceState';
 
 const { messages, ui } = useAppI18n();
 const { state: shellNavState } = useAppShellNavigation();
@@ -141,11 +142,21 @@ watch(
   { immediate: true },
 );
 
+function isCustomerServiceNavLabel(label: string) {
+  const trimmed = label.trim();
+  return trimmed === 'Earphone' || trimmed === ui('Earphone');
+}
+
 function onNavClick(event: MouseEvent) {
   const button = (event.target as HTMLElement | null)?.closest('button');
   if (!button?.closest('.eds-nav-bar')) return;
 
   const label = button.getAttribute('aria-label') ?? '';
+  if (isCustomerServiceNavLabel(label)) {
+    customerServiceState.open = true;
+    return;
+  }
+
   const navState = resolveNavBarClickState(label, ui);
   if (!navState) return;
 

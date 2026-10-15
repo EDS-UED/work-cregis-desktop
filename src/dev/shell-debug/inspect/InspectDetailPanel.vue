@@ -96,11 +96,9 @@ async function onCopyLine(line: string) {
     :class="[$style.root, embedded && $style.rootEmbedded]"
     data-dev-inspect-copy
   >
-    <div :class="$style.header">
+    <div v-if="!embedded" :class="$style.header">
       <p :class="$style.meta">
-        <span v-if="info.edsComponent">{{ info.edsComponent.vueName }}</span>
-        <span v-else-if="info.vueComponentName">{{ info.vueComponentName }}</span>
-        <span v-else>{{ info.tagName }}</span>
+        <span>{{ info.label }}</span>
       </p>
     </div>
 
@@ -247,13 +245,22 @@ async function onCopyLine(line: string) {
 
 .sectionTitle {
   margin: 0;
-  font-size: var(--eds-footnote-strong-size);
-  font-weight: var(--eds-footnote-strong-weight);
-  line-height: var(--eds-footnote-strong-line-height);
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
   color: var(--text-base-primary);
 }
 
-.propRows,
+.propRows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--spacing-5);
+  row-gap: var(--spacing-025);
+}
+
 .codeRows,
 .codeLineRows {
   margin: 0;
@@ -264,7 +271,11 @@ async function onCopyLine(line: string) {
   gap: var(--spacing-025);
 }
 
-.propRow,
+.propRow {
+  display: contents;
+  margin: 0;
+}
+
 .codeRow,
 .codeLineRow {
   margin: 0;
@@ -272,26 +283,31 @@ async function onCopyLine(line: string) {
 
 .propButton,
 .codeLineButton {
-  display: grid;
-  grid-template-columns: minmax(88px, 38%) 1fr;
-  gap: var(--spacing-2);
-  align-items: baseline;
-  width: 100%;
   margin: 0;
-  padding: var(--spacing-1) var(--spacing-2);
   border: none;
-  border-radius: var(--radius-sm);
   background: transparent;
   text-align: left;
   cursor: pointer;
   composes: motion-ease is-hover from global;
 }
 
+.propButton {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-xs);
+}
+
 .codeLineButton {
-  grid-template-columns: var(--spacing-4) 1fr;
-  gap: var(--spacing-2);
-  padding: var(--spacing-1) var(--spacing-3);
-  align-items: start;
+  display: grid;
+  width: 100%;
+  grid-template-columns: var(--spacing-6) minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  border-radius: var(--radius-xs);
+  align-items: stretch;
 }
 
 .propButton:disabled {
@@ -306,21 +322,27 @@ async function onCopyLine(line: string) {
 }
 
 .codeLineButton:hover {
-  background: color-mix(in srgb, #ffffff 8%, transparent);
+  background: var(--event-hover);
 }
 
 .propLabel {
+  white-space: nowrap;
   font-size: var(--eds-footnote-size);
   line-height: var(--eds-footnote-line-height);
-  color: var(--text-base-tertiary, var(--text-base-secondary));
+  color: var(--text-base-secondary);
 }
 
 .propValue {
+  min-width: 0;
   font-family: var(--eds-family-mono, ui-monospace, monospace);
   font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
   line-height: var(--eds-footnote-line-height);
   color: var(--text-base-primary);
-  word-break: break-word;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .subBlock {
@@ -349,20 +371,25 @@ async function onCopyLine(line: string) {
 
 .codeBlockFrame {
   box-sizing: border-box;
-  padding: var(--spacing-1) 0;
-  border: 1px solid #3c3c3c;
-  border-radius: var(--radius-sm);
-  background: #2b2b2b;
+  padding: var(--spacing-1);
+  border: var(--stroke-xs) solid var(--stroke-outline-shallow);
+  border-radius: var(--radius-xs);
   overflow: hidden;
 }
 
 .lineNumber {
-  flex: 0 0 auto;
-  min-width: var(--spacing-4);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  min-width: var(--spacing-6);
+  padding: var(--spacing-05) var(--spacing-2);
+  border-right: var(--stroke-xs) solid var(--stroke-outline-shallow);
   font-family: var(--eds-family-mono, ui-monospace, monospace);
   font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
   line-height: var(--eds-footnote-line-height);
-  color: #858585;
+  color: var(--text-base-tertiary, var(--text-base-secondary));
   text-align: right;
   user-select: none;
 }
@@ -370,51 +397,42 @@ async function onCopyLine(line: string) {
 .lineContent {
   flex: 1 1 auto;
   min-width: 0;
+  padding: var(--spacing-05) var(--spacing-3);
   font-family: var(--eds-family-mono, ui-monospace, monospace);
   font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
   line-height: var(--eds-footnote-line-height);
+  color: var(--text-base-primary);
   white-space: pre-wrap;
   word-break: break-word;
   text-align: left;
 }
 
 .tokenProp,
-.tokenPunct {
-  color: #d4d4d4;
+.tokenPunct,
+.tokenPlain {
+  color: var(--text-base-primary);
 }
 
-.tokenKeyword {
-  color: #f78c6c;
-}
-
+.tokenKeyword,
 .tokenFunction,
-.tokenVariable {
-  color: #d7ba7d;
+.tokenValue,
+.tokenString {
+  color: var(--text-base-primary);
 }
 
 .tokenVariable {
-  text-decoration: underline dashed color-mix(in srgb, #8fae8f 70%, #858585);
+  color: var(--text-brand-primary);
+  text-decoration: underline dashed color-mix(in srgb, var(--text-brand-primary) 55%, transparent);
   text-underline-offset: 2px;
 }
 
-.tokenValue {
-  color: #ce9178;
-}
-
 .tokenAttr {
-  color: #9cdcfe;
-}
-
-.tokenString {
-  color: #ce9178;
+  color: var(--text-base-primary);
 }
 
 .tokenTag {
-  color: #569cd6;
-}
-
-.tokenPlain {
-  color: #d4d4d4;
+  color: var(--text-base-primary);
 }
 
 .codeHeader {
@@ -435,7 +453,7 @@ async function onCopyLine(line: string) {
   border: none;
   border-radius: var(--radius-xs);
   background: transparent;
-  font-size: var(--eds-caption-size, var(--eds-footnote-size));
+  font-size: var(--eds-footnote-size);
   line-height: var(--eds-footnote-line-height);
   color: var(--text-base-secondary);
   cursor: pointer;

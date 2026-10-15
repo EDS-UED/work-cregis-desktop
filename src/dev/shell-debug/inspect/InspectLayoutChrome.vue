@@ -79,7 +79,7 @@ const accentStyle = computed(
   padding: var(--spacing-025) var(--spacing-1);
   border-radius: var(--radius-xs);
   background: var(--dev-inspect-accent, #ff308d);
-  font-size: var(--eds-caption-size, var(--eds-footnote-size));
+  font-size: var(--eds-footnote-size);
   line-height: var(--eds-footnote-line-height);
   color: #ffffff;
   white-space: nowrap;
@@ -130,7 +130,7 @@ const accentStyle = computed(
   border-radius: var(--radius-full);
   background: var(--dev-inspect-accent, #ff308d);
   font-family: var(--eds-family-mono, ui-monospace, monospace);
-  font-size: var(--eds-caption-size, var(--eds-footnote-size));
+  font-size: var(--eds-footnote-size);
   line-height: var(--eds-footnote-line-height);
   color: #ffffff;
   white-space: nowrap;

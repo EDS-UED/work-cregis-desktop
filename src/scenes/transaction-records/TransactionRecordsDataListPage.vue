@@ -14,6 +14,8 @@ import {
   EgPaginer,
   EgPaginationGroupButton,
   EgSegmented,
+  EgTag,
+  EgToast,
   EgToolBar,
   type DataListItem,
   type EgFilterCondition,
@@ -34,6 +36,7 @@ import TasksListFieldAmount from '@/scenes/tasks/list-field/TasksListFieldAmount
 import TasksListFieldCurrency from '@/scenes/tasks/list-field/TasksListFieldCurrency.vue';
 import TasksListFieldGeneralStructure from '@/scenes/tasks/list-field/TasksListFieldGeneralStructure.vue';
 import TasksListFieldTime from '@/scenes/tasks/list-field/TasksListFieldTime.vue';
+import { truncateAddressMiddle } from '@/scenes/tasks/list-field/listFieldAddressLineModel';
 import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
 import DataListHeaderTimezoneTrigger from './list-field/DataListHeaderTimezoneTrigger.vue';
 import TransactionRecordsWalletColumnHeader from './list-field/TransactionRecordsWalletColumnHeader.vue';
@@ -42,19 +45,26 @@ import {
   type TransactionRecordsTimezoneOffset,
 } from './list-field/transactionRecordsTimezoneOffsets';
 import {
+  buildReportAddressColumnModel,
   buildReportAmountCustomize,
   buildReportCurrencyCustomize,
   buildReportTimeCustomize,
+  buildReportTokenCustomize,
   buildReportWalletCustomize,
 } from './reportListFieldCustomize';
 import type { TransactionRecordRow } from './transactionRecordTypes';
 import {
+  TRANSACTION_RECORD_ADDRESS_COLUMN_MIN_WIDTH,
+  TRANSACTION_RECORD_ADDRESS_COLUMN_WIDTH,
   TRANSACTION_RECORD_AMOUNT_COLUMN_MIN_WIDTH,
   TRANSACTION_RECORD_CURRENCY_ADDRESS_COLUMN_MIN_WIDTH,
   TRANSACTION_RECORD_DIRECTION_COLUMN_MIN_WIDTH,
   TRANSACTION_RECORD_HASH_COLUMN_MIN_WIDTH,
+  TRANSACTION_RECORD_TIME_COLUMN_ADDRESS_MIN_WIDTH,
+  TRANSACTION_RECORD_TIME_COLUMN_ADDRESS_WIDTH,
   TRANSACTION_RECORD_TIME_COLUMN_MIN_WIDTH,
   TRANSACTION_RECORD_TIME_COLUMN_WIDTH,
+  TRANSACTION_RECORD_TOKEN_COLUMN_MIN_WIDTH,
   TRANSACTION_RECORD_TYPE_COLUMN_MIN_WIDTH,
   TRANSACTION_RECORD_WALLET_COLUMN_MIN_WIDTH,
 } from './transactionRecordColumnLayout';
@@ -98,10 +108,15 @@ const value = ref('');
 const committedAddress = ref('');
 const addressInputFocused = ref(false);
 const addressInputWrapRef = ref<HTMLElement | null>(null);
+const addressInputRef = ref<{ focus?: () => void } | null>(null);
 const addressSuggestPanelStyle = ref<CSSProperties>({});
 const transactionTimeTimezone = ref<TransactionRecordsTimezoneOffset>(
   TRANSACTION_RECORDS_DEFAULT_TIMEZONE,
 );
+
+/** Top-center black toast (same EgToast result pattern as Team Account / Team Security). */
+const listToastText = ref('');
+let listToastTimer: ReturnType<typeof setTimeout> | undefined;
 
 const isSpecificAddressMode = computed(() => selected.value === 1);
 const isWalletView = computed(() => !isSpecificAddressMode.value);
@@ -111,7 +126,7 @@ const reportFilterViewMode = computed((): TransactionRecordsFilterViewMode =>
 );
 
 /** Wallet: Time → Currency|Address → Hash → Wallet → Type → Direction → Amount
- *  Address: Time → Currency|Address → Hash → Type → Direction → Amount */
+ *  Address: Time → Interaction Address → Token → Hash → Type → Direction → Amount */
 const columnDisplayOrder = computed(() =>
   isWalletView.value
     ? {
@@ -122,15 +137,19 @@ const columnDisplayOrder = computed(() =>
         type: 5,
         direction: 6,
         amount: 7,
+        address: 0,
+        token: 0,
       }
     : {
         time: 1,
-        currencyAddress: 2,
-        hash: 3,
-        type: 4,
-        direction: 5,
-        amount: 6,
+        address: 2,
+        token: 3,
+        hash: 4,
+        type: 5,
+        direction: 6,
+        amount: 7,
         wallet: 0,
+        currencyAddress: 0,
       },
 );
 
@@ -294,6 +313,35 @@ const isHeaderSortDisabled = computed(
 
 const detailFlow = useTransactionRecordDetailFlow();
 
+function showListToast(messageKey: string) {
+  const message = ui(messageKey);
+  listToastText.value = message;
+  if (listToastTimer !== undefined) clearTimeout(listToastTimer);
+  listToastTimer = window.setTimeout(() => {
+    if (listToastText.value === message) listToastText.value = '';
+    listToastTimer = undefined;
+  }, 2200);
+}
+
+function focusAddressInput() {
+  void nextTick(() => {
+    addressInputRef.value?.focus?.();
+    const native = addressInputWrapRef.value?.querySelector('input');
+    native?.focus();
+    addressInputFocused.value = true;
+  });
+}
+
+const blockExportOpen = computed(
+  () => isSpecificAddressMode.value && !value.value.trim(),
+);
+
+/** View by Address: block export until the address field has a value; toast + focus input. */
+function onExportOpenBlocked() {
+  showListToast('Please input address first');
+  focusAddressInput();
+}
+
 onMounted(() => {
   registerTransactionRecordDetailFlow(detailFlow);
   registerTransactionRecordsDataListShellApi({
@@ -324,7 +372,7 @@ onMounted(() => {
       }
     },
     showDangerToast: (message) => {
-      console.warn(`[transaction-records QA] ${message}`);
+      showListToast(message);
     },
   });
   window.addEventListener('resize', updateAddressSuggestPanelPosition);
@@ -334,6 +382,7 @@ onBeforeUnmount(() => {
   registerTransactionRecordDetailFlow(null);
   registerTransactionRecordsDataListShellApi(null);
   window.removeEventListener('resize', updateAddressSuggestPanelPosition);
+  if (listToastTimer !== undefined) clearTimeout(listToastTimer);
 });
 
 function recordRow(data: DataListItem): TransactionRecordRow {
@@ -432,6 +481,38 @@ function resolveAddressSuggestionLabel(item: TransactionRecordAddressSuggestion)
   return item.alias.trim() || ui('Unnamed Address');
 }
 
+/** View by Address：交互地址与 TxID 同用 body-medium（OverflowText primary）。 */
+function interactionAddressOverflow(row: TransactionRecordRow): {
+  text: string;
+  displayText: string;
+} {
+  const model = buildReportAddressColumnModel(row, {
+    hideSelectedAddress: committedAddress.value,
+  });
+  const sides: Array<{ full: string; display: string }> = [];
+  if (model.showFrom) {
+    const alias = model.fromAlias?.trim();
+    sides.push({
+      full: alias ? `${alias} ${model.fromAddress}` : model.fromAddress,
+      display: alias || truncateAddressMiddle(model.fromAddress),
+    });
+  }
+  if (model.showTo) {
+    const alias = model.toAlias?.trim();
+    sides.push({
+      full: alias ? `${alias} ${model.toAddress}` : model.toAddress,
+      display: alias || truncateAddressMiddle(model.toAddress),
+    });
+  }
+  if (sides.length === 0) {
+    return { text: '', displayText: '' };
+  }
+  return {
+    text: sides.map((side) => side.full).join(' → '),
+    displayText: sides.map((side) => side.display).join(' → '),
+  };
+}
+
 function onSelectAddressSuggestion(item: TransactionRecordAddressSuggestion) {
   committedAddress.value = item.address;
   value.value = item.address;
@@ -492,6 +573,7 @@ watch(isSpecificAddressMode, (on) => {
                 @focusout="onAddressInputFocusOut"
               >
                 <EgInput
+                  ref="addressInputRef"
                   v-model="value"
                   size="sm"
                   width-mode="full"
@@ -516,10 +598,9 @@ watch(isSpecificAddressMode, (on) => {
                     @mousedown.prevent="onSelectAddressSuggestion(item)"
                   >
                     <span :class="styles.addressSuggestAlias">
-                      <EgListFieldOverflowText
-                        :text="resolveAddressSuggestionLabel(item)"
-                        size="medium"
-                      />
+                      <EgTag family="system" system-type="solid-brand" size="sm" truncate>
+                        {{ resolveAddressSuggestionLabel(item) }}
+                      </EgTag>
                     </span>
                     <span :class="styles.addressSuggestAddress">
                       <EgListFieldOverflowText :text="item.address" />
@@ -550,6 +631,8 @@ watch(isSpecificAddressMode, (on) => {
             </EgIconProButton>
             <TransactionRecordsExportFlotation
               :has-active-filters="hasActiveFilters"
+              :block-open="blockExportOpen"
+              @open-blocked="onExportOpenBlocked"
               @export="onExportConfirm"
             />
             <TransactionRecordsDisplayFlotation
@@ -561,6 +644,7 @@ watch(isSpecificAddressMode, (on) => {
 
       <div :class="styles.listRegion">
         <EgDataList
+          :key="isWalletView ? 'report-wallet' : 'report-address'"
           :data-list="displayRows"
           :header-height="TRANSACTION_RECORDS_HEADER_HEIGHT"
           :column-height="TRANSACTION_RECORDS_COLUMN_HEIGHT"
@@ -572,8 +656,16 @@ watch(isSpecificAddressMode, (on) => {
           <EgDataListColumn
             prop="transactionTime"
             :label="ui('Transaction Time UTC+08:00')"
-            :min-width="TRANSACTION_RECORD_TIME_COLUMN_MIN_WIDTH"
-            :width="TRANSACTION_RECORD_TIME_COLUMN_WIDTH"
+            :min-width="
+              isWalletView
+                ? TRANSACTION_RECORD_TIME_COLUMN_MIN_WIDTH
+                : TRANSACTION_RECORD_TIME_COLUMN_ADDRESS_MIN_WIDTH
+            "
+            :width="
+              isWalletView
+                ? TRANSACTION_RECORD_TIME_COLUMN_WIDTH
+                : TRANSACTION_RECORD_TIME_COLUMN_ADDRESS_WIDTH
+            "
             :display-order="columnDisplayOrder.time"
             :sortable="false"
           >
@@ -608,7 +700,10 @@ watch(isSpecificAddressMode, (on) => {
             </template>
           </EgDataListColumn>
 
+          <!-- Wallet: 币种|地址 合并列（与拆列互斥，用 hidden 避免列槽错绑）。 -->
           <EgDataListColumn
+            key="currency-address-combined"
+            :hidden="!isWalletView"
             prop="currencyAddress"
             :label="ui('Currency')"
             :min-width="TRANSACTION_RECORD_CURRENCY_ADDRESS_COLUMN_MIN_WIDTH"
@@ -636,11 +731,7 @@ watch(isSpecificAddressMode, (on) => {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{
-                        isSpecificAddressMode
-                          ? ui('Interaction Address')
-                          : ui('Address')
-                      }}
+                      {{ ui('Address') }}
                     </EgDataListCellOverflow>
                   </div>
                 </div>
@@ -650,11 +741,49 @@ watch(isSpecificAddressMode, (on) => {
               <div :class="styles.currencyAddressCell">
                 <TasksListFieldCurrency
                   :customize="buildReportCurrencyCustomize(recordRow(data), {
-                    enableMultiTxAddressCount: isWalletView,
-                    hideSelectedAddress: isSpecificAddressMode
-                      ? committedAddress
-                      : undefined,
+                    enableMultiTxAddressCount: true,
                   })"
+                />
+              </div>
+            </template>
+          </EgDataListColumn>
+
+          <!-- Address 视图：交互地址（紧挨交易时间；与 TxID 同 body-medium）。 -->
+          <EgDataListColumn
+            key="interaction-address"
+            :hidden="isWalletView"
+            prop="interactionAddress"
+            :label="ui('Interaction Address')"
+            :min-width="TRANSACTION_RECORD_ADDRESS_COLUMN_MIN_WIDTH"
+            :width="TRANSACTION_RECORD_ADDRESS_COLUMN_WIDTH"
+            align="left"
+            :display-order="columnDisplayOrder.address"
+            :sortable="false"
+          >
+            <template #default="{ data }">
+              <EgListFieldOverflowText
+                v-bind="interactionAddressOverflow(recordRow(data))"
+                variant="primary"
+                tooltip-trigger="hover"
+              />
+            </template>
+          </EgDataListColumn>
+
+          <!-- Address 视图：币种（在交互地址后）。 -->
+          <EgDataListColumn
+            key="address-token"
+            :hidden="isWalletView"
+            prop="token"
+            :label="ui('Token')"
+            :min-width="TRANSACTION_RECORD_TOKEN_COLUMN_MIN_WIDTH"
+            align="left"
+            :display-order="columnDisplayOrder.token"
+            :sortable="false"
+          >
+            <template #default="{ data }">
+              <div :class="styles.tokenCell">
+                <TasksListFieldCurrency
+                  :customize="buildReportTokenCustomize(recordRow(data))"
                 />
               </div>
             </template>
@@ -665,6 +794,7 @@ watch(isSpecificAddressMode, (on) => {
             :label="ui('Transaction hash')"
             :min-width="TRANSACTION_RECORD_HASH_COLUMN_MIN_WIDTH"
             align="left"
+            :flex-grow="isSpecificAddressMode"
             :display-order="columnDisplayOrder.hash"
             :sortable="false"
           >
@@ -836,5 +966,18 @@ watch(isSpecificAddressMode, (on) => {
         </EgPaginer>
       </template>
     </EgLayout>
+
+    <Teleport to=".app-preview">
+      <Transition
+        :enter-active-class="styles.toastFadeActive"
+        :leave-active-class="styles.toastFadeActive"
+        :enter-from-class="styles.toastFadeFrom"
+        :leave-to-class="styles.toastFadeFrom"
+      >
+        <div v-if="listToastText" :class="styles.toastHost" data-report-list-toast>
+          <EgToast type="result" :text="listToastText" />
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

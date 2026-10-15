@@ -10,6 +10,7 @@ import { signingBatchFlowRegistry } from '@/scenes/tasks/signing/batch/signingBa
 import SigningFlowHost from '@/scenes/tasks/signing/SigningFlowHost.vue';
 import { signingFlowRegistry } from '@/scenes/tasks/signing/signingFlowContext';
 import TeamAccountFlowHost from '@/scenes/manage/team-account/TeamAccountFlowHost.vue';
+import CustomerServicePopup from '@/scenes/customer-service/CustomerServicePopup.vue';
 import PaymentEngineFlowHost from '@/scenes/payment-engine/PaymentEngineFlowHost.vue';
 import TransactionRecordDetailFlowHost from '@/scenes/transaction-records/TransactionRecordDetailFlowHost.vue';
 import { transactionRecordDetailFlowRegistry } from '@/scenes/transaction-records/transactionRecordDetailFlowContext';
@@ -36,6 +37,7 @@ const transactionRecordDetailFlow = computed(
       <SigningBatchFlowHost v-if="signingBatchFlow" :flow="signingBatchFlow" />
       <SigningBatchGlobalProgressHost />
       <TeamAccountFlowHost />
+      <CustomerServicePopup />
       <PaymentEngineFlowHost />
     </div>
   </div>

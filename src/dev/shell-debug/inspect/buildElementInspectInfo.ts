@@ -1,4 +1,11 @@
 import type { InspectCodeSection } from './buildIconInspect';
+import {
+  resolveInspectAncestor,
+  resolveMotionLabel,
+  resolvePreferredInspectElement,
+  resolveTextInspect,
+  roundInspectPx,
+} from './buildTextInspect';
 import { formatTokenVar, formatValueWithToken, resolveTokenNameForValue } from './resolveDesignToken';
 import { resolveEdsComponentInspect } from './resolveEdsComponentInspect';
 
@@ -39,7 +46,46 @@ export type ElementInspectInfo = {
 };
 
 function roundPx(value: number): string {
-  return `${Math.round(value * 10) / 10}px`;
+  return roundInspectPx(value);
+}
+
+function withInspectChrome(
+  items: InspectPropertyItem[],
+  element: Element,
+  preview: Element,
+  rect: DOMRect,
+  displayName: string | null,
+): InspectPropertyItem[] {
+  const ancestor = resolveInspectAncestor(element, preview);
+  const motion = resolveMotionLabel(element);
+  const rest = items.filter(
+    (item) => item.label !== '尺寸' && item.label !== '祖先' && item.label !== '容器' && item.label !== '动效',
+  );
+  const prefix: InspectPropertyItem[] = [];
+  if (ancestor && ancestor !== displayName) {
+    prefix.push({
+      label: '祖先',
+      value: ancestor,
+      token: null,
+      copyLine: `ancestor: ${ancestor}`,
+    });
+  }
+  prefix.push({
+    label: '尺寸',
+    value: `${roundPx(rect.width)} × ${roundPx(rect.height)}`,
+    token: null,
+    copyLine: `size: ${roundPx(rect.width)} × ${roundPx(rect.height)}`,
+  });
+  return [
+    ...prefix,
+    ...rest,
+    {
+      label: '动效',
+      value: motion,
+      token: null,
+      copyLine: motion === '无' ? '' : motion,
+    },
+  ];
 }
 
 function buildElementAttributes(
@@ -361,14 +407,31 @@ export function buildElementInspectInfo(
   if (!preview.contains(element)) return null;
   if (element.closest('[data-shell-debug-ui]')) return null;
 
-  const style = getComputedStyle(element);
-  const rect = element.getBoundingClientRect();
-  const vueComponentName = resolveVueComponentName(element);
-  const edsComponentHints = readEdsComponentHints(element);
-  const edsComponent = resolveEdsComponentInspect(element);
-  const elementAttributes = buildElementAttributes(element, preview, style, rect);
-  const tagName = element.tagName.toLowerCase();
-  const domPath = buildDomPath(element, preview);
+  const target = resolvePreferredInspectElement(element);
+  const style = getComputedStyle(target);
+  const rect = target.getBoundingClientRect();
+  const vueComponentName = resolveVueComponentName(target);
+  const edsComponentHints = readEdsComponentHints(target);
+  const textInspect = resolveTextInspect(target, preview);
+  const edsComponent = textInspect ?? resolveEdsComponentInspect(target);
+  const elementAttributes = withInspectChrome(
+    buildElementAttributes(target, preview, style, rect),
+    target,
+    preview,
+    rect,
+    edsComponent?.displayName ?? null,
+  );
+  if (edsComponent) {
+    edsComponent.props = withInspectChrome(
+      edsComponent.props,
+      target,
+      preview,
+      rect,
+      edsComponent.displayName,
+    );
+  }
+  const tagName = target.tagName.toLowerCase();
+  const domPath = buildDomPath(target, preview);
   const label = buildLabel({ edsComponent, vueComponentName, edsComponentHints, tagName });
   const usefulCode = buildUsefulCode(preview, style);
 
@@ -376,14 +439,25 @@ export function buildElementInspectInfo(
     layout: usefulCode.layout,
     style: usefulCode.styleItems,
   };
-  const codeSections = edsComponent?.codeSections;
+  const codeSections =
+    edsComponent?.codeSections
+    ?? (
+      [
+        usefulCode.layout.length > 0
+          ? { title: '布局', content: usefulCode.layout.map((item) => item.copyLine).join('\n') }
+          : null,
+        usefulCode.styleItems.length > 0
+          ? { title: '样式', content: usefulCode.styleItems.map((item) => item.copyLine).join('\n') }
+          : null,
+      ] as Array<InspectCodeSection | null>
+    ).filter((section): section is InspectCodeSection => section != null);
 
   return {
-    element,
+    element: target,
     label,
     tagName,
     domPath,
-    classList: [...element.classList],
+    classList: [...target.classList],
     edsComponentHints,
     vueComponentName,
     edsComponent,

@@ -1,0 +1,191 @@
+.root {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--box-page);
+}
+
+.hero {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  padding: var(--spacing-4) var(--spacing-5) var(--spacing-5);
+  background:
+    linear-gradient(
+      135deg,
+      var(--eds-tag-colorful-ice-blue-bg) 0%,
+      var(--eds-tag-colorful-cyan-bg) 32%,
+      var(--eds-tag-colorful-sage-bg) 64%,
+      var(--eds-tag-colorful-lime-bg) 100%
+    );
+}
+
+.topBar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+.brand {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.brandMark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--spacing-8);
+  height: var(--spacing-8);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  background: var(--material-same-white-primary);
+  color: var(--status-success);
+}
+
+.brandWord {
+  min-width: 0;
+  color: var(--text-base-primary);
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-body-small-strong-weight);
+  line-height: var(--eds-footnote-line-height);
+}
+
+.windowControls {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1-5);
+}
+
+.windowDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  min-width: var(--icon-sm);
+  min-height: var(--icon-sm);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--material-same-white-primary);
+  color: var(--text-base-tertiary);
+  appearance: none;
+  cursor: default;
+}
+
+.windowDotAction {
+  cursor: pointer;
+}
+
+.windowDotGlyph {
+  display: none;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  line-height: 0;
+}
+
+.windowDotAction:hover .windowDotGlyph,
+.windowDotAction:focus-visible .windowDotGlyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  color: var(--text-base-primary);
+  font-size: var(--eds-title-size);
+  font-weight: var(--eds-title-weight);
+  line-height: var(--eds-title-line-height);
+}
+
+.cta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-4);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--material-same-white-primary);
+  box-shadow: var(--eds-shadow-light);
+  text-align: left;
+  appearance: none;
+  cursor: pointer;
+}
+
+.ctaCopy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.ctaTitle {
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-medium-strong-size);
+  font-weight: var(--eds-body-medium-strong-weight);
+  line-height: var(--eds-body-medium-strong-line-height);
+}
+
+.ctaSubtitle {
+  color: var(--text-base-secondary);
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
+}
+
+.ctaArrow {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--spacing-6);
+  height: var(--spacing-6);
+  color: var(--eds-tag-colorful-cyan-text);
+}
+
+.body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-height: 0;
+  padding: var(--spacing-4) var(--spacing-5);
+  background: var(--box-page);
+}
+
+.version {
+  margin: 0;
+  color: var(--text-base-tertiary);
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
+}

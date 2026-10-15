@@ -3,13 +3,32 @@
   flex-shrink: 0;
 }
 
+.triggerMetrics {
+  display: inline-flex;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
 .panel {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
   box-sizing: border-box;
   width: 100%;
+  min-height: 100%;
+  align-self: stretch;
   padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  background: var(--material-same-white-primary);
+}
+
+:global(.desktopTokens.effect-flotation-box:has([data-export-flotation-panel])),
+:global(html[data-theme='light'] .desktopTokens.effect-flotation-box:has([data-export-flotation-panel])),
+:global(html[data-theme='dark'] .desktopTokens.effect-flotation-box:has([data-export-flotation-panel])) {
+  background: var(--material-same-white-primary);
+  background-blend-mode: normal;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Reference: inline icons in this panel are 10px */
@@ -247,6 +266,16 @@
   font-size: var(--eds-body-small-size);
   font-weight: var(--eds-body-small-weight);
   line-height: var(--eds-body-small-line-height);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.historySubtitle {
+  color: var(--text-base-secondary);
+  font-size: var(--eds-bar-size);
+  font-weight: var(--eds-bar-weight);
+  line-height: var(--eds-bar-line-height);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -34,11 +34,37 @@ import {
 import styles from './TransactionRecordsExportFlotation.module.css';
 
 const EXPORT_HISTORY_LOADING_MS = 1200;
+const PANEL_MAX_HEIGHT_CAP = 560;
+const PANEL_MIN_HEIGHT = 280;
+const PANEL_EDGE_GAP = 12;
 
-const props = defineProps<{
-  disabled?: boolean;
-  hasActiveFilters?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    disabled?: boolean;
+    hasActiveFilters?: boolean;
+    /** When true, Export click does not open the panel (emit `open-blocked` instead). */
+    blockOpen?: boolean;
+    /** Radio group name; unique when more than one export panel is mounted. */
+    scopeGroupName?: string;
+    /** Hide Export according to filter / Export all radios (monthly statement). */
+    showScope?: boolean;
+    /** Hide Last 3/6/12 months presets and the date-range picker. */
+    showDateRange?: boolean;
+    initialHistory?: readonly TransactionRecordsExportHistoryItem[];
+    resolveHistoryEntry?: () => { title: string; subtitle?: string };
+    /** Panel heading; defaults to Export (monthly statement uses Generate Monthly Statement). */
+    panelTitle?: string;
+  }>(),
+  {
+    disabled: false,
+    hasActiveFilters: false,
+    blockOpen: false,
+    scopeGroupName: 'tx-records-export-scope',
+    showScope: true,
+    showDateRange: true,
+    panelTitle: '',
+  },
+);
 
 const emit = defineEmits<{
   export: [payload: {
@@ -46,21 +72,30 @@ const emit = defineEmits<{
     dateRange: string;
     presetId: TransactionRecordsExportPresetId;
   }];
+  'open-blocked': [];
 }>();
 
 const { locale, ui } = useAppI18n();
 
+const panelHeading = computed(() => props.panelTitle.trim() || ui('Export'));
+
 const expanded = ref(false);
+const rootRef = ref<HTMLElement | null>(null);
 const anchorRef = ref<{ openPanel?: () => void; close?: () => void } | null>(null);
+const panelMaxHeight = ref(PANEL_MAX_HEIGHT_CAP);
 const presetId = ref<TransactionRecordsExportPresetId>('custom');
 const defaultRange = resolveDefaultExportDateRange();
 const dateRange = ref(formatExportDateRangeValue(defaultRange.start, defaultRange.end));
 const exportScope = ref<TransactionRecordsExportScope>(
   props.hasActiveFilters ? 'filtered' : 'all',
 );
-const historyItems = ref<TransactionRecordsExportHistoryItem[]>(
-  TRANSACTION_RECORDS_EXPORT_HISTORY_DEMO.map((item) => ({ ...item })),
-);
+const liveHistoryItems = ref<TransactionRecordsExportHistoryItem[]>([]);
+const historyItems = computed(() => [
+  ...liveHistoryItems.value,
+  ...(props.initialHistory ?? TRANSACTION_RECORDS_EXPORT_HISTORY_DEMO).map((item) => ({
+    ...item,
+  })),
+]);
 let historyReadyTimer: ReturnType<typeof setTimeout> | null = null;
 let historySeq = 0;
 
@@ -105,12 +140,33 @@ function closePanel() {
   anchorRef.value?.close?.();
 }
 
+function resolvePanelMaxHeight() {
+  const trigger =
+    rootRef.value?.querySelector<HTMLElement>('[data-eds-trigger-metrics], button')
+    ?? rootRef.value;
+  const preview = document.querySelector('.app-preview');
+  if (!(trigger instanceof HTMLElement) || !(preview instanceof HTMLElement)) {
+    return PANEL_MAX_HEIGHT_CAP;
+  }
+  const remaining =
+    preview.getBoundingClientRect().bottom
+    - trigger.getBoundingClientRect().bottom
+    - PANEL_EDGE_GAP;
+  return Math.min(PANEL_MAX_HEIGHT_CAP, Math.max(PANEL_MIN_HEIGHT, Math.floor(remaining)));
+}
+
 function onTriggerClick() {
   if (props.disabled) return;
+  if (props.blockOpen) {
+    if (expanded.value) closePanel();
+    emit('open-blocked');
+    return;
+  }
   if (expanded.value) {
     closePanel();
     return;
   }
+  panelMaxHeight.value = resolvePanelMaxHeight();
   anchorRef.value?.openPanel?.();
 }
 
@@ -140,20 +196,22 @@ function onExportClick() {
 
   historySeq += 1;
   const pendingId = `exp-live-${historySeq}`;
+  const resolved = props.resolveHistoryEntry?.();
   const { start, end } = parseExportDateRangeValue(dateRange.value);
   const pendingItem: TransactionRecordsExportHistoryItem = {
     id: pendingId,
-    title: formatExportHistoryTitle(start, end),
+    title: resolved?.title ?? formatExportHistoryTitle(start, end),
+    subtitle: resolved?.subtitle,
     operator: TRANSACTION_RECORDS_EXPORT_HISTORY_OPERATOR_DEMO,
     exportedAt: formatExportHistoryTimestamp(),
     status: 'loading',
   };
-  historyItems.value = [pendingItem, ...historyItems.value];
+  liveHistoryItems.value = [pendingItem, ...liveHistoryItems.value];
 
   clearHistoryReadyTimer();
   historyReadyTimer = setTimeout(() => {
     historyReadyTimer = null;
-    historyItems.value = historyItems.value.map((item) =>
+    liveHistoryItems.value = liveHistoryItems.value.map((item) =>
       item.id === pendingId
         ? {
             ...item,
@@ -174,7 +232,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <span :class="styles.root">
+  <span ref="rootRef" :class="styles.root">
     <EgTooltip
       ref="anchorRef"
       trigger="click"
@@ -185,34 +243,47 @@ onBeforeUnmount(() => {
       :disabled="disabled"
       teleport-to=".app-preview"
       boundary-selector=".app-preview"
-      flip
       @open="onOpen"
       @close="onClose"
     >
-      <EgIconProButton
-        :label="ui('Export')"
-        :active="expanded"
-        :disabled="disabled"
-        :aria-expanded="expanded"
-        @click.stop="onTriggerClick"
-      >
-        <EgIcon name="eds-arrow-download" size="sm" />
-      </EgIconProButton>
+      <span data-eds-trigger-metrics :class="styles.triggerMetrics">
+        <slot
+          name="trigger"
+          :expanded="expanded"
+          :disabled="disabled"
+          :on-click="onTriggerClick"
+        >
+          <EgIconProButton
+            :label="ui('Export')"
+            :active="expanded"
+            :disabled="disabled"
+            :aria-expanded="expanded"
+            @click.stop="onTriggerClick"
+          >
+            <EgIcon name="eds-arrow-download" size="sm" />
+          </EgIconProButton>
+        </slot>
+      </span>
 
       <template #content>
         <EgTooltipPanel
           panel-kind="flotation"
           panel-micro-float
+          panel-flush
           width-mode="fixed"
           :width="380"
           height-mode="adaptive"
-          :max-height="560"
+          :max-height="panelMaxHeight"
           :scrollable="true"
         >
-          <div :class="styles.panel">
+          <div :class="styles.panel" data-export-flotation-panel>
             <div :class="styles.headerRow">
-              <span :class="styles.title">{{ ui('Export') }}</span>
-              <div :class="styles.presets" role="tablist">
+              <span :class="styles.title">{{ panelHeading }}</span>
+              <div
+                v-if="showDateRange"
+                :class="styles.presets"
+                role="tablist"
+              >
                 <button
                   v-for="item in quickPresetItems"
                   :key="item.id"
@@ -230,7 +301,7 @@ onBeforeUnmount(() => {
               </div>
             </div>
 
-            <div :class="styles.rangeBlock">
+            <div v-if="showDateRange" :class="styles.rangeBlock">
               <div :class="styles.rangeShell">
                 <div :class="styles.rangeVisual" aria-hidden="true">
                   <div :class="styles.rangeField">
@@ -270,7 +341,10 @@ onBeforeUnmount(() => {
               </div>
             </div>
 
+            <slot name="extra-fields" />
+
             <div
+              v-if="showScope"
               :class="styles.scopeGroup"
               role="radiogroup"
               :aria-label="ui('Export scope')"
@@ -284,7 +358,7 @@ onBeforeUnmount(() => {
               >
                 <EgRadio
                   :model-value="exportScope === 'filtered'"
-                  name="tx-records-export-scope"
+                  :name="scopeGroupName"
                   value="filtered"
                   tabindex="-1"
                   aria-hidden="true"
@@ -301,7 +375,7 @@ onBeforeUnmount(() => {
               >
                 <EgRadio
                   :model-value="exportScope === 'all'"
-                  name="tx-records-export-scope"
+                  :name="scopeGroupName"
                   value="all"
                   tabindex="-1"
                   aria-hidden="true"
@@ -337,6 +411,9 @@ onBeforeUnmount(() => {
                 >
                   <div :class="styles.historyMeta">
                     <div :class="styles.historyName">{{ item.title }}</div>
+                    <span v-if="item.subtitle" :class="styles.historySubtitle">
+                      {{ item.subtitle }}
+                    </span>
                     <span :class="styles.historySubItem">
                       <EgIcon name="eds-personal" fit />
                       {{ item.operator }}

@@ -1,9 +1,12 @@
 .page {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: var(--spacing-4);
   box-sizing: border-box;
+  min-width: 0;
   min-height: 0;
+  width: 100%;
   height: 100%;
   padding: var(--spacing-5);
   overflow: hidden;
@@ -37,8 +40,17 @@
 
 .heroActions {
   display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+.heroActions > * {
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--spacing-2);
   flex-shrink: 0;
 }
 
@@ -73,34 +85,43 @@
   font-variant-numeric: tabular-nums;
 }
 
-.panels {
-  display: grid;
-  grid-template-columns: 1.9fr 1fr;
-  gap: var(--spacing-3);
-  min-height: 0;
-  flex: 1 1 auto;
-}
-
-.panel {
+.listShell {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  width: calc(100% + (var(--spacing-5) * 2));
+  margin-inline: calc(var(--spacing-5) * -1);
+  margin-bottom: calc(var(--spacing-5) * -1);
   overflow: hidden;
-  border-radius: var(--radius-md);
-  border: var(--stroke-sm) solid var(--stroke-divider-module);
-  background: var(--box-page);
 }
 
-/* Title yields to actions; fill available width so ellipsis can apply (not parent-clip). */
-.panel :global(.eds-tool-bar-title) {
+.listShell :global(.eds-layout) {
   flex: 1 1 auto;
-  min-width: var(--scale-14);
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.listShell :global(.eds-tool-bar) {
+  flex-shrink: 0;
+}
+
+.listShell :global(.eds-paginer) {
+  flex-shrink: 0;
+}
+
+/* Title yields to Filter/Export; fill remaining toolbar width so ellipsis can apply. */
+.listShell :global(.eds-tool-bar-title) {
+  flex: 1 1 0%;
+  min-width: var(--scale-20);
   max-width: 100%;
   overflow: hidden;
 }
 
-.panel :global(.eds-tool-bar-title p) {
+.listShell :global(.eds-tool-bar-title p) {
   flex: 1 1 auto;
   width: 100%;
   font-size: var(--eds-body-medium-size);
@@ -111,20 +132,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Left list title takes remaining toolbar width before Filter/Export. */
-.txPanel :global(.eds-tool-bar-title) {
-  flex: 1 1 0%;
-  min-width: var(--scale-20);
-}
-
-.panelLayout {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 0;
-  width: 100%;
-  height: 100%;
 }
 
 .listRegion {
@@ -161,145 +168,6 @@
  */
 .txListFill :global(.eds-data-list [class*='tableContent']) {
   padding-top: max(var(--eds-layout-chrome-inset-top, 0px), var(--scale-15));
-}
-
-.billListFill {
-  box-sizing: border-box;
-  overflow: auto;
-}
-
-.billChromeSpacer {
-  height: var(--eds-layout-chrome-inset-top, 0);
-}
-
-.yearGroup {
-  display: block;
-  width: 100%;
-}
-
-.yearBar {
-  position: sticky;
-  top: var(--eds-layout-chrome-inset-top, 0);
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  box-sizing: border-box;
-  /* Match bill row horizontal inset so TZ lines up with row actions. */
-  padding: 0 var(--spacing-4) 0 var(--spacing-6);
-  background: var(--data-table-head);
-  color: var(--text-base-primary);
-  font-size: var(--eds-footnote-strong-size);
-  font-weight: var(--eds-footnote-strong-weight);
-  line-height: var(--eds-footnote-strong-line-height);
-}
-
-.yearBarYear {
-  flex: 0 0 auto;
-}
-
-.yearBarTz {
-  margin-left: auto;
-  min-width: 0;
-  flex: 0 1 auto;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.billRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: var(--spacing-2);
-  flex-shrink: 0;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0 var(--spacing-4) 0 var(--spacing-6);
-}
-
-.billMain {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-05);
-  min-width: 0;
-  flex: 1 1 auto;
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  text-align: left;
-}
-
-.billTitle {
-  display: flex;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.billTextFull,
-.billTextCompact {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.billTextFull {
-  display: flex;
-  width: 100%;
-}
-
-.billTextCompact {
-  display: none;
-}
-
-/* Matches --app-preview-min-width on the client window. */
-@media (max-width: 960px) {
-  .page {
-    overflow: hidden;
-  }
-
-  .panels {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .panel {
-    height: auto;
-    min-height: 0;
-    overflow: hidden;
-  }
-
-  .listRegion {
-    padding-bottom: 0;
-    overflow: hidden;
-  }
-
-  .listFill {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    --eds-layout-chrome-inset-bottom: 0;
-  }
-
-  .billListFill {
-    overflow-y: auto;
-  }
-
-  .billTextFull {
-    display: flex;
-    width: 100%;
-  }
-
-  .billTextCompact {
-    display: none;
-  }
 }
 
 .listFill :global(.eds-data-list) {
@@ -359,34 +227,12 @@
   overflow: visible;
 }
 
-.comboHeader > :global(.eds-divider) {
-  align-self: center;
-  flex-shrink: 0;
-  height: var(--spacing-2-5);
-  min-height: var(--spacing-2-5);
-  max-height: var(--spacing-2-5);
-  background: var(--stroke-base-quaternary);
-}
-
-.comboCell {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-05);
-  width: 100%;
-  min-width: 0;
-}
-
 .comboPrimary {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+  width: 100%;
   min-width: 0;
-}
-
-.comboSecondary {
-  color: var(--text-base-tertiary);
-  font-size: var(--eds-footnote-size);
-  line-height: var(--eds-footnote-line-height);
 }
 
 .dirIcon {
@@ -423,34 +269,6 @@
   flex: 1 1 auto;
   overflow: hidden;
   color: var(--text-base-primary);
-}
-
-.billActions {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--spacing-1);
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.earlier,
-.endNote {
-  margin: 0;
-  padding: var(--spacing-3) var(--spacing-4) var(--spacing-4);
-  color: var(--text-base-tertiary);
-  font-size: var(--eds-body-small-size);
-  line-height: var(--eds-body-small-line-height);
-  flex-shrink: 0;
-  width: 100%;
-  box-sizing: border-box;
-  text-align: left;
-}
-
-.earlier {
-  border: none;
-  background: transparent;
-  cursor: pointer;
 }
 
 .toastHost {

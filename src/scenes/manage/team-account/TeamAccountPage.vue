@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import {
-  EgButton,
   EgDataList,
   EgDataListCellOverflow,
   EgDataListColumn,
-  EgDivider,
-  EgFlotation,
-  EgFlotationMenu,
-  EgFlotationMenuItem,
-  EgFlotationTrigger,
   EgIcon,
-  EgIconButton,
   EgIconButtonPro,
   EgLayout,
   EgListFieldOverflowText,
@@ -22,14 +15,23 @@ import {
   type DataListItem,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { hasActiveEgFilterConditions } from '@/scenes/shared/applyEgFilterConditions';
 import DataListHeaderSortTrigger from '@/scenes/tasks/DataListHeaderSortTrigger.vue';
 import TasksToolbarFilter from '@/scenes/tasks/filter/TasksToolbarFilter.vue';
 import {
   DATA_LIST_FIGMA_HEADER_HEIGHT,
   DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
 } from '@/scenes/tasks/tasksDataListPageData';
+import TransactionRecordsExportFlotation from '@/scenes/transaction-records/export/TransactionRecordsExportFlotation.vue';
+import { TRANSACTION_RECORDS_EXPORT_HISTORY_OPERATOR_DEMO } from '@/scenes/transaction-records/export/transactionRecordsExportData';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
-import { txDisplayTitleKey, type MonthlyBill } from './teamAccountData';
+import TeamAccountMonthlyExportFields from './TeamAccountMonthlyExportFields.vue';
+import {
+  DEFAULT_MONTHLY_EXPORT_PERIOD_LABEL,
+  formatMonthlyExportHistoryTitle,
+  TEAM_ACCOUNT_MONTHLY_EXPORT_HISTORY_SEED,
+  txDisplayTitleKey,
+} from './teamAccountData';
 import { TEAM_ACCOUNT_FILTER_OPERATORS } from './teamAccountFilter';
 import { useTeamAccountPage } from './useTeamAccountPage';
 import styles from './TeamAccountPage.module.css';
@@ -43,8 +45,6 @@ const {
   filterLogicMode,
   filterFields,
   txDataList,
-  billYearGroups,
-  yearMenuItems,
   settingsLevelIndex,
   settingsJumpValue,
   currentPage,
@@ -59,9 +59,7 @@ const {
   prevNavDisabled,
   nextNavDisabled,
   availableBalance,
-  exportTx,
   openTx,
-  setYear,
   goFirstPage,
   goPrevPage,
   goNextPage,
@@ -69,118 +67,67 @@ const {
   onManyPageItemClick,
   isManyPageSelected,
   onSettingsJump,
-  loadEarlier,
   openAlert,
-  openBillSetting,
-  openStatement,
-  openSend,
+  draftTz,
+  draftLang,
+  draftHeader,
+  tzItems,
+  langItems,
   pagedTx,
-  billListTitle,
-  billListTitleCompact,
   timeSortOrder,
   amountSortOrder,
   onTimeSort,
   onAmountSort,
 } = useTeamAccountPage();
 
-const billToolbarTzLabel = computed(
-  () => `${ui('Financial Time Zone')}: ${state.statementTz}`,
+const hasActiveTxFilters = computed(() =>
+  hasActiveEgFilterConditions(filterConditions.value),
 );
 
-function onYearSelect(label: string, close: () => void) {
-  setYear(Number(label));
-  close();
-}
+const monthlyExportPeriod = ref(DEFAULT_MONTHLY_EXPORT_PERIOD_LABEL);
+
+const monthlyExportHistory = computed(() =>
+  TEAM_ACCOUNT_MONTHLY_EXPORT_HISTORY_SEED.map((item) => ({
+    id: item.id,
+    title: formatMonthlyExportHistoryTitle(item.periodLabel, { locale: locale.value, ui }),
+    subtitle: `${item.timezone}  ${item.language}`,
+    operator: TRANSACTION_RECORDS_EXPORT_HISTORY_OPERATOR_DEMO,
+    exportedAt: item.exportedAt,
+    status: 'ready' as const,
+  })),
+);
 
 function onTxRowClick(row: DataListItem) {
   const tx = pagedTx.value.find((item) => item.id === String(row.id));
   if (tx) openTx(tx);
 }
 
-function onBillOpen(bill: MonthlyBill) {
-  openStatement(bill);
+function syncMonthlyExportDrafts() {
+  draftTz.value = state.statementTz;
+  draftLang.value = state.statementLang;
+  draftHeader.value = state.statementHeader;
 }
 
-function onBillSendClick(bill: MonthlyBill) {
-  openSend(bill);
+function onMonthlyExportTriggerClick(onClick: () => void) {
+  syncMonthlyExportDrafts();
+  onClick();
 }
 
-const billPanelRef = ref<HTMLElement | null>(null);
-const billTitleCompact = ref(false);
-const billToolbarTitle = computed(() =>
-  ui(billTitleCompact.value ? 'Monthly...' : 'Monthly Statement'),
-);
+function onMonthlyExportConfirm() {
+  state.statementTz = draftTz.value;
+  state.statementLang = draftLang.value;
+  state.statementHeader = draftHeader.value;
+}
 
-let billToolbarResizeObserver: ResizeObserver | undefined;
-
-function queryBillToolbarEls() {
-  const panel = billPanelRef.value;
-  const toolbar = panel?.querySelector('.eds-tool-bar');
-  if (!toolbar) return { titleRow: null, titleEl: null, yearEl: null };
+function resolveMonthlyHistoryEntry() {
   return {
-    titleRow: toolbar.querySelector<HTMLElement>('.eds-tool-bar-title'),
-    titleEl: toolbar.querySelector<HTMLElement>('.eds-tool-bar-title p'),
-    yearEl: toolbar.querySelector<HTMLElement>('.eds-flotation'),
+    title: formatMonthlyExportHistoryTitle(monthlyExportPeriod.value, {
+      locale: locale.value,
+      ui,
+    }),
+    subtitle: `${draftTz.value}  ${draftLang.value}`,
   };
 }
-
-function measureFullBillTitleWidth(sample: HTMLElement) {
-  const cs = getComputedStyle(sample);
-  const probe = document.createElement('span');
-  probe.textContent = ui('Monthly Statement');
-  probe.style.cssText = [
-    'position:absolute',
-    'visibility:hidden',
-    'white-space:nowrap',
-    `font:${cs.font}`,
-    `letter-spacing:${cs.letterSpacing}`,
-  ].join(';');
-  document.body.appendChild(probe);
-  const width = probe.getBoundingClientRect().width;
-  probe.remove();
-  return width;
-}
-
-function updateBillToolbarTitleCompact() {
-  const { titleRow, titleEl, yearEl } = queryBillToolbarEls();
-  if (!titleRow || !titleEl || !yearEl) return;
-  const titleBox = titleRow.getBoundingClientRect();
-  const yearBox = yearEl.getBoundingClientRect();
-  const gap = 8;
-  const available = yearBox.left - titleBox.left - gap;
-  if (available <= 0) {
-    billTitleCompact.value = true;
-    return;
-  }
-  billTitleCompact.value = measureFullBillTitleWidth(titleEl) >= available;
-}
-
-function scheduleBillToolbarTitleCompact() {
-  void nextTick(() => {
-    requestAnimationFrame(updateBillToolbarTitleCompact);
-  });
-}
-
-onMounted(() => {
-  scheduleBillToolbarTitleCompact();
-  const panel = billPanelRef.value;
-  if (panel && typeof ResizeObserver !== 'undefined') {
-    billToolbarResizeObserver = new ResizeObserver(() => {
-      updateBillToolbarTitleCompact();
-    });
-    billToolbarResizeObserver.observe(panel);
-  }
-  window.addEventListener('resize', updateBillToolbarTitleCompact);
-});
-
-onBeforeUnmount(() => {
-  billToolbarResizeObserver?.disconnect();
-  billToolbarResizeObserver = undefined;
-  window.removeEventListener('resize', updateBillToolbarTitleCompact);
-});
-
-watch(locale, scheduleBillToolbarTitleCompact);
-watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
 </script>
 
 <template>
@@ -191,18 +138,44 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
         <p :class="styles.heroAmount">{{ availableBalance }}</p>
       </div>
       <div :class="styles.heroActions">
-        <EgButton tone="brand" variant="outline" size="md" @click="openAlert">
-          <template #icon>
-            <EgIcon name="eds-notice" fit />
+        <EgIconButtonPro :label="ui('Balance Alert')" @click="openAlert">
+          <EgIcon name="eds-notice" size="sm" />
+        </EgIconButtonPro>
+        <TransactionRecordsExportFlotation
+          key="monthly-statement-export"
+          :panel-title="ui('Generate Monthly Statement')"
+          :show-scope="false"
+          :show-date-range="false"
+          :initial-history="monthlyExportHistory"
+          :resolve-history-entry="resolveMonthlyHistoryEntry"
+          scope-group-name="team-account-monthly-export-scope"
+          @export="onMonthlyExportConfirm"
+        >
+          <template #trigger="{ expanded, disabled, onClick }">
+            <EgIconButtonPro
+              :label="ui('Statement')"
+              :active="expanded"
+              :disabled="disabled"
+              :aria-expanded="expanded"
+              @click.stop="onMonthlyExportTriggerClick(onClick)"
+            >
+              <EgIcon name="eds-file" size="sm" />
+            </EgIconButtonPro>
           </template>
-          {{ ui('Balance Alert') }}
-        </EgButton>
-        <EgButton tone="brand" variant="solid" size="md" @click="state.rechargeOpen = true">
-          <template #icon>
-            <EgIcon name="eds-recharge-money" fit />
+          <template #extra-fields>
+            <TeamAccountMonthlyExportFields
+              v-model:period="monthlyExportPeriod"
+              v-model:timezone="draftTz"
+              v-model:language="draftLang"
+              v-model:header="draftHeader"
+              :timezone-items="tzItems"
+              :language-items="langItems"
+            />
           </template>
-          {{ ui('Recharge') }}
-        </EgButton>
+        </TransactionRecordsExportFlotation>
+        <EgIconButtonPro :label="ui('Recharge')" @click="state.rechargeOpen = true">
+          <EgIcon name="eds-recharge-money" size="sm" />
+        </EgIconButtonPro>
       </div>
     </header>
 
@@ -217,14 +190,13 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
       </article>
     </div>
 
-    <div :class="styles.panels">
-      <section :class="[styles.panel, styles.txPanel]">
-        <EgLayout type="empty" show-toolbar show-paginer :class="styles.panelLayout">
-          <template #toolbar>
-            <EgToolBar
-              :title="ui('Transaction Details')"
-              show-divider
-            >
+    <div :class="styles.listShell">
+      <EgLayout type="empty" show-toolbar show-paginer>
+        <template #toolbar>
+          <EgToolBar
+            :title="ui('Transaction Details')"
+            show-divider
+          >
               <template #functional>
                 <TasksToolbarFilter
                   v-model="filterConditions"
@@ -232,9 +204,10 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
                   :fields="filterFields"
                   :operators="TEAM_ACCOUNT_FILTER_OPERATORS"
                 />
-                <EgIconButtonPro :label="ui('Export')" @click="exportTx">
-                  <EgIcon name="eds-arrow-download" size="sm" />
-                </EgIconButtonPro>
+                <TransactionRecordsExportFlotation
+                  :has-active-filters="hasActiveTxFilters"
+                  scope-group-name="team-account-tx-export-scope"
+                />
               </template>
             </EgToolBar>
           </template>
@@ -253,7 +226,7 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
                 <EgDataListColumn
                   prop="type"
                   :label="ui('Operation Type')"
-                  min-width="168px"
+                  min-width="200px"
                   :sortable="false"
                 >
                   <template #header>
@@ -268,7 +241,40 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
                           </EgDataListCellOverflow>
                         </div>
                       </div>
-                      <EgDivider type="navigator" direction="vertical" />
+                    </div>
+                  </template>
+                  <template #default="{ data }">
+                    <div :class="styles.comboPrimary">
+                      <span
+                        :class="[styles.dirIcon, data.dir === 'out' ? styles.dirOut : styles.dirIn]"
+                        aria-hidden="true"
+                      >
+                        <span :class="styles.dirIconGlyph">
+                          <EgIcon
+                            :name="data.dir === 'out' ? 'eds-arrow-outflow' : 'eds-arrow-entry'"
+                            fit
+                          />
+                        </span>
+                      </span>
+                      <span :class="styles.txType">
+                        <EgListFieldOverflowText
+                          :text="ui(txDisplayTitleKey(String(data.type)))"
+                          size="medium"
+                          boundary-selector=".app-preview"
+                        />
+                      </span>
+                    </div>
+                  </template>
+                </EgDataListColumn>
+                <EgDataListColumn
+                  prop="time"
+                  :label="ui('Time')"
+                  min-width="160px"
+                  width="160px"
+                  :sortable="false"
+                >
+                  <template #header>
+                    <div :class="styles.comboHeader">
                       <div :class="styles.comboHeaderSegment">
                         <div :class="styles.comboHeaderSegmentTextWrap">
                           <EgDataListCellOverflow
@@ -287,35 +293,17 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
                     </div>
                   </template>
                   <template #default="{ data }">
-                    <div :class="styles.comboCell">
-                      <div :class="styles.comboPrimary">
-                        <span
-                          :class="[styles.dirIcon, data.dir === 'out' ? styles.dirOut : styles.dirIn]"
-                          aria-hidden="true"
-                        >
-                          <span :class="styles.dirIconGlyph">
-                            <EgIcon
-                              :name="data.dir === 'out' ? 'eds-arrow-outflow' : 'eds-arrow-entry'"
-                              fit
-                            />
-                          </span>
-                        </span>
-                        <span :class="styles.txType">
-                          <EgListFieldOverflowText
-                            :text="ui(txDisplayTitleKey(String(data.type)))"
-                            size="medium"
-                            boundary-selector=".app-preview"
-                          />
-                        </span>
-                      </div>
-                      <span :class="styles.comboSecondary">{{ String(data.time) }}</span>
-                    </div>
+                    <EgListFieldOverflowText
+                      :text="String(data.time)"
+                      size="small"
+                      boundary-selector=".app-preview"
+                    />
                   </template>
                 </EgDataListColumn>
                 <EgDataListColumn
                   prop="amount"
                   :label="ui('Amount')"
-                  min-width="180px"
+                  min-width="140px"
                   align="right"
                   :sortable="false"
                 >
@@ -414,142 +402,6 @@ watch(billToolbarTitle, scheduleBillToolbarTitleCompact);
             </EgPaginer>
           </template>
         </EgLayout>
-      </section>
-
-      <section ref="billPanelRef" :class="styles.panel">
-        <EgLayout type="empty" show-toolbar :class="styles.panelLayout">
-          <template #toolbar>
-            <EgToolBar show-divider :title="billToolbarTitle">
-              <template #functional>
-                <EgFlotation
-                  trigger="click"
-                  placement="bottom"
-                  align="end"
-                  :show-add="false"
-                  :show-menu-divider="false"
-                  boundary-selector=".app-preview"
-                  flip
-                  close-on-scroll
-                >
-                  <template #trigger="{ expanded }">
-                    <EgFlotationTrigger
-                      trigger-style="outline"
-                      size="sm"
-                      width-mode="adaptive"
-                      :label="String(state.billYear)"
-                      :expanded="expanded"
-                    />
-                  </template>
-                  <template #content="{ close }">
-                    <EgFlotationMenu
-                      height-mode="adaptive"
-                      width-mode="adaptive"
-                      :scrollable="false"
-                      :show-add="false"
-                      :show-divider="false"
-                    >
-                      <EgFlotationMenuItem
-                        v-for="item in yearMenuItems"
-                        :key="item.label"
-                        box-type="text"
-                        :label="item.label"
-                        :show-tag="false"
-                        :focused="item.focused"
-                        @click="onYearSelect(item.label, close)"
-                      />
-                    </EgFlotationMenu>
-                  </template>
-                </EgFlotation>
-                <EgIconButtonPro :label="ui('Settings')" @click="openBillSetting">
-                  <EgIcon name="eds-gear" size="sm" />
-                </EgIconButtonPro>
-              </template>
-            </EgToolBar>
-          </template>
-          <div :class="styles.listRegion">
-            <div :class="[styles.listFill, styles.billListFill]">
-              <div :class="styles.billChromeSpacer" aria-hidden="true" />
-              <section
-                v-for="group in billYearGroups"
-                :key="group.year"
-                :class="styles.yearGroup"
-              >
-                <div
-                  :class="styles.yearBar"
-                  :style="{ height: `${DATA_LIST_FIGMA_HEADER_HEIGHT}px` }"
-                >
-                  <span :class="styles.yearBarYear">{{ group.year }}</span>
-                  <span :class="styles.yearBarTz">
-                    <EgListFieldOverflowText
-                      :text="billToolbarTzLabel"
-                      size="small"
-                      variant="secondary"
-                      boundary-selector=".app-preview"
-                    />
-                  </span>
-                </div>
-                <div
-                  v-for="bill in group.bills"
-                  :key="bill.id"
-                  :class="[styles.billRow, 'motion-ease', 'is-hover']"
-                  :style="{ minHeight: `${DATA_LIST_COLUMN_HEIGHT}px` }"
-                >
-                  <button
-                    :class="styles.billMain"
-                    type="button"
-                    @click="onBillOpen(bill)"
-                  >
-                    <span :class="styles.billTitle">
-                      <span :class="styles.billTextFull">
-                        <EgListFieldOverflowText
-                          :text="billListTitle(bill)"
-                          size="small"
-                          boundary-selector=".app-preview"
-                        />
-                      </span>
-                      <span :class="styles.billTextCompact">
-                        <EgListFieldOverflowText
-                          :text="billListTitle(bill)"
-                          :display-text="billListTitleCompact(bill)"
-                          size="small"
-                          boundary-selector=".app-preview"
-                        />
-                      </span>
-                    </span>
-                  </button>
-                  <div :class="styles.billActions">
-                    <EgIconButton
-                      size="sm"
-                      :label="ui('Download')"
-                      @click.stop="onBillOpen(bill)"
-                    >
-                      <EgIcon name="eds-arrow-download" fit />
-                    </EgIconButton>
-                    <EgIconButton
-                      size="sm"
-                      :label="ui('Send Statements')"
-                      @click.stop="onBillSendClick(bill)"
-                    >
-                      <EgIcon name="eds-share" fit />
-                    </EgIconButton>
-                  </div>
-                </div>
-              </section>
-              <button
-                v-if="state.billYear === 2026 && !state.billsExpanded"
-                :class="styles.earlier"
-                type="button"
-                @click="loadEarlier"
-              >
-                {{ ui('Load More') }}
-              </button>
-              <p v-else :class="styles.endNote">
-                {{ ui('All historical statements have been exported') }}
-              </p>
-            </div>
-          </div>
-        </EgLayout>
-      </section>
     </div>
   </section>
 

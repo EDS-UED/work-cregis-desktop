@@ -22,6 +22,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   Notifications: '通知',
   'Account Settings': '账户设置',
   Notice: '通知',
+  Earphone: '客服',
   'User avatar': '用户头像',
   UniChain: 'UniChain',
   MetaMask: 'MetaMask',
@@ -1001,6 +1002,9 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Export started': '已开始导出',
   'No matching records': '暂无匹配记录',
   'Monthly Statement': '月度账单',
+  'Export Monthly Statement': '导出月度账单',
+  'Generate Monthly Statement': '生成月度账单',
+  Statement: '账单',
   'Monthly...': '月度...',
   Month: '月份',
   'Statement for {month} {year}': '{year}年{month}月账单',
@@ -1019,6 +1023,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Team monthly statements will be generated at the beginning of each month based on this time zone and language. Underlying system records remain unaffected.':
     '每月月初会按照此时区及账单语言生成团队账户月度账单。系统底层记录不受影响。',
   'Financial Time Zone': '财务时区',
+  'Time Zone': '时区',
   'Statement Language': '账单语言',
   'Invoice Header': '账单抬头',
   'Use Team Name': '使用团队名称',
@@ -1065,4 +1070,10 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Card Issuance Fee': '开卡费',
   'Card Transfer': '划转',
   'Card Replacement Fee': '补卡费',
+
+  // Customer service (nav Earphone)
+  'Hello!': '您好！',
+  'You can ask any question, or share your suggestions.': '您可以咨询任何问题，或提出建议。',
+  'Customer service is busy. Tap to leave a message.': '客服繁忙，点击留言',
+  'You can use self-service, or leave us a message.': '您可以使用自助服务，或给我们留言。',
 };
