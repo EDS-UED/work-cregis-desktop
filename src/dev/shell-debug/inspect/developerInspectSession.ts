@@ -53,6 +53,7 @@ export function setDevInspectPopoverOpen(open: boolean) {
 }
 
 export function clearInspectSelection() {
+  inspectHoverPopoverHovered.value = false;
   inspectPinnedInfo.value = null;
   inspectPinnedRect.value = null;
   inspectHoverInfo.value = null;

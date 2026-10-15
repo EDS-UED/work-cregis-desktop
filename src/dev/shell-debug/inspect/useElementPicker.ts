@@ -33,7 +33,9 @@ function isShellDebugUiTarget(target: Element): boolean {
 }
 
 function isInspectPanelTarget(target: Element): boolean {
-  return Boolean(target.closest('[data-dev-inspect-panel]'));
+  return Boolean(
+    target.closest('[data-dev-inspect-panel], [data-dev-inspect-hover-popover]'),
+  );
 }
 
 function elementFromPreviewPoint(x: number, y: number, preview: Element): Element | null {
@@ -137,34 +139,34 @@ function updateHoverTarget(target: Element | null, preview: Element) {
     return;
   }
 
-  const pinned = inspectPinnedInfo.value;
-  if (pinned?.element === target) {
-    clearHoverSelection();
-    return;
-  }
-
-  if (target === lastHoverTarget && inspectHoverInfo.value) {
-    inspectHoverRect.value = target.getBoundingClientRect();
-    if (pinned) {
-      inspectMeasureElement.value = target;
-      inspectMeasureRect.value = target.getBoundingClientRect();
-    }
-    return;
-  }
-
-  lastHoverTarget = target;
-  const info = buildElementInspectInfo(target, preview);
+  const info = buildElementInspectInfo(target, preview, { includeAdaptive: true });
   if (!info) {
     clearHoverSelection();
     return;
   }
 
+  const pinned = inspectPinnedInfo.value;
+  if (pinned?.element === info.element) {
+    clearHoverSelection();
+    return;
+  }
+
+  if (info.element === lastHoverTarget && inspectHoverInfo.value) {
+    inspectHoverRect.value = info.element.getBoundingClientRect();
+    if (pinned) {
+      inspectMeasureElement.value = info.element;
+      inspectMeasureRect.value = info.element.getBoundingClientRect();
+    }
+    return;
+  }
+
+  lastHoverTarget = info.element;
   inspectHoverInfo.value = info;
-  inspectHoverRect.value = target.getBoundingClientRect();
+  inspectHoverRect.value = info.element.getBoundingClientRect();
 
   if (pinned) {
-    inspectMeasureElement.value = target;
-    inspectMeasureRect.value = target.getBoundingClientRect();
+    inspectMeasureElement.value = info.element;
+    inspectMeasureRect.value = info.element.getBoundingClientRect();
     return;
   }
 
@@ -176,8 +178,11 @@ function onPointerMove(event: PointerEvent) {
   if (!developerInspectActive.value) return;
 
   const eventTarget = event.target;
-  if (eventTarget instanceof Element && (isShellDebugUiTarget(eventTarget) || isInspectPanelTarget(eventTarget))) {
-    clearHoverSelection();
+  if (eventTarget instanceof Element && isInspectPanelTarget(eventTarget)) {
+    return;
+  }
+  if (eventTarget instanceof Element && isShellDebugUiTarget(eventTarget)) {
+    if (!inspectPinnedInfo.value) clearHoverSelection();
     return;
   }
 
@@ -217,14 +222,14 @@ function onPointerDown(event: PointerEvent) {
     return;
   }
 
-  const info = buildElementInspectInfo(target, preview);
+  const info = buildElementInspectInfo(target, preview, { includeAdaptive: true });
   if (!info) {
     clearInspectSelection();
     return;
   }
 
   inspectPinnedInfo.value = info;
-  inspectPinnedRect.value = target.getBoundingClientRect();
+  inspectPinnedRect.value = info.element.getBoundingClientRect();
   clearHoverSelection();
 }
 

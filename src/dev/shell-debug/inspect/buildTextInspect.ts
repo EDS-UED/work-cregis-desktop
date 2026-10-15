@@ -1,6 +1,9 @@
 import type { InspectCodeSection } from './buildIconInspect';
 import type { InspectPropertyItem } from './buildElementInspectInfo';
-import type { EdsComponentInspect } from './resolveEdsComponentInspect';
+import {
+  isCatalogComponentRoot,
+  type EdsComponentInspect,
+} from './resolveEdsComponentInspect';
 import {
   formatCssDeclaration,
   formatTokenVar,
@@ -212,6 +215,7 @@ export function isTextLeaf(element: Element): boolean {
 }
 
 export function resolvePreferredInspectElement(element: Element): Element {
+  if (isCatalogComponentRoot(element)) return element;
   if (isPreferredTextHost(element)) return element;
 
   let ancestor: Element | null = element.parentElement;
@@ -358,11 +362,18 @@ export function resolveInspectAncestor(element: Element, preview: Element): stri
   type VueInternal = {
     type?: { name?: string; __name?: string };
     parent?: VueInternal;
+    subTree?: { el?: Element | null };
+    vnode?: { el?: Element | null };
   };
 
   const formatName = (name: string) => (name.startsWith('Eg') ? name.slice(2) : name);
   let current = (element as Element & { __vueParentComponent?: VueInternal }).__vueParentComponent;
   while (current) {
+    const root = current.subTree?.el ?? current.vnode?.el;
+    if (root === element) {
+      current = current.parent;
+      continue;
+    }
     const name = current.type?.name || current.type?.__name;
     if (name && name !== 'Text' && !name.startsWith('Base')) {
       return formatName(name);
@@ -395,6 +406,19 @@ export function resolveMotionLabel(element: Element): string {
     return '无';
   }
   if (element.classList.contains('motion-none')) return '.motion-none';
+  if (element.classList.contains('motion-ease') && element.classList.contains('is-enter-only')) {
+    return '.motion-ease.is-enter-only';
+  }
+  if (element.classList.contains('motion-ease') && element.classList.contains('is-hover')) {
+    return '.motion-ease.is-hover';
+  }
+  if (element.classList.contains('motion-ease') && element.classList.contains('is-paint')) {
+    return '.motion-ease.is-paint';
+  }
+  if (element.classList.contains('motion-ease') && element.classList.contains('is-asym')) {
+    return '.motion-ease.is-asym';
+  }
+  if (element.classList.contains('motion-ease')) return '.motion-ease';
   if (element.classList.contains('motion-flotation') && element.classList.contains('is-active')) {
     return '.motion-flotation.is-active';
   }

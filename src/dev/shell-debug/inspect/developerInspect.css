@@ -15,3 +15,52 @@
   user-select: text;
   -webkit-user-select: text;
 }
+
+.dev-inspect-code-token--prop,
+.dev-inspect-code-token--punct,
+.dev-inspect-code-token--plain,
+.dev-inspect-code-token--variable {
+  color: var(--text-base-primary);
+}
+
+.dev-inspect-code-token--comment {
+  color: var(--text-base-tertiary);
+}
+
+.dev-inspect-code-token--keyword,
+.dev-inspect-code-token--value {
+  color: color(display-p3 0.9255 0 0.549);
+}
+
+.dev-inspect-code-token--function,
+.dev-inspect-code-token--string,
+.dev-inspect-code-token--effectClass {
+  color: color(display-p3 0.7059 0.3255 0.0353);
+}
+
+.dev-inspect-code-token--attr {
+  color: color(display-p3 0 0.4275 0.2588);
+}
+
+.dev-inspect-code-token--tag {
+  color: rgb(118, 34, 226);
+}
+
+[data-theme='dark'] .dev-inspect-code-token--keyword,
+[data-theme='dark'] .dev-inspect-code-token--value {
+  color: color(display-p3 1 0.4667 0.7255);
+}
+
+[data-theme='dark'] .dev-inspect-code-token--function,
+[data-theme='dark'] .dev-inspect-code-token--string,
+[data-theme='dark'] .dev-inspect-code-token--effectClass {
+  color: rgb(244, 164, 46);
+}
+
+[data-theme='dark'] .dev-inspect-code-token--attr {
+  color: color(display-p3 0.3294 0.9098 0.6824);
+}
+
+[data-theme='dark'] .dev-inspect-code-token--tag {
+  color: color(display-p3 0.6863 0.4902 1);
+}

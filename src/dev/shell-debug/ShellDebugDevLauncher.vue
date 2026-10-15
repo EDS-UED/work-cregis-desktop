@@ -9,6 +9,7 @@ import InspectDetailPanel from './inspect/InspectDetailPanel.vue';
 import {
   clearInspectSelection,
   developerInspectActive,
+  inspectHoverInfo,
   inspectPinnedInfo,
   setDeveloperInspectActive,
 } from './inspect/developerInspectSession';
@@ -42,9 +43,9 @@ let deactivateTimer: ReturnType<typeof setTimeout> | undefined;
 /** 与 AnchoredTooltip microFloat leave 时长对齐（默认约 300ms）。 */
 const DEACTIVATE_AFTER_CLOSE_MS = 320;
 
-const panelTitle = computed(() => inspectPinnedInfo.value?.label ?? '');
-const pinnedInfo = computed(() => inspectPinnedInfo.value);
-const isReminderState = computed(() => developerInspectActive.value && !inspectPinnedInfo.value);
+const displayInfo = computed(() => inspectHoverInfo.value ?? inspectPinnedInfo.value);
+const panelTitle = computed(() => displayInfo.value?.label ?? '');
+const isReminderState = computed(() => developerInspectActive.value && !displayInfo.value);
 
 function clearReminderDismissTimer() {
   if (reminderDismissTimer === undefined) return;
@@ -173,11 +174,12 @@ function onPopoverClose() {
 }
 
 watch(
-  () => inspectPinnedInfo.value,
+  displayInfo,
   (info) => {
+    if (!developerInspectActive.value) return;
+    if (!info) return;
     clearReminderDismissTimer();
-    if (!info || !developerInspectActive.value) return;
-    openDevPanel();
+    if (!popoverExpanded.value) openDevPanel();
   },
 );
 
@@ -207,7 +209,7 @@ onBeforeUnmount(() => {
       :width="isReminderState ? undefined : DEV_INSPECT_POPOVER_WIDTH"
       height-mode="adaptive"
       :max-height="isReminderState ? undefined : POPOVER_MAX_HEIGHT"
-      :top-tool="Boolean(pinnedInfo)"
+      :top-tool="Boolean(displayInfo)"
       :top-tool-title="panelTitle"
       top-tool-closable
       :close-on-scroll="false"
@@ -270,7 +272,7 @@ onBeforeUnmount(() => {
             maxHeight: `${popoverContentMaxHeight}px`,
           }"
         >
-          <InspectDetailPanel :info="pinnedInfo" embedded />
+          <InspectDetailPanel :info="displayInfo" embedded />
         </div>
       </template>
     </EgAnchoredPopover>

@@ -8,7 +8,7 @@ import { UI_TEXT_ZH_TW } from '@/i18n/uiTextZhTW';
 import { buildStatusRowValues } from './list-field/tasksListFieldStatusRowData';
 
 /** 接收方列 min-width（含 cell 左右 padding）。 */
-export const CURRENCY_DATA_LIST_COLUMN_MIN_WIDTH = '160px';
+export const CURRENCY_DATA_LIST_COLUMN_MIN_WIDTH = '180px';
 
 /** 第一列 Submitter：较高 min-width，在 DataList 均分 extra 时占据更多列宽。 */
 export const GENERAL_STRUCTURE_DATA_LIST_COLUMN_MIN_WIDTH = '190px';

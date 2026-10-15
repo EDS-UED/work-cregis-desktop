@@ -4,11 +4,12 @@ import InspectDetailPanel from '../inspect/InspectDetailPanel.vue';
 import {
   clearInspectSelection,
   developerInspectActive,
+  inspectHoverInfo,
   inspectPinnedInfo,
   setDeveloperInspectActive,
 } from '../inspect/developerInspectSession';
 
-const pinnedInfo = computed(() => inspectPinnedInfo.value);
+const displayInfo = computed(() => inspectHoverInfo.value ?? inspectPinnedInfo.value);
 
 function stopInspect() {
   setDeveloperInspectActive(false);
@@ -21,8 +22,10 @@ function stopInspect() {
     <p :class="$style.status">
       {{
         developerInspectActive
-          ? pinnedInfo
-            ? '已选中 · 悬停其他元素可测间距 · 点击空白关闭'
+          ? displayInfo
+            ? inspectPinnedInfo
+              ? '已选中 · 悬停其他元素可测间距 · 点击空白关闭'
+              : '悬停预览 · 点击元素选中 · 点击空白关闭'
             : '悬停查看布局 · 点击元素选中 · 点击空白关闭'
           : '高亮已暂停 · 关闭 Dev 前仍拦截业务导航'
       }}
@@ -37,7 +40,7 @@ function stopInspect() {
       Pause highlight
     </button>
 
-    <InspectDetailPanel :info="pinnedInfo" />
+    <InspectDetailPanel :info="displayInfo" />
   </div>
 </template>
 

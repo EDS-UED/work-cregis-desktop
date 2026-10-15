@@ -25,4 +25,5 @@
 ## 扩展
 
 - Inspect：`inspect/buildElementInspectInfo.ts` · `inspect/developerInspectSession.ts`
+- DataList 适配：hover 与 Pin 均读取当前页 `EgDataListColumn` min-width / width / flex；Popup / Detail 内不展示。Dev 面板跟随悬停目标更新。
 - Scenario：`registry.ts` + `scenarios/*.ts`

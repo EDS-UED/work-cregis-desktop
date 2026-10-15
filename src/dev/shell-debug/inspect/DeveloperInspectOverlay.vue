@@ -44,6 +44,7 @@ const showHoverChrome = computed(() => {
   if (!pinned) return true;
   return inspectHoverInfo.value.element !== pinned.element;
 });
+
 </script>
 
 <template>

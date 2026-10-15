@@ -35,6 +35,29 @@ const showUsageSnippet = computed(() => {
 
 const codeSections = computed(() => props.info?.codeSections ?? []);
 
+const adaptiveItems = computed(() => props.info?.adaptiveItems ?? []);
+
+function adaptiveValueTokens(value: string) {
+  const cssLine = value.includes(':') && !value.endsWith(';') ? `${value};` : value;
+  return tokenizeCodeLine(cssLine, 'css');
+}
+
+function propertyValueTokens(item: { label: string; value: string }): InspectCodeToken[] | null {
+  const value = item.value.trim();
+  if (!value) return null;
+  if (item.label === '祖先' || item.label === '容器') {
+    return [{ kind: 'string', text: value }];
+  }
+  if (value.startsWith('.')) {
+    return [{ kind: 'string', text: value }];
+  }
+  if (value.includes('var(') || value.includes(':')) {
+    const cssLine = value.includes(':') && !value.endsWith(';') ? `${value};` : value;
+    return tokenizeCodeLine(cssLine, 'css');
+  }
+  return null;
+}
+
 const showCodeTabs = computed(
   () =>
     codeSections.value.length === 0
@@ -47,28 +70,7 @@ const activeCodeItems = computed(() => {
 });
 
 function tokenClass(kind: InspectCodeToken['kind']): string {
-  switch (kind) {
-    case 'prop':
-      return 'tokenProp';
-    case 'keyword':
-      return 'tokenKeyword';
-    case 'function':
-      return 'tokenFunction';
-    case 'variable':
-      return 'tokenVariable';
-    case 'value':
-      return 'tokenValue';
-    case 'tag':
-      return 'tokenTag';
-    case 'attr':
-      return 'tokenAttr';
-    case 'string':
-      return 'tokenString';
-    case 'punct':
-      return 'tokenPunct';
-    default:
-      return 'tokenPlain';
-  }
+  return `dev-inspect-code-token dev-inspect-code-token--${kind}`;
 }
 
 function sectionLines(title: string, content: string) {
@@ -102,9 +104,9 @@ async function onCopyLine(line: string) {
       </p>
     </div>
 
-    <section v-if="propertyItems.length > 0" :class="$style.section">
+    <section v-if="propertyItems.length > 0" :class="$style.inspectGroup">
       <p :class="$style.sectionTitle">属性</p>
-      <ul :class="$style.propRows">
+      <ul :class="[$style.propRows, $style.inspectCardFrame]">
         <li
           v-for="item in propertyItems"
           :key="`property-${item.label}`"
@@ -112,35 +114,76 @@ async function onCopyLine(line: string) {
         >
           <button
             type="button"
-            :class="$style.propButton"
+            :class="[$style.propButton, 'motion-ease', 'is-paint']"
             :disabled="!item.copyLine"
             @click="onCopyLine(item.copyLine)"
           >
             <span :class="$style.propLabel">{{ item.label }}</span>
-            <span :class="$style.propValue">{{ item.value }}</span>
+            <span :class="$style.propValueCell">
+              <span :class="$style.propValue">
+                <template v-if="propertyValueTokens(item)">
+                  <span
+                    v-for="(token, tokenIndex) in propertyValueTokens(item)"
+                    :key="`property-value-${item.label}-${tokenIndex}`"
+                    :class="tokenClass(token.kind)"
+                  >{{ token.text }}</span>
+                </template>
+                <template v-else>{{ item.value }}</template>
+              </span>
+            </span>
           </button>
         </li>
       </ul>
-      <div v-if="showUsageSnippet && info.edsComponent" :class="$style.subBlock">
-        <p :class="$style.sectionTitle">用法</p>
-        <button
-          type="button"
-          :class="$style.usageSnippet"
-          title="点击复制"
-          @click="onCopyLine(info.edsComponent!.usageSnippet)"
+    </section>
+
+    <section v-if="adaptiveItems.length > 0" :class="$style.inspectGroup">
+      <p :class="$style.sectionTitle">DataList 适配</p>
+      <ul :class="[$style.propRows, $style.inspectCardFrame]">
+        <li
+          v-for="item in adaptiveItems"
+          :key="`adaptive-${item.label}`"
+          :class="$style.propRow"
         >
-          {{ info.edsComponent!.usageSnippet }}
-        </button>
-      </div>
+          <button
+            type="button"
+            :class="[$style.propButton, 'motion-ease', 'is-paint']"
+            :disabled="!item.copyLine"
+            @click="onCopyLine(item.copyLine)"
+          >
+            <span :class="$style.propLabel">{{ item.label }}</span>
+            <span :class="$style.propValueCell">
+              <span :class="$style.propValue">
+                <span
+                  v-for="(token, tokenIndex) in adaptiveValueTokens(item.value)"
+                  :key="`adaptive-value-${item.label}-${tokenIndex}`"
+                  :class="tokenClass(token.kind)"
+                >{{ token.text }}</span>
+              </span>
+            </span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <section v-if="showUsageSnippet && info.edsComponent" :class="$style.inspectGroup">
+      <p :class="$style.sectionTitle">用法</p>
+      <button
+        type="button"
+        :class="$style.usageSnippet"
+        title="点击复制"
+        @click="onCopyLine(info.edsComponent!.usageSnippet)"
+      >
+        {{ info.edsComponent!.usageSnippet }}
+      </button>
     </section>
 
     <section
       v-for="section in codeSections"
       :key="`code-section-${section.title}`"
-      :class="$style.section"
+      :class="$style.inspectGroup"
     >
       <p :class="$style.sectionTitle">{{ section.title }}</p>
-      <div :class="$style.codeBlockFrame">
+      <div :class="[$style.codeBlockFrame, $style.inspectCardFrame]">
         <ul :class="$style.codeLineRows">
           <li
             v-for="row in sectionLines(section.title, section.content)"
@@ -149,7 +192,7 @@ async function onCopyLine(line: string) {
           >
             <button
               type="button"
-              :class="$style.codeLineButton"
+              :class="[$style.codeLineButton, 'motion-ease', 'is-paint']"
               title="点击复制"
               @click="onCopyLine(row.line)"
             >
@@ -158,7 +201,7 @@ async function onCopyLine(line: string) {
                 <span
                   v-for="(token, tokenIndex) in row.tokens"
                   :key="`${section.title}-${row.number}-${tokenIndex}`"
-                  :class="$style[tokenClass(token.kind)]"
+                  :class="tokenClass(token.kind)"
                 >{{ token.text }}</span>
               </span>
             </button>
@@ -167,7 +210,7 @@ async function onCopyLine(line: string) {
       </div>
     </section>
 
-    <section v-if="showCodeTabs" :class="$style.section">
+    <section v-if="showCodeTabs" :class="$style.inspectGroup">
       <div :class="$style.codeHeader">
         <p :class="$style.sectionTitle">代码</p>
         <div :class="$style.codeTabs">
@@ -215,13 +258,14 @@ async function onCopyLine(line: string) {
 .root {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-3);
+  gap: var(--spacing-4);
   padding: var(--spacing-4);
   user-select: text;
 }
 
 .rootEmbedded {
   padding: 0;
+  min-height: 0;
 }
 
 .header {
@@ -237,10 +281,11 @@ async function onCopyLine(line: string) {
   color: var(--text-base-secondary);
 }
 
-.section {
+.section,
+.inspectGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1-5);
+  gap: var(--spacing-1);
 }
 
 .sectionTitle {
@@ -288,7 +333,6 @@ async function onCopyLine(line: string) {
   background: transparent;
   text-align: left;
   cursor: pointer;
-  composes: motion-ease is-hover from global;
 }
 
 .propButton {
@@ -303,7 +347,7 @@ async function onCopyLine(line: string) {
 .codeLineButton {
   display: grid;
   width: 100%;
-  grid-template-columns: var(--spacing-6) minmax(0, 1fr);
+  grid-template-columns: var(--spacing-6) minmax(0, 1fr) auto;
   gap: 0;
   padding: 0;
   border-radius: var(--radius-xs);
@@ -332,7 +376,15 @@ async function onCopyLine(line: string) {
   color: var(--text-base-secondary);
 }
 
+.propValueCell {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
 .propValue {
+  flex: 1 1 auto;
   min-width: 0;
   font-family: var(--eds-family-mono, ui-monospace, monospace);
   font-size: var(--eds-footnote-size);
@@ -343,6 +395,14 @@ async function onCopyLine(line: string) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.inspectCardFrame {
+  box-sizing: border-box;
+  padding: var(--spacing-1);
+  border: var(--stroke-xs) solid var(--stroke-outline-shallow);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
 }
 
 .subBlock {
@@ -371,10 +431,6 @@ async function onCopyLine(line: string) {
 
 .codeBlockFrame {
   box-sizing: border-box;
-  padding: var(--spacing-1);
-  border: var(--stroke-xs) solid var(--stroke-outline-shallow);
-  border-radius: var(--radius-xs);
-  overflow: hidden;
 }
 
 .lineNumber {
@@ -406,33 +462,6 @@ async function onCopyLine(line: string) {
   white-space: pre-wrap;
   word-break: break-word;
   text-align: left;
-}
-
-.tokenProp,
-.tokenPunct,
-.tokenPlain {
-  color: var(--text-base-primary);
-}
-
-.tokenKeyword,
-.tokenFunction,
-.tokenValue,
-.tokenString {
-  color: var(--text-base-primary);
-}
-
-.tokenVariable {
-  color: var(--text-brand-primary);
-  text-decoration: underline dashed color-mix(in srgb, var(--text-brand-primary) 55%, transparent);
-  text-underline-offset: 2px;
-}
-
-.tokenAttr {
-  color: var(--text-base-primary);
-}
-
-.tokenTag {
-  color: var(--text-base-primary);
 }
 
 .codeHeader {

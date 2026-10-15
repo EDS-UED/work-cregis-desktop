@@ -55,7 +55,26 @@ function normalizeCssValue(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
-type CssProbeProperty = 'width' | 'fontSize' | 'fontWeight' | 'lineHeight' | 'fontFamily' | 'color';
+export type TokenProbeStyleProperty =
+  | 'width'
+  | 'height'
+  | 'color'
+  | 'backgroundColor'
+  | 'fontFamily'
+  | 'fontSize'
+  | 'fontWeight'
+  | 'lineHeight'
+  | 'borderRadius'
+  | 'gap'
+  | 'paddingTop'
+  | 'paddingRight'
+  | 'paddingBottom'
+  | 'paddingLeft'
+  | 'backdropFilter'
+  | 'boxShadow'
+  | 'transition';
+
+type CssProbeProperty = TokenProbeStyleProperty;
 
 /** 将 token 解析为 computed 值（支持 var 链），用于与 getComputedStyle 结果比对。 */
 function getComputedTokenValue(
@@ -116,6 +135,18 @@ export const INSPECT_TOKEN_FILTERS = {
   material: (name: string) =>
     name.startsWith('--material-') || name.startsWith('--box-') || name.startsWith('--event-'),
   radius: (name: string) => name.startsWith('--radius-'),
+  avatar: (name: string) => name.startsWith('--avatar-'),
+  blur: (name: string) => name.startsWith('--blur-') || name.startsWith('--eds-blur-'),
+  depth: (name: string) => name.startsWith('--depth-'),
+};
+
+export const inspectTokenFilters = INSPECT_TOKEN_FILTERS;
+
+export type InspectTokenResolveResult = {
+  token: string | null;
+  tokenVar: string | null;
+  raw: string;
+  isToken: boolean;
 };
 
 export function formatCssDeclaration(
@@ -153,6 +184,41 @@ export function formatCssDeclaration(
 
 export function formatTokenVar(token: string): string {
   return `var(${token})`;
+}
+
+export function resolveInspectToken(
+  preview: Element,
+  rawValue: string,
+  filter: (name: string) => boolean,
+  styleProperty: TokenProbeStyleProperty = 'width',
+): InspectTokenResolveResult {
+  const raw = normalizeCssValue(rawValue);
+  if (!raw || raw === 'none' || raw === 'normal' || raw === 'auto') {
+    return { token: null, tokenVar: null, raw, isToken: false };
+  }
+
+  const token = resolveTokenNameForValue(preview, raw, filter, styleProperty);
+  if (token) {
+    return { token, tokenVar: formatTokenVar(token), raw, isToken: true };
+  }
+
+  return { token: null, tokenVar: null, raw, isToken: false };
+}
+
+export function requireInspectCssLine(
+  preview: Element,
+  property: string,
+  rawValue: string,
+  filter: (name: string) => boolean,
+  styleProperty: TokenProbeStyleProperty = 'width',
+  options: { allowLiteral?: boolean; comment?: string | null } = {},
+): string | null {
+  return formatCssDeclaration(preview, property, rawValue, {
+    filter,
+    cssProperty: styleProperty,
+    comment: options.comment,
+    allowLiteral: options.allowLiteral,
+  });
 }
 
 export function formatValueWithToken(

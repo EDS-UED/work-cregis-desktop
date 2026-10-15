@@ -14,7 +14,7 @@ import {
   type EdsPropSpec,
 } from './edsInspectCatalog';
 
-type VueComponentInternal = {
+export type VueComponentInternal = {
   type?: { name?: string; __name?: string };
   parent?: VueComponentInternal;
   props?: Record<string, unknown>;
@@ -99,7 +99,7 @@ function resolveComponentRootElement(instance: VueComponentInternal): Element | 
   return null;
 }
 
-function walkVueChain(element: Element): VueComponentInternal[] {
+export function walkVueChain(element: Element): VueComponentInternal[] {
   const chain: VueComponentInternal[] = [];
   const probe = element as Element & { __vueParentComponent?: VueComponentInternal };
   let current = probe.__vueParentComponent;
@@ -111,18 +111,25 @@ function walkVueChain(element: Element): VueComponentInternal[] {
 }
 
 function findDomCatalogEntry(element: Element): { entry: EdsInspectCatalogEntry; root: Element } | null {
-  let node: Element | null = element;
-  while (node) {
-    for (const className of node.classList) {
-      if (!className.startsWith('eds-')) continue;
-      const entry = lookupEdsCatalogByDomClass(className);
-      if (entry) {
-        return { entry, root: node };
-      }
+  for (const className of element.classList) {
+    if (!className.startsWith('eds-')) continue;
+    const entry = lookupEdsCatalogByDomClass(className);
+    if (entry) {
+      return { entry, root: element };
     }
-    node = node.parentElement;
   }
   return null;
+}
+
+export function isCatalogComponentRoot(element: Element): boolean {
+  if (findDomCatalogEntry(element)) return true;
+  for (const instance of walkVueChain(element)) {
+    const root = resolveComponentRootElement(instance);
+    if (root !== element) continue;
+    const vueName = resolveVueComponentName(instance);
+    if (lookupEdsCatalogByVueName(vueName)) return true;
+  }
+  return false;
 }
 
 function collectCandidates(element: Element): ResolvedCandidate[] {
@@ -133,12 +140,14 @@ function collectCandidates(element: Element): ResolvedCandidate[] {
     const vueName = resolveVueComponentName(instance);
     const entry = lookupEdsCatalogByVueName(vueName);
     if (!entry || seen.has(entry)) continue;
+    const rootElement = resolveComponentRootElement(instance);
+    if (rootElement && rootElement !== element) continue;
     seen.add(entry);
     candidates.push({
       entry,
       vueName: vueName ?? entry.displayName,
       instance,
-      rootElement: resolveComponentRootElement(instance),
+      rootElement,
     });
   }
 
@@ -352,8 +361,7 @@ function buildFromCandidate(candidate: ResolvedCandidate, element: Element): Eds
 export function resolveEdsComponentInspect(element: Element): EdsComponentInspect | null {
   const candidates = collectCandidates(element);
   if (candidates.length > 0) {
-    const primary = buildFromCandidate(candidates[0], element);
-    if (primary.props.length > 0) return primary;
+    return buildFromCandidate(candidates[0], element);
   }
 
   for (const instance of walkVueChain(element)) {

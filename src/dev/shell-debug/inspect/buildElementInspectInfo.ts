@@ -1,3 +1,5 @@
+import { buildDataListAdaptiveInspect } from './buildDataListAdaptiveInspect';
+import { buildDeclaredInspectCode } from './buildDeclaredInspectCode';
 import type { InspectCodeSection } from './buildIconInspect';
 import {
   resolveInspectAncestor,
@@ -40,6 +42,8 @@ export type ElementInspectInfo = {
   };
   /** Icon 等组件专用：分块代码（布局 / SVG），不走 Tab。 */
   codeSections?: InspectCodeSection[];
+  /** DataList 页面级列宽自适应（属性与用法之间；hover / Pin 均计算）。 */
+  adaptiveItems?: InspectPropertyItem[];
   /** @deprecated Legacy grouped dump — prefer edsComponent + code */
   groups: InspectPropertyGroup[];
   copyBundle: string;
@@ -310,6 +314,43 @@ function addPaddingTokenItem(
   });
 }
 
+function mergeInspectCodeSections(
+  componentSections: InspectCodeSection[] | undefined,
+  declared: { layout: InspectPropertyItem[]; styleItems: InspectPropertyItem[] },
+  isText: boolean,
+): InspectCodeSection[] {
+  const fromItems = (title: string, items: InspectPropertyItem[]): InspectCodeSection | null => {
+    if (items.length === 0) return null;
+    return { title, content: items.map((item) => item.copyLine).join('\n') };
+  };
+  const pick = (title: string, fallbackItems: InspectPropertyItem[]): InspectCodeSection | null => {
+    const custom = componentSections?.find((section) => section.title === title);
+    if (custom?.content.trim()) return custom;
+    return fromItems(title, fallbackItems);
+  };
+
+  const sections: InspectCodeSection[] = [];
+  const layout = pick('布局', declared.layout);
+  if (layout) sections.push(layout);
+
+  if (isText) {
+    const typography = componentSections?.find((section) => section.title === '字体排版');
+    if (typography?.content.trim()) sections.push(typography);
+  } else {
+    const style = pick('样式', declared.styleItems);
+    if (style) sections.push(style);
+  }
+
+  if (componentSections) {
+    for (const section of componentSections) {
+      if (section.title === '布局' || section.title === '样式' || section.title === '字体排版') continue;
+      if (section.content.trim()) sections.push(section);
+    }
+  }
+
+  return sections;
+}
+
 function buildUsefulCode(
   preview: Element,
   style: CSSStyleDeclaration,
@@ -365,6 +406,7 @@ function buildCopyBundle(
   edsComponent: ReturnType<typeof resolveEdsComponentInspect>,
   elementAttributes: InspectPropertyItem[],
   code: { layout: InspectPropertyItem[]; style: InspectPropertyItem[] },
+  adaptiveItems: InspectPropertyItem[] = [],
 ): string {
   const lines: string[] = [];
   const propertyItems = edsComponent?.props ?? elementAttributes;
@@ -377,6 +419,14 @@ function buildCopyBundle(
 
   if (propertyItems.length > 0) {
     for (const item of propertyItems) {
+      lines.push(`${item.label}: ${item.value}`);
+    }
+    lines.push('');
+  }
+
+  if (adaptiveItems.length > 0) {
+    lines.push('/* DataList 适配 */');
+    for (const item of adaptiveItems) {
       lines.push(`${item.label}: ${item.value}`);
     }
     lines.push('');
@@ -400,9 +450,15 @@ function buildCopyBundle(
   return lines.join('\n').trim();
 }
 
+export type BuildElementInspectOptions = {
+  /** @deprecated Adaptive is always computed for hover and Pin. */
+  includeAdaptive?: boolean;
+};
+
 export function buildElementInspectInfo(
   element: Element,
   preview: Element,
+  _options: BuildElementInspectOptions = {},
 ): ElementInspectInfo | null {
   if (!preview.contains(element)) return null;
   if (element.closest('[data-shell-debug-ui]')) return null;
@@ -412,8 +468,9 @@ export function buildElementInspectInfo(
   const rect = target.getBoundingClientRect();
   const vueComponentName = resolveVueComponentName(target);
   const edsComponentHints = readEdsComponentHints(target);
-  const textInspect = resolveTextInspect(target, preview);
-  const edsComponent = textInspect ?? resolveEdsComponentInspect(target);
+  const catalogComponent = resolveEdsComponentInspect(target);
+  const textInspect = catalogComponent ? null : resolveTextInspect(target, preview);
+  const edsComponent = textInspect ?? catalogComponent;
   const elementAttributes = withInspectChrome(
     buildElementAttributes(target, preview, style, rect),
     target,
@@ -433,24 +490,22 @@ export function buildElementInspectInfo(
   const tagName = target.tagName.toLowerCase();
   const domPath = buildDomPath(target, preview);
   const label = buildLabel({ edsComponent, vueComponentName, edsComponentHints, tagName });
+  const declaredCode = buildDeclaredInspectCode(target, preview);
   const usefulCode = buildUsefulCode(preview, style);
+  const layoutItems = declaredCode.layout.length > 0 ? declaredCode.layout : usefulCode.layout;
+  const styleItems = declaredCode.styleItems.length > 0 ? declaredCode.styleItems : usefulCode.styleItems;
 
   const code = {
-    layout: usefulCode.layout,
-    style: usefulCode.styleItems,
+    layout: layoutItems,
+    style: styleItems,
   };
-  const codeSections =
-    edsComponent?.codeSections
-    ?? (
-      [
-        usefulCode.layout.length > 0
-          ? { title: '布局', content: usefulCode.layout.map((item) => item.copyLine).join('\n') }
-          : null,
-        usefulCode.styleItems.length > 0
-          ? { title: '样式', content: usefulCode.styleItems.map((item) => item.copyLine).join('\n') }
-          : null,
-      ] as Array<InspectCodeSection | null>
-    ).filter((section): section is InspectCodeSection => section != null);
+  const codeSections = mergeInspectCodeSections(
+    edsComponent?.codeSections,
+    { layout: layoutItems, styleItems },
+    Boolean(textInspect),
+  );
+
+  const adaptiveItems = buildDataListAdaptiveInspect(preview, target);
 
   return {
     element: target,
@@ -468,7 +523,8 @@ export function buildElementInspectInfo(
     },
     code,
     codeSections,
+    adaptiveItems: adaptiveItems.length > 0 ? adaptiveItems : undefined,
     groups: [],
-    copyBundle: buildCopyBundle(edsComponent, elementAttributes, code),
+    copyBundle: buildCopyBundle(edsComponent, elementAttributes, code, adaptiveItems),
   };
 }
