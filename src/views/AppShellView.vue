@@ -153,7 +153,7 @@ function onNavClick(event: MouseEvent) {
 
   const label = button.getAttribute('aria-label') ?? '';
   if (isCustomerServiceNavLabel(label)) {
-    customerServiceState.open = true;
+    customerServiceState.open = !customerServiceState.open;
     return;
   }
 
@@ -165,6 +165,29 @@ function onNavClick(event: MouseEvent) {
     activeModuleTitle.value = navState.moduleTitle;
   }
 }
+
+watch(
+  [activeModuleTitle, activeModuleMenuItem],
+  ([title, item]) => {
+    customerServiceState.locationTitle = title;
+    customerServiceState.locationItem = item;
+  },
+  { immediate: true },
+);
+
+watch(
+  () => customerServiceState.open,
+  async (open) => {
+    if (open) return;
+    await nextTick();
+    requestAnimationFrame(() => {
+      const button = findNavBarButton(activeNavLabel.value);
+      if (button && button.getAttribute('aria-pressed') !== 'true') {
+        button.click();
+      }
+    });
+  },
+);
 
 function onModuleMenuItemSelect(label: string) {
   if (activeModuleTitle.value === 'Tasks') {

@@ -37,6 +37,12 @@ import {
   type StatementLang,
 } from './teamAccountData';
 import {
+  shiftTimestampForTimezone,
+  TRANSACTION_RECORDS_DEFAULT_TIMEZONE,
+  TRANSACTION_RECORDS_TIMEZONE_BASELINE,
+  type TransactionRecordsTimezoneOffset,
+} from '@/scenes/transaction-records/list-field/transactionRecordsTimezoneOffsets';
+import {
   buildTeamAccountFilterFields,
   txMatchesEgFilterConditions,
 } from './teamAccountFilter';
@@ -60,6 +66,7 @@ export const teamAccountState = reactive({
   alertThreshold: '',
   alertNotify: memberFlagMap((id) => DEFAULT_ALERT_NOTIFY_IDS.has(id)),
   statementTz: 'UTC+8',
+  displayTimezone: TRANSACTION_RECORDS_DEFAULT_TIMEZONE as TransactionRecordsTimezoneOffset,
   statementLang: 'English' as StatementLang,
   statementHeader: 'team' as StatementHeader,
   rechargeOpen: false,
@@ -168,7 +175,7 @@ export function useTeamAccountPage() {
     pagedTx.value.map((tx) => ({
       id: tx.id,
       type: tx.type,
-      time: tx.time,
+      time: formatTxDisplayTime(tx.time),
       amount: tx.amount,
       dir: tx.dir,
     })),
@@ -428,6 +435,16 @@ function parseTxTime(time: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function formatTxDisplayTime(time: string): string {
+  const timezone = teamAccountState.displayTimezone;
+  if (timezone === TRANSACTION_RECORDS_TIMEZONE_BASELINE) return time;
+  return shiftTimestampForTimezone(
+    time.replace(/ {2}/g, ' '),
+    TRANSACTION_RECORDS_TIMEZONE_BASELINE,
+    timezone,
+  );
+}
+
 function parseTxAmount(amount: string): number {
   const trimmed = amount.trim();
   const sign = trimmed.startsWith('-') ? -1 : 1;
@@ -463,7 +480,7 @@ function txDetailItems(tx: BalanceTx, ui: (key: string) => string) {
     if (key === 'time') {
       return createDetailApplyItemRow('time', {
         title: ui('Time'),
-        value: tx.time.replace(/ {2}/g, ' '),
+        value: formatTxDisplayTime(tx.time).replace(/ {2}/g, ' '),
       });
     }
     if (key === 'plan') {

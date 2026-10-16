@@ -25,7 +25,7 @@ alwaysApply: true
 
 | 主题 | 章节 |
 |------|------|
-| 禁止复制、Desktop-only | §1 |
+| 禁止复制、Desktop-only、Icons catalog | §1 |
 | 本仓库 vs eds-desktop、同步、dev HMR、Git 推送 | §2 |
 | DOM、EgPopup 挂载位置 | §3 |
 | Eg* 组件用法 | §4 |
@@ -70,6 +70,14 @@ alwaysApply: true
 
 **【必须】** `var(--*)` 仅在 `@eds/desktop-tokens/json` 白名单或 `token-allowlist.business.json` 已批条目内；否则 `pnpm lint:ds-tokens` 失败。缺 token → 向 eds-desktop 申请，**不得**私造。
 
+### 1.4 Icons catalog 冻结
+
+真源（只读）：[EDS Desktop Icons](https://eds-ued.github.io/eds-desktop/components/icons)。该页为已发布图标全集。
+
+**【禁止】** 修订该 catalog 及其源文件（含切到 `../eds-desktop` 仓库时）。不得新增、改写、删除图标 SVG，不得改 `iconRegistry` / glob / cache version，不得改 DS 默认 icon 绑定（如 `navBarDefaultBottomUtilities` 的 Earphone / Notice / Lock），不得在本仓库 `src/**` 私造平行 SVG。
+
+**【必须】** 换图标只从 catalog 已有 `eds-*` 名中选。catalog 没有所需图形 → **告知用户属 DS 范围**，等 catalog 更新后再跟；**不得**在 eds-desktop 代写。
+
 ---
 
 ## 2. 仓库边界与工程
@@ -84,7 +92,7 @@ alwaysApply: true
 | `token-allowlist.business.json` | `../eds-desktop/apps/showcase/**` |
 | `scripts/verify-*.mjs` | 把业务逻辑抄进 DS 包 |
 
-改 Popover / token / 组件 API → **切换 eds-desktop 仓库**改，或告知用户属 DS 范围。
+改 Popover / token / 组件 API → **切换 eds-desktop 仓库**改，或告知用户属 DS 范围。**Icons catalog 除外**（§1.4）：不得以切仓库为由改图标。
 
 **消费 DS**：`link:../eds-desktop/packages/{tokens,animations,components}`；Vite alias `@eds/desktop-components` / `@eds/desktop-animations` → DS 源码。
 
@@ -435,6 +443,7 @@ usePopupShellLifecycle({
 - [ ] 网络 Tag 链全名（§6.4）
 - [ ] dev HMR 已目测（§2.3）
 - [ ] `listFieldCryptoSampleAddresses.ts` 业务扩展仍在
+- [ ] 未改 Icons catalog / `atoms/icons` / `iconRegistry`（§1.4）
 - [ ] 若本次含 DS 改动：远程 eds-desktop 已含对应提交；CI pin 与该 SHA 一致（§2.5）
 
 ---
@@ -454,6 +463,7 @@ usePopupShellLifecycle({
 | list-field 校验 | `scripts/verify-list-field-crypto.mjs` |
 | Shell Debug | `src/dev/shell-debug/AGENTS.md` |
 | Pages CI pin | `.github/workflows/deploy-pages.yml`（`Checkout eds-desktop` 的 `ref`） |
+| Icons catalog（只读） | https://eds-ued.github.io/eds-desktop/components/icons |
 
 ---
 
@@ -461,9 +471,10 @@ usePopupShellLifecycle({
 
 | 字段 | 值 |
 |------|-----|
-| 文档版本 | 2.1 |
+| 文档版本 | 2.2 |
 | 合并 `i18n.mdc` + `top&botton-mask.mdc` + 历史分散规则 → 单文件 | 2026-08-18 |
 | 增补 §2.5 Git 推送 / Pages pin | 2026-08-19 |
+| 增补 §1.4 Icons catalog 冻结 | 2026-10-15 |
 | 维护 | EDS Desktop 维护者 |
 
 **本规范为业务项目强制约束。违反项须在 PR 修正或取得维护者书面例外。**

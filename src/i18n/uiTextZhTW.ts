@@ -413,6 +413,9 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   'Team monthly statements will be generated at the beginning of each month based on this time zone and language. Underlying system records remain unaffected.':
     '每月月初會按照此時區及賬單語言生成團隊賬戶月度賬單。系統底層記錄不受影響。',
   'Financial Time Zone': '財務時區',
+  'Display Time Zone': '顯示時區',
+  'The timezone shown below is standardized for all team members and unaffected by personal timezone settings.':
+    '以下顯示之時區為全體團隊成員統一標準，不受個人設定之時區影響。',
   'Statement Language': '賬單語言',
   'Invoice Header': '賬單抬頭',
   'Use Team Name': '使用團隊名稱',
@@ -454,4 +457,27 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   'Copy Address': '複製地址',
   'Partial Failed': '部分失敗',
   Transferring: '轉賬中',
+
+  // Customer service (nav Earphone)
+  'CregisAI Assistant': 'CregisAI助手',
+  'Chat History': '聊天記錄',
+  'New Chat': '新對話',
+  'Send Attachment': '發送附件',
+  'Ask a question': '請輸入問題',
+  'Current conversation': '當前對話',
+  'No chat history': '暫無聊天記錄',
+  'Conversation History Records': '歷史對話紀錄',
+  'Web3 Wallet': 'Web3 錢包',
+  'Daily Withdrawal Limit': '每日提現限額',
+  'Team Role Permissions and Risk-Control Rules': '團隊角色權限與風控規則',
+  'Unreceived Order Inquiry': '未到帳訂單查詢',
+  'Hello! I am CregisAI Assistant. I can see you are currently on [{page}]. How can I help?':
+    '您好！我是CregisAI助手。已感知您當前位於【{page}】，請問需要什麼協助？',
+  'How do I change the daily withdrawal limit?': '如何修改每日提現限額？',
+  'How do I configure team role permissions and risk-control rules?':
+    '如何配置團隊角色權限與風控規則？',
+  'Look up an unreceived order (handoff to a human agent)': '查一筆未到帳訂單（觸發轉人工）',
+  'Connecting you to a human agent…': '正在為您轉接人工客服…',
+  'I can help with that. Please tell me more.': '我可以協助處理，請補充更多資訊。',
+  Send: '發送',
 };

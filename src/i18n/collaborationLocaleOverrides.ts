@@ -41,6 +41,45 @@ export const COLLABORATION_LOCALE_OVERRIDES: Record<string, readonly [string, st
   ],
   Withdrawal: ['撤回', '撤回'],
   'Withdraw Application': ['撤回申请', '撤回申請'],
+  'CregisAI Assistant': ['CregisAI助手', 'CregisAI助手'],
+  'Chat History': ['聊天记录', '聊天記錄'],
+  'New Chat': ['新对话', '新對話'],
+  'Send Attachment': ['发送附件', '發送附件'],
+  'Ask a question': ['请输入问题', '請輸入問題'],
+  'Current conversation': ['当前对话', '當前對話'],
+  'No chat history': ['暂无聊天记录', '暫無聊天記錄'],
+  'Conversation History Records': ['历史对话记录', '歷史對話紀錄'],
+  'Web3 Wallet': ['Web3 钱包', 'Web3 錢包'],
+  'Daily Withdrawal Limit': ['每日提现限额', '每日提現限額'],
+  'Team Role Permissions and Risk-Control Rules': [
+    '团队角色权限与风控规则',
+    '團隊角色權限與風控規則',
+  ],
+  'Unreceived Order Inquiry': ['未到账订单查询', '未到帳訂單查詢'],
+  'Hello! I am CregisAI Assistant. I can see you are currently on [{page}]. How can I help?': [
+    '您好！我是CregisAI助手。已感知您当前位于【{page}】，请问需要什么协助？',
+    '您好！我是CregisAI助手。已感知您當前位於【{page}】，請問需要什麼協助？',
+  ],
+  'How do I change the daily withdrawal limit?': ['如何修改每日提现限额？', '如何修改每日提現限額？'],
+  'How do I configure team role permissions and risk-control rules?': [
+    '如何配置团队角色权限与风控规则？',
+    '如何配置團隊角色權限與風控規則？',
+  ],
+  'Look up an unreceived order (handoff to a human agent)': [
+    '查一笔未到账订单（触发转人工）',
+    '查一筆未到帳訂單（觸發轉人工）',
+  ],
+  'Connecting you to a human agent…': ['正在为您转接人工客服…', '正在為您轉接人工客服…'],
+  'I can help with that. Please tell me more.': [
+    '我可以协助处理，请补充更多信息。',
+    '我可以協助處理，請補充更多資訊。',
+  ],
+  Send: ['发送', '發送'],
+  'Display Time Zone': ['显示时区', '顯示時區'],
+  'The timezone shown below is standardized for all team members and unaffected by personal timezone settings.': [
+    '以下显示之时区为全体团队成员统一标准，不受个人设置之时区影响。',
+    '以下顯示之時區為全體團隊成員統一標準，不受個人設定之時區影響。',
+  ],
 };
 
 /** 旧英文 key → 核对表英文 key */

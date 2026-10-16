@@ -1,0 +1,18 @@
+/**
+ * Customer service widget — docked bottom-left next to compact NavBar (fixed, no drag).
+ * Compact 74px = spacing-18 + spacing-05 (DS NavBar, not wide).
+ */
+.host {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dock {
+  position: absolute;
+  left: calc(var(--spacing-18) + var(--spacing-05) + var(--stroke-sm));
+  bottom: 0;
+  pointer-events: auto;
+}

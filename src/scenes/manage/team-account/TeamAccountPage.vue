@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import {
+  EgButton,
   EgDataList,
   EgDataListCellOverflow,
   EgDataListColumn,
@@ -25,6 +26,7 @@ import {
 import TransactionRecordsExportFlotation from '@/scenes/transaction-records/export/TransactionRecordsExportFlotation.vue';
 import { TRANSACTION_RECORDS_EXPORT_HISTORY_OPERATOR_DEMO } from '@/scenes/transaction-records/export/transactionRecordsExportData';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
+import TeamAccountDisplayTimezoneControl from './TeamAccountDisplayTimezoneControl.vue';
 import TeamAccountMonthlyExportFields from './TeamAccountMonthlyExportFields.vue';
 import {
   DEFAULT_MONTHLY_EXPORT_PERIOD_LABEL,
@@ -68,10 +70,8 @@ const {
   isManyPageSelected,
   onSettingsJump,
   openAlert,
-  draftTz,
   draftLang,
   draftHeader,
-  tzItems,
   langItems,
   pagedTx,
   timeSortOrder,
@@ -103,7 +103,6 @@ function onTxRowClick(row: DataListItem) {
 }
 
 function syncMonthlyExportDrafts() {
-  draftTz.value = state.statementTz;
   draftLang.value = state.statementLang;
   draftHeader.value = state.statementHeader;
 }
@@ -114,7 +113,6 @@ function onMonthlyExportTriggerClick(onClick: () => void) {
 }
 
 function onMonthlyExportConfirm() {
-  state.statementTz = draftTz.value;
   state.statementLang = draftLang.value;
   state.statementHeader = draftHeader.value;
 }
@@ -125,7 +123,7 @@ function resolveMonthlyHistoryEntry() {
       locale: locale.value,
       ui,
     }),
-    subtitle: `${draftTz.value}  ${draftLang.value}`,
+    subtitle: `${state.statementTz}  ${draftLang.value}`,
   };
 }
 </script>
@@ -133,9 +131,17 @@ function resolveMonthlyHistoryEntry() {
 <template>
   <section :class="styles.page">
     <header :class="styles.hero">
-      <div>
+      <div :class="styles.heroBalance">
         <p :class="styles.heroLabel">{{ ui('Available Balance (USD)') }}</p>
-        <p :class="styles.heroAmount">{{ availableBalance }}</p>
+        <div :class="styles.heroAmountRow">
+          <p :class="styles.heroAmount">{{ availableBalance }}</p>
+          <EgButton
+            size="sm"
+            @click="state.rechargeOpen = true"
+          >
+            {{ ui('Recharge') }}
+          </EgButton>
+        </div>
       </div>
       <div :class="styles.heroActions">
         <EgIconButtonPro :label="ui('Balance Alert')" @click="openAlert">
@@ -165,17 +171,12 @@ function resolveMonthlyHistoryEntry() {
           <template #extra-fields>
             <TeamAccountMonthlyExportFields
               v-model:period="monthlyExportPeriod"
-              v-model:timezone="draftTz"
               v-model:language="draftLang"
               v-model:header="draftHeader"
-              :timezone-items="tzItems"
               :language-items="langItems"
             />
           </template>
         </TransactionRecordsExportFlotation>
-        <EgIconButtonPro :label="ui('Recharge')" @click="state.rechargeOpen = true">
-          <EgIcon name="eds-recharge-money" size="sm" />
-        </EgIconButtonPro>
       </div>
     </header>
 
@@ -197,6 +198,12 @@ function resolveMonthlyHistoryEntry() {
             :title="ui('Transaction Details')"
             show-divider
           >
+              <template #title>
+                <span :class="styles.toolbarTitleWithTimezone">
+                  <span :class="styles.toolbarTitleText">{{ ui('Transaction Details') }}</span>
+                  <TeamAccountDisplayTimezoneControl v-model="state.displayTimezone" />
+                </span>
+              </template>
               <template #functional>
                 <TasksToolbarFilter
                   v-model="filterConditions"

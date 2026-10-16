@@ -25,12 +25,10 @@ const PERIOD_MENU_WIDTH = 168;
 const MONTH_MENU_WIDTH = 140;
 
 const period = defineModel<string>('period', { required: true });
-const timezone = defineModel<string>('timezone', { required: true });
 const language = defineModel<StatementLang>('language', { required: true });
 const header = defineModel<StatementHeader>('header', { required: true });
 
 const props = defineProps<{
-  timezoneItems: FlotationMenuItemPreset[];
   languageItems: FlotationMenuItemPreset[];
 }>();
 
@@ -39,13 +37,6 @@ const { ui } = useAppI18n();
 const periodYears = computed(() => listMonthlyExportYears());
 
 const selectedPeriod = computed(() => parseMonthlyExportPeriodLabel(period.value));
-
-const tzMenuItems = computed(() =>
-  props.timezoneItems.map((item) => ({
-    ...item,
-    focused: item.label === timezone.value,
-  })),
-);
 
 const langMenuItems = computed(() =>
   props.languageItems.map((item) => ({
@@ -83,10 +74,6 @@ function onPeriodMonthClick(
   closeYears();
 }
 
-function onTimezoneClick(item: FlotationMenuItemPreset) {
-  timezone.value = item.label;
-}
-
 function onLanguageClick(item: FlotationMenuItemPreset) {
   if (item.label === 'English' || item.label === '简体中文' || item.label === '繁體中文') {
     language.value = item.label;
@@ -101,7 +88,7 @@ function onHeaderClick(next: StatementHeader, close: () => void) {
 
 <template>
   <div :class="styles.fields">
-    <EgComboInputItem :label="ui('Time Zone')">
+    <EgComboInputItem :label="ui('Month')">
       <EgFlotation
         trigger="click"
         width-mode="trigger"
@@ -192,29 +179,6 @@ function onHeaderClick(next: StatementHeader, close: () => void) {
               </EgFlotation>
             </div>
           </EgFlotationMenu>
-        </template>
-      </EgFlotation>
-    </EgComboInputItem>
-    <EgComboInputItem :label="ui('Financial Time Zone')">
-      <EgFlotation
-        trigger="click"
-        width-mode="trigger"
-        :show-add="false"
-        :show-menu-divider="false"
-        :items="tzMenuItems"
-        boundary-selector=".app-preview"
-        flip
-        close-on-scroll
-        @item-click="onTimezoneClick"
-      >
-        <template #trigger="{ expanded }">
-          <EgFlotationTrigger
-            trigger-style="outline"
-            size="md"
-            width-mode="adaptive"
-            :label="timezone"
-            :expanded="expanded"
-          />
         </template>
       </EgFlotation>
     </EgComboInputItem>
