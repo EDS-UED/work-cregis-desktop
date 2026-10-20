@@ -17,6 +17,36 @@ export const CUSTOMER_SERVICE_SUGGESTION_KEYS = [
 
 export const CUSTOMER_SERVICE_HANDOFF_KEY = 'Look up an unreceived order (handoff to a human agent)';
 
+/** Demo: user message containing this substring triggers AI refusal → human handoff. */
+export const CUSTOMER_SERVICE_REFUSAL_DEMO_TRIGGER = 'refuse-demo';
+
+export const CUSTOMER_SERVICE_REFUSAL_REPLY_KEY =
+  'I’m unable to help with that request.';
+
+export const CUSTOMER_SERVICE_FEEDBACK_QUESTION_KEY =
+  'What went wrong with this response?';
+
+export const CUSTOMER_SERVICE_FEEDBACK_OTHER_PROMPT_KEY =
+  'Please describe what went wrong.';
+
+export const CUSTOMER_SERVICE_HANDOFF_REP_MESSAGE_KEY =
+  'You are speaking with customer service representative "{name}".';
+
+/** Demo agent display name (field value — do not pass to `ui()`). */
+export const CUSTOMER_SERVICE_HANDOFF_REP_NAME = 'Alex Chen';
+
+export const CUSTOMER_SERVICE_TEAM_SWITCH_ANNOUNCEMENT_KEY =
+  'Switched to [{team}], AI permissions and SOP have been updated.';
+
+export const CUSTOMER_SERVICE_FEEDBACK_OPTION_KEYS = [
+  'Inaccurate answer',
+  'Ineffective steps',
+  'Irrelevant response',
+  'Others',
+] as const;
+
+export const CUSTOMER_SERVICE_FEEDBACK_OTHER_KEY = 'Others';
+
 export const CUSTOMER_SERVICE_HISTORY_TITLE_KEY = 'Conversation History Records';
 export const CUSTOMER_SERVICE_PERSONAL_SPACE_KEY = 'Web3 Wallet';
 

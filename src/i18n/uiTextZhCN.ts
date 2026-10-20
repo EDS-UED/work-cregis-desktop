@@ -1099,4 +1099,22 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Look up an unreceived order (handoff to a human agent)': '查一笔未到账订单（触发转人工）',
   'Connecting you to a human agent…': '正在为您转接人工客服…',
   'I can help with that. Please tell me more.': '我可以协助处理，请补充更多信息。',
+  Helpful: '有帮助',
+  'Not helpful': '没有帮助',
+  'What went wrong with this response?': '这条回复有什么问题？',
+  'Inaccurate answer': '回答不准确',
+  'Ineffective steps': '步骤无效',
+  'Irrelevant response': '回复不相关',
+  Others: '其他',
+  'Please describe what went wrong.': '请描述具体问题。',
+  'You are speaking with customer service representative "{name}".':
+    '您正在与客户服务专员 "{name}"对话',
+  'I’m unable to help with that request.': '我无法协助处理该请求。',
+  'Switch Team': '切换团队',
+  'Create a Team': '创建团队',
+  Starter: '入门版',
+  Business: '商业版',
+  Enterprise: '企业版',
+  'Switched to [{team}], AI permissions and SOP have been updated.':
+    '已切换至【{team}】, AI 已更新权限与 SOP',
 };

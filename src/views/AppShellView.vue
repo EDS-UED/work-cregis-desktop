@@ -8,6 +8,7 @@ import {
   navBarDefaultBottomUtilities,
 } from '@eds/desktop-components';
 import CregisModuleMenu from '@/components/CregisModuleMenu.vue';
+import TeamWorkspaceSwitcher from '@/components/TeamWorkspaceSwitcher.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { useAppShellNavigation } from '@/composables/useAppShellNavigation';
 import PreferencePage from '@/scenes/account-settings/PreferencePage.vue';
@@ -303,6 +304,9 @@ watch(
     <template #nav>
       <div class="app-shell-nav" @click.capture="onNavClick">
         <EgNavBar v-bind="navBarAttrs">
+          <template #corporation>
+            <TeamWorkspaceSwitcher />
+          </template>
           <template #utilities>
             <EgNavBarBottomIcon
               v-for="(utility, index) in navBarBottomUtilities"

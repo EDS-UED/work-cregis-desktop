@@ -169,6 +169,104 @@
   color: var(--text-same-white-primary);
 }
 
+.announcementRow {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: var(--spacing-1) 0;
+}
+
+.announcementPill {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--spacing-1-5);
+  max-width: 100%;
+  margin: 0;
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
+  background: var(--material-card-shallow);
+  color: var(--text-base-secondary);
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
+}
+
+.announcementIcon {
+  flex-shrink: 0;
+  line-height: var(--eds-footnote-line-height);
+}
+
+.announcementText {
+  min-width: 0;
+  text-align: center;
+  word-break: break-word;
+}
+
+.feedbackRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  margin-top: calc(-1 * var(--spacing-1));
+  padding-left: calc(var(--avatar-xs) + var(--spacing-2));
+}
+
+.feedbackBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--scale-6);
+  margin: 0;
+  padding: var(--spacing-05) var(--spacing-1-5);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--material-hide);
+  font-size: var(--eds-body-small-size);
+  line-height: 1;
+  appearance: none;
+  cursor: pointer;
+  composes: motion-ease is-hover from global;
+}
+
+.feedbackBtn:hover {
+  background: var(--event-hover);
+}
+
+.feedbackBtnActive {
+  background: var(--event-focus);
+}
+
+.feedbackChoices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  padding-left: calc(var(--avatar-xs) + var(--spacing-2));
+}
+
+.feedbackChoice {
+  max-width: 100%;
+  margin: 0;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: var(--stroke-xs) solid var(--stroke-outline-shallow);
+  border-radius: var(--radius-md);
+  background: var(--material-hide);
+  color: var(--text-base-primary);
+  font: inherit;
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
+  text-align: left;
+  appearance: none;
+  cursor: pointer;
+  composes: motion-ease is-hover from global;
+}
+
+.feedbackChoice:hover {
+  background: var(--event-hover);
+}
+
 .suggestions {
   display: flex;
   flex-direction: column;
@@ -221,7 +319,7 @@
   gap: var(--spacing-1);
   width: 100%;
   margin: 0;
-  padding: var(--spacing-3) 0;
+  padding: var(--spacing-3) var(--spacing-2);
   border: none;
   border-radius: var(--radius-sm);
   background: var(--material-hide);
