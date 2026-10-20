@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cregis — Desktop</title>
+  <link rel="stylesheet" href="./src/styles/desktop-app.css?v=team-balance-19" />
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="nav" aria-label="Primary navigation">
+      <div class="nav__corp">
+        <div class="nav__sys" aria-hidden="true">
+          <img src="./assets/eds/nav/sys-close.svg" width="12" height="12" alt="" />
+          <img src="./assets/eds/nav/sys-min.svg" width="12" height="12" alt="" />
+          <img src="./assets/eds/nav/sys-max.svg" width="12" height="12" alt="" />
+        </div>
+        <span class="nav__logo" aria-hidden="true">G</span>
+      </div>
+      <nav class="nav__list" id="nav-list"></nav>
+      <div class="nav__footer">
+        <div class="nav__rule nav__rule--foot" aria-hidden="true"></div>
+        <div class="nav__utils">
+          <button class="nav__util" type="button" aria-label="Notifications">
+            <span class="nav__util-icon" id="nav-notice"></span>
+          </button>
+          <button class="nav__util" type="button" aria-label="Support">
+            <span class="nav__util-icon" id="nav-support"></span>
+          </button>
+          <button class="nav__util" type="button" aria-label="Lock">
+            <span class="nav__util-icon" id="nav-lock"></span>
+          </button>
+        </div>
+        <button class="nav__avatar" type="button" aria-label="Profile">
+          <span class="nav__avatar-face">N</span>
+        </button>
+      </div>
+    </aside>
+
+    <aside class="sidebar" id="sidebar">
+      <header class="sidebar__head" id="sidebar-head"></header>
+      <div class="sidebar__body" id="sidebar-body"></div>
+    </aside>
+
+    <main class="main">
+      <div class="main__scroll" id="content"></div>
+    </main>
+  </div>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="modal" id="modal" role="dialog" aria-modal="true">
+      <button class="modal__close" type="button" id="modal-close" aria-label="Close">×</button>
+      <div class="modal__body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="./src/desktop-app.js?v=team-balance-19" type="module"></script>
+</body>
+</html>

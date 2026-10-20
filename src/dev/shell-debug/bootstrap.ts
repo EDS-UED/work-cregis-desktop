@@ -1,3 +1,4 @@
+import { initPreviewWindowMode } from './previewWindowSize';
 import './scenarios/commonScenarioPack';
 import './scenarios/waasScenarioPack';
 import './scenarios/signingScenarioPack';
@@ -12,6 +13,8 @@ import './scenarios/waasHistoryCallbackScenarioPack';
 import './scenarios/webhookPushScenarioPack';
 import './scenarios/webhookConfigScenarioPack';
 import './scenarios/riskControlLogsScenarioPack';
+
+initPreviewWindowMode();
 
 export { registerCommonScenarioPack } from './scenarios/commonScenarioPack';
 export { registerWaasScenarioPack } from './scenarios/waasScenarioPack';

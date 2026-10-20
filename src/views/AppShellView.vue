@@ -1,14 +1,20 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import {
   EgCregisModuleMenu,
   EgCregisNavBar,
+  EgIcon,
   EgLayout,
+  EgNavBarBottomIcon,
   getCregisModuleMenuGroups,
+  navBarDefaultBottomUtilities,
   type ModuleMenuPresetGroup,
 } from '@eds/desktop-components';
+import TeamWorkspaceSwitcher from '@/components/TeamWorkspaceSwitcher.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useAppShellNavigation } from '@/composables/useAppShellNavigation';
 import PreferencePage from '@/scenes/account-settings/PreferencePage.vue';
+import TeamAccountPage from '@/scenes/manage/team-account/TeamAccountPage.vue';
 import {
   DEFAULT_CREGIS_MODULE_MENU_BUSINESS_TITLE,
   navLabelShouldHideModuleMenu,
@@ -18,6 +24,7 @@ import {
 import { resolveFirstSubitemForBranchLabel } from '@/presets/module-menu/resolveModuleMenuBranchDefaultItem';
 import { syncModuleMenuItemFocus } from '@/presets/module-menu/syncModuleMenuItemFocus';
 import { resolveEnglishUiText } from '@/i18n/translateUiText';
+import { customerServiceState } from '@/scenes/customer-service/customerServiceState';
 import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
 import {
   DEFAULT_PAYMENT_ENGINE_MENU_ITEM,
@@ -44,7 +51,6 @@ import {
 import WaasProjectShell from '@/scenes/waas-project/WaasProjectShell.vue';
 import {
   isWaasMenuItemValidForProject,
-  isWaasOrderModeProject,
   resolveDefaultWaasMenuItem,
 } from '@/scenes/waas-project/waasMenuData';
 import { useWaasModuleMenuGroups } from '@/scenes/waas-project/useWaasModuleMenuGroups';
@@ -65,6 +71,19 @@ import {
 import { useManageModuleMenuGroups } from '@/scenes/manage/useManageModuleMenuGroups';
 
 const { messages, ui, locale } = useAppI18n();
+const { state: shellNavState } = useAppShellNavigation();
+
+const navBarBottomUtilities = computed(() =>
+  navBarDefaultBottomUtilities.map((utility) => {
+    if (utility.label !== 'Earphone') return utility;
+    return {
+      ...utility,
+      icon: 'eds-question',
+      focusIcon: 'eds-question',
+    };
+  }),
+);
+
 const {
   hasProjects: waasHasProjects,
   selectedProject: waasSelectedProject,
@@ -91,6 +110,9 @@ const activeNavLabel = ref('Wallet');
 
 const activeModuleMenuItem = ref<string | null>(null);
 
+/** When set, module-title watcher applies this item instead of the module default. */
+let pendingShellMenuItem: string | null = null;
+
 const isWaasModule = computed(() => isWaasModuleTitle(activeModuleTitle.value));
 const isPaymentEngineModule = computed(() => isPaymentEngineModuleTitle(activeModuleTitle.value));
 const isRiskControlModule = computed(() => activeModuleTitle.value === 'Risk Control');
@@ -115,6 +137,11 @@ const showTasksDataList = computed(
 
 const showPreferencePage = computed(
   () => activeModuleTitle.value === 'Account Settings' && activeModuleMenuItem.value === 'Preference',
+);
+
+const showTeamAccountPage = computed(
+  () =>
+    activeModuleTitle.value === 'Manage' && activeModuleMenuItem.value === 'Team Account Balance',
 );
 
 const showPaymentEngineSettings = computed(
@@ -207,12 +234,21 @@ watch(
 );
 
 watch(activeModuleTitle, (title) => {
+  if (pendingShellMenuItem != null) {
+    activeModuleMenuItem.value = pendingShellMenuItem;
+    pendingShellMenuItem = null;
+    return;
+  }
   if (title === 'Tasks') {
     activeModuleMenuItem.value = DEFAULT_TASKS_DATA_LIST_MENU_ITEM;
     return;
   }
   if (title === 'Account Settings') {
     activeModuleMenuItem.value = 'Preference';
+    return;
+  }
+  if (title === 'Manage') {
+    activeModuleMenuItem.value = 'Team Account Balance';
     return;
   }
   if (title === 'WaaS') {
@@ -262,11 +298,21 @@ watch(waasSelectedProject, (project, previousProject) => {
   }
 });
 
+function isCustomerServiceNavLabel(label: string) {
+  const trimmed = label.trim();
+  return trimmed === 'Earphone' || trimmed === ui('Earphone');
+}
+
 function onNavClick(event: MouseEvent) {
   const button = (event.target as HTMLElement | null)?.closest('button');
   if (!button?.closest('.eds-nav-bar')) return;
 
   const label = button.getAttribute('aria-label') ?? '';
+  if (isCustomerServiceNavLabel(label)) {
+    customerServiceState.open = !customerServiceState.open;
+    return;
+  }
+
   const navState = resolveNavBarClickState(label, ui);
   if (navState) {
     activeNavLabel.value = navState.navLabel;
@@ -279,6 +325,29 @@ function onNavClick(event: MouseEvent) {
   const englishLabel = resolveEnglishUiText(locale.value, label);
   if (englishLabel.trim()) activeNavLabel.value = englishLabel;
 }
+
+watch(
+  [activeModuleTitle, activeModuleMenuItem],
+  ([title, item]) => {
+    customerServiceState.locationTitle = title;
+    customerServiceState.locationItem = item;
+  },
+  { immediate: true },
+);
+
+watch(
+  () => customerServiceState.open,
+  async (open) => {
+    if (open) return;
+    await nextTick();
+    requestAnimationFrame(() => {
+      const button = findNavBarButton(activeNavLabel.value);
+      if (button && button.getAttribute('aria-pressed') !== 'true') {
+        button.click();
+      }
+    });
+  },
+);
 
 function onModuleMenuItemSelect(label: string) {
   const branchDefault = resolveFirstSubitemForBranchLabel(
@@ -299,6 +368,11 @@ function onModuleMenuItemSelect(label: string) {
   }
 
   if (activeModuleTitle.value === 'Account Settings') {
+    activeModuleMenuItem.value = label;
+    return;
+  }
+
+  if (activeModuleTitle.value === 'Manage') {
     activeModuleMenuItem.value = label;
     return;
   }
@@ -342,13 +416,88 @@ function onModuleMenuTitleFlotationItemSelect(_label: string, index: number) {
     selectWaasProjectByFlotationIndex(index);
   }
 }
+
+function findNavBarButton(navLabel: string): HTMLButtonElement | null {
+  const nav = document.querySelector('.eds-nav-bar');
+  if (!nav) return null;
+  const translated = ui(navLabel);
+  for (const button of nav.querySelectorAll('button[aria-label]')) {
+    const label = button.getAttribute('aria-label') ?? '';
+    if (label === navLabel || label === translated) {
+      return button as HTMLButtonElement;
+    }
+  }
+  return null;
+}
+
+function syncModuleMenuItemFocus(menuItem: string) {
+  const translated = ui(menuItem);
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    'button.eds-module-menu-item',
+  )) {
+    const text = button.textContent?.trim() ?? '';
+    if (text !== menuItem && text !== translated) continue;
+    if (button.getAttribute('aria-pressed') === 'true') return;
+    button.click();
+    return;
+  }
+}
+
+watch(
+  () => shellNavState.requestId,
+  async () => {
+    const target = shellNavState.target;
+    if (!target) return;
+
+    const navLabel = target.navLabel ?? target.moduleTitle;
+    pendingShellMenuItem = target.menuItem;
+    activeNavLabel.value = navLabel;
+
+    await nextTick();
+    const navButton = findNavBarButton(navLabel);
+    const navAlreadyFocused = navButton?.getAttribute('aria-pressed') === 'true';
+
+    if (navButton && !navAlreadyFocused) {
+      navButton.click();
+    } else if (activeModuleTitle.value !== target.moduleTitle) {
+      activeModuleTitle.value = target.moduleTitle;
+    } else {
+      activeModuleMenuItem.value = target.menuItem;
+      pendingShellMenuItem = null;
+    }
+
+    await nextTick();
+    if (pendingShellMenuItem != null) {
+      activeModuleMenuItem.value = pendingShellMenuItem;
+      pendingShellMenuItem = null;
+    }
+    await nextTick();
+    syncModuleMenuItemFocus(target.menuItem);
+  },
+);
 </script>
 
 <template>
   <EgLayout type="free">
     <template #nav>
       <div class="app-shell-nav" @click.capture="onNavClick">
-        <EgCregisNavBar :translate="ui" />
+        <EgCregisNavBar :translate="ui">
+          <template #corporation>
+            <TeamWorkspaceSwitcher />
+          </template>
+          <template #utilities>
+            <EgNavBarBottomIcon
+              v-for="(utility, index) in navBarBottomUtilities"
+              :key="`nav-utility-${index}`"
+              :label="utility.label"
+            >
+              <EgIcon :name="utility.icon" size="sm" fit />
+              <template #focusIcon>
+                <EgIcon :name="utility.focusIcon" size="sm" fit />
+              </template>
+            </EgNavBarBottomIcon>
+          </template>
+        </EgCregisNavBar>
       </div>
     </template>
 
@@ -384,6 +533,7 @@ function onModuleMenuTitleFlotationItemSelect(_label: string, index: number) {
       :toolbar-title="activeModuleMenuItem"
     />
     <PreferencePage v-else-if="showPreferencePage" />
+    <TeamAccountPage v-else-if="showTeamAccountPage" />
 
     <WaasProjectShell
       v-else-if="isWaasModule"

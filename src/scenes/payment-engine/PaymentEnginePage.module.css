@@ -1,0 +1,264 @@
+.dataListNest {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.statsMeasure {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.statsMeasureItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.statsMeasureText {
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
+}
+
+.statsMeasureNumber {
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-strong-weight);
+  line-height: var(--eds-footnote-line-height);
+  font-variant-numeric: tabular-nums;
+}
+
+.dataListNest :deep(.eds-layout) {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.dataListNest :deep(.eds-tool-bar) {
+  flex-shrink: 0;
+}
+
+.dataListNest :deep(.eds-paginer) {
+  flex-shrink: 0;
+}
+
+.dataListNest :deep(.eds-data-list) {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.listRegion {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.comboHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  color: var(--text-base-tertiary);
+  font-size: var(--eds-footnote-strong-size);
+  font-weight: var(--eds-footnote-strong-weight);
+  line-height: var(--eds-footnote-strong-line-height);
+}
+
+.comboHeaderAlignEnd {
+  margin-left: auto;
+}
+
+.comboHeaderSegment {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.comboHeaderSegmentTextWrap {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  flex: 1 1 0;
+}
+
+.comboHeaderSegmentText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+  cursor: default;
+  user-select: none;
+}
+
+.comboHeader > :global(.eds-divider) {
+  align-self: center;
+  flex-shrink: 0;
+  height: var(--spacing-2-5);
+  min-height: var(--spacing-2-5);
+  max-height: var(--spacing-2-5);
+  background: var(--stroke-base-quaternary);
+}
+
+.comboCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  width: 100%;
+  min-width: 0;
+}
+
+.comboPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Overflow text defaults to flex: 1 1 auto (hostFlex); keep the chain tag beside the token. */
+.comboPrimary > :first-child {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.comboPrimary :global(.eds-tag) {
+  flex-shrink: 0;
+}
+
+.comboSecondary {
+  color: var(--text-base-secondary);
+  font-size: var(--eds-footnote-size);
+  line-height: var(--eds-footnote-line-height);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.comboCellEnd {
+  align-items: flex-end;
+}
+
+.statusCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.tokenCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.tokenIcon {
+  display: flex;
+  flex-shrink: 0;
+  width: var(--avatar-md);
+  height: var(--avatar-md);
+  overflow: hidden;
+}
+
+.tokenBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.addressFlow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+.addressFlowText {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.addressArrow {
+  display: flex;
+  flex-shrink: 0;
+  width: var(--spacing-3);
+  height: var(--spacing-3);
+  color: var(--text-base-secondary);
+}
+
+.amountPrimaryRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.actionCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-1);
+  width: 100%;
+}
+
+.timeStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  align-items: flex-end;
+  width: 100%;
+  min-width: 0;
+}
+
+.timeStackPrimary {
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-medium-size);
+  line-height: var(--eds-body-medium-line-height);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.timeStackSecondary {
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-small-size);
+  line-height: var(--eds-body-small-line-height);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.settingsEmpty {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}

@@ -1,0 +1,78 @@
+.root {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.caption {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.label {
+  color: var(--text-base-secondary);
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
+  white-space: nowrap;
+}
+
+.hintTooltip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+
+.hintButton {
+  flex-shrink: 0;
+}
+
+.hintButton:global(.eds-icon-button:hover),
+.hintButton:global(.eds-icon-button:active) {
+  background-color: var(--event-hover);
+}
+
+.hintButton:global(.eds-icon-button:focus-visible),
+.hintTooltip :global([data-eds-tooltip-open]) .hintButton:global(.eds-icon-button) {
+  background-color: var(--event-focus);
+}
+
+.hintIconOutline,
+.hintIconFill {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.hintIconFill {
+  display: none;
+}
+
+.hintButton:hover .hintIconOutline,
+.hintTooltip :global([data-eds-tooltip-open]) .hintIconOutline {
+  display: none;
+}
+
+.hintButton:hover .hintIconFill,
+.hintTooltip :global([data-eds-tooltip-open]) .hintIconFill {
+  display: inline-flex;
+}
+
+.hintTooltipPanel :global(.eds-tooltip-panel) {
+  padding: var(--spacing-1) var(--spacing-2);
+  font-family: var(--eds-family-sans);
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-primary);
+  white-space: normal;
+  word-break: break-word;
+}
+
+.menu {
+  min-width: 0;
+}

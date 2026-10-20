@@ -99,6 +99,44 @@
   min-height: 0;
 }
 
+.batchPopupPageStack {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+/*
+ * 摘要停态由正文撑高；motion-page 全局 absolute+height:100% 在 slot 未定高时会塌成 0。
+ * 用「非 Fill」判定停态，避免 Pop 结束后 direction 仍卡在 backward 时摘要不渲染。
+ */
+.batchPopupPageStack[data-batch-popup-page='summary']:not(.batchPopupPageStackFill)
+  > :global(.motion-page) {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  will-change: auto;
+}
+
+.batchPopupPageStackFill {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.batchPopupPageStack > :global(.motion-page) {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  background: var(--box-page);
+}
+
+.batchPopupPageStackFill > :global(.motion-page) {
+  min-height: 0;
+  height: 100%;
+}
+
 .batchPopupPageFill {
   display: flex;
   flex: 1 1 auto;

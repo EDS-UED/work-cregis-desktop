@@ -1,0 +1,359 @@
+.page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  padding: var(--spacing-5);
+  overflow: hidden;
+  background: var(--box-page);
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  flex-shrink: 0;
+}
+
+.heroBalance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.heroLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  margin: 0;
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-medium-strong-size);
+  font-weight: var(--eds-body-medium-strong-weight);
+  line-height: var(--eds-body-medium-strong-line-height);
+}
+
+.heroLabelDot {
+  flex-shrink: 0;
+  width: var(--scale-2);
+  height: var(--scale-2);
+  border-radius: var(--radius-full);
+  background: var(--status-success);
+}
+
+.heroAmountRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-1);
+  min-width: 0;
+}
+
+.heroAmount {
+  margin: 0;
+  color: var(--text-base-primary);
+  font-size: var(--eds-headline-size);
+  font-weight: var(--eds-headline-weight);
+  line-height: var(--eds-headline-line-height);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroActions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+}
+
+.heroActions > * {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-3);
+  flex-shrink: 0;
+}
+
+.stat {
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--material-card-shallow);
+}
+
+.statLabel {
+  margin: 0;
+  color: var(--text-base-secondary);
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+}
+
+.statValue {
+  margin: var(--spacing-1) 0 0;
+  color: var(--text-base-primary);
+  font-size: var(--eds-title-size);
+  font-weight: var(--eds-title-weight);
+  line-height: var(--eds-title-line-height);
+  font-variant-numeric: tabular-nums;
+}
+
+.listShell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  width: calc(100% + (var(--spacing-5) * 2));
+  margin-inline: calc(var(--spacing-5) * -1);
+  margin-bottom: calc(var(--spacing-5) * -1);
+  overflow: hidden;
+}
+
+.listShell :global(.eds-layout) {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.listShell :global(.eds-tool-bar) {
+  flex-shrink: 0;
+}
+
+.listShell :global(.eds-paginer) {
+  flex-shrink: 0;
+}
+
+/* Title yields to Filter/Export; fill remaining toolbar width so ellipsis can apply. */
+.listShell :global(.eds-tool-bar-title) {
+  flex: 1 1 0%;
+  min-width: var(--scale-20);
+  max-width: 100%;
+  overflow: visible;
+}
+
+.listShell :global(.eds-tool-bar-title p) {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  width: 100%;
+  font-size: var(--eds-body-medium-size);
+  font-weight: var(--eds-body-medium-weight);
+  line-height: var(--eds-body-medium-line-height);
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.toolbarTitleWithTimezone {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+}
+
+.toolbarTitleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listRegion {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 0%;
+  width: 100%;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.listRegion :global(.eds-data-list) {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.listFill {
+  display: block;
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/*
+ * TX DataList: keep column headers under frosted ToolBar even when Layout
+ * briefly reports --eds-layout-chrome-inset-top: 0 before ResizeObserver runs.
+ */
+.txListFill :global(.eds-data-list [class*='tableContent']) {
+  padding-top: max(var(--eds-layout-chrome-inset-top, 0px), var(--scale-15));
+}
+
+/* At scroll top: no header tint; after rows scroll under sticky header → DS frosted backdrop. */
+.txListFill :global(.eds-data-list [class*='headerBackdrop']) {
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
+.txListFillHeaderScrim :global(.eds-data-list [class*='headerBackdrop']) {
+  background-color: var(--data-table-head);
+  -webkit-backdrop-filter: saturate(120%) blur(var(--blur-shallow));
+  backdrop-filter: saturate(120%) blur(var(--blur-shallow));
+}
+
+/* Flat rows at rest; row hover when pointer is on the row. */
+.txListFill :global(.eds-data-list tbody[class*='body'] tr:not(.loadingRow):not(.blankRow)) {
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color var(--motion-transition-hover);
+}
+
+.txListFill :global(.eds-data-list tbody[class*='body'] tr:not(.loadingRow):not(.blankRow):hover) {
+  background-color: var(--event-hover);
+}
+
+.txListFill :global(.eds-data-list tbody[class*='body'] tr:not(.loadingRow):not(.blankRow):hover td:first-child) {
+  border-top-left-radius: var(--radius-sm);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.txListFill :global(.eds-data-list tbody[class*='body'] tr:not(.loadingRow):not(.blankRow):hover td:last-child) {
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.listFill :global(.eds-data-list) {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.comboHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  color: var(--text-base-tertiary);
+  font-size: var(--eds-footnote-strong-size);
+  font-weight: var(--eds-footnote-strong-weight);
+  line-height: var(--eds-footnote-strong-line-height);
+}
+
+.comboHeaderAlignEnd {
+  margin-left: auto;
+}
+
+.comboHeaderSegment {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.comboHeaderSegmentTextWrap {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  flex: 1 1 0;
+}
+
+.comboHeaderSegmentText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+  cursor: default;
+  user-select: none;
+}
+
+.comboHeaderSegment > :global(.eds-flotation) {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.comboPrimary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.dirIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+  padding: var(--spacing-1);
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 0 var(--stroke-xl) var(--stroke-face-primary);
+  color: var(--text-same-white-primary);
+}
+
+.dirIn {
+  background: var(--status-success);
+}
+
+.dirOut {
+  background: var(--status-danger);
+}
+
+.dirIconGlyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--spacing-2-5);
+  height: var(--spacing-2-5);
+}
+
+.txType {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: var(--text-base-primary);
+}
+
+.toastHost {
+  position: absolute;
+  top: var(--spacing-10);
+  left: 50%;
+  z-index: 40;
+  transform: translateX(-50%);
+  pointer-events: none;
+}

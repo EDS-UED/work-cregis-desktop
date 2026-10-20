@@ -9,6 +9,8 @@ import SigningBatchGlobalProgressHost from '@/scenes/tasks/signing/batch/Signing
 import { signingBatchFlowRegistry } from '@/scenes/tasks/signing/batch/signingBatchFlowContext';
 import SigningFlowHost from '@/scenes/tasks/signing/SigningFlowHost.vue';
 import { signingFlowRegistry } from '@/scenes/tasks/signing/signingFlowContext';
+import TeamAccountFlowHost from '@/scenes/manage/team-account/TeamAccountFlowHost.vue';
+import CustomerServicePopup from '@/scenes/customer-service/CustomerServicePopup.vue';
 import PaymentEngineDetailFlowHost from '@/scenes/payment-engine/PaymentEngineDetailFlowHost.vue';
 import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import TransactionRecordDetailFlowHost from '@/scenes/transaction-records/TransactionRecordDetailFlowHost.vue';
@@ -48,6 +50,8 @@ const manageRoleOverlay = computed(() => manageRoleOverlayRegistry.value);
       <ManageWebhookOverlayHost v-if="manageWebhookOverlay" />
       <ManageRoleOverlayHost v-if="manageRoleOverlay" />
       <SigningBatchGlobalProgressHost />
+      <TeamAccountFlowHost />
+      <CustomerServicePopup />
     </div>
   </div>
 </template>

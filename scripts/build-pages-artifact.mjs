@@ -23,6 +23,7 @@ function run(command, args) {
   }
 }
 
+run('node', ['scripts/ensure-eds-pages-compat.mjs']);
 run('pnpm', ['prebuild']);
 run('pnpm', ['exec', 'vite', 'build']);
 run('node', ['scripts/write-deploy-manifest.mjs']);

@@ -1,0 +1,320 @@
+.root {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.root :global(.eds-layout) {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Overlay the skid instead of shrinking the page, so tabs keep one row. */
+.root :global(.eds-layout) > :last-child {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+}
+
+.page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  box-sizing: border-box;
+  padding-top: var(--eds-layout-chrome-inset-top, 0);
+}
+
+.tabBlock {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: var(--spacing-2) var(--spacing-6) 0;
+}
+
+.tabBlock :global(.eds-tabs) {
+  flex-wrap: nowrap;
+}
+
+.tabBlock :global(.eds-tab) {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-3);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  gap: var(--spacing-4);
+  padding: var(--spacing-1-5) var(--spacing-3);
+  border-radius: var(--radius-sm);
+}
+
+.settingTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-medium-size);
+  font-weight: var(--eds-body-medium-weight);
+  line-height: var(--eds-body-medium-line-height);
+}
+
+.settingHint {
+  margin: 0;
+  color: var(--text-base-secondary);
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
+}
+
+.notifyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  padding-top: var(--spacing-05);
+}
+
+.notifyItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  padding-bottom: var(--spacing-3);
+}
+
+.notifyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  min-width: 0;
+  margin: 0 var(--spacing-3);
+  padding: var(--spacing-2-5) var(--spacing-3);
+  border-radius: var(--radius-sm);
+}
+
+.notifyCopy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.notifyActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-1);
+}
+
+.memberWrap {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-6);
+}
+
+.memberBox {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--spacing-6);
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--spacing-3);
+  border: var(--stroke-xs) dashed var(--stroke-outline-deep);
+  border-radius: var(--scale-2);
+}
+
+.member {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.memberText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.memberName {
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-medium-size);
+  line-height: var(--eds-body-medium-line-height);
+}
+
+.memberEmail {
+  color: var(--text-base-secondary);
+  font-size: var(--eds-footnote-size);
+  line-height: var(--eds-footnote-line-height);
+}
+
+.memberMore {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-lg);
+  height: var(--avatar-lg);
+  border-radius: var(--radius-full);
+  background: var(--material-card-moderate);
+  color: var(--text-base-secondary);
+  font-size: var(--eds-bar-size);
+  font-weight: var(--eds-bar-weight);
+  line-height: var(--eds-bar-line-height);
+}
+
+.skidBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  min-height: 100%;
+  padding: var(--spacing-2);
+  box-sizing: border-box;
+}
+
+.skidField {
+  width: 100%;
+  padding-inline: var(--spacing-2);
+  box-sizing: border-box;
+}
+
+.skidHint {
+  margin: 0;
+  color: var(--text-base-secondary);
+  font-size: var(--eds-bar-size);
+  font-weight: var(--eds-bar-weight);
+  line-height: var(--eds-bar-line-height);
+}
+
+.skidHint :deep(.eds-link) {
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.skidHintPeriod {
+  color: var(--text-brand-primary);
+}
+
+.skidAction {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  padding: 0 var(--spacing-4) var(--spacing-5);
+  box-sizing: border-box;
+}
+
+.skidConfirm {
+  width: 100%;
+}
+
+.notifySkidBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  min-height: 0;
+  padding: var(--spacing-2);
+  box-sizing: border-box;
+}
+
+.notifySkidHeading {
+  margin: 0;
+  padding-inline: var(--spacing-2);
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-medium-size);
+  font-weight: var(--eds-body-medium-weight);
+  line-height: var(--eds-body-medium-line-height);
+}
+
+.notifySearch {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  padding-inline: var(--spacing-2);
+  box-sizing: border-box;
+}
+
+.teamList {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.teamRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-1-5) var(--spacing-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--material-hide);
+  box-sizing: border-box;
+  cursor: default;
+}
+
+.teamRow:hover {
+  background: var(--event-hover);
+}
+
+.teamCheck {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.teamCopy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.teamName {
+  min-width: 0;
+  width: 100%;
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-medium-size);
+  line-height: var(--eds-body-medium-line-height);
+}
+
+.teamEmail {
+  min-width: 0;
+  width: 100%;
+  color: var(--text-base-secondary);
+  font-size: var(--eds-footnote-size);
+  line-height: var(--eds-footnote-line-height);
+}

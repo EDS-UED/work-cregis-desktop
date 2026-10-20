@@ -1,0 +1,77 @@
+.host {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.handle {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.n,
+.s {
+  left: var(--spacing-3);
+  right: var(--spacing-3);
+  height: var(--spacing-2);
+  cursor: ns-resize;
+}
+
+.e,
+.w {
+  top: var(--spacing-3);
+  bottom: var(--spacing-3);
+  width: var(--spacing-2);
+  cursor: ew-resize;
+}
+
+.n {
+  top: 0;
+}
+
+.s {
+  bottom: 0;
+}
+
+.e {
+  right: 0;
+}
+
+.w {
+  left: 0;
+}
+
+.ne,
+.nw,
+.se,
+.sw {
+  width: var(--spacing-3);
+  height: var(--spacing-3);
+  z-index: 1;
+}
+
+.ne {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+
+.nw {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
+.se {
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+}
+
+.sw {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}

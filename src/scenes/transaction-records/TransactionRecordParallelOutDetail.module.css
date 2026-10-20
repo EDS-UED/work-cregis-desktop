@@ -1,0 +1,13 @@
+/* 笔数明细嵌在 SignSubPageShell 内：隐藏空 Amount headline，保留关闭钮。 */
+.root {
+  height: 100%;
+  min-height: 0;
+}
+
+.root :global(.eds-detail > header[class*='headline']) {
+  display: none;
+}
+
+.root :global(.eds-detail [class*='sections']) {
+  padding-bottom: var(--spacing-6);
+}

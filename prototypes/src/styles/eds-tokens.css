@@ -1,0 +1,149 @@
+/* eds.mobile — Full color library from Figma Color System (Cregis @ Light/Dark)
+ * Source: EverGreen Design System — node 2:22945 / 325:1720
+ */
+
+:root {
+  /* ── Primitives @Cregis ── */
+  --eds-brand: #1fc35a;
+  --eds-match: #003a6d;
+  --eds-decor: #022d0d;
+  --eds-success: #1fc35a;
+  --eds-danger: #d7462d;
+  --eds-warning: #eb9114;
+  --eds-base: #020304;
+  --eds-face: #ffffff;
+  --eds-same-black: #020304;
+  --eds-same-white: #ffffff;
+  --eds-page: #ffffff;
+  --eds-flotation: #ffffff;
+
+  /* ── Primitives @Cregis (Dark) ── */
+  --eds-brand-dark: #1fc35a;
+  --eds-match-dark: #004178;
+  --eds-decor-dark: #ffffff;
+  --eds-success-dark: #1fc35a;
+  --eds-danger-dark: #fa6950;
+  --eds-warning-dark: #ffaa32;
+  --eds-base-dark: #ffffff;
+  --eds-face-dark: #020304;
+  --eds-same-black-dark: #020304;
+  --eds-same-white-dark: #ffffff;
+  --eds-page-dark: #1c1d1f;
+  --eds-flotation-dark: #1c1d1f;
+
+  /* ── Box ── */
+  --box-page: var(--eds-page);
+  --box-flotation: var(--eds-flotation);
+  --box-menu: #fafafa;
+
+  /* ── Stroke / Line ── */
+  --stroke-hide: transparent;
+  --stroke-divider: color-mix(in srgb, var(--eds-base) 5%, var(--eds-face));
+  --stroke-face-primary: var(--eds-base);
+  --stroke-face-secondary: color-mix(in srgb, var(--eds-base) 60%, var(--eds-face));
+  --stroke-face-tertiary: color-mix(in srgb, var(--eds-base) 40%, var(--eds-face));
+  --stroke-face-quaternary: color-mix(in srgb, var(--eds-base) 20%, var(--eds-face));
+  --stroke-color-brand: var(--eds-brand);
+  --stroke-color-danger: var(--eds-danger);
+  --stroke-same-white: var(--eds-same-white);
+
+  /* ── Text ── */
+  --text-brand: var(--eds-brand);
+  --text-brand-weaken: color-mix(in srgb, var(--eds-brand) 20%, transparent);
+  --text-brand-disable: color-mix(in srgb, var(--eds-brand) 40%, transparent);
+  --text-success: var(--eds-success);
+  --text-danger: var(--eds-danger);
+  --text-warning: var(--eds-warning);
+  --text-same-black: var(--eds-same-black);
+  --text-same-white: var(--eds-same-white);
+  --text-same-white-weaken: color-mix(in srgb, var(--eds-same-white) 40%, transparent);
+  --text-base-primary: var(--eds-base);
+  --text-base-secondary: color-mix(in srgb, var(--eds-base) 60%, transparent);
+  --text-base-tertiary: color-mix(in srgb, var(--eds-base) 40%, transparent);
+  --text-base-quaternary: color-mix(in srgb, var(--eds-base) 20%, transparent);
+  --text-face-primary: var(--eds-face);
+  --text-face-secondary: color-mix(in srgb, var(--eds-face) 60%, transparent);
+  --text-face-tertiary: color-mix(in srgb, var(--eds-face) 40%, transparent);
+  --text-face-quaternary: color-mix(in srgb, var(--eds-face) 20%, transparent);
+
+  /* ── Material ── */
+  --material-hide: transparent;
+  --material-brand: var(--eds-brand);
+  --material-brand-disable: color-mix(in srgb, var(--eds-brand) 40%, transparent);
+  --material-brand-weaken: color-mix(in srgb, var(--eds-brand) 12%, transparent);
+  --material-match: var(--eds-match);
+  --material-match-weaken: color-mix(in srgb, var(--eds-match) 12%, transparent);
+  --material-decor: var(--eds-decor);
+  --material-decor-weaken: color-mix(in srgb, var(--eds-decor) 12%, transparent);
+  --material-success: var(--eds-success);
+  --material-success-weaken: color-mix(in srgb, var(--eds-success) 12%, transparent);
+  --material-danger: var(--eds-danger);
+  --material-danger-weaken: color-mix(in srgb, var(--eds-danger) 12%, transparent);
+  --material-warning: var(--eds-warning);
+  --material-warning-weaken: color-mix(in srgb, var(--eds-warning) 12%, transparent);
+  --material-same-black: color-mix(in srgb, var(--eds-same-black) 50%, transparent);
+  --material-same-black-weaken: color-mix(in srgb, var(--eds-same-black) 20%, transparent);
+  --material-same-white: var(--eds-same-white);
+  --material-same-white-weaken: var(--eds-same-white);
+  --material-card-shallow: color-mix(in srgb, var(--eds-base) 3%, var(--eds-face));
+  --material-card-moderate: color-mix(in srgb, var(--eds-base) 5%, var(--eds-face));
+  --material-card-deep: color-mix(in srgb, var(--eds-base) 7%, var(--eds-face));
+  --material-base-primary: var(--eds-base);
+  --material-base-secondary: color-mix(in srgb, var(--eds-base) 60%, transparent);
+  --material-base-tertiary: color-mix(in srgb, var(--eds-base) 40%, transparent);
+  --material-base-quaternary: color-mix(in srgb, var(--eds-base) 20%, transparent);
+  --material-face-primary: var(--eds-face);
+  --material-face-secondary: color-mix(in srgb, var(--eds-face) 60%, transparent);
+  --material-face-tertiary: color-mix(in srgb, var(--eds-face) 40%, transparent);
+  --material-face-quaternary: color-mix(in srgb, var(--eds-face) 20%, transparent);
+
+  /* ── Effect ── */
+  --effect-shallow: color-mix(in srgb, var(--eds-same-black) 10%, transparent);
+  --effect-deep: color-mix(in srgb, var(--eds-same-black) 20%, transparent);
+  --effect-popup-background: color-mix(in srgb, var(--eds-base) 50%, transparent);
+  --effect-vulvar-shadow: color-mix(in srgb, var(--eds-base) 25%, transparent);
+  --effect-vulvar-shadow-glow: #dcdcdc;
+  --depth-deep: 8px;
+  --blur-deep: 48px;
+
+  /* ── Event (interaction) ── */
+  --event-focus: color-mix(in srgb, var(--eds-base) 5%, var(--eds-face));
+  --event-tap-brand: color-mix(in srgb, var(--eds-brand) 60%, transparent);
+  --event-tap-decor: color-mix(in srgb, var(--eds-decor) 60%, transparent);
+  --event-tap-danger: color-mix(in srgb, var(--eds-decor) 60%, transparent);
+  --event-tap: color-mix(in srgb, var(--eds-base) 10%, transparent);
+  --event-focus-brand: color-mix(in srgb, var(--eds-brand) 10%, transparent);
+
+  /* ── Semantic aliases (app convenience) ── */
+  --text-primary: var(--text-base-primary);
+  --text-secondary: var(--text-base-secondary);
+  --text-tertiary: var(--text-base-tertiary);
+  --text-quaternary: var(--text-base-quaternary);
+  --bg-page: var(--box-page);
+  --bg-flotation: var(--box-flotation);
+  --bg-card: var(--eds-face);
+  --bg-surface: var(--material-card-shallow);
+  --bg-pill: var(--material-card-shallow);
+  --line-border: var(--stroke-divider);
+  --line-module: var(--material-card-shallow);
+  --shadow-flotation: 0 8px 32px var(--effect-shallow);
+  --shadow-card: 0 2px 12px var(--effect-shallow);
+}
+
+[data-theme="dark"] {
+  --eds-brand: var(--eds-brand-dark);
+  --eds-match: var(--eds-match-dark);
+  --eds-decor: var(--eds-decor-dark);
+  --eds-success: var(--eds-success-dark);
+  --eds-danger: var(--eds-danger-dark);
+  --eds-warning: var(--eds-warning-dark);
+  --eds-base: var(--eds-base-dark);
+  --eds-face: var(--eds-face-dark);
+  --eds-same-black: var(--eds-same-black-dark);
+  --eds-same-white: var(--eds-same-white-dark);
+  --eds-page: var(--eds-page-dark);
+  --eds-flotation: var(--eds-flotation-dark);
+
+  --box-page: var(--eds-page);
+  --box-flotation: var(--eds-flotation);
+}

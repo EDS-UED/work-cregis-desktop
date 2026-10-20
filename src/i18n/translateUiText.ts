@@ -23,6 +23,19 @@ function isDocAligned(catalogKey: string): boolean {
   return I18N_DOC_ALIGNED_KEYS.has(catalogKey);
 }
 
+/** Sort aria / 触发文案：en 用 `Sort ${header}`；中文 catalog 复合词无空格时走表内整词。 */
+function composeSortLabel(locale: AppLocale, header: string): string {
+  const translatedHeader = translateUiText(locale, header);
+  if (locale === 'en') {
+    return `Sort ${translatedHeader}`;
+  }
+  const sortLabel =
+    locale === 'zh-TW'
+      ? (UI_TEXT_ZH_TW.Sort ?? UI_TEXT_ZH_CN.Sort ?? '排序')
+      : (UI_TEXT_ZH_CN.Sort ?? '排序');
+  return `${sortLabel} ${translatedHeader}`;
+}
+
 /**
  * 展示层翻译（唯一入口）。
  *
@@ -41,6 +54,11 @@ export function translateUiText(locale: AppLocale, text: string): string {
   if (catalogValue) {
     if (locale === 'zh-CN') return catalogValue;
 
+    // Sort 复合 key 仅服务中文无空格；en 按 header 组装，避免表外整词回落简体。
+    if (locale === 'en' && catalogKey.startsWith('Sort ')) {
+      return composeSortLabel(locale, catalogKey.slice('Sort '.length));
+    }
+
     // 规则 2：源文档 / 核对表无 zh-cn 匹配 → 三语显示 catalog 简体中文。
     if (!isDocAligned(catalogKey)) {
       return catalogValue;
@@ -57,12 +75,7 @@ export function translateUiText(locale: AppLocale, text: string): string {
   }
 
   if (trimmed.startsWith('Sort ')) {
-    const header = trimmed.slice('Sort '.length);
-    const sortLabel =
-      locale === 'zh-TW'
-        ? (UI_TEXT_ZH_TW.Sort ?? UI_TEXT_ZH_CN.Sort ?? '排序')
-        : (UI_TEXT_ZH_CN.Sort ?? '排序');
-    return `${sortLabel} ${translateUiText(locale, header)}`;
+    return composeSortLabel(locale, trimmed.slice('Sort '.length));
   }
 
   // 无 catalog 基准：无法核对表；三语回显原文便于补 key（应尽快写入 uiTextZhCN）。
