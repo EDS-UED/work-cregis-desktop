@@ -7,7 +7,7 @@ import type { WaasProject } from '@/scenes/project/types';
 
 export const WAAS_SETTINGS_MENU_ITEM = 'Settings';
 
-/** tier-2 分组父级：仅展开子菜单，无独立列表页。 */
+/** tier-2 分组父级：无独立列表页；展开默认子项见 work.mdc §4.3 · AppShellView。 */
 export const WAAS_MENU_BRANCH_ONLY_ITEMS = new Set(['Collection Record']);
 
 export const WAAS_STANDARD_MENU_ITEMS = flattenModuleMenuPresetItemLabels(

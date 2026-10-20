@@ -328,6 +328,14 @@ body .eds-popover.desktopTokens::-webkit-scrollbar {
   z-index: 1100;
 }
 
+/* 全局业务成功反馈 · 高于 EgPopup shell（20）与 DataList BatchBar（30） */
+.app-preview > [data-app-end-feedback-host] {
+  position: absolute;
+  inset: 0;
+  z-index: 1101;
+  pointer-events: none;
+}
+
 /*
  * Hover / focus Tooltip：仅浮层命中区拦截指针，避免 tooltip 下方误触底层行。
  * 离场动画 inner 带 floatingInnerPassThrough，:has 不匹配故不拦截。

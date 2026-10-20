@@ -1,0 +1,58 @@
+/** 锚点 Teleport 挂载在 EgDetail 滚动视口内，相对视口固定于右侧。 */
+.detailPermissionHost :global(.eds-detail [class*='scroll_']) {
+  position: relative;
+}
+
+.detailPermissionHost :global(.eds-detail [class*='sections']) {
+  gap: var(--spacing-4);
+}
+
+.detailPermissionHost :global(.eds-detail [class*='sectionDivider']) {
+  display: none;
+}
+
+/** 锚点滚动：区块标题对齐滚动区顶缘。 */
+.detailPermissionHost :global(.eds-detail [class*='sectionTitleRow']) {
+  scroll-margin-top: var(--spacing-6);
+}
+
+/** Checkbox 权限行：收起左侧 Title 列，由 Value 槽承载 checkbox + 文案。 */
+.detailPermissionHost
+  :global(.eds-detail [class*='item']:has([class*='rolePermissionValue']) [class*='itemTitle']) {
+  display: none;
+}
+
+.detailPermissionHost
+  :global(.eds-detail [class*='item']:has([class*='rolePermissionValue']) [class*='itemValue']) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/** 权限项两列，左右各 50%；说明类整行通栏；右侧为锚点条留列宽。 */
+.detailPermissionHost :global(.eds-detail [class*='itemList']) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--spacing-0);
+  row-gap: var(--spacing-05);
+  width: 100%;
+  padding-inline-end: var(--spacing-6);
+}
+
+.detailPermissionHost
+  :global(.eds-detail [class*='item']:has([class*='rolePermissionValue'])) {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.detailPermissionHost
+  :global(.eds-detail [class*='item']:not(:has([class*='rolePermissionValue']))) {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.detailPermissionHost
+  :global(.eds-detail [class*='item']:has([class*='rolePermissionValue']) [class*='itemRow']) {
+  width: 100%;
+  box-sizing: border-box;
+}

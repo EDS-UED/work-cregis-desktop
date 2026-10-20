@@ -15,6 +15,10 @@ import PaymentEngineDetailFlowHost from '@/scenes/payment-engine/PaymentEngineDe
 import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import TransactionRecordDetailFlowHost from '@/scenes/transaction-records/TransactionRecordDetailFlowHost.vue';
 import { transactionRecordDetailFlowRegistry } from '@/scenes/transaction-records/transactionRecordDetailFlowContext';
+import ManageWebhookOverlayHost from '@/scenes/manage/webhook/ManageWebhookOverlayHost.vue';
+import { manageWebhookOverlayRegistry } from '@/scenes/manage/webhook/manageWebhookOverlayContext';
+import ManageRoleOverlayHost from '@/scenes/manage/role/ManageRoleOverlayHost.vue';
+import { manageRoleOverlayRegistry } from '@/scenes/manage/role/manageRoleOverlayContext';
 
 const approvalFlow = computed(() => approvalFlowRegistry.value);
 const signingFlow = computed(() => signingFlowRegistry.value);
@@ -24,6 +28,8 @@ const transactionRecordDetailFlow = computed(
   () => transactionRecordDetailFlowRegistry.value,
 );
 const paymentEngineDetailFlow = computed(() => paymentEngineDetailFlowRegistry.value);
+const manageWebhookOverlay = computed(() => manageWebhookOverlayRegistry.value);
+const manageRoleOverlay = computed(() => manageRoleOverlayRegistry.value);
 </script>
 
 <template>
@@ -41,6 +47,8 @@ const paymentEngineDetailFlow = computed(() => paymentEngineDetailFlowRegistry.v
         :flow="paymentEngineDetailFlow"
       />
       <SigningBatchFlowHost v-if="signingBatchFlow" :flow="signingBatchFlow" />
+      <ManageWebhookOverlayHost v-if="manageWebhookOverlay" />
+      <ManageRoleOverlayHost v-if="manageRoleOverlay" />
       <SigningBatchGlobalProgressHost />
       <TeamAccountFlowHost />
       <CustomerServicePopup />

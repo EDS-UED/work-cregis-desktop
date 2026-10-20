@@ -56,6 +56,9 @@ export const I18N_NAV_MODULE_MENU_CATALOG_KEYS = new Set<string>([
   'Role',
   'Team Security',
   'API Manage',
+  'Webhook',
+  'Webhook Config',
+  'Push Records',
   // Risk Control menu
   'Policy Settings',
   'Automation',

@@ -3,6 +3,7 @@ import {
   parseCreatedTimeSortValue,
   type TasksDataListSortOrder,
 } from '@/scenes/tasks/tasksDataListSort';
+import { resolveCallbackRowBusinessTypeLabelKey } from './paymentEngineListFieldCustomize';
 import type {
   PaymentEngineRecordColumnKey,
   PaymentEngineRecordRow,
@@ -44,11 +45,24 @@ function compareRows(
     return compareText(rowA.id, rowB.id);
   }
 
-  if (columnKey === 'callbackAmountTime') {
+  if (columnKey === 'callbackAmountTime' || columnKey === 'callbackAmountBusinessType') {
     if (segment === 'secondary') {
+      if (columnKey === 'callbackAmountBusinessType') {
+        return compareText(
+          resolveCallbackRowBusinessTypeLabelKey(rowA),
+          resolveCallbackRowBusinessTypeLabelKey(rowB),
+        );
+      }
       return compareCreatedTime(rowA, rowB);
     }
     return compareAmountValue(rowA.orderAmount, rowB.orderAmount);
+  }
+
+  if (columnKey === 'callbackAddressTime') {
+    if (segment === 'secondary') {
+      return compareCreatedTime(rowA, rowB);
+    }
+    return compareText(rowA.callbackUrl ?? '', rowB.callbackUrl ?? '');
   }
 
   if (columnKey === 'createdAt' || columnKey === 'callbackTime' || columnKey === 'amlQueryTime') {
@@ -147,6 +161,17 @@ function compareRows(
       return compareText(rowA.taskTransactionCount ?? '0', rowB.taskTransactionCount ?? '0');
     }
     return compareAmountValue(rowA.orderAmount, rowB.orderAmount);
+  }
+
+  if (columnKey === 'roleName') {
+    return compareText(rowA.ruleName ?? rowA.id, rowB.ruleName ?? rowB.id);
+  }
+
+  if (columnKey === 'roleCreatorTime') {
+    if (segment === 'secondary') {
+      return compareCreatedTime(rowA, rowB);
+    }
+    return compareText(rowA.logOperatorName ?? rowA.id, rowB.logOperatorName ?? rowB.id);
   }
 
   return 0;

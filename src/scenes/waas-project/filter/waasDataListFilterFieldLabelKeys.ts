@@ -18,7 +18,7 @@ export const WAAS_DATA_LIST_FILTER_FIELD_LABEL_KEYS = {
   addressStatus: 'Address Status',
   address: 'Address',
   addressAlias: 'Address Alias',
-  callbackAddress: 'Callback Address',
+  callbackAddress: 'Callback URL',
   thirdPartyBizId: 'Third-party Reference',
   receiver: 'Receiver',
   sender: 'Sender',

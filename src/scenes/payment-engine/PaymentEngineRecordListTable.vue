@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, type ComponentPublicInstance } from 'vue';
 import {
   EgDataList,
   EgDataListCellOverflow,
@@ -19,9 +19,14 @@ import { buildTasksListFieldTimeCustomize } from '@/scenes/tasks/list-field/task
 import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
 import PaymentEngineListFieldAmount from './list-field/PaymentEngineListFieldAmount.vue';
 import PaymentEngineListFieldAmountAddress from './list-field/PaymentEngineListFieldAmountAddress.vue';
+import PaymentEngineListFieldCallbackAmountBusiness from './list-field/PaymentEngineListFieldCallbackAmountBusiness.vue';
 import PaymentEngineListFieldCallbackAmountTime from './list-field/PaymentEngineListFieldCallbackAmountTime.vue';
+import PaymentEngineListFieldCallbackAddressTime from './list-field/PaymentEngineListFieldCallbackAddressTime.vue';
 import PaymentEngineListFieldCallbackEvent from './list-field/PaymentEngineListFieldCallbackEvent.vue';
 import PaymentEngineListFieldCallbackUrl from './list-field/PaymentEngineListFieldCallbackUrl.vue';
+import TasksListFieldReceiver from '@/scenes/tasks/list-field/TasksListFieldReceiver.vue';
+import TasksListFieldSender from '@/scenes/tasks/list-field/TasksListFieldSender.vue';
+import columnCellStyles from '@/scenes/tasks/list-field/TasksDataListColumnCell.module.css';
 import PaymentEngineListFieldOrderAmounts from './list-field/PaymentEngineListFieldOrderAmounts.vue';
 import PaymentEngineListFieldRefundActions from './list-field/PaymentEngineListFieldRefundActions.vue';
 import PaymentEngineListFieldMeta from './list-field/PaymentEngineListFieldMeta.vue';
@@ -34,6 +39,9 @@ import {
   buildRefundAmountCustomize,
   buildRefundTokenCryptoCustomize,
   buildAddressBookCryptoCustomize,
+  buildCallbackReceiverCustomize,
+  buildCallbackSenderCustomize,
+  resolveCallbackRowBusinessTypeLabelKey,
 } from './paymentEngineListFieldCustomize';
 import {
   buildWaasCollectionAddressCryptoCustomize,
@@ -55,6 +63,22 @@ import RiskControlListFieldAddressBookAddress from '@/scenes/risk-control/list-f
 import RiskControlListFieldAddressBookActions from '@/scenes/risk-control/list-field/RiskControlListFieldAddressBookActions.vue';
 import RiskControlListFieldLogEvent from '@/scenes/risk-control/list-field/RiskControlListFieldLogEvent.vue';
 import RiskControlListFieldLogActions from '@/scenes/risk-control/list-field/RiskControlListFieldLogActions.vue';
+import {
+  isManageRoleMenuItem,
+  isManageWebhookConfigMenuItem,
+  isManageWebhookPushRecordsMenuItem,
+} from '@/scenes/manage/manageMenuData';
+import RoleListFieldActions from '@/scenes/manage/role/list-field/RoleListFieldActions.vue';
+import RoleListFieldCreatorTime from '@/scenes/manage/role/list-field/RoleListFieldCreatorTime.vue';
+import RoleListFieldName from '@/scenes/manage/role/list-field/RoleListFieldName.vue';
+import { resolveWebhookConfigCreatorAvatarColorSeed } from '@/scenes/manage/webhook/filter/buildWebhookConfigCreatorFilterOptions';
+import WebhookListFieldConfigActions from '@/scenes/manage/webhook/list-field/WebhookListFieldConfigActions.vue';
+import WebhookListFieldNameEvent from '@/scenes/manage/webhook/list-field/WebhookListFieldNameEvent.vue';
+import WebhookListFieldNameId from '@/scenes/manage/webhook/list-field/WebhookListFieldNameId.vue';
+import WebhookListFieldCreatorTime from '@/scenes/manage/webhook/list-field/WebhookListFieldCreatorTime.vue';
+import WebhookListFieldPushActions from '@/scenes/manage/webhook/list-field/WebhookListFieldPushActions.vue';
+import WebhookListFieldPushStatus from '@/scenes/manage/webhook/list-field/WebhookListFieldPushStatus.vue';
+import WebhookListFieldStatus from '@/scenes/manage/webhook/list-field/WebhookListFieldStatus.vue';
 import RiskControlListFieldAmlAddressRequester from '@/scenes/risk-control/list-field/RiskControlListFieldAmlAddressRequester.vue';
 import RiskControlListFieldAmlRiskScore from '@/scenes/risk-control/list-field/RiskControlListFieldAmlRiskScore.vue';
 import RiskControlListFieldAutoRuleActions from '@/scenes/risk-control/list-field/RiskControlListFieldAutoRuleActions.vue';
@@ -81,6 +105,8 @@ import {
   PAYMENT_ENGINE_COLUMN_HEIGHT,
   PAYMENT_ENGINE_HEADER_HEIGHT,
 } from './usePaymentEngineDataListPage';
+import batchListFillStyles from '@/scenes/tasks/signing/batch/batchSigning.shared.module.css';
+import { useDataListSelectAllShortcut } from '@/scenes/tasks/shared/useDataListSelectAllShortcut';
 import styles from './PaymentEngineDataListPage.module.css';
 
 const props = withDefaults(
@@ -97,9 +123,11 @@ const props = withDefaults(
     ) => Promise<DataListBatchActionResult | void>;
     activeSort?: PaymentEngineRecordSortTarget | null;
     columnHeight?: number;
+    dataListFill?: boolean;
   }>(),
   {
     columnHeight: PAYMENT_ENGINE_COLUMN_HEIGHT,
+    dataListFill: false,
   },
 );
 
@@ -107,11 +135,25 @@ const emit = defineEmits<{
   'update:selectMode': [value: boolean];
   'row-click': [data: DataListItem];
   'sort-change': [value: PaymentEngineRecordSortTarget | null];
+  'callback-push-order': [row: PaymentEngineRecordRow];
+  'callback-ignore': [row: PaymentEngineRecordRow];
 }>();
 
 const selectMode = defineModel<boolean>('selectMode', { default: false });
 
-const { ui } = useAppI18n();
+const dataListRef = ref<ComponentPublicInstance | null>(null);
+
+const batchSelectShortcutEnabled = computed(() => props.batchActions.length > 0);
+
+useDataListSelectAllShortcut({
+  selectMode: computed(() => selectMode.value),
+  dataListRef,
+  pageRowCount: computed(() => props.rows.length),
+  selectedCount: computed(() => 0),
+  enabled: batchSelectShortcutEnabled,
+});
+
+const { ui, locale } = useAppI18n();
 
 function recordRow(data: DataListItem): PaymentEngineRecordRow {
   return data as PaymentEngineRecordRow;
@@ -154,8 +196,18 @@ function columnProp(column: PaymentEngineRecordColumnConfig): string {
   if (column.key === 'bulkState' || column.key === 'refundState') return 'status';
   if (column.key === 'bulkMeta' || column.key === 'refundMeta') return 'createdAt';
   if (column.key === 'callbackEvent') return 'callbackEventId';
-  if (column.key === 'callbackAmount' || column.key === 'callbackAmountTime') return 'orderAmount';
+  if (
+    column.key === 'callbackAmount'
+    || column.key === 'callbackAmountTime'
+    || column.key === 'callbackAmountBusinessType'
+  ) {
+    return 'orderAmount';
+  }
+  if (column.key === 'callbackSender') return 'walletFromAddress';
+  if (column.key === 'callbackReceiver') return 'walletToAddress';
+  if (column.key === 'callbackAddressTime') return 'callbackUrl';
   if (column.key === 'callbackStatus') return 'callbackStatus';
+  if (column.key === 'callbackPushMethod') return 'callbackTriggerMode';
   if (column.key === 'callbackTime') return 'createdAt';
   if (column.key === 'callbackUrl') return 'callbackUrl';
   if (column.key === 'ruleNameId') return 'id';
@@ -189,6 +241,9 @@ function columnProp(column: PaymentEngineRecordColumnConfig): string {
     return 'merchantOrderId';
   }
   if (column.key === 'processingMeta') return 'createdAt';
+  if (column.key === 'roleName') return 'ruleName';
+  if (column.key === 'roleCreatorTime') return 'logOperatorName';
+  if (column.key === 'roleActions') return 'actions';
   if (column.key === 'processingAmount') return 'orderAmount';
   if (column.key === 'taskCurrencyId') return 'orderAmount';
   if (column.key === 'taskStatus') return 'status';
@@ -246,6 +301,9 @@ function isActionColumn(column: PaymentEngineRecordColumnConfig): boolean {
     || column.key === 'addressBookActions'
     || column.key === 'logActions'
     || column.key === 'autoRuleActions'
+    || column.key === 'webhookConfigActions'
+    || column.key === 'webhookPushActions'
+    || column.key === 'roleActions'
   );
 }
 
@@ -258,8 +316,14 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
 </script>
 
 <template>
-  <div :class="styles.listRegion">
+  <div
+    :class="[
+      styles.listRegion,
+      props.dataListFill && batchListFillStyles.batchDetailDataListFill,
+    ]"
+  >
 <EgDataList
+          ref="dataListRef"
           v-model:select-mode="selectMode"
           :data-list="rows"
           :header-height="PAYMENT_ENGINE_HEADER_HEIGHT"
@@ -284,6 +348,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
             :align="columnAlign(column)"
             :sortable="false"
             :is-action="isActionColumn(column)"
+            :hidden="selectMode && isActionColumn(column)"
           >
             <template v-if="column.headerKind === 'combo'" #header>
               <div
@@ -374,6 +439,8 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
 
               <WaasListFieldCallbackActions
                 v-else-if="column.key === 'callbackActions'"
+                @push-order="emit('callback-push-order', recordRow(data))"
+                @ignore="emit('callback-ignore', recordRow(data))"
               />
 
               <PaymentEngineListFieldRefundActions
@@ -405,8 +472,113 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 :row="recordRow(data)"
               />
 
+              <RoleListFieldActions
+                v-else-if="column.key === 'roleActions' && isManageRoleMenuItem(menuItem)"
+                :row="recordRow(data)"
+              />
+
+              <RoleListFieldName
+                v-else-if="column.key === 'roleName' && isManageRoleMenuItem(menuItem)"
+                :row="recordRow(data)"
+              />
+
+              <RoleListFieldCreatorTime
+                v-else-if="
+                  column.key === 'roleCreatorTime'
+                    && isManageRoleMenuItem(menuItem)
+                "
+                :row="recordRow(data)"
+              />
+
+              <WebhookListFieldConfigActions
+                v-else-if="
+                  column.key === 'webhookConfigActions'
+                    && isManageWebhookConfigMenuItem(menuItem)
+                "
+                :row="recordRow(data)"
+              />
+
+              <WebhookListFieldPushActions
+                v-else-if="
+                  column.key === 'webhookPushActions'
+                    && isManageWebhookPushRecordsMenuItem(menuItem)
+                "
+                :row="recordRow(data)"
+              />
+
               <template v-else-if="!isActionColumn(column)">
-              <template v-if="column.key === 'logType' && menuItem === 'Logs'">
+              <template
+                v-if="
+                  column.key === 'webhookNameId'
+                    && isManageWebhookConfigMenuItem(menuItem)
+                "
+              >
+                <WebhookListFieldNameId :row="recordRow(data)" />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'webhookEvent'
+                    && isManageWebhookConfigMenuItem(menuItem)
+                "
+              >
+                <EgListFieldOverflowText
+                  :text="ui(recordRow(data).webhookEventKey ?? 'Dangerous transaction')"
+                  variant="primary"
+                />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'webhookNameEvent'
+                    && isManageWebhookPushRecordsMenuItem(menuItem)
+                "
+              >
+                <WebhookListFieldNameEvent :row="recordRow(data)" />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'webhookCreatorTime'
+                    && isManageWebhookConfigMenuItem(menuItem)
+                "
+              >
+                <WebhookListFieldCreatorTime :row="recordRow(data)" />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'webhookEnabled'
+                    && isManageWebhookConfigMenuItem(menuItem)
+                "
+              >
+                <WebhookListFieldStatus :row="recordRow(data)" />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'webhookPushTime'
+                    && isManageWebhookPushRecordsMenuItem(menuItem)
+                "
+              >
+                <TasksListFieldTime
+                  :customize="{
+                    ...buildTasksListFieldTimeCustomize(column.minWidth),
+                    datetime: recordRow(data).createdAt,
+                  }"
+                />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'webhookPushStatus'
+                    && isManageWebhookPushRecordsMenuItem(menuItem)
+                "
+              >
+                <WebhookListFieldPushStatus :row="recordRow(data)" />
+              </template>
+
+              <template v-else-if="column.key === 'logType' && menuItem === 'Logs'">
                 <EgListFieldOverflowText
                   :text="ui(recordRow(data).logTypeKey ?? 'Policy')"
                   variant="primary"
@@ -525,13 +697,60 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 />
               </template>
 
+              <template v-else-if="column.key === 'callbackAmountBusinessType'">
+                <PaymentEngineListFieldCallbackAmountBusiness
+                  :amount="recordRow(data).orderAmount"
+                  :symbol="recordRow(data).orderSymbol ?? ''"
+                  :crypto-name="recordRow(data).currencyCryptoName"
+                  :network-label="recordRow(data).networkLabel"
+                  :business-type-key="resolveCallbackRowBusinessTypeLabelKey(recordRow(data))"
+                />
+              </template>
+
               <template v-else-if="column.key === 'callbackAmountTime'">
                 <PaymentEngineListFieldCallbackAmountTime
                   :amount="recordRow(data).orderAmount"
                   :symbol="recordRow(data).orderSymbol"
                   :crypto-name="recordRow(data).currencyCryptoName"
-                  :network-label="recordRow(data).networkLabel"
+                  :network-label="
+                    recordRow(data).currencyNetwork
+                    ?? recordRow(data).networkLabel
+                  "
                   :datetime="recordRow(data).createdAt"
+                  :align-end="column.align === 'end'"
+                />
+              </template>
+
+              <template v-else-if="column.key === 'callbackSender'">
+                <div :class="columnCellStyles.listFieldCell">
+                  <TasksListFieldSender
+                    :customize="buildCallbackSenderCustomize(
+                      recordRow(data),
+                      column.minWidth,
+                      locale,
+                      menuItem,
+                    )"
+                  />
+                </div>
+              </template>
+
+              <template v-else-if="column.key === 'callbackReceiver'">
+                <div :class="columnCellStyles.listFieldCell">
+                  <TasksListFieldReceiver
+                    :customize="buildCallbackReceiverCustomize(
+                      recordRow(data),
+                      column.minWidth,
+                      menuItem,
+                    )"
+                  />
+                </div>
+              </template>
+
+              <template v-else-if="column.key === 'callbackAddressTime'">
+                <PaymentEngineListFieldCallbackAddressTime
+                  :url="recordRow(data).callbackUrl ?? ''"
+                  :datetime="recordRow(data).createdAt"
+                  :align-end="column.align === 'end'"
                 />
               </template>
 
@@ -615,14 +834,6 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                   "
                   :approximate-fiat="!isPaymentSettlementRecordMenuItem(menuItem)"
                   align-end
-                />
-              </template>
-
-              <template v-else-if="column.key === 'callbackAmount'">
-                <PaymentEngineListFieldAmount
-                  :crypto-amount="recordRow(data).orderAmount"
-                  :crypto-symbol="recordRow(data).orderSymbol"
-                  :network-label="recordRow(data).networkLabel"
                 />
               </template>
 

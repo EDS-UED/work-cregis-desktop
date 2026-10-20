@@ -1,0 +1,94 @@
+/* composeBody 默认 padding-inline spacing-5 · 业务收窄 12px */
+.composeBodyInset {
+  box-sizing: border-box;
+  width: calc(100% + 2 * var(--spacing-3));
+  margin-inline: calc(-1 * var(--spacing-3));
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-0);
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-1-5) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  composes: motion-ease is-paint from global;
+}
+
+.row:hover,
+.rowCopyable:focus-visible {
+  background-color: var(--event-hover);
+}
+
+.rowCopyable {
+  cursor: pointer;
+  outline: none;
+}
+
+.rowLabel {
+  flex: 0 0 112px;
+  composes: typography-body-small from global;
+  color: var(--text-base-secondary);
+}
+
+.rowValue {
+  display: flex;
+  flex: 0 1 auto;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--text-base-primary);
+  text-align: end;
+  composes: typography-body-small from global;
+}
+
+.rowValue :global([class*='_text_']) {
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+}
+
+.valueRow {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.rowValue :global(.hostFlex) {
+  width: max-content;
+  max-width: 100%;
+  margin-inline-start: auto;
+}
+
+.rowActions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-05);
+}
+
+.rowAction {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.rowActionCopied :global(.eds-icon-button .symbol) {
+  color: var(--status-success);
+}
+
+.rowActionCopied :global(.eds-icon .eds-i-f),
+.rowActionCopied :global(.eds-icon path) {
+  fill: var(--status-success);
+}

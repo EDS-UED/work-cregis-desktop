@@ -9,6 +9,7 @@ import detailChromeStyles from '@/scenes/tasks/shared/detailPopupChrome.module.c
 import {
   buildPaymentEngineCallbackErrorDetailSections,
   resolvePaymentEngineCallbackErrorDetailTabLabels,
+  resolvePaymentEngineCallbackErrorHeadlineStatus,
 } from './buildPaymentEngineCallbackErrorDetailSections';
 import { buildPaymentEngineDetailSections } from './buildPaymentEngineDetailSections';
 import {
@@ -17,7 +18,8 @@ import {
   resolvePaymentEngineOrderRecordTabLabels,
 } from './buildPaymentEngineOrderRecordDetailSections';
 import { buildPaymentEngineAmountHeadline } from './paymentEngineDetail';
-import { resolveCallbackEventLabelKey } from './paymentEngineListFieldCustomize';
+import { paymentEngineDetailFlowRegistry } from './paymentEngineDetailFlowContext';
+import { isOrderModeCallbackExperience } from './paymentEngineCallbackExperience';
 import {
   isCallbackRecordDetailMenuItem,
   isCallbackErrorRecordMenuItem,
@@ -128,7 +130,15 @@ const callbackRecordTabLabels = computed(() => {
   return resolvePaymentEngineCallbackErrorDetailTabLabels(props.detail, ui);
 });
 
-const showCallbackRecordTabs = computed(() => false);
+const callbackExperience = computed(
+  () => paymentEngineDetailFlowRegistry.value?.callbackExperience.value ?? 'order-mode',
+);
+
+const showCallbackRecordTabs = computed(
+  () =>
+    isCallbackRecordDetail.value
+    && isOrderModeCallbackExperience(callbackExperience.value),
+);
 
 const amlRecordTabLabels = computed(() => {
   void locale.value;
@@ -313,10 +323,7 @@ const callbackRecordHeadlineStatus = computed(() => {
   void locale.value;
   if (!props.detail || !isCallbackRecordDetail.value) return null;
   if (isCallbackErrorRecordMenuItem(props.menuItem)) {
-    return {
-      label: ui(resolveCallbackEventLabelKey(props.detail.callbackEventType)),
-      status: 'warning' as const,
-    };
+    return resolvePaymentEngineCallbackErrorHeadlineStatus(props.detail, ui);
   }
   return {
     label: ui(resolvePaymentEngineRecordStatusDetailLabel(props.detail, props.menuItem, ui)),
@@ -398,6 +405,7 @@ const baseSections = computed(() => {
       activeTab.value,
       ui,
       props.menuItem,
+      callbackExperience.value,
     );
   }
   if (isAmlRecordDetail.value) {

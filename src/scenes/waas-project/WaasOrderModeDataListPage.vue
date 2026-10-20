@@ -11,6 +11,7 @@ defineProps<{
 <template>
   <PaymentEngineDataListPage
     :menu-item="menuItem"
+    waas-eg-filter-list-mode="order-mode"
     :resolve-config="resolveWaasOrderModeRecordConfig"
     :build-rows="buildWaasOrderModeRecordRows"
   />

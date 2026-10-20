@@ -126,9 +126,12 @@ function buildCallbackEventSnapshot(
   const businessTypeLabel = row.callbackEventType
     ? resolveCallbackEventLabelKey(row.callbackEventType)
     : '';
+  const callbackEventNumber = String(
+    row.callbackEventId ?? row.merchantOrderId ?? '',
+  ).trim();
 
   return {
-    cregisId: joinWaasFilterSearchParts([row.callbackEventId, row.id]),
+    cregisId: callbackEventNumber,
     businessType: businessTypeLabel
       ? resolveWaasFilterDropdownOptionId('waas-business-type', businessTypeLabel)
       : undefined,

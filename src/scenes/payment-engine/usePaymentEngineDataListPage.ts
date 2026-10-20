@@ -169,6 +169,15 @@ export function usePaymentEngineDataListPage<T>(options: {
       return buttons;
     }
 
+    if (preset === 'filter-refresh-add') {
+      buttons.push(
+        { key: 'filter', item: filterButton.value },
+        { key: 'refresh', item: refreshButton.value },
+        { key: 'addNew', item: addNewButton.value },
+      );
+      return buttons;
+    }
+
     if (preset === 'filter-add') {
       buttons.push(
         { key: 'filter', item: filterButton.value },
@@ -228,7 +237,11 @@ export function usePaymentEngineDataListPage<T>(options: {
         (button) => button.key === 'filter' || button.key === 'addNew',
       );
     }
-    if (preset === 'filter-refresh' || preset === 'filter-refresh-add-export') {
+    if (
+      preset === 'filter-refresh'
+      || preset === 'filter-refresh-add'
+      || preset === 'filter-refresh-add-export'
+    ) {
       return toolbarActionButtons.value.filter(
         (button) =>
           button.key === 'filter'
@@ -247,7 +260,13 @@ export function usePaymentEngineDataListPage<T>(options: {
 
   const showToolbarSection = computed(() => {
     const preset = resolvedToolbarPreset.value;
-    if (preset === 'filter-refresh' || preset === 'filter-refresh-add-export') return false;
+    if (
+      preset === 'filter-refresh'
+      || preset === 'filter-refresh-add'
+      || preset === 'filter-refresh-add-export'
+    ) {
+      return false;
+    }
     return preset === 'rule-configuration'
       || preset === 'batch-filter-refresh'
       || options.showBatchSelect.value;
@@ -265,7 +284,7 @@ export function usePaymentEngineDataListPage<T>(options: {
     await new Promise<void>((resolve) => {
       window.setTimeout(resolve, 600);
     });
-    if (key === 'ignore' || key === 'retry') {
+    if (key === 'ignore' || key === 'retry' || key === 'push-order') {
       customize.value.selectMode = false;
     }
   }

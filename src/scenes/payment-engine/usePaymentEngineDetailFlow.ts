@@ -1,4 +1,4 @@
-import { computed, ref, shallowRef } from 'vue';
+import { computed, nextTick, ref, shallowRef } from 'vue';
 import {
   isCallbackRecordDetailMenuItem,
   isPaymentBulkTransferRecordMenuItem,
@@ -32,6 +32,11 @@ import {
   isRiskControlAutoRulesMenuItem,
   isRiskControlLogsMenuItem,
 } from '@/scenes/risk-control/riskControlMenuData';
+import { showAppEndFeedback } from '@/composables/appEndFeedback';
+import {
+  isOrderModeCallbackExperience,
+  type PaymentEngineCallbackExperience,
+} from './paymentEngineCallbackExperience';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 
 export function usePaymentEngineDetailFlow() {
@@ -43,6 +48,15 @@ export function usePaymentEngineDetailFlow() {
   const bulkTransferDetailRow = shallowRef<PaymentEngineRecordRow | null>(null);
   const collectionDetailOpen = ref(false);
   const collectionDetailRow = shallowRef<PaymentEngineRecordRow | null>(null);
+  const pushOrderDialogOpen = ref(false);
+  const pushOrderDialogCallbackUrl = ref('');
+  const pushOrderGoogleVerifyOpen = ref(false);
+  const callbackIgnoreConfirmOpen = ref(false);
+  const callbackIgnoreGoogleVerifyOpen = ref(false);
+  const callbackExperience = ref<PaymentEngineCallbackExperience>('order-mode');
+  let pushOrderAfterConfirm: (() => void) | undefined;
+  let pushOrderPendingAfterVerify: (() => void) | undefined;
+  let callbackIgnoreAfterConfirm: (() => void | Promise<void>) | undefined;
 
   const detailPopupMounted = computed(
     () => detailOpen.value || detailRow.value != null,
@@ -143,6 +157,78 @@ export function usePaymentEngineDetailFlow() {
     detailRow.value = null;
   }
 
+  function openPushOrderDialog(callbackUrl: string, afterConfirm?: () => void) {
+    pushOrderAfterConfirm = afterConfirm;
+    pushOrderDialogCallbackUrl.value = callbackUrl.trim();
+    pushOrderDialogOpen.value = true;
+  }
+
+  function closePushOrderDialog() {
+    pushOrderDialogOpen.value = false;
+    pushOrderAfterConfirm = undefined;
+    pushOrderPendingAfterVerify = undefined;
+  }
+
+  function confirmPushOrderDialog(callbackUrl: string) {
+    pushOrderDialogCallbackUrl.value = callbackUrl.trim();
+    pushOrderDialogOpen.value = false;
+    pushOrderPendingAfterVerify = pushOrderAfterConfirm;
+    pushOrderAfterConfirm = undefined;
+    pushOrderGoogleVerifyOpen.value = true;
+  }
+
+  function onPushOrderGoogleVerified() {
+    pushOrderGoogleVerifyOpen.value = false;
+    pushOrderPendingAfterVerify?.();
+    pushOrderPendingAfterVerify = undefined;
+    showAppEndFeedback();
+  }
+
+  function onPushOrderGoogleVerifyDismissed() {
+    pushOrderPendingAfterVerify = undefined;
+  }
+
+  function openCallbackIgnoreConfirm(afterConfirm?: () => void | Promise<void>) {
+    callbackIgnoreAfterConfirm = afterConfirm;
+    callbackIgnoreConfirmOpen.value = true;
+  }
+
+  function closeCallbackIgnoreConfirm() {
+    callbackIgnoreConfirmOpen.value = false;
+    callbackIgnoreAfterConfirm = undefined;
+  }
+
+  async function finishCallbackIgnoreAfterConfirm() {
+    const afterConfirm = callbackIgnoreAfterConfirm;
+    callbackIgnoreAfterConfirm = undefined;
+    await afterConfirm?.();
+    await nextTick();
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+    showAppEndFeedback();
+  }
+
+  async function confirmCallbackIgnore() {
+    callbackIgnoreConfirmOpen.value = false;
+    if (isOrderModeCallbackExperience(callbackExperience.value)) {
+      callbackIgnoreGoogleVerifyOpen.value = true;
+      return;
+    }
+    await finishCallbackIgnoreAfterConfirm();
+  }
+
+  function onCallbackIgnoreGoogleVerified() {
+    callbackIgnoreGoogleVerifyOpen.value = false;
+    void finishCallbackIgnoreAfterConfirm();
+  }
+
+  function onCallbackIgnoreGoogleVerifyDismissed() {
+    callbackIgnoreAfterConfirm = undefined;
+  }
+
   return {
     detailOpen,
     detailRow,
@@ -159,5 +245,21 @@ export function usePaymentEngineDetailFlow() {
     closeCollectionDetail,
     clearCollectionDetailRow,
     onDetailPopupClosed,
+    pushOrderDialogOpen,
+    pushOrderDialogCallbackUrl,
+    pushOrderGoogleVerifyOpen,
+    openPushOrderDialog,
+    closePushOrderDialog,
+    confirmPushOrderDialog,
+    onPushOrderGoogleVerified,
+    onPushOrderGoogleVerifyDismissed,
+    callbackIgnoreConfirmOpen,
+    callbackIgnoreGoogleVerifyOpen,
+    callbackExperience,
+    openCallbackIgnoreConfirm,
+    closeCallbackIgnoreConfirm,
+    confirmCallbackIgnore,
+    onCallbackIgnoreGoogleVerified,
+    onCallbackIgnoreGoogleVerifyDismissed,
   };
 }

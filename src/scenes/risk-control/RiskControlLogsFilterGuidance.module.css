@@ -1,0 +1,124 @@
+.guideTriggerHost {
+  display: inline-flex;
+  max-width: 100%;
+}
+
+/**
+ * 视觉同 EgIconProButton；引导锚点仅 icon 区（data-eds-trigger-metrics），
+ * 避免 AnchoredTooltip 量到含「筛选」文案的整颗 button，箭头与漏斗不对齐。
+ */
+.filterTriggerRoot {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: max-content;
+  min-width: var(--scale-11);
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: default;
+}
+
+.filterTriggerDisabled {
+  cursor: not-allowed;
+}
+
+.filterIconMetrics {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filterIconMetrics :global(.eds-icon-button) {
+  pointer-events: none;
+}
+
+.filterTriggerRoot:hover:not(.filterTriggerDisabled) .filterIconMetrics :global(.eds-icon-button),
+.filterTriggerRoot:active:not(.filterTriggerDisabled) .filterIconMetrics :global(.eds-icon-button) {
+  background-color: var(--event-hover);
+}
+
+.filterTriggerRoot:hover:not(.filterTriggerDisabled) .filterIconMetrics :global(.eds-icon),
+.filterTriggerRoot:active:not(.filterTriggerDisabled) .filterIconMetrics :global(.eds-icon) {
+  color: var(--stroke-base-primary);
+}
+
+.filterTriggerExpanded:not(.filterTriggerDisabled) .filterIconMetrics :global(.eds-icon-button) {
+  background-color: var(--event-focus);
+}
+
+.filterTriggerExpanded:not(.filterTriggerDisabled) .filterIconMetrics :global(.eds-icon) {
+  color: var(--stroke-base-secondary);
+}
+
+.filterTriggerDisabled .filterIconMetrics :global(.eds-icon) {
+  color: var(--stroke-base-quaternary);
+}
+
+.filterIconMetricsGuideActive :global(.eds-icon-button),
+.filterTriggerRoot:hover:not(.filterTriggerDisabled) .filterIconMetricsGuideActive :global(.eds-icon-button),
+.filterTriggerRoot:active:not(.filterTriggerDisabled) .filterIconMetricsGuideActive :global(.eds-icon-button) {
+  background-color: var(--event-focus-brand-weaken);
+}
+
+.filterLabelWrap {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--text-base-secondary);
+  text-align: center;
+}
+
+.filterTriggerDisabled .filterLabelWrap {
+  color: var(--text-base-quaternary);
+}
+
+.filterLabelSizer {
+  display: block;
+  visibility: hidden;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  font-size: var(--eds-bar-size);
+  font-weight: var(--eds-bar-weight);
+  line-height: var(--eds-bar-line-height);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+.filterLabelPaint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 200%;
+  padding: 0;
+  margin: 0;
+  font-size: calc(var(--eds-bar-size) * 2);
+  font-weight: var(--eds-bar-weight);
+  line-height: calc(var(--eds-bar-line-height) * 2);
+  transform: scale(0.5);
+  transform-origin: top left;
+  color: inherit;
+  text-align: center;
+  white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  pointer-events: none;
+}
+
+.filterBadge {
+  position: absolute;
+  top: -3px;
+  left: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
   EgAnchoredPopover,
   EgIcon,
@@ -7,6 +7,10 @@ import {
 } from '@eds/desktop-components';
 import styles from './ShellDebugLauncherAnchored.module.css';
 import { markShellDebugUiInteraction } from './installShellDebugFloatLayerGuard';
+import {
+  registerShellDebugLauncherPopoverExceptRoot,
+  unregisterShellDebugLauncherPopoverExceptRoot,
+} from './shellDebugPopoverExcept';
 import { registerShellDebugLauncherPopover } from './shellDebugLauncherPopovers';
 import type { ShellDebugLauncherPopoverId } from './shellDebugLauncherPopovers';
 import {
@@ -49,6 +53,7 @@ type PopoverAlign = 'center' | 'end';
 /** 壳外胶囊靠预览框右侧，默认 end 避免首开时 align 翻转导致 remount。 */
 const popoverAlign = ref<PopoverAlign>('end');
 const triggerRef = ref<HTMLElement | null>(null);
+const popoverContentRef = ref<HTMLElement | null>(null);
 const anchoredRef = ref<{ close?: () => void } | null>(null);
 let unregisterLauncherPopover: (() => void) | undefined;
 
@@ -107,8 +112,20 @@ onMounted(() => {
   }
 });
 
+async function onPopoverOpen() {
+  await nextTick();
+  registerShellDebugLauncherPopoverExceptRoot(popoverContentRef.value);
+  emit('open');
+}
+
+function onPopoverClose() {
+  unregisterShellDebugLauncherPopoverExceptRoot();
+  emit('close');
+}
+
 onBeforeUnmount(() => {
   unregisterLauncherPopover?.();
+  unregisterShellDebugLauncherPopoverExceptRoot();
 });
 </script>
 
@@ -128,8 +145,8 @@ onBeforeUnmount(() => {
       :close-on-scroll="false"
       teleport-to="body"
       boundary-selector="body"
-      @open="emit('open')"
-      @close="emit('close')"
+      @open="onPopoverOpen"
+      @close="onPopoverClose"
     >
     <template #trigger="{ active, onClick }">
       <span
@@ -163,6 +180,7 @@ onBeforeUnmount(() => {
 
     <template #default>
       <div
+        ref="popoverContentRef"
         class="shell-debug-popover-content"
         :class="styles.popoverContent"
         :style="{

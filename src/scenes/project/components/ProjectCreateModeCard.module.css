@@ -38,8 +38,10 @@
 }
 
 .itemRowSelected,
-.itemRowSelected:hover {
-  background-color: var(--material-card-subtle);
+.itemRowSelected:hover,
+.itemRowSelected:focus,
+.itemRowSelected:focus-visible {
+  background-color: var(--material-brand-quinary);
 }
 
 .itemValueStack {

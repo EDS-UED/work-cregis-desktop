@@ -1,18 +1,15 @@
 import {
+  CALLBACK_ERROR_COLUMNS,
   PAYMENT_ENGINE_BULK_TRANSFER_AMOUNT_COLUMN_MIN_WIDTH,
   PAYMENT_ENGINE_BULK_TRANSFER_STATUS_COLUMN_MIN_WIDTH,
   PAYMENT_ENGINE_BULK_TRANSFER_TOKEN_ADDRESS_COLUMN_MIN_WIDTH,
-  PAYMENT_ENGINE_CALLBACK_ACTIONS_COLUMN_MIN_WIDTH,
-  PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
-  PAYMENT_ENGINE_CALLBACK_EVENT_COLUMN_MIN_WIDTH,
-  PAYMENT_ENGINE_CALLBACK_STATUS_COLUMN_MIN_WIDTH,
-  PAYMENT_ENGINE_CALLBACK_URL_COLUMN_MIN_WIDTH,
   PAYMENT_ENGINE_ORDER_RECORD_CREATED_TIME_COLUMN_MIN_WIDTH,
   type PaymentEngineDataListToolbarPreset,
   type PaymentEngineRecordColumnConfig,
   type PaymentEngineRecordPageConfig,
 } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import type { WaasStandardDataListMenuItem } from './waasStandardMenuData';
+import { WAAS_STANDARD_HISTORY_CALLBACK_COLUMNS } from './waasStandardHistoryCallbackColumns';
 import {
   WAAS_DATA_LIST_FILTER_FIELD_LABEL_KEYS as L,
   waasDataListTimeColumnLabelKey as timeCol,
@@ -307,78 +304,6 @@ const COLLECTION_PROCESSING_BUSINESS_TYPE_COLUMN_MIN_WIDTH = '96px';
 const COLLECTION_PROCESSING_META_COLUMN_MIN_WIDTH = '168px';
 const COLLECTION_PROCESSING_ACTIONS_COLUMN_MIN_WIDTH = '240px';
 
-/** 归集处理中：金额|地址、业务类型、完成时间|编号、操作。 */
-const WAAS_CALLBACK_ERROR_COLUMNS: PaymentEngineRecordColumnConfig[] = [
-  {
-    key: 'callbackEvent',
-    labelKey: L.businessType,
-    secondaryLabelKey: L.cregisId,
-    minWidth: PAYMENT_ENGINE_CALLBACK_EVENT_COLUMN_MIN_WIDTH,
-    headerKind: 'combo',
-    displayOrder: 1,
-  },
-  {
-    key: 'callbackAmountTime',
-    labelKey: L.currency,
-    secondaryLabelKey: 'Creation Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
-    headerKind: 'combo',
-    sortable: true,
-    secondarySortable: true,
-    displayOrder: 2,
-  },
-  {
-    key: 'callbackUrl',
-    labelKey: L.callbackAddress,
-    minWidth: PAYMENT_ENGINE_CALLBACK_URL_COLUMN_MIN_WIDTH,
-    flexGrow: true,
-    displayOrder: 3,
-  },
-  {
-    key: 'callbackActions',
-    labelKey: 'Actions',
-    minWidth: PAYMENT_ENGINE_CALLBACK_ACTIONS_COLUMN_MIN_WIDTH,
-    align: 'end',
-    displayOrder: 4,
-  },
-];
-
-const WAAS_HISTORY_CALLBACK_COLUMNS: PaymentEngineRecordColumnConfig[] = [
-  {
-    key: 'callbackEvent',
-    labelKey: L.businessType,
-    secondaryLabelKey: L.cregisId,
-    minWidth: PAYMENT_ENGINE_CALLBACK_EVENT_COLUMN_MIN_WIDTH,
-    headerKind: 'combo',
-    displayOrder: 1,
-  },
-  {
-    key: 'callbackAmountTime',
-    labelKey: L.currency,
-    secondaryLabelKey: 'Creation Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
-    headerKind: 'combo',
-    sortable: true,
-    secondarySortable: true,
-    displayOrder: 2,
-  },
-  {
-    key: 'callbackStatus',
-    labelKey: L.pushStatus,
-    minWidth: PAYMENT_ENGINE_CALLBACK_STATUS_COLUMN_MIN_WIDTH,
-    align: 'center',
-    displayOrder: 3,
-  },
-  {
-    key: 'callbackUrl',
-    labelKey: L.callbackAddress,
-    minWidth: PAYMENT_ENGINE_CALLBACK_URL_COLUMN_MIN_WIDTH,
-    flexGrow: true,
-    align: 'end',
-    displayOrder: 4,
-  },
-];
-
 const COLLECTION_PROCESSING_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   {
     key: 'bulkAmount',
@@ -475,12 +400,12 @@ export const WAAS_STANDARD_RECORD_PAGE_CONFIG: Record<
     showExport: false,
     showBatchSelect: true,
     toolbarPreset: 'batch-filter-refresh',
-    columns: WAAS_CALLBACK_ERROR_COLUMNS,
+    columns: CALLBACK_ERROR_COLUMNS,
   },
   'History Callback': {
     showExport: false,
     toolbarPreset: 'filter-refresh',
-    columns: WAAS_HISTORY_CALLBACK_COLUMNS,
+    columns: WAAS_STANDARD_HISTORY_CALLBACK_COLUMNS,
   },
 };
 

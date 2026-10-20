@@ -40,3 +40,20 @@
   min-width: 0;
   max-width: 100%;
 }
+
+/* 尾列 combo：整块（主行+副行）在列宽内右对齐，主行保持 icon+金额+网络 Tag 同一行。 */
+.hostAlignEnd .hashLikeCombo {
+  align-items: flex-end;
+}
+
+.hostAlignEnd .titleRow {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  flex-wrap: nowrap;
+}
+
+.hostAlignEnd .titleRow :global(.eds-anchored-tooltip) {
+  flex: 0 1 auto;
+  min-width: 0;
+}

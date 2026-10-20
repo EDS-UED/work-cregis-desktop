@@ -1,9 +1,21 @@
+import type { AppLocale } from '@/composables/useAppLocale';
 import { applyCurrencyRowTagVisibility } from '@/scenes/tasks/list-field/listFieldCurrencyTagCustomize';
 import {
   buildCurrencyRowPresetCustomize,
   resolveEgDataListDemoRowIndex,
 } from '@/scenes/shared/egDataListMockData';
 import { resolveDataListCryptoName } from '@/scenes/shared/resolveDataListCryptoName';
+import {
+  buildTasksListFieldBusinessTypeCustomize,
+} from '@/scenes/tasks/list-field/tasksListFieldBusinessTypeDefaults';
+import {
+  buildSenderWalletDisplayName,
+} from '@/scenes/tasks/list-field/tasksListFieldBusinessTypeRowData';
+import { buildTasksListFieldReceiverCustomize } from '@/scenes/tasks/list-field/tasksListFieldReceiverDefaults';
+import {
+  CALLBACK_ERROR_WALLET_PAYOUT_SENDER_WALLET_NAME,
+  CALLBACK_ERROR_WALLET_PAYOUT_SHOWCASE_ROW_INDEX,
+} from './paymentEngineOrderRecordData';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 
 const CALLBACK_EVENT_LABEL_KEYS: Record<
@@ -11,7 +23,7 @@ const CALLBACK_EVENT_LABEL_KEYS: Record<
   string
 > = {
   'wallet-payout': 'Withdrawal',
-  'waas-order': 'WaaS Order',
+  'waas-order': 'Order',
   'payment-exception': 'Payment Exception',
   'waas-refund': 'WaaS Refund',
 };
@@ -21,6 +33,66 @@ export function resolveCallbackEventLabelKey(
 ): string {
   if (!eventType) return 'Withdrawal';
   return CALLBACK_EVENT_LABEL_KEYS[eventType];
+}
+
+function resolveCallbackSenderWalletDisplayName(
+  row: PaymentEngineRecordRow,
+  rowIndex: number,
+  locale: AppLocale,
+): string {
+  if (
+    rowIndex === CALLBACK_ERROR_WALLET_PAYOUT_SHOWCASE_ROW_INDEX
+    && row.callbackEventType === 'wallet-payout'
+  ) {
+    return CALLBACK_ERROR_WALLET_PAYOUT_SENDER_WALLET_NAME;
+  }
+  return buildSenderWalletDisplayName(rowIndex, locale);
+}
+
+/** 异常回调 · 发送方列（同协作 Tasks business-type 列）。 */
+export function buildCallbackSenderCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+  locale: AppLocale = 'en',
+  menuItem = 'Callback Error',
+): Record<string, unknown> {
+  const rowIndex = resolveEgDataListDemoRowIndex(row);
+  const customize = buildTasksListFieldBusinessTypeCustomize(
+    columnMinWidth,
+    rowIndex,
+    menuItem,
+    locale,
+  );
+  if (row.walletFromAddress) {
+    Object.assign(customize, {
+      address: row.walletFromAddress,
+      /** 主行=钱包名；勿用 walletFromAlias（那是地址侧别名语义）。 */
+      addressSecondaryText: resolveCallbackSenderWalletDisplayName(row, rowIndex, locale),
+    });
+  }
+  return customize;
+}
+
+/** 异常回调 · 接收方列（同协作 Tasks receiver 列）。 */
+export function buildCallbackReceiverCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+  menuItem = 'Callback Error',
+): Record<string, unknown> {
+  const rowIndex = resolveEgDataListDemoRowIndex(row);
+  const customize = buildTasksListFieldReceiverCustomize(rowIndex, columnMinWidth, menuItem);
+  if (row.walletToAddress) {
+    Object.assign(customize, {
+      toAddress1: row.walletToAddress,
+      /** 覆盖 Tasks 演示 toAlias；无别名时必须清空，避免非首行仍显示 Alex Mah. 等。 */
+      toAlias1: row.walletToAlias?.trim() ?? '',
+    });
+  }
+  return customize;
+}
+
+export function resolveCallbackRowBusinessTypeLabelKey(row: PaymentEngineRecordRow): string {
+  return row.businessTypeKey ?? resolveCallbackEventLabelKey(row.callbackEventType);
 }
 
 /** 钱包提币：仅保留可读别名；含 `...` 的占位串交给 EDS 对完整地址做前 8 后 6 截断。 */

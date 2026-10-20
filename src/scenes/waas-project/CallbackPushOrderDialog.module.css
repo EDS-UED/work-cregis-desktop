@@ -1,0 +1,10 @@
+.dialogHost:global(.eds-dialog) :global(footer .eds-divider) {
+  opacity: 1;
+  background: var(--stroke-divider-module);
+}
+
+.dialogHost:global(.eds-dialog) :global([class*='composeBody']) {
+  padding-top: var(--spacing-4);
+  padding-inline: var(--spacing-5);
+  padding-bottom: var(--spacing-5);
+}

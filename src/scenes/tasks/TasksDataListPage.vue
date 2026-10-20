@@ -16,7 +16,6 @@ import {
   EgDataListCellOverflow,
   EgDataListColumn,
   EgDivider,
-  EgEndFeedbackCard,
   EgFlotation,
   EgIcon,
   EgIconButton,
@@ -88,6 +87,7 @@ import {
   type TasksDataListMenuItemLabel,
   type TasksDataListCustomizeState,
 } from './tasksDataListPageData';
+import { showAppEndFeedback } from '@/composables/appEndFeedback';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import { useListRegionInteractionBlock } from '@/composables/useListRegionInteractionBlock';
@@ -338,12 +338,8 @@ const listToastText = ref('');
 const listToastType = ref<'result' | 'danger'>('result');
 const listToastKeepMounted = ref(false);
 const listToastMotionActive = ref(false);
-const showEndFeedback = ref(false);
-const endFeedbackKey = ref(0);
-const endFeedbackText = ref('Success');
 let listToastTimer: ReturnType<typeof setTimeout> | undefined;
 let listToastLeaveTimer: ReturnType<typeof setTimeout> | undefined;
-let endFeedbackTimer: ReturnType<typeof setTimeout> | undefined;
 
 function readListToastLeaveMs(el: HTMLElement): number {
   const probe = document.createElement('div');
@@ -401,14 +397,7 @@ function showListError(message: string) {
 }
 
 function showListSuccess(messageKey = 'Success') {
-  endFeedbackText.value = ui(messageKey);
-  endFeedbackKey.value += 1;
-  showEndFeedback.value = true;
-  if (endFeedbackTimer !== undefined) clearTimeout(endFeedbackTimer);
-  endFeedbackTimer = window.setTimeout(() => {
-    showEndFeedback.value = false;
-    endFeedbackTimer = undefined;
-  }, 2500);
+  showAppEndFeedback(messageKey);
 }
 
 const allRowIndexes = computed(() => {
@@ -775,7 +764,6 @@ onBeforeUnmount(() => {
   setBatchSigningListRefreshHandler(null);
   if (listToastTimer !== undefined) clearTimeout(listToastTimer);
   clearListToastLeaveTimer();
-  if (endFeedbackTimer !== undefined) clearTimeout(endFeedbackTimer);
 });
 
 function onRowPrimaryAction(row: Record<string, unknown>) {
@@ -1668,9 +1656,6 @@ const displayBatchActions = computed(() => {
     </EgLayout>
 
     <Teleport to=".app-preview">
-      <div v-if="showEndFeedback" :class="pageStyles.endFeedbackHost">
-        <EgEndFeedbackCard :key="endFeedbackKey" :text="endFeedbackText" />
-      </div>
       <div
         v-if="listToastKeepMounted"
         :class="[pageStyles.listToastHost, listToastMotionActive && 'is-active']"

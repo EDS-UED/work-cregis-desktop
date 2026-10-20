@@ -1,7 +1,7 @@
 import {
   BULK_TRANSFER_COLUMNS,
-  CALLBACK_ERROR_COLUMNS,
-  HISTORY_CALLBACK_COLUMNS,
+  CALLBACK_ERROR_ORDER_MODE_COLUMNS,
+  ORDER_MODE_HISTORY_CALLBACK_COLUMNS,
   ORDER_RECORD_COLUMNS,
   PAYMENT_ENGINE_ORDER_RECORD_LIST_PAGE_CONFIG,
   PAYMENT_EXCEPTION_COLUMNS,
@@ -43,12 +43,12 @@ export const WAAS_ORDER_MODE_RECORD_PAGE_CONFIG: Record<
     showExport: false,
     showBatchSelect: true,
     toolbarPreset: 'batch-filter-refresh',
-    columns: CALLBACK_ERROR_COLUMNS,
+    columns: CALLBACK_ERROR_ORDER_MODE_COLUMNS,
   },
   'History Callback': {
     showExport: false,
     toolbarPreset: 'filter-refresh',
-    columns: HISTORY_CALLBACK_COLUMNS,
+    columns: ORDER_MODE_HISTORY_CALLBACK_COLUMNS,
   },
 };
 

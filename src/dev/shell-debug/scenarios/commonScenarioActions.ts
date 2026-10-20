@@ -1,3 +1,4 @@
+import { paymentEngineDataListShellApiRegistry } from '@/scenes/payment-engine/paymentEngineDataListShellApi';
 import { waasProjectShellApiRegistry } from '@/scenes/project/waasProjectShellApi';
 import { transactionRecordsDataListShellApiRegistry } from '@/scenes/transaction-records/transactionRecordsDataListShellApi';
 import { tasksDataListShellApiRegistry } from '@/scenes/tasks/tasksDataListShellApi';
@@ -10,7 +11,8 @@ type DataListShellApi = {
 
 function readDataListShellApi(): DataListShellApi | null {
   return (
-    tasksDataListShellApiRegistry.value
+    paymentEngineDataListShellApiRegistry.value
+    ?? tasksDataListShellApiRegistry.value
     ?? transactionRecordsDataListShellApiRegistry.value
   );
 }

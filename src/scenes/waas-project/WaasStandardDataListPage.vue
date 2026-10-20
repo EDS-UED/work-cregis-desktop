@@ -12,6 +12,7 @@ defineProps<{
 <template>
   <PaymentEngineDataListPage
     :menu-item="menuItem"
+    waas-eg-filter-list-mode="standard"
     :resolve-config="resolveWaasStandardRecordConfig"
     :build-rows="buildWaasStandardRecordRows"
     :open-detail-on-row-click="shouldOpenWaasStandardDetailOnRowClick(menuItem)"

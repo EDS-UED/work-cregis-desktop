@@ -26,6 +26,11 @@ import {
   shellDebugPopoverContentMaxHeight,
   shellDebugPopoverContentMinHeight,
 } from '../shellDebugPopover.constants';
+import { markShellDebugUiInteraction } from '../shellDebugFloatInteraction';
+import {
+  registerShellDebugQaPopoverExceptRoot,
+  unregisterShellDebugQaPopoverExceptRoot,
+} from '../shellDebugPopoverExcept';
 import styles from './TestScenarioMode.module.css';
 
 const props = defineProps<{
@@ -200,6 +205,9 @@ onMounted(() => {
   nextTick(() => {
     ensureTopToolHead();
     syncPageSpecHeights();
+    if (shellRef.value) {
+      registerShellDebugQaPopoverExceptRoot(shellRef.value);
+    }
   });
 
   const shell = shellRef.value;
@@ -214,6 +222,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   shellResizeObserver?.disconnect();
   teardownTopToolHead();
+  unregisterShellDebugQaPopoverExceptRoot();
 });
 
 watch(segmentedIndex, async (index) => {
@@ -235,9 +244,18 @@ watch(lastAppliedId, () => {
   nextTick(syncPageSpecHeights);
 });
 
+watch(shellRef, (root) => {
+  registerShellDebugQaPopoverExceptRoot(root);
+});
+
 async function applyScenario(id: string, apply: () => void | Promise<void>) {
+  markShellDebugUiInteraction(400);
   await apply();
   lastAppliedId.value = id;
+}
+
+function onExecutePointerDown() {
+  markShellDebugUiInteraction(400);
 }
 </script>
 
@@ -246,6 +264,7 @@ async function applyScenario(id: string, apply: () => void | Promise<void>) {
     ref="shellRef"
     :class="[styles.shell, 'shell-debug-qa-popover']"
     :data-qa-needs-scroll="displayedNeedsScroll ? '' : undefined"
+    @pointerdown.stop="onExecutePointerDown"
   >
     <Teleport v-if="topToolHeadTarget" :to="topToolHeadTarget">
       <div :class="styles.scopeControl">
@@ -309,6 +328,7 @@ async function applyScenario(id: string, apply: () => void | Promise<void>) {
                 tone="decor"
                 variant="outline"
                 size="sm"
+                @pointerdown.stop="onExecutePointerDown"
                 @click="applyScenario(scenario.id, scenario.apply)"
               >
                 执行

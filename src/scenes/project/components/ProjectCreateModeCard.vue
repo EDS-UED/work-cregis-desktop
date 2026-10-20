@@ -2,7 +2,7 @@
 import { EgRadio } from '@eds/desktop-components';
 import styles from './ProjectCreateModeCard.module.css';
 
-defineProps<{
+const props = defineProps<{
   title: string;
   description: string;
   selected?: boolean;
@@ -13,6 +13,14 @@ defineProps<{
 const emit = defineEmits<{
   select: [];
 }>();
+
+function onRowActivate(event: MouseEvent | KeyboardEvent) {
+  const wasSelected = props.selected;
+  emit('select');
+  if (wasSelected && event.currentTarget instanceof HTMLElement) {
+    event.currentTarget.blur();
+  }
+}
 </script>
 
 <template>
@@ -22,9 +30,9 @@ const emit = defineEmits<{
       role="radio"
       tabindex="0"
       :aria-checked="selected"
-      @click="emit('select')"
-      @keydown.enter.prevent="emit('select')"
-      @keydown.space.prevent="emit('select')"
+      @click="onRowActivate"
+      @keydown.enter.prevent="onRowActivate"
+      @keydown.space.prevent="onRowActivate"
     >
       <EgRadio
         :class="styles.radio"

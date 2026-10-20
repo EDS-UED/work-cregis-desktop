@@ -16,6 +16,7 @@ const props = defineProps<{
   cryptoName?: string;
   networkLabel?: string;
   datetime: string;
+  alignEnd?: boolean;
 }>();
 
 const resolvedCryptoName = computed((): CryptoName => {
@@ -33,7 +34,10 @@ const networkTagLabel = computed(() => String(props.networkLabel ?? '').trim());
 </script>
 
 <template>
-  <div class="desktopTokens list-field-general-structure" :class="styles.host">
+  <div
+    class="desktopTokens list-field-general-structure"
+    :class="[styles.host, alignEnd && styles.hostAlignEnd]"
+  >
     <span class="hash-like-combo" :class="styles.hashLikeCombo">
       <div :class="styles.titleRow">
         <span :class="styles.cryptoInlineIcon">

@@ -258,7 +258,7 @@ function buildCallbackSnapshot(
   menuItem: string,
 ): EgFilterRowSnapshot {
   const detail = resolvePaymentCallbackErrorRecordDetail(row);
-  const businessTypeLabel = detail.businessTypeKey;
+  const businessTypeLabel = resolveWaasBusinessTypeLabel(row);
   const pushMethodLabel = resolveWaasPushMethodLabel(row);
 
   return {

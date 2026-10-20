@@ -344,7 +344,7 @@ export function buildWaasOrderModeFilterFields(
     if (fieldId === 'pushStatus' && resolvedMenu === 'History Callback') {
       return {
         ...field,
-        selectionMode: 'single' as const,
+        selectionMode: 'multi' as const,
         statusOptions: buildWaasOrderModeStatusFilterOptions(
           sourceRowCount,
           menuItem,

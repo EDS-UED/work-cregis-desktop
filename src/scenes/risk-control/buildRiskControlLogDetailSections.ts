@@ -263,6 +263,59 @@ function buildTeamApiUpdateSections(
   ];
 }
 
+function buildWebhookLogSections(
+  row: PaymentEngineRecordRow,
+  translate: (key: string) => string,
+): DetailSectionData[] {
+  const detail = resolveRiskControlLogRecordDetail(row);
+
+  return [{
+    key: 'log-webhook-operation',
+    items: [
+      {
+        ...createDetailApplyItemRow('initiated-by', {
+          key: LOG_TRIGGER_OPERATOR_ITEM_KEY,
+          title: translate('Operator'),
+          value: detail.operatorName,
+          valueSymbolAvatarName: detail.operatorAvatarName,
+          valueSecondary: detail.operatorEmailMasked,
+          valueDeviceInfo: detail.deviceInfo,
+        }),
+        titleIcon: 'eds-user-pointer',
+      },
+      createDetailApplyItemRow('time', {
+        key: 'log-webhook-operation-time',
+        title: translate('Operation Time'),
+        value: detail.operationTime,
+      }),
+      {
+        ...createDetailApplyItemRow('text', {
+          key: 'log-webhook-name',
+          title: translate('Webhook Name'),
+          value: detail.webhookName,
+        }),
+        titleIcon: 'eds-title',
+      },
+      {
+        ...createDetailApplyItemRow('text', {
+          key: 'log-webhook-event-type',
+          title: translate('Event Type'),
+          value: translate(detail.webhookEventTypeKey),
+        }),
+        titleIcon: 'eds-business-type',
+      },
+      {
+        ...createDetailApplyItemRow('text', {
+          key: 'log-webhook-endpoint',
+          title: translate('Endpoint URL'),
+          value: detail.webhookEndpointUrl,
+        }),
+        titleIcon: 'eds-link',
+      },
+    ],
+  }];
+}
+
 export function buildRiskControlLogDetailSections(
   row: PaymentEngineRecordRow,
   translate: (key: string) => string,
@@ -275,6 +328,10 @@ export function buildRiskControlLogDetailSections(
 
   if (detail.kind === 'team-api-update') {
     return buildTeamApiUpdateSections(row, translate);
+  }
+
+  if (detail.kind === 'webhook-operation') {
+    return buildWebhookLogSections(row, translate);
   }
 
   return buildStandardLogDetailSections(row, translate);
