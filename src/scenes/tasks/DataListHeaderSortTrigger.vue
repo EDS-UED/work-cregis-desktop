@@ -16,11 +16,15 @@ const props = withDefaults(
     label?: string;
     disabled?: boolean;
     activeOrder?: TasksDataListSortOrder | '';
+    align?: 'start' | 'end' | 'center';
+    boundarySelector?: string;
   }>(),
   {
     label: '',
     disabled: false,
     activeOrder: '',
+    align: 'start',
+    boundarySelector: '.app-preview',
   },
 );
 
@@ -45,10 +49,12 @@ function chooseSort(order: TasksDataListSortOrder, close: () => void) {
   <EgFlotation
     :class="dataListStyles.sortDropdown"
     placement="bottom"
-    align="start"
+    :align="align"
     :disabled="disabled"
     :show-add="false"
     :show-menu-divider="false"
+    :boundary-selector="boundarySelector"
+    flip
     close-on-scroll
   >
     <template #trigger="{ expanded }">

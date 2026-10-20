@@ -26,10 +26,6 @@ const detailPopupMounted = computed(
 );
 
 const detail = computed(() => props.flow.detailRow.value);
-
-const enableMultiTxDetail = computed(
-  () => props.flow.detailOpenedFromWalletView.value,
-);
 </script>
 
 <template>
@@ -38,7 +34,6 @@ const enableMultiTxDetail = computed(
     v-model:open="detailOpen"
     v-model:detail-page="detailPage"
     :detail="detail"
-    :enable-multi-tx-detail="enableMultiTxDetail"
     @popup-closed="flow.onDetailPopupClosed()"
   />
 </template>

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import {
+  EgCregisModuleMenu,
+  EgCregisNavBar,
   EgIcon,
   EgLayout,
-  EgNavBar,
   EgNavBarBottomIcon,
   navBarDefaultBottomUtilities,
 } from '@eds/desktop-components';
-import CregisModuleMenu from '@/components/CregisModuleMenu.vue';
 import TeamWorkspaceSwitcher from '@/components/TeamWorkspaceSwitcher.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { useAppShellNavigation } from '@/composables/useAppShellNavigation';
@@ -19,26 +19,49 @@ import {
   resolveNavBarClickState,
   type CregisModuleMenuBusinessTitle,
 } from '@/presets/module-menu/businessModuleTitles';
-import { getCregisModuleMenuGroups } from '@/presets/module-menu/cregisModuleMenuGroups';
-import { cregisNavBarDeclarativeAttrs } from '@/presets/nav/cregisNavBarDeclarative';
-import PaymentEnginePage from '@/scenes/payment-engine/PaymentEnginePage.vue';
+import { resolveEnglishUiText } from '@/i18n/translateUiText';
+import { customerServiceState } from '@/scenes/customer-service/customerServiceState';
+import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
 import {
   DEFAULT_PAYMENT_ENGINE_MENU_ITEM,
-  isPaymentEngineMenuItem,
-} from '@/scenes/payment-engine/paymentEngineData';
+  PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+} from '@/scenes/payment-engine/paymentEngineMenuData';
+import { usePaymentEngineProjectStore } from '@/scenes/payment-engine/paymentEngineProjectStore';
+import {
+  isPaymentEngineModuleTitle,
+  isReportModuleTitle,
+  isWaasModuleTitle,
+} from '@/scenes/project/projectModuleTitles';
+import { registerWaasProjectShellApi } from '@/scenes/project/waasProjectShellApi';
+import { useWaasProjectStore } from '@/scenes/project/waasProjectStore';
 import TasksDataListPage from '@/scenes/tasks/TasksDataListPage.vue';
 import { setMultiSignCollaborationModuleActive } from '@/scenes/tasks/signing/multiSignInvitation/multiSignInvitationStore';
 import { useTasksModuleMenuGroups } from '@/scenes/tasks/useTasksModuleMenuGroups';
+import TransactionRecordsDataListPage from '@/scenes/transaction-records/TransactionRecordsDataListPage.vue';
 import {
   DEFAULT_TASKS_DATA_LIST_MENU_ITEM,
   isTasksDataListMenuItem,
+  resolveTasksModuleMenuDisplayLabel,
   type TasksDataListMenuItemLabel,
 } from '@/scenes/tasks/tasksDataListPageData';
-import TransactionRecordsDataListPage from '@/scenes/transaction-records/TransactionRecordsDataListPage.vue';
-import BulkTransferRecordPage from '@/scenes/waas/BulkTransferRecordPage.vue';
-import { customerServiceState } from '@/scenes/customer-service/customerServiceState';
+import WaasProjectShell from '@/scenes/waas-project/WaasProjectShell.vue';
+import {
+  isWaasMenuBranchOnlyItem,
+  isWaasMenuItemValidForProject,
+  resolveDefaultWaasMenuItem,
+} from '@/scenes/waas-project/waasMenuData';
+import { useWaasModuleMenuGroups } from '@/scenes/waas-project/useWaasModuleMenuGroups';
+import PaymentEngineProjectSettingsPage from '@/scenes/payment-engine/PaymentEngineProjectSettingsPage.vue';
+import RiskControlAmlQueryPage from '@/scenes/risk-control/RiskControlAmlQueryPage.vue';
+import RiskControlDataListPage from '@/scenes/risk-control/RiskControlDataListPage.vue';
+import {
+  DEFAULT_RISK_CONTROL_MENU_ITEM,
+  isRiskControlAmlQueryMenuItem,
+  isRiskControlDataListMenuItem,
+  isRiskControlModuleMenuItem,
+} from '@/scenes/risk-control/riskControlMenuData';
 
-const { messages, ui } = useAppI18n();
+const { messages, ui, locale } = useAppI18n();
 const { state: shellNavState } = useAppShellNavigation();
 
 const navBarBottomUtilities = computed(() =>
@@ -52,19 +75,23 @@ const navBarBottomUtilities = computed(() =>
   }),
 );
 
-const navBarAttrs = computed(() => ({
-  ...cregisNavBarDeclarativeAttrs,
-  moduleLabel1: ui('Wallet'),
-  moduleLabel2: ui('Tasks'),
-  moduleLabel3: ui('WaaS'),
-  moduleLabel4: ui('Payment Engine'),
-  moduleLabel5: ui('Report'),
-  moduleLabel6: ui('Risk Control'),
-  moduleLabel7: ui('Manage'),
-  moduleLabel8: ui('Marketplace'),
-  appEntryLabel1: ui('UniChain'),
-  appEntryLabel2: ui('MetaMask'),
-}));
+const {
+  hasProjects: waasHasProjects,
+  selectedProject: waasSelectedProject,
+  shellView: waasShellView,
+  titleFlotationItems: waasTitleFlotationItems,
+  titleFlotationSelectedIndex: waasTitleFlotationSelectedIndex,
+  openCreateProject: openWaasCreateProject,
+  syncShellViewFromProjects: syncWaasShellViewFromProjects,
+  resetWaasProjectsForDemo,
+  clearWaasProjectsForQa,
+  selectProject: selectWaasProjectById,
+  selectProjectByFlotationIndex: selectWaasProjectByFlotationIndex,
+} = useWaasProjectStore();
+
+function translateModuleMenu(text: string) {
+  return ui(resolveTasksModuleMenuDisplayLabel(text, locale.value));
+}
 
 const activeModuleTitle = ref<CregisModuleMenuBusinessTitle>(
   DEFAULT_CREGIS_MODULE_MENU_BUSINESS_TITLE,
@@ -74,7 +101,22 @@ const activeNavLabel = ref('Wallet');
 
 const activeModuleMenuItem = ref<string | null>(null);
 
-const showModuleMenu = computed(() => !navLabelShouldHideModuleMenu(activeNavLabel.value));
+/** When set, module-title watcher applies this item instead of the module default. */
+let pendingShellMenuItem: string | null = null;
+
+const isWaasModule = computed(() => isWaasModuleTitle(activeModuleTitle.value));
+const isPaymentEngineModule = computed(() => isPaymentEngineModuleTitle(activeModuleTitle.value));
+const isRiskControlModule = computed(() => activeModuleTitle.value === 'Risk Control');
+const showReportPage = computed(() => isReportModuleTitle(activeModuleTitle.value));
+
+const showModuleMenu = computed(() => {
+  if (navLabelShouldHideModuleMenu(activeNavLabel.value)) return false;
+  if (isPaymentEngineModule.value) return true;
+  if (isWaasModule.value) {
+    return waasHasProjects.value && waasShellView.value === 'content';
+  }
+  return true;
+});
 
 const showTasksDataList = computed(
   () =>
@@ -88,36 +130,86 @@ const showPreferencePage = computed(
 );
 
 const showTeamAccountPage = computed(
-  () => activeModuleTitle.value === 'Manage' && activeModuleMenuItem.value === 'Team Account Balance',
+  () =>
+    activeModuleTitle.value === 'Manage' && activeModuleMenuItem.value === 'Team Account Balance',
 );
 
-const showPaymentEnginePage = computed(
+const showPaymentEngineSettings = computed(
   () =>
-    activeModuleTitle.value === 'Payment Engine' &&
+    isPaymentEngineModule.value &&
+    activeModuleMenuItem.value === PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
+);
+
+const showPaymentEngineContent = computed(
+  () =>
+    isPaymentEngineModule.value &&
     activeModuleMenuItem.value !== null &&
-    isPaymentEngineMenuItem(activeModuleMenuItem.value),
+    activeModuleMenuItem.value !== PAYMENT_ENGINE_SETTINGS_MENU_ITEM,
 );
 
-/** Report has no module menu — open transaction records directly. */
-const showReportPage = computed(() => activeModuleTitle.value === 'Report');
-
-const showWaasBulkTransferPage = computed(
+const showRiskControlAmlQueryPage = computed(
   () =>
-    activeModuleTitle.value === 'WaaS'
-    && activeModuleMenuItem.value === 'Bulk Transfer Record',
+    isRiskControlModule.value &&
+    activeModuleMenuItem.value !== null &&
+    isRiskControlAmlQueryMenuItem(activeModuleMenuItem.value),
+);
+
+const showRiskControlDataList = computed(
+  () =>
+    isRiskControlModule.value &&
+    activeModuleMenuItem.value !== null &&
+    isRiskControlDataListMenuItem(activeModuleMenuItem.value),
 );
 
 const tasksModuleMenuGroups = useTasksModuleMenuGroups();
-
-/** When set, module-title watcher applies this item instead of the module default. */
-let pendingShellMenuItem: string | null = null;
+const waasModuleMenuGroups = useWaasModuleMenuGroups();
+const {
+  titleFlotationItems: paymentEngineTitleFlotationItems,
+  titleFlotationSelectedIndex: paymentEngineTitleFlotationSelectedIndex,
+  selectProjectByFlotationIndex,
+} = usePaymentEngineProjectStore();
 
 const moduleMenuGroups = computed(() => {
-  if (activeModuleTitle.value === 'Tasks') {
-    return tasksModuleMenuGroups.value;
-  }
-  return getCregisModuleMenuGroups(activeModuleTitle.value);
+  if (activeModuleTitle.value === 'Tasks') return tasksModuleMenuGroups.value;
+  if (isWaasModule.value) return waasModuleMenuGroups.value;
+  return undefined;
 });
+
+const moduleMenuRemountKey = computed(() => {
+  if (isWaasModule.value) {
+    const mode = waasSelectedProject.value?.depositMode ?? 'sub-address';
+    return `waas:${mode}`;
+  }
+  if (isPaymentEngineModule.value) {
+    return 'payment-engine';
+  }
+  return activeModuleTitle.value;
+});
+
+watch(
+  isWaasModule,
+  (active) => {
+    if (!active) {
+      registerWaasProjectShellApi(null);
+      return;
+    }
+    registerWaasProjectShellApi({
+      setProjectsEmpty: (empty) => {
+        if (empty) {
+          clearWaasProjectsForQa();
+          return;
+        }
+        resetWaasProjectsForDemo();
+      },
+      activateWaasModule: () => {
+        activeNavLabel.value = 'WaaS';
+        activeModuleTitle.value = 'WaaS';
+      },
+      selectProjectById: selectWaasProjectById,
+    });
+  },
+  { immediate: true },
+);
 
 watch(activeModuleTitle, (title) => {
   if (pendingShellMenuItem != null) {
@@ -134,15 +226,20 @@ watch(activeModuleTitle, (title) => {
     return;
   }
   if (title === 'Manage') {
-    activeModuleMenuItem.value = 'Team Subscription';
+    activeModuleMenuItem.value = 'Team Account Balance';
+    return;
+  }
+  if (title === 'WaaS') {
+    activeModuleMenuItem.value = resolveDefaultWaasMenuItem(waasSelectedProject.value);
+    syncWaasShellViewFromProjects();
     return;
   }
   if (title === 'Payment Engine') {
     activeModuleMenuItem.value = DEFAULT_PAYMENT_ENGINE_MENU_ITEM;
     return;
   }
-  if (title === 'WaaS') {
-    activeModuleMenuItem.value = 'Order Record';
+  if (title === 'Risk Control') {
+    activeModuleMenuItem.value = DEFAULT_RISK_CONTROL_MENU_ITEM;
     return;
   }
   if (title === 'Report') {
@@ -153,12 +250,27 @@ watch(activeModuleTitle, (title) => {
 }, { immediate: true });
 
 watch(
-  [activeModuleTitle, activeModuleMenuItem],
-  ([title, item]) => {
-    setMultiSignCollaborationModuleActive(title === 'Tasks' && item === 'Signing');
+  activeModuleTitle,
+  (title) => {
+    setMultiSignCollaborationModuleActive(title === 'Tasks');
   },
   { immediate: true },
 );
+
+watch(waasSelectedProject, (project, previousProject) => {
+  if (!isWaasModule.value || !project) return;
+
+  const previousMode = previousProject?.depositMode ?? 'sub-address';
+  const nextMode = project.depositMode;
+  const currentItem = activeModuleMenuItem.value;
+
+  if (
+    previousMode !== nextMode
+    || !isWaasMenuItemValidForProject(currentItem, project)
+  ) {
+    activeModuleMenuItem.value = resolveDefaultWaasMenuItem(project);
+  }
+});
 
 function isCustomerServiceNavLabel(label: string) {
   const trimmed = label.trim();
@@ -176,12 +288,16 @@ function onNavClick(event: MouseEvent) {
   }
 
   const navState = resolveNavBarClickState(label, ui);
-  if (!navState) return;
-
-  activeNavLabel.value = navState.navLabel;
-  if (navState.moduleTitle) {
-    activeModuleTitle.value = navState.moduleTitle;
+  if (navState) {
+    activeNavLabel.value = navState.navLabel;
+    if (navState.moduleTitle) {
+      activeModuleTitle.value = navState.moduleTitle;
+    }
+    return;
   }
+
+  const englishLabel = resolveEnglishUiText(locale.value, label);
+  if (englishLabel.trim()) activeNavLabel.value = englishLabel;
 }
 
 watch(
@@ -225,15 +341,37 @@ function onModuleMenuItemSelect(label: string) {
     return;
   }
 
-  if (activeModuleTitle.value === 'Payment Engine') {
-    if (isPaymentEngineMenuItem(label)) {
-      activeModuleMenuItem.value = label;
-    }
+  if (isWaasModuleTitle(activeModuleTitle.value)) {
+    if (isWaasMenuBranchOnlyItem(label)) return;
+    activeModuleMenuItem.value = label;
     return;
   }
 
-  if (activeModuleTitle.value === 'WaaS') {
+  if (isPaymentEngineModuleTitle(activeModuleTitle.value)) {
     activeModuleMenuItem.value = label;
+    return;
+  }
+
+  if (activeModuleTitle.value === 'Risk Control') {
+    if (isRiskControlModuleMenuItem(label)) {
+      activeModuleMenuItem.value = label;
+    }
+  }
+}
+
+function onModuleMenuTitleAdd() {
+  if (isWaasModuleTitle(activeModuleTitle.value)) {
+    openWaasCreateProject();
+  }
+}
+
+function onModuleMenuTitleFlotationItemSelect(_label: string, index: number) {
+  if (isPaymentEngineModuleTitle(activeModuleTitle.value)) {
+    selectProjectByFlotationIndex(index);
+    return;
+  }
+  if (isWaasModuleTitle(activeModuleTitle.value)) {
+    selectWaasProjectByFlotationIndex(index);
   }
 }
 
@@ -250,7 +388,6 @@ function findNavBarButton(navLabel: string): HTMLButtonElement | null {
   return null;
 }
 
-/** EgModuleMenuItem focus is internal (first item default); click syncs highlight to target. */
 function syncModuleMenuItemFocus(menuItem: string) {
   const translated = ui(menuItem);
   for (const button of document.querySelectorAll<HTMLButtonElement>(
@@ -279,7 +416,6 @@ watch(
     const navAlreadyFocused = navButton?.getAttribute('aria-pressed') === 'true';
 
     if (navButton && !navAlreadyFocused) {
-      // Sync NavBar focus; capture handler updates module title, watcher applies pending menu.
       navButton.click();
     } else if (activeModuleTitle.value !== target.moduleTitle) {
       activeModuleTitle.value = target.moduleTitle;
@@ -303,7 +439,7 @@ watch(
   <EgLayout type="free">
     <template #nav>
       <div class="app-shell-nav" @click.capture="onNavClick">
-        <EgNavBar v-bind="navBarAttrs">
+        <EgCregisNavBar :translate="ui">
           <template #corporation>
             <TeamWorkspaceSwitcher />
           </template>
@@ -319,16 +455,33 @@ watch(
               </template>
             </EgNavBarBottomIcon>
           </template>
-        </EgNavBar>
+        </EgCregisNavBar>
       </div>
     </template>
 
     <template v-if="showModuleMenu" #moduleMenu>
-      <CregisModuleMenu
+      <EgCregisModuleMenu
+        :key="moduleMenuRemountKey"
         :title="activeModuleTitle"
+        :translate="translateModuleMenu"
         :groups="moduleMenuGroups"
-        :focused-label="activeModuleMenuItem"
+        :title-flotation-items="
+          isPaymentEngineModule
+            ? paymentEngineTitleFlotationItems
+            : isWaasModule
+              ? waasTitleFlotationItems
+              : undefined
+        "
+        :title-flotation-selected-index="
+          isPaymentEngineModule
+            ? paymentEngineTitleFlotationSelectedIndex
+            : isWaasModule
+              ? waasTitleFlotationSelectedIndex
+              : undefined
+        "
         @item-select="onModuleMenuItemSelect"
+        @title-add="onModuleMenuTitleAdd"
+        @title-flotation-item-select="onModuleMenuTitleFlotationItemSelect"
       />
     </template>
 
@@ -339,13 +492,31 @@ watch(
     />
     <PreferencePage v-else-if="showPreferencePage" />
     <TeamAccountPage v-else-if="showTeamAccountPage" />
-    <BulkTransferRecordPage v-else-if="showWaasBulkTransferPage" />
-    <PaymentEnginePage
-      v-else-if="showPaymentEnginePage && activeModuleMenuItem"
+
+    <WaasProjectShell
+      v-else-if="isWaasModule"
+      :menu-item="activeModuleMenuItem"
+    />
+
+    <template v-else-if="isPaymentEngineModule">
+      <PaymentEngineProjectSettingsPage v-if="showPaymentEngineSettings" />
+      <PaymentEngineDataListPage
+        v-else-if="showPaymentEngineContent && activeModuleMenuItem"
+        :key="`${paymentEngineTitleFlotationSelectedIndex}:${activeModuleMenuItem}`"
+        :menu-item="activeModuleMenuItem"
+      />
+    </template>
+
+    <TransactionRecordsDataListPage v-else-if="showReportPage" />
+
+    <RiskControlAmlQueryPage v-else-if="showRiskControlAmlQueryPage" />
+
+    <RiskControlDataListPage
+      v-else-if="showRiskControlDataList && activeModuleMenuItem"
       :key="activeModuleMenuItem"
       :menu-item="activeModuleMenuItem"
     />
-    <TransactionRecordsDataListPage v-else-if="showReportPage" />
+
     <div v-else class="app-shell-main">
       <p class="app-shell-main__hint">{{ messages.appShellMainHint }}</p>
     </div>

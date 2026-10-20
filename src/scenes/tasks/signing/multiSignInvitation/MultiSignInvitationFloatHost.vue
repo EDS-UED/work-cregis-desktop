@@ -2,9 +2,9 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import {
   EgTooltip,
-  EgTooltipPanel,
   EgIcon,
   EgToast,
+  EgTooltipPanel,
   closeAllAnchoredTooltips,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
@@ -73,7 +73,7 @@ const triggerLabelParts = computed(() => {
   };
 });
 
-function readDsOpen(): boolean {
+function readEdsOpen(): boolean {
   const openState = anchoredRef.value?.open;
   if (openState == null) {
     return false;
@@ -88,7 +88,7 @@ function dismissPanel() {
   panelExpanded.value = false;
   anchoredRef.value?.close?.();
   void nextTick(() => {
-    if (readDsOpen()) {
+    if (readEdsOpen()) {
       panelExpanded.value = false;
       anchoredRef.value?.close?.();
     }
@@ -96,7 +96,7 @@ function dismissPanel() {
 }
 
 function healDesyncBeforeOpen() {
-  if (readDsOpen() && !panelExpanded.value) {
+  if (readEdsOpen() && !panelExpanded.value) {
     panelExpanded.value = false;
     anchoredRef.value?.close?.();
   }
@@ -120,7 +120,7 @@ function openPanel() {
       anchoredRef.value?.openPanel?.();
 
       void nextTick(() => {
-        if (panelExpanded.value || readDsOpen()) {
+        if (panelExpanded.value || readEdsOpen()) {
           return;
         }
         if (retriesLeft > 0) {
@@ -134,7 +134,7 @@ function openPanel() {
 }
 
 /**
- * click-toggle=false：仅此 handler 开/关；须 stop 到 trigger，避免 DS 默认 click 双触发。
+ * click-toggle=false：仅此 handler 开/关；须 stop 到 trigger，避免 EDS 默认 click 双触发。
  * 与 ShellDebugLauncherAnchored / work.mdc §7.3 同模式。
  */
 function onBadgeClick(event: MouseEvent) {

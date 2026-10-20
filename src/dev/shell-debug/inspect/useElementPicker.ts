@@ -1,5 +1,5 @@
 import { onBeforeUnmount, onMounted, watch } from 'vue';
-import { buildElementInspectInfo } from './buildElementInspectInfo';
+import { buildElementInspectHoverPreview, buildElementInspectInfo } from './buildElementInspectInfo';
 import {
   clearInspectSelection,
   developerInspectActive,
@@ -11,40 +11,48 @@ import {
   inspectPinnedRect,
 } from './developerInspectSession';
 
+import {
+  markShellDebugUiInteraction,
+  nativeWindowAddEventListener,
+  nativeWindowRemoveEventListener,
+} from '../installShellDebugFloatLayerGuard';
+import { isShellDebugUiElement } from '../shellDebugUiScope';
+import { isInspectFloatLayerElement } from './inspectFloatLayerScope';
+
 const PREVIEW_SELECTOR = '.app-preview';
-const BLOCK_EVENT_TYPES = ['click', 'mousedown', 'dblclick'] as const;
+const BLOCK_EVENT_TYPES = ['click', 'mousedown', 'mouseup', 'dblclick'] as const;
 
 let lastHoverTarget: Element | null = null;
+let pointerRafId: number | null = null;
+let pendingPointer: { x: number; y: number; eventTarget: EventTarget | null } | null = null;
 
 function resolvePreview(): Element | null {
   return document.querySelector(PREVIEW_SELECTOR);
 }
 
 function isInspectOverlayTarget(target: Element): boolean {
-  return Boolean(
-    target.closest(
-      '[data-dev-inspect-overlay], [data-shell-debug-ui], [data-app-client-float-host], [data-float-interactive]',
-    ),
+  return (
+    isShellDebugUiElement(target)
+    || Boolean(target.closest('[data-app-client-float-host], [data-float-interactive]'))
   );
 }
 
-function isShellDebugUiTarget(target: Element): boolean {
-  return Boolean(target.closest('[data-shell-debug-ui]'));
-}
 
-function isInspectPanelTarget(target: Element): boolean {
-  return Boolean(
-    target.closest('[data-dev-inspect-panel], [data-dev-inspect-hover-popover]'),
-  );
+/** Dev 点选须拦截业务交互：preview 内 + teleport 浮层（eds-tooltip-v-* / Flotation / Popover）。 */
+function shouldBlockDevInspectBusinessInteraction(target: Element, preview: Element): boolean {
+  if (isInspectOverlayTarget(target)) return false;
+  if (preview.contains(target)) return true;
+  return isInspectFloatLayerElement(target);
 }
 
 function elementFromPreviewPoint(x: number, y: number, preview: Element): Element | null {
   const stack = document.elementsFromPoint(x, y);
   for (const node of stack) {
     if (!(node instanceof Element)) continue;
-    if (!preview.contains(node)) continue;
-    if (node.closest('[data-shell-debug-ui], [data-dev-inspect-overlay], [data-app-client-float-host]')) continue;
-    return node;
+    if (isShellDebugUiElement(node) || node.closest('[data-app-client-float-host]')) {
+      continue;
+    }
+    if (preview.contains(node) || isInspectFloatLayerElement(node)) return node;
   }
   return null;
 }
@@ -57,8 +65,7 @@ function blockPreviewInteraction(event: Event) {
 
   const target = event.target;
   if (!(target instanceof Element)) return;
-  if (!preview.contains(target)) return;
-  if (isInspectOverlayTarget(target)) return;
+  if (!shouldBlockDevInspectBusinessInteraction(target, preview)) return;
 
   event.preventDefault();
   event.stopPropagation();
@@ -73,8 +80,7 @@ function blockPreviewKeyboard(event: KeyboardEvent) {
 
   const target = event.target;
   if (!(target instanceof Element)) return;
-  if (!preview.contains(target)) return;
-  if (isInspectOverlayTarget(target)) return;
+  if (!shouldBlockDevInspectBusinessInteraction(target, preview)) return;
 
   if (event.key === 'Enter' || event.key === ' ') {
     event.preventDefault();
@@ -90,7 +96,7 @@ function syncPinnedRect() {
     return;
   }
   if (!pinned.element.isConnected) {
-    clearInspectSelection();
+    // Teleport 浮层可能在业务关闭动画中短暂 unmount；保留 pin 快照供粉框与 Dev 面板。
     return;
   }
   inspectPinnedRect.value = pinned.element.getBoundingClientRect();
@@ -139,34 +145,34 @@ function updateHoverTarget(target: Element | null, preview: Element) {
     return;
   }
 
-  const info = buildElementInspectInfo(target, preview, { includeAdaptive: true });
+  const pinned = inspectPinnedInfo.value;
+  if (pinned?.element === target) {
+    clearHoverSelection();
+    return;
+  }
+
+  if (target === lastHoverTarget && inspectHoverInfo.value) {
+    inspectHoverRect.value = target.getBoundingClientRect();
+    if (pinned) {
+      inspectMeasureElement.value = target;
+      inspectMeasureRect.value = target.getBoundingClientRect();
+    }
+    return;
+  }
+
+  lastHoverTarget = target;
+  const info = buildElementInspectHoverPreview(target, preview);
   if (!info) {
     clearHoverSelection();
     return;
   }
 
-  const pinned = inspectPinnedInfo.value;
-  if (pinned?.element === info.element) {
-    clearHoverSelection();
-    return;
-  }
-
-  if (info.element === lastHoverTarget && inspectHoverInfo.value) {
-    inspectHoverRect.value = info.element.getBoundingClientRect();
-    if (pinned) {
-      inspectMeasureElement.value = info.element;
-      inspectMeasureRect.value = info.element.getBoundingClientRect();
-    }
-    return;
-  }
-
-  lastHoverTarget = info.element;
   inspectHoverInfo.value = info;
-  inspectHoverRect.value = info.element.getBoundingClientRect();
+  inspectHoverRect.value = target.getBoundingClientRect();
 
   if (pinned) {
-    inspectMeasureElement.value = info.element;
-    inspectMeasureRect.value = info.element.getBoundingClientRect();
+    inspectMeasureElement.value = target;
+    inspectMeasureRect.value = target.getBoundingClientRect();
     return;
   }
 
@@ -174,52 +180,94 @@ function updateHoverTarget(target: Element | null, preview: Element) {
   inspectMeasureRect.value = null;
 }
 
-function onPointerMove(event: PointerEvent) {
-  if (!developerInspectActive.value) return;
-
-  const eventTarget = event.target;
-  if (eventTarget instanceof Element && isInspectPanelTarget(eventTarget)) {
-    return;
-  }
-  if (eventTarget instanceof Element && isShellDebugUiTarget(eventTarget)) {
-    if (!inspectPinnedInfo.value) clearHoverSelection();
+function processPointerMove(x: number, y: number, eventTarget: EventTarget | null) {
+  if (eventTarget instanceof Element && isShellDebugUiElement(eventTarget)) {
+    clearHoverSelection();
     return;
   }
 
   const preview = resolvePreview();
   if (!preview) return;
 
-  const target = elementFromPreviewPoint(event.clientX, event.clientY, preview);
+  const target = elementFromPreviewPoint(x, y, preview);
   updateHoverTarget(target, preview);
+}
+
+function onPointerMove(event: PointerEvent) {
+  if (!developerInspectActive.value) return;
+
+  pendingPointer = {
+    x: event.clientX,
+    y: event.clientY,
+    eventTarget: event.target,
+  };
+  if (pointerRafId !== null) return;
+
+  pointerRafId = requestAnimationFrame(() => {
+    pointerRafId = null;
+    const pending = pendingPointer;
+    pendingPointer = null;
+    if (!pending || !developerInspectActive.value) return;
+    processPointerMove(pending.x, pending.y, pending.eventTarget);
+  });
+}
+
+function cancelPointerRaf() {
+  if (pointerRafId === null) return;
+  cancelAnimationFrame(pointerRafId);
+  pointerRafId = null;
+  pendingPointer = null;
+}
+
+function isShellDebugUiPointerEvent(event: PointerEvent): boolean {
+  if (event.target instanceof Element && isShellDebugUiElement(event.target)) {
+    return true;
+  }
+  if ('composedPath' in event) {
+    for (const node of event.composedPath()) {
+      if (node instanceof Element && isShellDebugUiElement(node)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 function onPointerDown(event: PointerEvent) {
   if (!developerInspectActive.value) return;
 
-  const eventTarget = event.target;
-  if (eventTarget instanceof Element && (isShellDebugUiTarget(eventTarget) || isInspectPanelTarget(eventTarget))) {
-    return;
-  }
-
   const preview = resolvePreview();
   if (!preview) return;
 
-  if (!(eventTarget instanceof Element) || !preview.contains(eventTarget)) {
+  const target = elementFromPreviewPoint(event.clientX, event.clientY, preview);
+
+  if (isShellDebugUiPointerEvent(event)) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    markShellDebugUiInteraction();
+    return;
+  }
+
+  if (!target) {
     if (inspectPinnedInfo.value) {
       clearInspectSelection();
     }
     return;
   }
 
-  const target = elementFromPreviewPoint(event.clientX, event.clientY, preview);
+  if (isShellDebugUiElement(target)) {
+    return;
+  }
 
   event.preventDefault();
   event.stopPropagation();
   event.stopImmediatePropagation();
 
-  if (!target) {
-    clearInspectSelection();
-    return;
+  if (isInspectFloatLayerElement(target)) {
+    markShellDebugUiInteraction(400);
+  } else {
+    markShellDebugUiInteraction(120);
   }
 
   const info = buildElementInspectInfo(target, preview, { includeAdaptive: true });
@@ -229,7 +277,7 @@ function onPointerDown(event: PointerEvent) {
   }
 
   inspectPinnedInfo.value = info;
-  inspectPinnedRect.value = info.element.getBoundingClientRect();
+  inspectPinnedRect.value = target.getBoundingClientRect();
   clearHoverSelection();
 }
 
@@ -246,25 +294,28 @@ export function useDeveloperInspectPicker() {
       window.addEventListener(type, blockPreviewInteraction, true);
     }
     window.addEventListener('keydown', blockPreviewKeyboard, true);
-    window.addEventListener('pointerdown', onPointerDown, true);
+    // 须用原生 addEventListener：installShellDebugFloatLayerGuard 会跳过浮层上的 wrapped capture pointerdown。
+    nativeWindowAddEventListener('pointerdown', onPointerDown, true);
     window.addEventListener('pointermove', onPointerMove, true);
-    window.addEventListener('scroll', onScrollOrResize, true);
+    nativeWindowAddEventListener('scroll', onScrollOrResize, true);
     window.addEventListener('resize', onScrollOrResize, true);
   });
 
   onBeforeUnmount(() => {
+    cancelPointerRaf();
     for (const type of BLOCK_EVENT_TYPES) {
       window.removeEventListener(type, blockPreviewInteraction, true);
     }
     window.removeEventListener('keydown', blockPreviewKeyboard, true);
-    window.removeEventListener('pointerdown', onPointerDown, true);
+    nativeWindowRemoveEventListener('pointerdown', onPointerDown, true);
     window.removeEventListener('pointermove', onPointerMove, true);
-    window.removeEventListener('scroll', onScrollOrResize, true);
+    nativeWindowRemoveEventListener('scroll', onScrollOrResize, true);
     window.removeEventListener('resize', onScrollOrResize, true);
   });
 
   watch(developerInspectActive, (active) => {
     if (active) return;
+    cancelPointerRaf();
     lastHoverTarget = null;
     clearInspectSelection();
   });

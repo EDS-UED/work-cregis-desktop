@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import {
   EgAnchoredPopover,
   EgIcon,
   EgTooltipPanel,
 } from '@eds/desktop-components';
 import styles from './ShellDebugLauncherAnchored.module.css';
+import { markShellDebugUiInteraction } from './installShellDebugFloatLayerGuard';
+import { registerShellDebugLauncherPopover } from './shellDebugLauncherPopovers';
+import type { ShellDebugLauncherPopoverId } from './shellDebugLauncherPopovers';
 import {
   SHELL_DEBUG_POPOVER_CHROME_HEIGHT,
   SHELL_DEBUG_POPOVER_MAX_HEIGHT,
@@ -14,7 +17,7 @@ import {
   shellDebugPopoverContentMinHeight,
 } from './shellDebugPopover.constants';
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     label: string;
     icon: string;
@@ -24,6 +27,8 @@ withDefaults(
     showPanelMeta?: boolean;
     /** true（默认）：内容区 min-height = shellDebugPopoverContentMinHeight（298px），整面板 360px。 */
     useContentMinHeight?: boolean;
+    /** 登记到 shellDebugLauncherPopovers，Dev 进入时互斥关闭。 */
+    launcherPopoverId?: ShellDebugLauncherPopoverId;
   }>(),
   {
     showPanelMeta: true,
@@ -45,6 +50,7 @@ type PopoverAlign = 'center' | 'end';
 const popoverAlign = ref<PopoverAlign>('end');
 const triggerRef = ref<HTMLElement | null>(null);
 const anchoredRef = ref<{ close?: () => void } | null>(null);
+let unregisterLauncherPopover: (() => void) | undefined;
 
 const emit = defineEmits<{
   open: [];
@@ -73,6 +79,11 @@ function syncPopoverAlign() {
   popoverAlign.value = resolvePopoverAlign();
 }
 
+function onLauncherPointerDown(event: PointerEvent) {
+  event.stopPropagation();
+  markShellDebugUiInteraction();
+}
+
 function onTriggerClick(event: MouseEvent, active: boolean, open: () => void) {
   event.preventDefault();
   event.stopPropagation();
@@ -86,6 +97,18 @@ function onTriggerClick(event: MouseEvent, active: boolean, open: () => void) {
 
 onMounted(() => {
   syncPopoverAlign();
+  if (props.launcherPopoverId) {
+    unregisterLauncherPopover = registerShellDebugLauncherPopover(
+      props.launcherPopoverId,
+      () => {
+        anchoredRef.value?.close?.();
+      },
+    );
+  }
+});
+
+onBeforeUnmount(() => {
+  unregisterLauncherPopover?.();
 });
 </script>
 
@@ -126,6 +149,7 @@ onMounted(() => {
             :class="styles.launcherButton"
             :aria-label="triggerAriaLabel"
             :aria-expanded="active"
+            @pointerdown.stop="onLauncherPointerDown"
             @click.stop.prevent="onTriggerClick($event, active, onClick)"
           >
             <span :class="styles.launcherIcon" aria-hidden="true">

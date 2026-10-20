@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.cwd();
-const ROW_COUNT = 128;
+const ROW_COUNT = 134;
 
 const REQUIRED_SOURCE_MARKERS = [
   {
@@ -32,8 +32,17 @@ const REQUIRED_SOURCE_MARKERS = [
     markers: ['multi-sign-waiting-shell', 'useMultiSignWaitingPopupHost'],
   },
   {
-    file: 'src/scenes/tasks/approval/ApprovalRemarkPopoverPanel.vue',
-    markers: ['EgMinerFeeTonPanel', "resolvedProfile.kind === 'ton-xrp'", 'EgMinerFeeTronPanel'],
+    file: 'src/scenes/tasks/approval/ApprovalRemarkPopover.vue',
+    markers: [
+      'EgGasFeePopover',
+      'EgMinerFeeBatchStubPanel',
+      'resolveGasFeeNetworkFromProfile',
+      ':transaction-count="minerFeeTransactionCount"',
+    ],
+  },
+  {
+    file: 'src/scenes/tasks/shared/resolveGasFeeNetwork.ts',
+    markers: ["profile.kind === 'ton-xrp'", 'GasFeeNetwork'],
   },
   {
     file: 'src/scenes/tasks/shared/minerFeeProfile.ts',

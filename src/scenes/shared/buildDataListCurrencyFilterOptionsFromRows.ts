@@ -1,6 +1,5 @@
 import type { EgFilterFieldCurrencyOption } from '@eds/desktop-components';
 import { compareDataListFilterCurrencyLabels } from './dataListFilterOptionUtils';
-import { enrichDataListCurrencyFilterOptionsWithMultiChain } from './dataListFilterCurrencyMultiChain';
 import { mapRowNetworkLabelToFilterKey } from './mapRowNetworkLabelToFilterKey';
 import type { PaymentEngineRecordRow } from '../payment-engine/paymentEngineRecordConfigs';
 import { resolveDataListCryptoName } from './resolveDataListCryptoName';
@@ -71,7 +70,7 @@ export function buildDataListCurrencyFilterOptionsFromRows(
 
   rows.forEach((row, rowIndex) => accumulateRowCurrency(bySymbol, row, rowIndex, pickSymbol));
 
-  const options = [...bySymbol.values()]
+  return [...bySymbol.values()]
     .map((entry) => {
       const networks = [...entry.networks.values()];
 
@@ -104,6 +103,4 @@ export function buildDataListCurrencyFilterOptionsFromRows(
       };
     })
     .sort((a, b) => compareDataListFilterCurrencyLabels(a.label, b.label));
-
-  return enrichDataListCurrencyFilterOptionsWithMultiChain(options);
 }

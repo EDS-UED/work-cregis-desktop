@@ -11,7 +11,8 @@ import SigningFlowHost from '@/scenes/tasks/signing/SigningFlowHost.vue';
 import { signingFlowRegistry } from '@/scenes/tasks/signing/signingFlowContext';
 import TeamAccountFlowHost from '@/scenes/manage/team-account/TeamAccountFlowHost.vue';
 import CustomerServicePopup from '@/scenes/customer-service/CustomerServicePopup.vue';
-import PaymentEngineFlowHost from '@/scenes/payment-engine/PaymentEngineFlowHost.vue';
+import PaymentEngineDetailFlowHost from '@/scenes/payment-engine/PaymentEngineDetailFlowHost.vue';
+import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import TransactionRecordDetailFlowHost from '@/scenes/transaction-records/TransactionRecordDetailFlowHost.vue';
 import { transactionRecordDetailFlowRegistry } from '@/scenes/transaction-records/transactionRecordDetailFlowContext';
 
@@ -22,6 +23,7 @@ const recordDetailFlow = computed(() => recordDetailFlowRegistry.value);
 const transactionRecordDetailFlow = computed(
   () => transactionRecordDetailFlowRegistry.value,
 );
+const paymentEngineDetailFlow = computed(() => paymentEngineDetailFlowRegistry.value);
 </script>
 
 <template>
@@ -34,11 +36,14 @@ const transactionRecordDetailFlow = computed(
         v-if="transactionRecordDetailFlow"
         :flow="transactionRecordDetailFlow"
       />
+      <PaymentEngineDetailFlowHost
+        v-if="paymentEngineDetailFlow"
+        :flow="paymentEngineDetailFlow"
+      />
       <SigningBatchFlowHost v-if="signingBatchFlow" :flow="signingBatchFlow" />
       <SigningBatchGlobalProgressHost />
       <TeamAccountFlowHost />
       <CustomerServicePopup />
-      <PaymentEngineFlowHost />
     </div>
   </div>
 </template>

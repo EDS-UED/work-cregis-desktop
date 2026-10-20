@@ -1,0 +1,29 @@
+.host {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.riskIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.riskLabel {
+  min-width: 0;
+}
+
+.riskToneSuccess {
+  color: var(--status-success);
+}
+
+.riskToneWarning {
+  color: var(--status-warning);
+}
+
+.riskToneDanger {
+  color: var(--status-danger);
+}

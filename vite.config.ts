@@ -16,10 +16,10 @@ const EDS_TOKENS_DIST_DIR = resolve(EDS_ROOT, 'packages/tokens/dist');
 const EDS_TOKENS_BUILD_SCRIPT = resolve(EDS_ROOT, 'packages/tokens/scripts/build.mjs');
 
 /**
- * DS → 业务 实时：监听 sibling eds-desktop。
+ * EDS → 业务 实时：监听 sibling eds-desktop。
  * - tokens/spec 变更 → build:tokens → full-reload
  * - components 源码 → HMR / full-reload
- * - 仅读取 ../eds-desktop，不写业务代码回 DS
+ * - 仅读取 ../eds-desktop，不写业务代码回 EDS
  */
 function watchEdsDesktopPackages(): Plugin {
   let building = false;
@@ -108,8 +108,14 @@ function watchEdsDesktopPackages(): Plugin {
   };
 }
 
+const shellDebugEnabled = process.env.VITE_SHELL_DEBUG !== 'false';
+
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
+  define: {
+    /** Shell Debug Inspect 依赖 DOM 上的 __vueParentComponent；4173 dev 自带，4174 须开 prod devtools。 */
+    __VUE_PROD_DEVTOOLS__: shellDebugEnabled,
+  },
   plugins: [vue(), watchEdsDesktopPackages()],
   resolve: {
     alias: [
@@ -120,6 +126,10 @@ export default defineConfig({
       {
         find: '@eds/desktop-components',
         replacement: EDS_COMPONENTS_SRC,
+      },
+      {
+        find: `${EDS_COMPONENTS_SRC_DIR}/molecules/tooltip/anchoredTooltipManager.ts`,
+        replacement: resolve(__dirname, 'src/dev/shell-debug/shim/anchoredTooltipManager.ts'),
       },
       {
         find: '@eds/desktop-animations',

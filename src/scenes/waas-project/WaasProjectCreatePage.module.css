@@ -1,0 +1,123 @@
+.page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--box-page);
+}
+
+.pageEmbedded {
+  width: 100%;
+  height: 100%;
+}
+
+.pageEmbedded :global(.eds-layout) {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.scrollBody {
+  composes: layoutChromeScroll from '../project/layoutChromePage.shared.module.css';
+}
+
+.scrollBodyEmbedded {
+  composes: layoutChromeBodyScroll from '../project/layoutChromePage.shared.module.css';
+}
+
+.formRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  min-height: 100%;
+}
+
+.formBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 711px;
+  padding: var(--spacing-2) var(--spacing-6) var(--spacing-5);
+}
+
+.fieldItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.toggleRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-12);
+  min-height: var(--scale-5);
+}
+
+.toggleText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.toggleTitle {
+  composes: typography-body-small-strong from global;
+  color: var(--text-base-primary);
+}
+
+.toggleDescription {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.modeList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.policyWarning {
+  margin: 0;
+  composes: typography-footnote from global;
+  color: var(--text-warning);
+}
+
+.payoutBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.infoRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--spacing-1);
+  color: var(--text-base-secondary);
+}
+
+.infoText {
+  margin: 0;
+  composes: typography-footnote from global;
+}
+
+.pageFooter {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.pageFooterActions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--spacing-3) var(--spacing-6) var(--spacing-5);
+}

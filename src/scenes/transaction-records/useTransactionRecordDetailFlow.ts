@@ -11,8 +11,6 @@ export function useTransactionRecordDetailFlow() {
   const detailOpen = ref(false);
   const detailRow = shallowRef<TransactionRecordRow | null>(null);
   const detailPage = ref<TransactionRecordDetailPage>('summary');
-  /** 打开详情时所在视图：仅 View by Wallet 启用多笔 (x) / 查看明细。 */
-  const detailOpenedFromWalletView = ref(true);
 
   const detailPopupMounted = computed(
     () => detailOpen.value || detailRow.value != null,
@@ -26,10 +24,8 @@ export function useTransactionRecordDetailFlow() {
   function openDetailForRow(
     row: TransactionRecordRow,
     page: TransactionRecordDetailPage = 'summary',
-    options: { fromWalletView?: boolean } = {},
   ) {
     loadDetail(row.id);
-    detailOpenedFromWalletView.value = options.fromWalletView ?? true;
     detailPage.value = page;
     detailOpen.value = true;
   }
@@ -40,7 +36,6 @@ export function useTransactionRecordDetailFlow() {
     openDetailForRow(
       buildTransactionRecordRow(TRANSACTION_RECORD_PARALLEL_OUT_DEMO_ROW_INDEX),
       page,
-      { fromWalletView: true },
     );
   }
 
@@ -51,14 +46,12 @@ export function useTransactionRecordDetailFlow() {
   function onDetailPopupClosed() {
     detailRow.value = null;
     detailPage.value = 'summary';
-    detailOpenedFromWalletView.value = true;
   }
 
   return {
     detailOpen,
     detailRow,
     detailPage,
-    detailOpenedFromWalletView,
     detailPopupMounted,
     openDetailForRow,
     openParallelOutBtcDetailDemo,

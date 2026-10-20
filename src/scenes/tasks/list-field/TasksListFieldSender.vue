@@ -2,7 +2,10 @@
 import { computed } from 'vue';
 import { type TagSystemType } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
-import { buildCurrencyAddressTags } from './listFieldCurrencyTagCustomize';
+import {
+  buildCurrencyAddressTags,
+  localizeCurrencyAddressTags,
+} from './listFieldCurrencyTagCustomize';
 import TasksListFieldAddressLine from './TasksListFieldAddressLine.vue';
 import styles from './TasksListFieldSender.module.css';
 
@@ -20,7 +23,9 @@ function parsePreviewMinWidth(customize: Record<string, unknown>): number | unde
   return parsed > 0 ? parsed : undefined;
 }
 
-const senderTags = computed(() => buildCurrencyAddressTags('from', 1, props.customize));
+const senderTags = computed(() =>
+  localizeCurrencyAddressTags(buildCurrencyAddressTags('from', 1, props.customize), ui),
+);
 const showRowTag = computed(() => Boolean(props.customize.showRowTag));
 const rowTagLabel = computed(() => ui(String(props.customize.rightLabel ?? 'Multi-Sign')));
 const rowTagSystemType = computed(
@@ -31,11 +36,10 @@ const addressTooltipTrigger = computed(
   () => String(props.customize.addressTooltipTrigger ?? 'hover') as 'hover' | 'focus',
 );
 const cellMinWidthStyle = computed(() => {
-  if (props.alignEnd) {
+  if (props.alignEnd || parsePreviewMinWidth(props.customize) != null) {
     return { width: '100%', maxWidth: '100%', minWidth: '0' };
   }
-  const width = parsePreviewMinWidth(props.customize);
-  return width ? { minWidth: `${width}px`, maxWidth: `${width}px` } : undefined;
+  return undefined;
 });
 </script>
 

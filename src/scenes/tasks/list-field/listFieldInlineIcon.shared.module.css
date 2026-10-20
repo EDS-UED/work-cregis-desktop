@@ -1,0 +1,42 @@
+/*
+ * List Field 行内图标 wrapper — 对齐 Showcase listFieldScene.cryptoInlineIcon*。
+ * 单行主行：icon-xl（24px）；双行/金额+地址主行：icon-lg（20px）。内部 EgCrypto / EgIcon 须 fit。
+ */
+.cryptoInlineIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.cryptoInlineIconXl {
+  composes: cryptoInlineIcon;
+  width: var(--icon-xl);
+  height: var(--icon-xl);
+}
+
+.cryptoInlineIconLg {
+  composes: cryptoInlineIcon;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+}
+
+.amountCryptoIconXl {
+  composes: cryptoInlineIconXl;
+}
+
+.amountCryptoIconLg {
+  composes: cryptoInlineIconLg;
+}
+
+.listFieldInlineAvatar {
+  flex-shrink: 0;
+}
+
+.listFieldInlineAppIconXl {
+  composes: cryptoInlineIconXl;
+}
+
+.listFieldInlineAppIconLg {
+  composes: cryptoInlineIconLg;
+}

@@ -1,13 +1,6 @@
 import type { TagColorfulStyle, TagStatus } from '@eds/desktop-components';
 import type { DetailProgressMemberDeviceInfo } from '@/scenes/tasks/shared/detailProgressMemberDeviceInfo.types';
-
-/** Record list menu keys used by page config (Payment Engine Module Menu). */
-export type PaymentEngineRecordMenuItem =
-  | 'Payment Record'
-  | 'Settlement Record'
-  | 'Payment Exception Record'
-  | 'Callback Error'
-  | 'History Callback';
+import type { PaymentEngineRecordMenuItem } from './paymentEngineMenuData';
 
 export type PaymentEngineOrderStatus =
   | 'initiated'

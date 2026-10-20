@@ -7,3 +7,7 @@
   max-width: 100%;
   width: 100%;
 }
+
+.hostAlignEnd {
+  align-items: flex-end;
+}

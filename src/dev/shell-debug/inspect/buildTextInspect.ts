@@ -1,100 +1,50 @@
-import type { InspectCodeSection } from './buildIconInspect';
 import type { InspectPropertyItem } from './buildElementInspectInfo';
+import type { InspectCodeSection } from './buildIconInspect';
+import { isShellDebugUiElement } from '../shellDebugUiScope';
 import {
-  isCatalogComponentRoot,
-  type EdsComponentInspect,
-} from './resolveEdsComponentInspect';
+  collectDeclaredCssValues,
+  formatAuthoredInspectValue,
+  pickDeclaredCssValue,
+} from './inspectDeclaredStyles';
 import {
-  formatCssDeclaration,
   formatTokenVar,
-  INSPECT_TOKEN_FILTERS,
+  inspectTokenFilters,
+  requireInspectCssLine,
 } from './resolveDesignToken';
+import type { EdsComponentInspect } from './resolveEdsComponentInspect';
+import {
+  matchTypographyRole,
+  resolveEffectiveTypographyMetrics,
+  resolveTypographyMetricsForRole,
+  isBarSubpixelTextHost,
+  resolveTypographyLineHeightComment,
+} from './typographyInspectMatch';
 
-type TypographyRole = {
-  label: string;
-  sizeToken: string;
-  weightToken: string;
-  lineHeightToken: string;
+export function formatDomTagInspectLabel(tagName: string): string {
+  const lower = tagName.toLowerCase();
+  if (!lower) return lower;
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
+/** 仅 typography 叶子（span/p/label 等）；不含 td/div/button 等容器或组件根。 */
+const TEXT_INSPECT_TAGS = new Set(['SPAN', 'P', 'LABEL', 'EM', 'STRONG', 'SMALL', 'TIME', 'A']);
+
+export function isNativeTextInspectTag(tagName: string): boolean {
+  return TEXT_INSPECT_TAGS.has(tagName.toUpperCase());
+}
+
+type VueComponentInternal = {
+  parent?: VueComponentInternal;
+  props?: Record<string, unknown>;
+  vnode?: { props?: Record<string, unknown> };
+  setupState?: Record<string, unknown>;
 };
 
-const TYPOGRAPHY_ROLES: TypographyRole[] = [
-  {
-    label: 'Display',
-    sizeToken: '--eds-display-size',
-    weightToken: '--eds-display-weight',
-    lineHeightToken: '--eds-display-line-height',
-  },
-  {
-    label: 'Headline',
-    sizeToken: '--eds-headline-size',
-    weightToken: '--eds-headline-weight',
-    lineHeightToken: '--eds-headline-line-height',
-  },
-  {
-    label: 'Title',
-    sizeToken: '--eds-title-size',
-    weightToken: '--eds-title-weight',
-    lineHeightToken: '--eds-title-line-height',
-  },
-  {
-    label: 'Body Large',
-    sizeToken: '--eds-body-large-size',
-    weightToken: '--eds-body-large-weight',
-    lineHeightToken: '--eds-body-large-line-height',
-  },
-  {
-    label: 'Body Large Strong',
-    sizeToken: '--eds-body-large-strong-size',
-    weightToken: '--eds-body-large-strong-weight',
-    lineHeightToken: '--eds-body-large-strong-line-height',
-  },
-  {
-    label: 'Body Medium',
-    sizeToken: '--eds-body-medium-size',
-    weightToken: '--eds-body-medium-weight',
-    lineHeightToken: '--eds-body-medium-line-height',
-  },
-  {
-    label: 'Body Medium Strong',
-    sizeToken: '--eds-body-medium-strong-size',
-    weightToken: '--eds-body-medium-strong-weight',
-    lineHeightToken: '--eds-body-medium-strong-line-height',
-  },
-  {
-    label: 'Body Small',
-    sizeToken: '--eds-body-small-size',
-    weightToken: '--eds-body-small-weight',
-    lineHeightToken: '--eds-body-small-line-height',
-  },
-  {
-    label: 'Body Small Strong',
-    sizeToken: '--eds-body-small-strong-size',
-    weightToken: '--eds-body-small-strong-weight',
-    lineHeightToken: '--eds-body-small-strong-line-height',
-  },
-  {
-    label: 'Footnote',
-    sizeToken: '--eds-footnote-size',
-    weightToken: '--eds-footnote-weight',
-    lineHeightToken: '--eds-footnote-line-height',
-  },
-  {
-    label: 'Footnote Strong',
-    sizeToken: '--eds-footnote-strong-size',
-    weightToken: '--eds-footnote-strong-weight',
-    lineHeightToken: '--eds-footnote-strong-line-height',
-  },
-  {
-    label: 'Bar',
-    sizeToken: '--eds-bar-size',
-    weightToken: '--eds-bar-weight',
-    lineHeightToken: '--eds-bar-line-height',
-  },
-];
+const FULL_TEXT_PROP_KEYS = ['text', 'tooltipText'] as const;
 
-const TEXT_TAGS = new Set(['SPAN', 'P', 'LABEL', 'EM', 'STRONG', 'SMALL', 'TIME', 'A']);
 const NON_TEXT_TAGS = new Set(['SVG', 'IMG', 'INPUT', 'TEXTAREA', 'SELECT', 'VIDEO', 'CANVAS']);
-const HOST_CLASSES = [
+
+const TEXT_INSPECT_BLOCKED_ROOT_CLASSES = [
   'eds-button',
   'eds-link',
   'eds-tag',
@@ -102,237 +52,337 @@ const HOST_CLASSES = [
   'eds-tab',
   'eds-icon-button',
   'eds-icon-button-pro',
-];
-const PREFERRED_TEXT_HOST_CLASS_PARTS = [
-  'itemMain',
-  'itemTitleText',
-  'labelWrap',
-  'itemValueText',
-];
-const SIZE_MATCH_EPSILON = 0.61;
+] as const;
 
-function tokenComputedPx(preview: Element, token: string, cssProperty: 'fontSize' | 'lineHeight'): number {
-  const probe = document.createElement('div');
-  probe.style.position = 'absolute';
-  probe.style.visibility = 'hidden';
-  probe.style[cssProperty] = `var(${token})`;
-  preview.appendChild(probe);
-  const value = Number.parseFloat(getComputedStyle(probe)[cssProperty]);
-  preview.removeChild(probe);
-  return value;
+function hasBlockedTextInspectRootClass(element: Element): boolean {
+  return TEXT_INSPECT_BLOCKED_ROOT_CLASSES.some((blocked) => element.classList.contains(blocked));
 }
 
-function tokenComputedWeight(preview: Element, token: string): string {
-  const probe = document.createElement('div');
-  probe.style.position = 'absolute';
-  probe.style.visibility = 'hidden';
-  probe.style.fontWeight = `var(${token})`;
-  preview.appendChild(probe);
-  const value = getComputedStyle(probe).fontWeight;
-  preview.removeChild(probe);
-  return value;
-}
+const TEXT_INSPECT_BLOCKED_ANCESTOR_SELECTORS =
+  '.eds-button, .eds-link, .eds-tag, .eds-module-menu-item, .eds-tab, .eds-icon-button, .eds-icon-button-pro';
 
-function readScaledTypeMetrics(style: CSSStyleDeclaration) {
-  const fontSizePx = Number.parseFloat(style.fontSize);
-  const lineHeightPx = Number.parseFloat(style.lineHeight);
-  return {
-    fontSizePx,
-    lineHeightPx,
-    fontWeight: style.fontWeight,
-  };
-}
-
-function matchesTypographyRole(
-  preview: Element,
-  role: TypographyRole,
-  metrics: { fontSizePx: number; lineHeightPx: number; fontWeight: string },
-): boolean {
-  const size = tokenComputedPx(preview, role.sizeToken, 'fontSize');
-  const lineHeight = tokenComputedPx(preview, role.lineHeightToken, 'lineHeight');
-  const weight = tokenComputedWeight(preview, role.weightToken);
-  return (
-    Number.isFinite(size)
-    && Number.isFinite(lineHeight)
-    && Math.abs(metrics.fontSizePx - size) < SIZE_MATCH_EPSILON
-    && Math.abs(metrics.lineHeightPx - lineHeight) < SIZE_MATCH_EPSILON
-    && weight === metrics.fontWeight
+function hasTypographyClassHint(element: Element): boolean {
+  return [...element.classList].some((name) =>
+    /(?:^|_)text(?:Primary|Secondary|Small|Tabular)?(?:_|$)/.test(name)
+    || name.includes('aliasLine')
+    || name.includes('walletMetaAddress')
+    || name.includes('metaSecondaryText'),
   );
 }
 
-export function resolveTypographyRole(
-  preview: Element,
-  element: Element,
-  style: CSSStyleDeclaration,
-): TypographyRole | null {
-  const metrics = readScaledTypeMetrics(style);
-  const matches = TYPOGRAPHY_ROLES.filter((role) => matchesTypographyRole(preview, role, metrics));
-  if (matches.length === 0) return null;
-  if (matches.length === 1) return matches[0] ?? null;
-  const strong = matches.filter((role) => role.label.endsWith(' Strong'));
-  return strong[0] ?? matches[0] ?? null;
+function hasInteractiveLabelClassHint(element: Element): boolean {
+  return [...element.classList].some((name) =>
+    name.includes('itemLabel')
+    || name.includes('moduleLabel')
+    || name.includes('labelWrap')
+    || name.includes('itemTitleText')
+    || name.includes('itemValueText'),
+  );
 }
 
-function lineHeightPercentComment(metrics: { fontSizePx: number; lineHeightPx: number }): string | null {
-  if (!Number.isFinite(metrics.fontSizePx) || !Number.isFinite(metrics.lineHeightPx) || metrics.fontSizePx <= 0) {
-    return null;
-  }
-  return `${Math.round((metrics.lineHeightPx / metrics.fontSizePx) * 1000) / 10}%`;
+function isTypographyTextLeaf(element: Element, preview: Element): boolean {
+  if (!isNativeTextInspectTag(element.tagName)) return false;
+  if (hasBlockedTextInspectRootClass(element)) return false;
+  if (isHiddenOverflowMeasureElement(element)) return false;
+  if (!readDomTextContent(element)) return false;
+
+  const style = getComputedStyle(element);
+  if (style.display === 'none' || style.visibility === 'hidden') return false;
+  if (isBarSubpixelTextHost(element)) return true;
+  if (matchTypographyRole(preview, element, style) != null) return true;
+  return hasTypographyClassHint(element) || hasInteractiveLabelClassHint(element);
 }
 
-function readDirectText(element: Element): string {
-  const parts: string[] = [];
-  for (const node of element.childNodes) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent?.replace(/\s+/g, ' ').trim();
-      if (text) parts.push(text);
+/** 交互组件内部的排版叶子仍判 Text；其余内层节点交给组件 inspect。 */
+function isInsideBlockedTextInspectAncestor(element: Element, preview: Element): boolean {
+  const host = element.closest(TEXT_INSPECT_BLOCKED_ANCESTOR_SELECTORS);
+  if (!host || host === element) return false;
+  if (isTypographyTextLeaf(element, preview)) return false;
+  return true;
+}
+
+function isInsideTeleportedTooltipPanel(element: Element): boolean {
+  return Boolean(element.closest('.eds-tooltip-panel, .eds-flotation-menu'));
+}
+
+function isHiddenOverflowMeasureElement(element: Element): boolean {
+  if (element.getAttribute('aria-hidden') === 'true') return true;
+  const style = getComputedStyle(element);
+  return style.visibility === 'hidden' || style.opacity === '0';
+}
+
+/** Overflow / Tooltip 触发器上的可见排版文案（非 teleport 面板）。 */
+function isOverflowTooltipTriggerTextLeaf(element: Element, preview: Element): boolean {
+  if (isInsideTeleportedTooltipPanel(element)) return false;
+  if (hasBlockedTextInspectRootClass(element)) return false;
+  if (!isNativeTextInspectTag(element.tagName)) return false;
+  if (isHiddenOverflowMeasureElement(element)) return false;
+  if (!element.closest('.eds-hover-tooltip-trigger__target, .eds-hover-tooltip-trigger')) return false;
+  if (!readDomTextContent(element)) return false;
+
+  return isTypographyTextLeaf(element, preview);
+}
+
+function isTextInspectTarget(element: Element): boolean {
+  if (!TEXT_INSPECT_TAGS.has(element.tagName)) return false;
+  if (isBarSubpixelTextHost(element)) return true;
+  if (hasBlockedTextInspectRootClass(element)) return false;
+  return Boolean(readDomTextContent(element));
+}
+
+function isGraphicHostElement(element: Element): boolean {
+  return (
+    element.classList.contains('eds-icon')
+    || element.classList.contains('eds-crypto')
+    || element.classList.contains('eds-avatar')
+    || element.classList.contains('eds-divider')
+  );
+}
+
+function readVueProps(instance: VueComponentInternal): Record<string, unknown> {
+  if (instance.props && typeof instance.props === 'object') {
+    const keys = Object.keys(instance.props).filter((key) => !key.startsWith('_') && !key.startsWith('$'));
+    if (keys.length > 0) {
+      return Object.fromEntries(keys.map((key) => [key, instance.props![key]]));
     }
   }
-  return parts.join(' ').trim();
-}
 
-function isPreferredTextHost(element: Element): boolean {
-  return [...element.classList].some((name) =>
-    PREFERRED_TEXT_HOST_CLASS_PARTS.some((part) => name.includes(part)),
-  );
-}
-
-export function isTextLeaf(element: Element): boolean {
-  if (element.closest('.eds-avatar')) return false;
-  if (NON_TEXT_TAGS.has(element.tagName)) return false;
-  if (HOST_CLASSES.some((name) => element.classList.contains(name))) return false;
-  if (element.querySelector('svg, img, input, textarea, select, video, canvas, button')) return false;
-
-  const text = readDirectText(element) || element.textContent?.replace(/\s+/g, ' ').trim() || '';
-  if (!text) return false;
-
-  if (isPreferredTextHost(element)) return true;
-
-  const elementChildren = [...element.children].filter((child) => child.tagName !== 'BR');
-  if (TEXT_TAGS.has(element.tagName) && elementChildren.length === 0) return true;
-
-  return [...element.classList].some((name) => name.includes('itemLabel'));
-}
-
-export function resolvePreferredInspectElement(element: Element): Element {
-  if (isCatalogComponentRoot(element)) return element;
-  if (isPreferredTextHost(element)) return element;
-
-  let ancestor: Element | null = element.parentElement;
-  while (ancestor) {
-    const current = ancestor;
-    if (HOST_CLASSES.some((name) => current.classList.contains(name))) break;
-    if (isPreferredTextHost(current)) return current;
-    ancestor = current.parentElement;
+  const vnodeProps = instance.vnode?.props;
+  if (vnodeProps && typeof vnodeProps === 'object') {
+    const raw: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(vnodeProps)) {
+      if (key.startsWith('on') || key === 'key' || key === 'ref') continue;
+      raw[key] = value;
+    }
+    if (Object.keys(raw).length > 0) return raw;
   }
 
-  const descendantHost = [...element.querySelectorAll('span, p, label, em, strong, small, time, a')].find(
-    (node) => isPreferredTextHost(node),
-  );
-  if (descendantHost) return descendantHost;
+  if (instance.setupState && typeof instance.setupState === 'object') {
+    return { ...instance.setupState };
+  }
 
-  if (isTextLeaf(element)) return element;
-
-  const candidates = [...element.querySelectorAll('span, p, label, em, strong, small, time, a')];
-  const leaf = candidates.find((node) => isTextLeaf(node));
-  return leaf ?? element;
+  return {};
 }
 
-function buildTypographyLines(
+function walkVueChain(element: Element): VueComponentInternal[] {
+  const chain: VueComponentInternal[] = [];
+  const probe = element as Element & { __vueParentComponent?: VueComponentInternal };
+  let current = probe.__vueParentComponent;
+  while (current) {
+    chain.push(current);
+    current = current.parent;
+  }
+  return chain;
+}
+
+function normalizeInspectText(raw: string): string {
+  return raw.replace(/\s+/g, ' ').trim();
+}
+
+function readDomTextContent(element: Element): string | null {
+  const directText = [...element.childNodes]
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => normalizeInspectText(node.textContent ?? ''))
+    .filter(Boolean)
+    .join(' ');
+
+  if (directText) return directText;
+
+  const text = normalizeInspectText(element.textContent ?? '');
+  return text || null;
+}
+
+/** 优先从 Vue props 取完整文案（如 OverflowText / AddressLine 的 text）。 */
+function resolveFullInspectTextContent(element: Element): string | null {
+  for (const instance of walkVueChain(element)) {
+    const props = readVueProps(instance);
+    for (const key of FULL_TEXT_PROP_KEYS) {
+      const value = props[key];
+      if (typeof value === 'string' && value.trim()) {
+        return normalizeInspectText(value);
+      }
+    }
+  }
+
+  return readDomTextContent(element);
+}
+
+/** 选中 typography 叶子时返回 Text；td/div/button 等容器走 EDS 组件或元素属性。 */
+export function canInspectAsText(element: Element): boolean {
+  if (isShellDebugUiElement(element)) {
+    return false;
+  }
+  if (element.closest('.eds-avatar')) {
+    return false;
+  }
+  if (NON_TEXT_TAGS.has(element.tagName) || isGraphicHostElement(element)) {
+    return false;
+  }
+  if (hasBlockedTextInspectRootClass(element)) return false;
+  if (isHiddenOverflowMeasureElement(element)) return false;
+
+  const preview = element.closest('.app-preview') ?? element.closest('.desktopTokens') ?? document.documentElement;
+
+  if (isOverflowTooltipTriggerTextLeaf(element, preview)) return true;
+  if (!isNativeTextInspectTag(element.tagName)) return false;
+  if (isInsideBlockedTextInspectAncestor(element, preview)) return false;
+  if (!isTextInspectTarget(element)) return false;
+
+  return isTypographyTextLeaf(element, preview);
+}
+
+export function resolveTextStyleLabel(
   preview: Element,
   element: Element,
   style: CSSStyleDeclaration,
-): string[] {
-  const role = resolveTypographyRole(preview, element, style);
-  const metrics = readScaledTypeMetrics(style);
+): string {
+  return matchTypographyRole(preview, element, style)?.label ?? '—';
+}
+
+function formatCssLine(property: string, value: string, comment?: string | null): string {
+  if (comment) return `${property}: ${value}; /* ${comment} */`;
+  return `${property}: ${value};`;
+}
+
+const TYPOGRAPHY_DECLARED_PROPS = [
+  'color',
+  'font-family',
+  'font-size',
+  'font-weight',
+  'line-height',
+  'font-style',
+  'letter-spacing',
+] as const;
+
+function buildTypographyLinesFromDeclared(element: Element): string[] | null {
+  const declared = collectDeclaredCssValues(element, { excludeDevInspectRules: true });
   const lines: string[] = [];
 
-  const color = formatCssDeclaration(preview, 'color', style.color, {
-    filter: INSPECT_TOKEN_FILTERS.textColor,
-    cssProperty: 'color',
-  });
-  if (color) lines.push(color);
+  for (const property of TYPOGRAPHY_DECLARED_PROPS) {
+    const authored = pickDeclaredCssValue(declared, [property]);
+    if (!authored) continue;
+    const { display } = formatAuthoredInspectValue(authored);
+    if (!display || display === 'normal') continue;
+    lines.push(formatCssLine(property, display));
+  }
 
-  const family = formatCssDeclaration(preview, 'font-family', style.fontFamily, {
-    filter: INSPECT_TOKEN_FILTERS.fontFamily,
-    cssProperty: 'fontFamily',
-  });
-  if (family) lines.push(family);
+  return lines.length > 0 ? lines : null;
+}
 
-  if (role) {
-    lines.push(`font-size: ${formatTokenVar(role.sizeToken)};`);
-    lines.push(`font-weight: ${formatTokenVar(role.weightToken)};`);
-    const percent = lineHeightPercentComment(metrics);
+function buildTextLayoutLines(preview: Element, element: Element, style: CSSStyleDeclaration): string[] {
+  const lines: string[] = [];
+  const display = style.display.trim();
+  if (display && display !== 'inline' && display !== 'contents') {
+    lines.push(formatCssLine('display', display));
+  }
+
+  if (isBarSubpixelTextHost(element)) {
+    return lines;
+  }
+
+  const widthLine = requireInspectCssLine(
+    preview,
+    'width',
+    style.width,
+    (name) => inspectTokenFilters.spacing(name) || inspectTokenFilters.scale(name),
+    'width',
+  );
+  if (widthLine && !widthLine.includes('auto') && !widthLine.includes('%')) {
+    lines.push(widthLine);
+  }
+
+  return lines;
+}
+
+function buildTypographyLines(preview: Element, element: Element, style: CSSStyleDeclaration): string[] {
+  const declaredLines = buildTypographyLinesFromDeclared(element);
+  if (declaredLines) return declaredLines;
+
+  const lines: string[] = [];
+  const matchedRole = matchTypographyRole(preview, element, style);
+  const effectiveMetrics = matchedRole
+    ? resolveTypographyMetricsForRole(preview, matchedRole, style)
+    : resolveEffectiveTypographyMetrics(style);
+
+  const colorLine = requireInspectCssLine(
+    preview,
+    'color',
+    style.color,
+    inspectTokenFilters.textColor,
+    'color',
+  );
+  if (colorLine) lines.push(colorLine);
+
+  const fontFamilyLine = requireInspectCssLine(
+    preview,
+    'font-family',
+    style.fontFamily,
+    inspectTokenFilters.fontFamily,
+    'fontFamily',
+  );
+  if (fontFamilyLine) lines.push(fontFamilyLine);
+
+  if (matchedRole) {
+    lines.push(formatCssLine('font-size', formatTokenVar(matchedRole.sizeToken)));
+    lines.push(formatCssLine('font-weight', formatTokenVar(matchedRole.weightToken)));
     lines.push(
-      percent
-        ? `line-height: ${formatTokenVar(role.lineHeightToken)}; /* ${percent} */`
-        : `line-height: ${formatTokenVar(role.lineHeightToken)};`,
+      formatCssLine(
+        'line-height',
+        formatTokenVar(matchedRole.lineHeightToken),
+        resolveTypographyLineHeightComment(effectiveMetrics),
+      ),
     );
     return lines;
   }
 
-  const fontSize = formatCssDeclaration(preview, 'font-size', style.fontSize, {
-    filter: INSPECT_TOKEN_FILTERS.typographySize,
-    cssProperty: 'fontSize',
-  });
-  if (fontSize) lines.push(fontSize);
-
-  if (style.fontStyle.trim() && style.fontStyle !== 'normal') {
-    lines.push(`font-style: ${style.fontStyle};`);
-  }
-
-  const fontWeight = formatCssDeclaration(preview, 'font-weight', style.fontWeight, {
-    filter: INSPECT_TOKEN_FILTERS.typographyWeight,
-    cssProperty: 'fontWeight',
-  });
-  if (fontWeight) lines.push(fontWeight);
-
-  const lineHeight = formatCssDeclaration(preview, 'line-height', style.lineHeight, {
-    filter: INSPECT_TOKEN_FILTERS.typographyLineHeight,
-    cssProperty: 'lineHeight',
-  });
-  if (lineHeight) lines.push(lineHeight);
-
-  return lines;
-}
-
-function buildLayoutLines(preview: Element, style: CSSStyleDeclaration): string[] {
-  const lines: string[] = [];
-  const display = style.display.trim();
-  if (display && display !== 'inline' && display !== 'contents') {
-    lines.push(`display: ${display};`);
-  }
-
-  const width = formatCssDeclaration(
+  const sizeLine = requireInspectCssLine(
     preview,
-    'width',
-    style.width,
-    {
-      filter: (name) => INSPECT_TOKEN_FILTERS.spacing(name) || INSPECT_TOKEN_FILTERS.scale(name),
-    },
+    'font-size',
+    Number.isFinite(effectiveMetrics.fontSizePx) ? `${effectiveMetrics.fontSizePx}px` : style.fontSize,
+    inspectTokenFilters.typographySize,
+    'fontSize',
   );
-  if (width && !width.includes('auto') && !width.includes('%')) {
-    lines.push(width);
+  if (sizeLine) lines.push(sizeLine);
+
+  const fontStyle = style.fontStyle.trim();
+  if (fontStyle && fontStyle !== 'normal') {
+    lines.push(formatCssLine('font-style', fontStyle));
   }
+
+  const weightLine = requireInspectCssLine(
+    preview,
+    'font-weight',
+    style.fontWeight,
+    inspectTokenFilters.typographyWeight,
+    'fontWeight',
+  );
+  if (weightLine) lines.push(weightLine);
+
+  const lineHeightLine = requireInspectCssLine(
+    preview,
+    'line-height',
+    Number.isFinite(effectiveMetrics.lineHeightPx)
+      ? `${effectiveMetrics.lineHeightPx}px`
+      : style.lineHeight,
+    inspectTokenFilters.typographyLineHeight,
+    'lineHeight',
+  );
+  if (lineHeightLine) lines.push(lineHeightLine);
 
   return lines;
 }
 
-export function resolveTextInspect(
-  element: Element,
-  preview: Element,
-): EdsComponentInspect | null {
-  if (!isTextLeaf(element)) return null;
-
+export function buildTextPropertyItems(element: Element, preview: Element): InspectPropertyItem[] {
   const style = getComputedStyle(element);
-  const text = readDirectText(element) || element.textContent?.replace(/\s+/g, ' ').trim() || '—';
-  const role = resolveTypographyRole(preview, element, style);
-  const props: InspectPropertyItem[] = [
+  const text = resolveFullInspectTextContent(element) ?? '—';
+  const styleLabel = resolveTextStyleLabel(preview, element, style);
+
+  return [
     {
       label: '样式',
-      value: role?.label ?? '—',
+      value: styleLabel,
       token: null,
-      copyLine: role?.label ?? '',
+      copyLine: styleLabel === '—' ? '' : styleLabel,
     },
     {
       label: '文本',
@@ -341,98 +391,34 @@ export function resolveTextInspect(
       copyLine: text === '—' ? '' : text,
     },
   ].filter((item) => item.value !== '—');
+}
 
-  const layout = buildLayoutLines(preview, style);
-  const typography = buildTypographyLines(preview, element, style);
-  const codeSections: InspectCodeSection[] = [];
-  if (layout.length > 0) codeSections.push({ title: '布局', content: layout.join('\n') });
-  if (typography.length > 0) codeSections.push({ title: '字体排版', content: typography.join('\n') });
+export function buildTextCodeSections(element: Element, preview: Element): InspectCodeSection[] {
+  const style = getComputedStyle(element);
+  const sections: InspectCodeSection[] = [];
+
+  const layoutLines = buildTextLayoutLines(preview, element, style);
+  if (layoutLines.length > 0) {
+    sections.push({ title: '布局', content: layoutLines.join('\n') });
+  }
+
+  const typographyLines = buildTypographyLines(preview, element, style);
+  if (typographyLines.length > 0) {
+    sections.push({ title: '字体排版', content: typographyLines.join('\n') });
+  }
+
+  return sections;
+}
+
+export function resolveTextInspect(element: Element, preview: Element): EdsComponentInspect | null {
+  if (!canInspectAsText(element)) return null;
 
   return {
     vueName: 'Text',
     displayName: 'Text',
     rootElement: element,
-    props,
+    props: buildTextPropertyItems(element, preview),
     usageSnippet: '',
-    codeSections,
+    codeSections: buildTextCodeSections(element, preview),
   };
-}
-
-export function resolveInspectAncestor(element: Element, preview: Element): string | null {
-  type VueInternal = {
-    type?: { name?: string; __name?: string };
-    parent?: VueInternal;
-    subTree?: { el?: Element | null };
-    vnode?: { el?: Element | null };
-  };
-
-  const formatName = (name: string) => (name.startsWith('Eg') ? name.slice(2) : name);
-  let current = (element as Element & { __vueParentComponent?: VueInternal }).__vueParentComponent;
-  while (current) {
-    const root = current.subTree?.el ?? current.vnode?.el;
-    if (root === element) {
-      current = current.parent;
-      continue;
-    }
-    const name = current.type?.name || current.type?.__name;
-    if (name && name !== 'Text' && !name.startsWith('Base')) {
-      return formatName(name);
-    }
-    current = current.parent;
-  }
-
-  let node = element.parentElement;
-  while (node && preview.contains(node)) {
-    const probe = node as Element & { __vueParentComponent?: VueInternal };
-    let instance = probe.__vueParentComponent;
-    while (instance) {
-      const name = instance.type?.name || instance.type?.__name;
-      if (name && name !== 'Text' && !name.startsWith('Base')) {
-        return formatName(name);
-      }
-      instance = instance.parent;
-    }
-    node = node.parentElement;
-  }
-
-  return null;
-}
-
-export function resolveMotionLabel(element: Element): string {
-  if (
-    (element instanceof HTMLButtonElement && element.disabled)
-    || element.getAttribute('aria-disabled') === 'true'
-  ) {
-    return '无';
-  }
-  if (element.classList.contains('motion-none')) return '.motion-none';
-  if (element.classList.contains('motion-ease') && element.classList.contains('is-enter-only')) {
-    return '.motion-ease.is-enter-only';
-  }
-  if (element.classList.contains('motion-ease') && element.classList.contains('is-hover')) {
-    return '.motion-ease.is-hover';
-  }
-  if (element.classList.contains('motion-ease') && element.classList.contains('is-paint')) {
-    return '.motion-ease.is-paint';
-  }
-  if (element.classList.contains('motion-ease') && element.classList.contains('is-asym')) {
-    return '.motion-ease.is-asym';
-  }
-  if (element.classList.contains('motion-ease')) return '.motion-ease';
-  if (element.classList.contains('motion-flotation') && element.classList.contains('is-active')) {
-    return '.motion-flotation.is-active';
-  }
-  if (element.classList.contains('motion-layout') && element.classList.contains('is-active')) {
-    return '.motion-layout.is-active';
-  }
-  if (element.classList.contains('motion-deform')) return '.motion-deform';
-  if (element.classList.contains('motion-page')) return '.motion-page';
-  if (element.classList.contains('motion-layout-deform')) return '.motion-layout-deform';
-  if (element.classList.contains('motion-flotation')) return '.motion-flotation';
-  if (element.classList.contains('motion-layout')) return '.motion-layout';
-  return '无';
-}
-
-export function roundInspectPx(value: number): string {
-  return `${Math.round(value * 10) / 10}px`;
 }

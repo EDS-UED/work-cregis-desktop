@@ -9,13 +9,25 @@ import {
   applyMultiSignParticipantWaitingScenario,
   applyMultiSignReadyScenario,
   applyMultiSignWaitingScenario,
+  applySigningBatchNoEligibleDataScenario,
   applySigningBatchQuotaAlertScenario,
   applySigningFailedScenario,
+  applySingleSignSigningScenario,
   applyWalletShardMissingScenario,
 } from './signingScenarioActions';
 
 export function registerSigningScenarioPack() {
   replaceShellDebugScenariosForPage('Tasks:Signing', [
+    // —— 单签 ——
+    {
+      id: 'single-sign-signing',
+      pageKey: 'Tasks:Signing',
+      label: '单签（签名中）',
+      description:
+        '单签进度弹窗 · 签名步进行中（底栏取消交易、关闭二次确认）。',
+      apply: applySingleSignSigningScenario,
+    },
+
     // —— 多签 · 签名人 ——
     {
       id: 'multi-sign-waiting',
@@ -44,6 +56,14 @@ export function registerSigningScenarioPack() {
       label: '多签签名人（额度告警）',
       description: '签名人视角：批签确认弹窗 · 提现额度告警。',
       apply: applySigningBatchQuotaAlertScenario,
+    },
+    {
+      id: 'signing-batch-no-eligible',
+      pageKey: 'Tasks:Signing',
+      label: '批处理（无可处理数据）',
+      description:
+        '待签名列表仍有行，但无待签名单签可批处理；执行后自动展开工具栏「批处理」Flotation，列表区显示空态文案。',
+      apply: applySigningBatchNoEligibleDataScenario,
     },
 
     // —— 多签 · 参与人（全流程在前，分态在后）——

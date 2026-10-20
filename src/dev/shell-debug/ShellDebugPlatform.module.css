@@ -9,7 +9,7 @@
 :global(body [class*='floating']:has(.shell-debug-popover-content)),
 :global(body [class*='floating']:has(.shell-debug-dev-inspect-hint)),
 :global(body [class*='floating']:has(.shell-debug-model-popover-content)),
-:global(body [class*='floating']:has(.shell-debug-window-popover-content)) {
+:global(body [class*='floating']:has(.shell-debug-wnd-popover-content)) {
   z-index: 10001;
 }
 

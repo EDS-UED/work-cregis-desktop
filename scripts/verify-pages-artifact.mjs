@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 
 const basePath = process.env.VITE_BASE_PATH || '/work-cregis-desktop/';
 const normalizedBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
@@ -35,6 +35,47 @@ if (!bundleJs.includes('list-field-operation-type')) {
 }
 if (!bundleJs.includes('SentRequestOperationTypeListCell')) {
   errors.push('production bundle missing SentRequestOperationTypeListCell');
+}
+
+/** Pages 与本地 dev 排版 parity：pin 须含 EDS Text Style + mono 字体（见 eds-desktop 88b7b9a+）。 */
+const cssFiles = readdirSync('dist/assets').filter((name) => name.endsWith('.css'));
+const cssBlob = cssFiles.map((name) => readFileSync(`dist/assets/${name}`, 'utf8')).join('\n');
+if (!cssBlob.includes('typography-footnote')) {
+  errors.push('production CSS missing .typography-footnote (EDS Text Style 未进 Pages 构建)');
+}
+if (!cssBlob.includes('--eds-family-mono')) {
+  errors.push('production CSS missing --eds-family-mono (IBM Plex Mono token 未进 Pages 构建)');
+}
+const assetNames = readdirSync('dist/assets');
+if (!assetNames.some((name) => name.includes('IBMPlexMono'))) {
+  errors.push('dist/assets missing IBMPlexMono font files');
+}
+
+/** Pages 与 4173 dev 功能 parity：Shell Debug 须进生产构建（VITE_SHELL_DEBUG 默认 true）。 */
+if (!bundleJs.includes('data-shell-debug-ui')) {
+  errors.push('production bundle missing Shell Debug UI marker (4173/4174 parity)');
+}
+const shellDebugChunk = assetNames.find(
+  (name) => name.startsWith('ShellDebugPlatform-') && name.endsWith('.js'),
+);
+if (!shellDebugChunk) {
+  errors.push('production bundle missing ShellDebugPlatform lazy chunk');
+} else {
+  const shellDebugJs = readFileSync(`dist/assets/${shellDebugChunk}`, 'utf8');
+  if (!shellDebugJs.includes('data-dev-inspect-overlay')) {
+    errors.push('Shell Debug chunk missing developer inspect overlay');
+  }
+  if (!shellDebugJs.includes('DataList 适配')) {
+    errors.push('Shell Debug chunk missing DataList 适配 inspect section');
+  }
+}
+if (!bundleJs.includes('installShellDebugFloatLayerGuard') && !bundleJs.includes('composedPath')) {
+  errors.push('production bundle missing Shell Debug popover guard (early install)');
+}
+if (!bundleJs.includes('__vueParentComponent')) {
+  errors.push(
+    'production bundle missing __vueParentComponent (Shell Debug Inspect 须 vite define __VUE_PROD_DEVTOOLS__)',
+  );
 }
 
 if (errors.length > 0) {

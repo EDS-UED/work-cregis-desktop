@@ -49,6 +49,8 @@ const FAMILY_BY_SYMBOL: Record<string, CryptoAddressFamily> = {
   TON: 'ton',
   DEEP: 'sui',
   SUI: 'sui',
+  ADA: 'evm',
+  FIL: 'evm',
   BCH: 'btc',
   CBBTC: 'btc',
   CBXRP: 'xrp',
@@ -73,6 +75,8 @@ const FAMILY_BY_CRYPTO_NAME: Record<string, CryptoAddressFamily> = {
   dogecoin: 'doge',
   ton: 'ton',
   sui: 'sui',
+  cardano: 'evm',
+  filecoin: 'evm',
 };
 
 /** 首列 preset 行固定真实地址（0-based rowIndex）。 */
@@ -94,14 +98,7 @@ const VERIFIED_ADDRESS_BASES: Record<CryptoAddressFamily, readonly string[]> = {
     '0x8894E0a0c962CB723c1976a4421c95941bE7D7955',
   ],
   zec: ['t1WnKbfp7s8Sy5TXoHCPsHyaAc94oyxQLd9', 't1g722FZ7XH5mdUoQ1YNMPZ9YfqXJKnQfK'],
-  btc: [
-    'bc1qmakjy7ns2z8vwgptf9vs8fndp304fg0p9xafm2',
-    'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-    // P2SH demo addresses (View by Address typeahead partial match on "3")
-    '3FxjX4ew2CA7YS7EvWNyjvDrQauFnxSf9F',
-    '32n9WZvsyMcLM6kkLfibf39o9fNhP4GUbg',
-    '3DuXjJty9EyGHNnWvPJaXMsQSiTKmu5nXa',
-  ],
+  btc: ['bc1qmakjy7ns2z8vwgptf9vs8fndp304fg0p9xafm2', 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'],
   trx: ['TLa2f6VPqDgRE67v1736s7bJ8nyEwRS9WB', 'TWd4WrZ9wn84f5x1hZhL4DHvk738ns5jR8'],
   sol: ['9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', '7EcDhSYGxXyscsz7oxWLzbDy5zvHshFv5ECjNjA9yLx'],
   xrp: ['rDsbeomae4FXwgQTJp9BkLLBn2GXQkEiB3'],
@@ -116,8 +113,8 @@ const DEMO_ADDRESS_POOL_MIN = 23;
 const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 
 /**
- * 链上真实 TxID / tx hash（Etherscan / Blockchain.com / Tronscan 等可验证）。
- * Used by Report / transaction-records demo rows.
+ * 链上真实 TxID / tx hash（Etherscan / Blockchain.com / Tronscan / Tonviewer 等可验证）。
+ * @see https://blockscan.com/
  */
 const VERIFIED_TX_HASHES: Partial<Record<CryptoAddressFamily, readonly string[]>> = {
   evm: [

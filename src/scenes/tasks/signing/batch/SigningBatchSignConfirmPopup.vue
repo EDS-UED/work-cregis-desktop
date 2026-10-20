@@ -2,40 +2,34 @@
 import {
   computed,
   nextTick,
-  onMounted,
-  reactive,
   ref,
   toRef,
   watch,
 } from 'vue';
 import {
+  EgAnchoredPopover,
+  EgGasFeePopover,
+  EgMinerFeeBatchStubPanel,
   EgPopup,
   EgStreamer,
   EgButton,
-  EgTooltip,
-  EgPopover,
-  EgComboTextareaItem,
-  EgFormSubmission,
-  EgTextarea,
-  POPOVER_PRESET_WIDTH_BASE,
-  REMARK_POPOVER_MAX_LENGTH,
-  MOTION_LAYOUT_DEFORM_CONTENT,
-  MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
-  MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
-  useMotionLayoutDeformPageSwitch,
-  type MotionLayoutDeformPageSpec,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
 import { usePopupShellLifecycle } from '../../shared/usePopupShellLifecycle';
-import ApprovalRemarkPopoverPanel from '../../approval/ApprovalRemarkPopoverPanel.vue';
+import DetailToolbarRemarkTrigger from '../../shared/DetailToolbarRemarkTrigger.vue';
+import remarkTriggerStyles from '../../shared/remarkPopoverTrigger.module.css';
 import {
   type MinerFeeProfile,
   type MinerFeeSelection,
+  isMinerFeeBatchStubProfile,
+  resolveMinerFeeBatchTransactionCount,
   resolveMinerFeePopoverTitleKey,
 } from '../../shared/minerFeeProfile';
+import { resolveGasFeeNetworkFromProfile } from '../../shared/resolveGasFeeNetwork';
 import { formatBreakdownLine, buildBatchSummary } from './buildBatchSummary';
 import { splitDetailAmountHeadline } from '../../shared/splitDetailAmountHeadline';
+import { buildWithdrawalQuotaNoticeText } from '../buildWithdrawalQuotaNoticeText';
 import detailChromeStyles from '../../shared/detailPopupChrome.module.css';
 import { DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS } from '../../tasksDataListPageData';
 import { sortIneligibleByReasonOrder } from './evaluateBatchEligibility';
@@ -44,10 +38,11 @@ import type { BatchEligibilityResult, BatchSummaryBreakdown, SigningBatchRowMode
 import {
   BATCH_SIGN_CONFIRM_POPUP_HEIGHT,
   BATCH_SIGN_CONFIRM_POPUP_WIDTH,
-  MOCK_WITHDRAWAL_QUOTA_USD,
 } from './batchSigning.constants';
 import SigningBatchDataListPaginerBar from './SigningBatchDataListPaginerBar.vue';
+import SigningBatchPopupMotionPageChrome from './SigningBatchPopupMotionPageChrome.vue';
 import SigningBatchPopupSlotChrome from './SigningBatchPopupSlotChrome.vue';
+import SigningBatchPopupSlotFooterBody from './SigningBatchPopupSlotFooterBody.vue';
 import SigningBatchSignDetailPanel from './SigningBatchSignDetailPanel.vue';
 import SigningBatchSignReasonsPanel from './SigningBatchSignReasonsPanel.vue';
 import SigningBatchIneligibleReasonFilterDecor from './SigningBatchIneligibleReasonFilterDecor.vue';
@@ -64,6 +59,7 @@ const props = defineProps<{
   summary: BatchSummaryBreakdown;
   remark: string;
   minerFeeProfile: MinerFeeProfile | null;
+  pendingTransactionCount?: number;
 }>();
 
 const emit = defineEmits<{
@@ -84,37 +80,22 @@ const { popupMounted, popupOpen, onPopupClosed } = usePopupShellLifecycle({
 
 const { ui } = useAppI18n();
 
-const summaryContentRef = ref<HTMLElement | null>(null);
 const slotChromeRef = ref<InstanceType<typeof SigningBatchPopupSlotChrome> | null>(null);
-const minerFeePanelRef = ref<InstanceType<typeof ApprovalRemarkPopoverPanel> | null>(null);
-const minerFeeAnchoredRef = ref<{ close: () => void } | null>(null);
+const motionPageChromeRef = ref<InstanceType<typeof SigningBatchPopupMotionPageChrome> | null>(null);
+const gasFeePopoverRef = ref<{ close?: () => void } | null>(null);
+const batchStubAnchoredRef = ref<{ close?: () => void } | null>(null);
 
-const pageSpecs = reactive<Record<ConfirmPage, MotionLayoutDeformPageSpec>>({
-  summary: { shellHeight: 360 },
-  detail: { shellHeight: 360 },
-  reasons: { shellHeight: 360 },
-});
-
-const {
-  activePage,
-  shellHeight,
-  contentExiting,
-  contentEntering,
-  contentDirection,
-  switchTo,
-} = useMotionLayoutDeformPageSwitch<ConfirmPage>(pageSpecs, 'summary');
-
+const activePage = ref<ConfirmPage>('summary');
 const pageStackDirection = ref<'forward' | 'backward' | 'none'>('none');
+const motionTransitionPending = ref(0);
+/** 固定高度 Popup：stack 始终 fill，子页 DataList 与整页 motion 共用 bounded 高度。 */
+const popupContentFill = computed(() => true);
 const detailDisplayRows = ref<SigningBatchRowModel[]>([]);
 const reasonsDisplayRows = ref<SigningBatchRowModel[]>([]);
 const reasonsFilter = ref<BatchIneligibleReasonFilter>('all');
-const footerMotionKey = computed(() => activePage.value);
 const isSummaryPage = computed(() => activePage.value === 'summary');
 const isDetailPage = computed(() => activePage.value === 'detail');
 const isReasonsPage = computed(() => activePage.value === 'reasons');
-const deformUsesPixelHeight = computed(
-  () => contentExiting.value || contentEntering.value,
-);
 
 const ineligiblePaginatorItems = computed(() => {
   const sorted = sortIneligibleByReasonOrder(props.eligibility.ineligible);
@@ -136,20 +117,9 @@ watch(reasonsFilter, () => {
 });
 
 const hasSignable = computed(() => props.eligibility.signable.length > 0);
-const showRemarkSection = computed(
-  () => hasSignable.value && props.minerFeeProfile != null,
-);
-
-const remarkModel = computed({
-  get: () => props.remark,
-  set: (value: string) => emit('update:remark', value.slice(0, REMARK_POPOVER_MAX_LENGTH)),
-});
 
 const showToolbarConfirm = computed(() => true);
-const quotaNoticeText = computed(() =>
-  ui('Team withdrawal quota remaining: ${amount}. Upgrade to increase quota or enjoy unlimited withdrawal.')
-    .replace('${amount}', formatGroupedNumber(MOCK_WITHDRAWAL_QUOTA_USD)),
-);
+const quotaNoticeText = computed(() => buildWithdrawalQuotaNoticeText(ui));
 const breakdownSummary = computed(() => {
   if (hasSignable.value) {
     return props.summary;
@@ -176,6 +146,27 @@ const minerFeeSectionTitle = computed(() => {
   }
   return ui(resolveMinerFeePopoverTitleKey(props.minerFeeProfile));
 });
+
+const minerFeeTransactionCount = computed(() =>
+  resolveMinerFeeBatchTransactionCount(
+    props.eligibility.signable.length,
+    props.pendingTransactionCount ?? 0,
+  ),
+);
+
+const showBatchStubOnly = computed(() => {
+  if (!props.minerFeeProfile) {
+    return false;
+  }
+  return isMinerFeeBatchStubProfile(props.minerFeeProfile, minerFeeTransactionCount.value);
+});
+
+const gasFeeNetwork = computed(() => {
+  if (!props.minerFeeProfile || showBatchStubOnly.value) {
+    return null;
+  }
+  return resolveGasFeeNetworkFromProfile(props.minerFeeProfile);
+});
 const subPageTitle = computed(() => {
   if (isDetailPage.value) {
     return ui('Signable transaction details');
@@ -188,169 +179,105 @@ const subPageTitle = computed(() => {
 
 const showSystemBarClose = computed(() => isSummaryPage.value);
 
-function readPanelConfirmDisabled(
-  disabled: boolean | { value: boolean } | undefined,
-): boolean {
-  if (typeof disabled === 'boolean') {
-    return disabled;
+const toolbarConfirmDisabled = computed(() => !hasSignable.value);
+
+function resolvePageStackDirection(
+  from: ConfirmPage,
+  to: ConfirmPage,
+): 'forward' | 'backward' | 'none' {
+  if (from === 'summary' && to !== 'summary') {
+    return 'forward';
   }
-  return disabled?.value ?? true;
+  if (from !== 'summary' && to === 'summary') {
+    return 'backward';
+  }
+  return 'none';
 }
 
-const toolbarConfirmDisabled = computed(() => {
-  if (!hasSignable.value) {
-    return true;
-  }
-
-  if (!props.minerFeeProfile) {
-    return false;
-  }
-
-  const panel = minerFeePanelRef.value;
-  if (!panel) {
-    return false;
-  }
-
-  return readPanelConfirmDisabled(panel.confirmDisabled);
-});
-
-function measureSummaryShellHeight() {
-  const measured = summaryContentRef.value?.scrollHeight ?? 0;
-  return measured > 0 ? measured : 0;
-}
-
-function measureSubPageShellHeight() {
-  return slotChromeRef.value?.readScrollViewportHeight() ?? 0;
-}
-
-async function syncShellHeightForPage(page: ConfirmPage) {
-  await nextTick();
-  if (page === 'summary') {
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => resolve());
-    });
-    const summaryH = measureSummaryShellHeight();
-    if (summaryH > 0) {
-      pageSpecs.summary.shellHeight = summaryH;
-    }
+function setActivePage(next: ConfirmPage) {
+  if (next === activePage.value) {
     return;
   }
-
-  const viewportH = measureSubPageShellHeight();
-  if (viewportH > 0) {
-    pageSpecs.detail.shellHeight = viewportH;
-    pageSpecs.reasons.shellHeight = viewportH;
-    shellHeight.value = viewportH;
-  }
+  pageStackDirection.value = resolvePageStackDirection(activePage.value, next);
+  activePage.value = next;
 }
 
 function resetToSummary() {
   activePage.value = 'summary';
-  contentExiting.value = false;
-  contentEntering.value = false;
-  contentDirection.value = null;
   pageStackDirection.value = 'none';
+  motionTransitionPending.value = 0;
   reasonsFilter.value = 'all';
 }
 
-async function bootstrapSummaryShell() {
-  resetToSummary();
-  await syncShellHeightForPage('summary');
+function onMotionPageBeforeEnter() {
+  motionTransitionPending.value += 1;
+}
+
+function onMotionPageBeforeLeave() {
+  motionTransitionPending.value += 1;
+}
+
+function settleMotionPageTransition() {
+  motionTransitionPending.value = Math.max(0, motionTransitionPending.value - 1);
+  if (motionTransitionPending.value === 0) {
+    pageStackDirection.value = 'none';
+  }
 }
 
 watch(
   () => props.open,
   (open) => {
     if (open) {
-      void bootstrapSummaryShell();
+      resetToSummary();
     }
   },
 );
 
 watch(
   () => activePage.value,
-  async (page, previousPage) => {
-    if (previousPage != null) {
-      if (previousPage === 'summary' && page !== 'summary') {
-        pageStackDirection.value = 'forward';
-      } else if (previousPage !== 'summary' && page === 'summary') {
-        pageStackDirection.value = 'backward';
-      } else {
-        pageStackDirection.value = 'none';
-      }
-    }
-
+  async () => {
     await nextTick();
-    await nextTick();
-    slotChromeRef.value?.scrollToTop?.();
-    await syncShellHeightForPage(page);
+    motionPageChromeRef.value?.scrollToTop?.();
   },
 );
-
-watch(
-  () => [props.open, showRemarkSection.value, props.eligibility.signable.length] as const,
-  ([open]) => {
-    if (open && isSummaryPage.value) {
-      void syncShellHeightForPage('summary');
-    }
-  },
-);
-
-onMounted(() => {
-  if (props.open) {
-    void bootstrapSummaryShell();
-  }
-});
 
 function onClose() {
   popupOpen.value = false;
 }
 
-async function goToDetail() {
-  const summaryH = measureSummaryShellHeight();
-  if (summaryH > 0) {
-    pageSpecs.summary.shellHeight = summaryH;
-  }
-  const viewportH = measureSubPageShellHeight();
-  if (viewportH > 0) {
-    pageSpecs.detail.shellHeight = viewportH;
-    pageSpecs.reasons.shellHeight = viewportH;
-  }
-  switchTo('detail');
+function goToDetail() {
+  setActivePage('detail');
 }
 
-async function goToReasons() {
-  const summaryH = measureSummaryShellHeight();
-  if (summaryH > 0) {
-    pageSpecs.summary.shellHeight = summaryH;
-  }
-  const viewportH = measureSubPageShellHeight();
-  if (viewportH > 0) {
-    pageSpecs.detail.shellHeight = viewportH;
-    pageSpecs.reasons.shellHeight = viewportH;
-  }
-  switchTo('reasons');
+function goToReasons() {
+  setActivePage('reasons');
 }
 
-async function goBack() {
-  await syncShellHeightForPage('summary');
-  switchTo('summary');
+function goBack() {
+  setActivePage('summary');
 }
 
 function onSubPageBack() {
-  void goBack();
+  goBack();
 }
 
-function onMinerFeePopoverTopToolClose() {
-  minerFeeAnchoredRef.value?.close();
-}
-
-function onMinerFeePanelConfirm(selection: MinerFeeSelection | null) {
-  if (!selection) {
+function onMinerFeeToolbarClick(anchorClick: () => void) {
+  if (toolbarConfirmDisabled.value) {
     return;
   }
-  minerFeeAnchoredRef.value?.close();
-  emit('confirm', selection);
+  anchorClick();
+}
+
+function onGasFeeConfirm(payload: { displayValue: string }) {
+  if (!props.minerFeeProfile) {
+    return;
+  }
+  gasFeePopoverRef.value?.close?.();
+  batchStubAnchoredRef.value?.close?.();
+  emit('confirm', {
+    profileKind: props.minerFeeProfile.kind,
+    displayValue: payload.displayValue,
+  });
 }
 
 function onToolbarConfirm() {
@@ -376,94 +303,46 @@ useBatchSignConfirmEscape({
   >
     <SigningBatchPopupSlotChrome
       ref="slotChromeRef"
+      integrated-page-stack
       :show-system-bar-close="showSystemBarClose"
-      :content-fill="!isSummaryPage"
+      :content-fill="popupContentFill"
       content-inset-preset="xs"
-      :footer-motion-key="footerMotionKey"
-      :page-stack-direction="pageStackDirection"
-      :show-toolbar="isSummaryPage"
-      :show-toolbar-cancel="false"
-      :show-toolbar-confirm="showToolbarConfirm"
-      :toolbar-confirm-disabled="toolbarConfirmDisabled"
-      :toolbar-confirm-label="ui('Confirm')"
-      :toolbar-divider-pinned="isSummaryPage"
+      :show-toolbar="false"
       @close="onClose"
-      @toolbar-confirm="onToolbarConfirm"
     >
-      <template v-if="minerFeeProfile" #toolbar-confirm>
-        <EgTooltip
-          ref="minerFeeAnchoredRef"
-          placement="top"
-          align="center"
-          trigger="click"
-          :wrap-tooltip="false"
-          boundary-selector=".eds-popup"
-          token-scope-class="desktopTokens"
-        >
-          <EgButton
-            tone="decor"
-            variant="solid"
-            size="md"
-            :disabled="toolbarConfirmDisabled"
-          >
-            {{ ui('Confirm') }}
-          </EgButton>
-          <template #content>
-            <EgPopover
-              placement="top"
-              align="center"
-              top-tool
-              :top-tool-title="minerFeeSectionTitle"
-              top-tool-closable
-              width-mode="fixed"
-              :width="POPOVER_PRESET_WIDTH_BASE"
-              @top-tool-close="onMinerFeePopoverTopToolClose"
-            >
-              <ApprovalRemarkPopoverPanel
-                ref="minerFeePanelRef"
-                :selected-count="eligibility.signable.length"
-                :remark="remark"
-                :miner-fee-profile="minerFeeProfile"
-                :reset-remark-on-mount="false"
-                @update:remark="emit('update:remark', $event)"
-                @confirm="onMinerFeePanelConfirm"
-              />
-            </EgPopover>
-          </template>
-        </EgTooltip>
-      </template>
       <div
         :class="[
           styles.batchPopupContent,
-          !isSummaryPage && styles.batchPopupContentFill,
+          popupContentFill && styles.batchPopupContentFill,
         ]"
       >
         <div
-          class="motion-layout-deform"
+          class="motion-page-stack"
           :class="[
-            styles.batchPopupContentDeform,
-            isSummaryPage
-              ? styles.batchPopupContentDeformSummary
-              : styles.batchPopupContentDeformFill,
+            styles.batchPopupPageStack,
+            styles.batchPopupPageStackFill,
           ]"
-          :style="deformUsesPixelHeight ? { height: `${shellHeight}px` } : undefined"
-          :data-batch-popup-page="footerMotionKey"
+          :data-page-direction="pageStackDirection"
+          :data-batch-popup-page="activePage"
         >
-          <div
-            :class="[
-              MOTION_LAYOUT_DEFORM_CONTENT,
-              styles.batchPopupDeformContent,
-              contentDirection,
-              contentExiting && MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
-              contentEntering && MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
-            ]"
+          <Transition
+            name="motion-page"
+            @before-enter="onMotionPageBeforeEnter"
+            @before-leave="onMotionPageBeforeLeave"
+            @after-enter="settleMotionPageTransition"
+            @after-leave="settleMotionPageTransition"
           >
             <div
-              v-if="isSummaryPage"
-              ref="summaryContentRef"
-              :class="styles.batchPopupPageSummary"
+              :key="activePage"
+              class="motion-page"
+              :class="styles.batchPopupPageFill"
             >
-              <div :class="styles.batchSummaryStack">
+              <SigningBatchPopupMotionPageChrome
+                ref="motionPageChromeRef"
+                :body-scroll="isSummaryPage"
+                :footer-scrim="isSummaryPage"
+              >
+                <div v-if="isSummaryPage" :class="styles.batchSummaryStack">
                 <section :class="styles.detailHeadline">
                   <div :class="styles.detailHeadlineInner">
                     <div :class="styles.detailHeadlineTop">
@@ -552,90 +431,181 @@ useBatchSignConfirmEscape({
                     </div>
                   </div>
                 </section>
-
-                <div
-                  v-if="showRemarkSection"
-                  :class="styles.batchPopupSectionDivider"
-                  role="separator"
-                  aria-orientation="horizontal"
-                />
               </div>
 
-              <section v-if="showRemarkSection" :class="styles.minerFeeSection">
-                <h3 :class="styles.minerFeeSectionTitle">
-                  {{ ui('Remark') }}
-                </h3>
-                <div :class="styles.batchRemarkField">
-                  <EgComboTextareaItem
-                    v-model="remarkModel"
-                    feedback
-                    :label="ui('Remark')"
-                    :placeholder="ui('Please Enter')"
+              <SigningBatchSignSubPageShell
+                v-else-if="isDetailPage"
+                enable-amount-sort
+                :class="styles.batchPopupPageFill"
+                :title="subPageTitle"
+                @back="onSubPageBack"
+              >
+                <SigningBatchSignDetailPanel :rows="detailDisplayRows" />
+              </SigningBatchSignSubPageShell>
+
+              <SigningBatchSignSubPageShell
+                v-else-if="isReasonsPage"
+                enable-amount-sort
+                :class="styles.batchPopupPageFill"
+                :title="subPageTitle"
+                @back="onSubPageBack"
+              >
+                <template #topActions>
+                  <SigningBatchIneligibleReasonFilterDecor />
+                </template>
+                <SigningBatchSignReasonsPanel
+                  :key="`reasons-panel-${reasonsFilter}`"
+                  v-model:filter="reasonsFilter"
+                  :eligibility="eligibility"
+                  :rows="reasonsDisplayRows"
+                />
+              </SigningBatchSignSubPageShell>
+
+                <template #footer>
+                  <SigningBatchPopupSlotFooterBody
+                    v-if="isSummaryPage"
+                    show-toolbar-divider
+                    :show-paginer-row="false"
+                    show-toolbar-row
+                    :show-toolbar-cancel="false"
+                    :show-toolbar-confirm="showToolbarConfirm"
+                    :toolbar-confirm-disabled="toolbarConfirmDisabled"
+                    :toolbar-confirm-label="ui('Confirm')"
+                    toolbar-cancel-label=""
+                    toolbar-cancel-tone="decor"
+                    toolbar-cancel-variant="text"
+                    toolbar-confirm-tone="decor"
+                    @toolbar-confirm="onToolbarConfirm"
                   >
-                    <EgTextarea
-                      v-model="remarkModel"
-                      :placeholder="ui('Please Enter')"
-                      width-mode="full"
-                      :paste-label="ui('Paste')"
-                      :clear-label="ui('Clear')"
-                    />
-                    <template #feedback>
-                      <EgFormSubmission
-                        type="notes"
-                        :text="ui('Optional, up to 256 characters.')"
-                        :show-link="false"
+                    <template v-if="hasSignable" #toolbar-leading>
+                      <DetailToolbarRemarkTrigger
+                        :model-value="remark"
+                        @update:model-value="emit('update:remark', $event)"
                       />
                     </template>
-                  </EgComboTextareaItem>
-                </div>
-              </section>
+                    <template v-if="minerFeeProfile && gasFeeNetwork" #toolbar-confirm>
+                      <EgGasFeePopover
+                        ref="gasFeePopoverRef"
+                        :network="gasFeeNetwork"
+                        :translate="ui"
+                        :symbol="minerFeeProfile.symbol"
+                        :title="minerFeeSectionTitle"
+                        :transaction-count="minerFeeTransactionCount"
+                        boundary-selector=".eds-popup"
+                        @confirm="onGasFeeConfirm"
+                      >
+                        <template #trigger="{ active, onClick }">
+                          <span
+                            :class="[
+                              remarkTriggerStyles.remarkTrigger,
+                              active && remarkTriggerStyles.remarkTriggerPassPressed,
+                            ]"
+                          >
+                            <EgButton
+                              tone="decor"
+                              variant="solid"
+                              size="md"
+                              :disabled="toolbarConfirmDisabled"
+                              :aria-expanded="active"
+                              @click.stop="onMinerFeeToolbarClick(onClick)"
+                            >
+                              {{ ui('Confirm') }}
+                            </EgButton>
+                          </span>
+                        </template>
+                      </EgGasFeePopover>
+                    </template>
+                    <template v-else-if="minerFeeProfile && showBatchStubOnly" #toolbar-confirm>
+                      <EgAnchoredPopover
+                        ref="batchStubAnchoredRef"
+                        boundary-selector=".eds-popup"
+                        :top-tool-title="minerFeeSectionTitle"
+                        top-tool
+                        top-tool-closable
+                        width-mode="fixed"
+                        height-mode="adaptive"
+                      >
+                        <template #trigger="{ active, onClick }">
+                          <span
+                            :class="[
+                              remarkTriggerStyles.remarkTrigger,
+                              active && remarkTriggerStyles.remarkTriggerPassPressed,
+                            ]"
+                          >
+                            <EgButton
+                              tone="decor"
+                              variant="solid"
+                              size="md"
+                              :disabled="toolbarConfirmDisabled"
+                              :aria-expanded="active"
+                              @click.stop="onMinerFeeToolbarClick(onClick)"
+                            >
+                              {{ ui('Confirm') }}
+                            </EgButton>
+                          </span>
+                        </template>
+                        <EgMinerFeeBatchStubPanel
+                          v-if="minerFeeProfile"
+                          :translate="ui"
+                          :symbol="minerFeeProfile.symbol"
+                          :profile-kind="minerFeeProfile.kind"
+                          :transaction-count="minerFeeTransactionCount"
+                          @confirm="onGasFeeConfirm"
+                        />
+                      </EgAnchoredPopover>
+                    </template>
+                  </SigningBatchPopupSlotFooterBody>
+
+                  <SigningBatchPopupSlotFooterBody
+                    v-else-if="isDetailPage"
+                    :show-toolbar-divider="false"
+                    show-paginer-row
+                    :show-toolbar-row="false"
+                    :show-toolbar-cancel="false"
+                    :show-toolbar-confirm="false"
+                    :toolbar-confirm-disabled="false"
+                    toolbar-confirm-label=""
+                    toolbar-cancel-label=""
+                    toolbar-cancel-tone="decor"
+                    toolbar-cancel-variant="text"
+                    toolbar-confirm-tone="decor"
+                  >
+                    <template #footer>
+                      <SigningBatchDataListPaginerBar
+                        :items="eligibility.signable"
+                        @paginated-change="detailDisplayRows = $event"
+                      />
+                    </template>
+                  </SigningBatchPopupSlotFooterBody>
+
+                  <SigningBatchPopupSlotFooterBody
+                    v-else-if="isReasonsPage"
+                    :show-toolbar-divider="false"
+                    show-paginer-row
+                    :show-toolbar-row="false"
+                    :show-toolbar-cancel="false"
+                    :show-toolbar-confirm="false"
+                    :toolbar-confirm-disabled="false"
+                    toolbar-confirm-label=""
+                    toolbar-cancel-label=""
+                    toolbar-cancel-tone="decor"
+                    toolbar-cancel-variant="text"
+                    toolbar-confirm-tone="decor"
+                  >
+                    <template #footer>
+                      <SigningBatchDataListPaginerBar
+                        :key="`reasons-${reasonsFilter}`"
+                        :items="ineligiblePaginatorItems"
+                        @paginated-change="reasonsDisplayRows = $event"
+                      />
+                    </template>
+                  </SigningBatchPopupSlotFooterBody>
+                </template>
+              </SigningBatchPopupMotionPageChrome>
             </div>
-
-            <SigningBatchSignSubPageShell
-              v-else-if="isDetailPage"
-              enable-amount-sort
-              :class="styles.batchPopupPageFill"
-              :title="subPageTitle"
-              @back="onSubPageBack"
-            >
-              <SigningBatchSignDetailPanel :rows="detailDisplayRows" />
-            </SigningBatchSignSubPageShell>
-
-            <SigningBatchSignSubPageShell
-              v-else-if="isReasonsPage"
-              enable-amount-sort
-              :class="styles.batchPopupPageFill"
-              :title="subPageTitle"
-              @back="onSubPageBack"
-            >
-              <template #topActions>
-                <SigningBatchIneligibleReasonFilterDecor />
-              </template>
-              <SigningBatchSignReasonsPanel
-                :key="`reasons-panel-${reasonsFilter}`"
-                v-model:filter="reasonsFilter"
-                :eligibility="eligibility"
-                :rows="reasonsDisplayRows"
-              />
-            </SigningBatchSignSubPageShell>
-          </div>
+          </Transition>
         </div>
       </div>
-
-      <template v-if="isDetailPage" #footer>
-        <SigningBatchDataListPaginerBar
-          :items="eligibility.signable"
-          @paginated-change="detailDisplayRows = $event"
-        />
-      </template>
-
-      <template v-else-if="isReasonsPage" #footer>
-        <SigningBatchDataListPaginerBar
-          :key="`reasons-${reasonsFilter}`"
-          :items="ineligiblePaginatorItems"
-          @paginated-change="reasonsDisplayRows = $event"
-        />
-      </template>
     </SigningBatchPopupSlotChrome>
   </EgPopup>
 </template>

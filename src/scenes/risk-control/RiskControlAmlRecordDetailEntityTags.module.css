@@ -1,0 +1,7 @@
+.host {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}

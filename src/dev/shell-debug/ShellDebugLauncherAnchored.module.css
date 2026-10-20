@@ -112,6 +112,22 @@
   padding-bottom: var(--spacing-1);
 }
 
+:global(.eds-popover:has(.shell-debug-dev-inspect-popover) [class*='topToolTitle']) {
+  font-size: var(--eds-body-medium-strong-size);
+  font-weight: var(--eds-body-medium-strong-weight);
+  line-height: var(--eds-body-medium-strong-line-height);
+  color: var(--text-base-primary);
+}
+
+:global(.eds-popover:has(.shell-debug-dev-inspect-popover) [class*='contentSlotPaddingTop']) {
+  padding: var(--spacing-2) var(--spacing-4) var(--spacing-4);
+}
+
+:global(.eds-popover:has(.shell-debug-dev-inspect-popover):not(:has(.shell-debug-dev-inspect-hint)) [class*='contentBodyWithTopTool']) {
+  min-height: 360px;
+  overflow: hidden;
+}
+
 .popoverContent {
   display: flex;
   flex-direction: column;
@@ -125,6 +141,25 @@
   margin-inline: 0;
   margin-bottom: 0;
   box-sizing: border-box;
+  min-height: 0;
+  overflow: visible;
+}
+
+:global(.eds-popover:has(.shell-debug-dev-inspect-popover) [class*='contentSlotWithTopTool']) {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+:global(.eds-popover:has(.shell-debug-dev-inspect-popover) [class*='contentSlotWithTopTool']::-webkit-scrollbar) {
+  display: none;
+}
+
+:global(.eds-popover:has(.shell-debug-dev-inspect-popover) [class*='contentSlotWithTopTool'].shell-debug-dev-inspect-scroll-fade-bottom) {
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 var(--spacing-2));
+  mask-image: linear-gradient(to top, transparent 0, #000 var(--spacing-2));
+  transition: var(--motion-recipe-scroll-fade);
 }
 
 :global(.shell-debug-dev-inspect-hint) {
@@ -134,7 +169,7 @@
   box-sizing: border-box;
 }
 
-/* placement=top 且无 topTool 时 DS contentSlot 顶 padding 为 0；reminder 补回 spacing-3。 */
+/* placement=top 且无 topTool 时 EDS contentSlot 顶 padding 为 0；reminder 补回 spacing-3。 */
 :global(.eds-popover:has(.shell-debug-dev-inspect-hint) [class*='contentSlot']) {
   padding: var(--spacing-3) var(--spacing-4) var(--spacing-4);
 }

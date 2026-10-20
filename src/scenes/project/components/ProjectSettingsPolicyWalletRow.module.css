@@ -1,0 +1,27 @@
+.idCluster {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.idText {
+  composes: typography-body-small from global;
+  color: var(--text-base-secondary);
+  white-space: nowrap;
+}
+
+.copyButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.copyButtonCopied :global(.eds-icon-button .symbol) {
+  color: var(--status-success);
+}
+
+.copyButtonCopied :global(.eds-icon .eds-i-f),
+.copyButtonCopied :global(.eds-icon path) {
+  fill: var(--status-success);
+}

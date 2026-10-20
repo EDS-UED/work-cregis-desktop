@@ -1,15 +1,18 @@
 import { MAX_CURRENCY_SIDE_ADDRESSES, currencyAddressTagsEnabledKey } from './listFieldCurrencyShared';
 import {
   CURRENCY_CUSTOM_TAG_DEFAULT_COUNT,
+  CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX,
   CURRENCY_DEMO_ROW_WITH_TAGS_INDEX,
+  currencyAddressBlacklistTagOverrides,
   currencyAddressCustomTagOverrides,
-  currencyAddressRiskTagOverrides,
+  currencyTagShowKey,
 } from './listFieldCurrencyTagCustomize';
 import {
   resolveSampleAddressForSymbol,
   sideAddressPoolIndex,
 } from './listFieldCryptoSampleAddresses';
 import { resolveCurrencyRowPreset } from './tasksListFieldCurrencyRowData';
+import { tasksDataListShowsAddressBlacklist } from '../tasksDataListPageData';
 
 function seededFraction(seed: number): number {
   const x = Math.sin(seed * 9973) * 10000;
@@ -64,15 +67,31 @@ function buildDemoSideAddressOverrides(
   return entries;
 }
 
-/** 第 3 条演示行：发送方 23 笔订单（单地址）；接收方 Danger + 5 自定义 Tag。 */
+/** 第 3 条演示行：发送方 23 笔订单（单地址）；接收方 Blacklist + 5 自定义 Tag。 */
 export function applyCurrencyDemoRowOverrides(
   customize: Record<string, unknown>,
   rowIndex: number,
+  menuItem?: string,
 ): Record<string, unknown> {
+  const showBlacklist = tasksDataListShowsAddressBlacklist(menuItem);
+
   if (rowIndex === CURRENCY_DEMO_ROW_FIRST_TO_ALIAS_INDEX) {
     return {
       ...customize,
       toAlias1: 'Alex Mah.',
+    };
+  }
+
+  /** 第 2 条（TON）：接收方单地址 + 黑名单 tag（仅待审批 / 待签名）。 */
+  if (rowIndex === CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX) {
+    if (!showBlacklist) return customize;
+
+    return {
+      ...customize,
+      [currencyAddressTagsEnabledKey('from', 1)]: false,
+      [currencyAddressTagsEnabledKey('to', 1)]: true,
+      [currencyTagShowKey('to', 1, 'custom')]: false,
+      ...currencyAddressBlacklistTagOverrides('to', 1, 1, true),
     };
   }
 
@@ -84,7 +103,7 @@ export function applyCurrencyDemoRowOverrides(
       fromAlias1: 'Mr. Wang',
       [currencyAddressTagsEnabledKey('from', 1)]: false,
       [currencyAddressTagsEnabledKey('to', 1)]: true,
-      ...currencyAddressRiskTagOverrides('to', 1, 1, true),
+      ...(showBlacklist ? currencyAddressBlacklistTagOverrides('to', 1, 1, true) : {}),
       ...currencyAddressCustomTagOverrides('to', 1, CURRENCY_CUSTOM_TAG_DEFAULT_COUNT, true),
     };
   }

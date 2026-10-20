@@ -14,7 +14,7 @@ const invitations = ref<MultiSignInvitation[]>(
 /** 演示：是否已导入钱包分片（false 时 Join 提示分片不存在）。 */
 export const multiSignWalletShardImported = ref(true);
 
-/** 待签名模块是否处于前台，用于展示浮标。 */
+/** 协作（Tasks）模块是否处于前台，用于展示多签邀请浮标。 */
 export const multiSignCollaborationModuleActive = ref(false);
 
 export const pendingMultiSignInvitations = computed(() =>

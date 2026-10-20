@@ -5,9 +5,11 @@ import {
   EgDataListCellOverflow,
   EgDataListColumn,
   EgDivider,
-  EgTooltipOverflow,
+  EgListFieldOverflowText,
+  EgFieldOvfTooltip,
   type DataListItem,
 } from '@eds/desktop-components';
+import { EMPTY_DISPLAY } from '@/utils/formatEmptyDisplay';
 import { useAppI18n } from '@/composables/useAppI18n';
 import DataListHeaderSortTrigger from '../../DataListHeaderSortTrigger.vue';
 import type { TasksDataListSortOrder } from '../../tasksDataListSort';
@@ -21,8 +23,10 @@ import {
   BATCH_AMOUNT_COLUMN_MIN_WIDTH,
   BATCH_INELIGIBLE_REASON_COLUMN_MIN_WIDTH,
   BATCH_RECEIVER_COLUMN_MIN_WIDTH,
+  BATCH_REMARK_COLUMN_MIN_WIDTH,
   BATCH_SENDER_COLUMN_MIN_WIDTH,
 } from './batchDataListLayout';
+import { resolveBatchDetailRemark } from './batchDetailRemarkDisplay';
 import { signingBatchDetailAmountSortKey } from './signingBatchDetailTableSortContext';
 import {
   BATCH_INELIGIBLE_REASON_LABELS,
@@ -76,11 +80,14 @@ const dataList = computed<DataListItem[]>(() =>
     const ineligibleReasonLabel =
       reason != null ? ui(BATCH_INELIGIBLE_REASON_LABELS[reason]) : '';
 
+    const remarkDisplay = resolveBatchDetailRemark(row.rowIndex);
+
     return {
       id: row.rowIndex,
       signingId: row.signingId,
       rowIndex: row.rowIndex,
       ineligibleReasonLabel,
+      remarkDisplay,
     };
   }),
 );
@@ -213,15 +220,31 @@ function rowIndexFromData(data: DataListItem) {
         </template>
         <template #default="{ data }">
           <div :class="styles.batchIneligibleReasonCell">
-            <EgTooltipOverflow
+            <EgFieldOvfTooltip
               :tooltip-text="String(data.ineligibleReasonLabel ?? '')"
               :typography-class="styles.batchIneligibleReasonCellText"
               :measure-class="styles.batchIneligibleReasonCellText"
               boundary-selector=".eds-data-list"
             >
               {{ String(data.ineligibleReasonLabel ?? '') }}
-            </EgTooltipOverflow>
+            </EgFieldOvfTooltip>
           </div>
+        </template>
+      </EgDataListColumn>
+
+      <EgDataListColumn
+        prop="remark"
+        :label="ui('Remark')"
+        :min-width="BATCH_REMARK_COLUMN_MIN_WIDTH"
+        align="left"
+        :sortable="false"
+      >
+        <template #default="{ data }">
+          <EgListFieldOverflowText
+            :text="String(data.remarkDisplay ?? EMPTY_DISPLAY)"
+            variant="primary"
+            tooltip-trigger="hover"
+          />
         </template>
       </EgDataListColumn>
     </EgDataList>

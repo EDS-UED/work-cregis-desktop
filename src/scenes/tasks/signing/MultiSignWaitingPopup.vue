@@ -108,11 +108,11 @@ function onRemarkDismiss() {
       <template v-if="isSignerPerspective" #actions>
         <ApprovalRemarkPopover
           v-if="isSignEnabled && minerFeeProfile"
+          skip-remark-step
           boundary-selector=".app-preview"
-          :title="ui('Remark')"
+          :title="ui('Miner Fee')"
           :remark="remark"
           :miner-fee-profile="minerFeeProfile"
-          require-miner-fee
           @update:remark="emit('update:remark', $event)"
           @confirm="onReadyConfirm"
           @dismiss="onRemarkDismiss"

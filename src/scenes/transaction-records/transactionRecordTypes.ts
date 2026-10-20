@@ -14,20 +14,12 @@ export type TransactionRecordRow = {
   toAddress: string;
   txHash: string;
   walletName: string;
-  /** 项目名称（按钱包筛选） */
-  projectName?: string;
   transactionType: string;
-  /** 业务类型（列表列；钱包 / 地址视图均展示） */
-  businessType: string;
   directionLabel: string;
   transactionCount: string;
   /** BTC 并行转出详情：笔数行尾展示「查看明细」链接。 */
   transactionCountShowsDetailLink?: boolean;
   minerFeeDisplay: string;
-  /** 矿工费类别：代付 / 原生币种 */
-  minerFeeCategory: 'sponsored' | 'native';
-  /** 矿工费币种 */
-  minerFeeToken: string;
   /** 钱包人工转出 */
   thirdPartyRef?: string;
   initiatorDisplay?: string;

@@ -1,0 +1,30 @@
+.host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.addressRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.addressTag {
+  flex: 0 0 auto;
+}
+
+.addressText {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}

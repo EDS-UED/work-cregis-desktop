@@ -5,10 +5,11 @@ import {
   EgCrypto,
   EgIcon,
   EgIconButton,
-  EgLink,
+  EgLinkButton,
   EgTag,
   type DetailItemData,
 } from '@eds/desktop-components';
+import { copyToClipboard } from '@eds/desktop-components/utils/copyToClipboard';
 import styles from './SigningCustomPopupItemRow.module.css';
 import { useAppI18n } from '@/composables/useAppI18n';
 import DetailValueActionIcon from '../shared/DetailValueActionIcon.vue';
@@ -83,16 +84,14 @@ async function onCopyItemValue(
 ) {
   event?.stopPropagation();
   event?.preventDefault();
-  try {
-    await navigator.clipboard.writeText(value);
-    copiedItemKey.value = copyKey;
-    if (copiedResetTimer) clearTimeout(copiedResetTimer);
-    copiedResetTimer = setTimeout(() => {
-      if (copiedItemKey.value === copyKey) copiedItemKey.value = null;
-    }, 2000);
-  } catch {
-    /* ignore */
-  }
+  const copied = await copyToClipboard(value);
+  if (!copied) return;
+
+  copiedItemKey.value = copyKey;
+  if (copiedResetTimer) clearTimeout(copiedResetTimer);
+  copiedResetTimer = setTimeout(() => {
+    if (copiedItemKey.value === copyKey) copiedItemKey.value = null;
+  }, 2000);
 }
 
 function onItemRowCopyClick(item: DetailItemData, itemIndex: number, event?: MouseEvent) {
@@ -107,6 +106,7 @@ function onItemRowCopyClick(item: DetailItemData, itemIndex: number, event?: Mou
       styles.itemRow,
       itemRowCopyable(item) && styles.itemRowCopyable,
     ]"
+    :data-signing-custom-popup-copy="itemRowCopyable(item) ? '' : undefined"
     :role="itemRowCopyable(item) ? 'button' : undefined"
     :tabindex="itemRowCopyable(item) ? 0 : undefined"
     @click="onItemRowCopyClick(item, itemIndex, $event)"
@@ -169,14 +169,14 @@ function onItemRowCopyClick(item: DetailItemData, itemIndex: number, event?: Mou
       </EgTag>
 
       <div v-if="itemHasValueTrailingActions(item)" :class="styles.itemValueTrailing">
-        <EgLink
+        <EgLinkButton
           v-if="item.showValueLink"
           size="sm"
           tone="brand"
           @click="emit('value-link-click')"
         >
           {{ ui(item.valueLinkLabel ?? 'Edit') }}
-        </EgLink>
+        </EgLinkButton>
 
         <span
           v-if="item.showValueCopy"

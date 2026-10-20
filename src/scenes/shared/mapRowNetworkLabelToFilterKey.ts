@@ -43,7 +43,6 @@ export function mapRowNetworkLabelToFilterKey(networkLabel: string): string | un
   return undefined;
 }
 
-/** 条件值 networkKey → 列表 networkLabel 匹配子串（对齐 EDS 级联链全名）。 */
 export const FILTER_NETWORK_KEY_TO_ROW_LABEL: Record<string, string> = {
   'btc-omni': 'Bitcoin',
   'eth-erc20': 'Ethereum',

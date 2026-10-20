@@ -1,0 +1,22 @@
+.page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.body {
+  composes: layoutChromeScroll from '../project/layoutChromePage.shared.module.css';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--spacing-5);
+  padding-bottom: var(--spacing-5);
+}
+
+.hint {
+  margin: 0;
+  composes: typography-body-medium from global;
+  color: var(--text-base-secondary);
+}

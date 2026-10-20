@@ -13,6 +13,7 @@ const TARGET = join(
 
 const REQUIRED_MARKERS = [
   'getPinnedAddressForRow',
+  'resolveVerifiedTxHashForRow',
   'DEMO_ADDRESS_POOL_MIN = 23',
   "'ton'",
   'familyOverride',
@@ -31,7 +32,7 @@ if (missing.length > 0) {
   console.error(
     `[verify-list-field-crypto] ${TARGET} 已被 showcase 精简版覆盖，缺少: ${missing.join(', ')}`,
   );
-  console.error('  请从 git 历史恢复，或参考 AGENTS.md § list-field 本地扩展。');
+  console.error('  请从 git 历史恢复，或参考 .cursor/rules/work.mdc §2.4 list-field 本地扩展。');
   process.exit(1);
 }
 

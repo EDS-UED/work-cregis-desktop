@@ -358,6 +358,8 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   'After stopping, transactions that have not yet been signed will no longer be signed, while transactions that have already been signed will not be affected. Are you sure you want to stop the current batch signing task?':
     '停止後，尚未完成簽名的交易將不再繼續簽名，已完成簽名的交易不受影響。是否確定停止當前批量簽名任務？',
   'Warm reminder': '溫馨提示',
+  'After closing, this transaction will not be fully signed. Are you sure you want to close?':
+    '關閉後，本次交易將無法完成簽名，是否確定關閉？',
   'Insufficient Withdrawal Limit': '提幣額度不足',
   'Withdrawal quota exceeded': '超出提幣額度',
   'Continue sending': '繼續發送',

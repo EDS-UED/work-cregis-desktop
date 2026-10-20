@@ -1,6 +1,5 @@
 .itemRow {
   width: 100%;
-  cursor: pointer;
 }
 
 .itemRow:hover:not(.itemRowSelected) {

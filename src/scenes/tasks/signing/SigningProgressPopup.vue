@@ -66,9 +66,26 @@ const items = computed(() =>
 
 const progressSteps = computed(() => buildSigningProgressPopupSteps(props.phase, ui));
 
+/** 单签 · 签名步进行中：关闭需二次确认，底栏展示「取消交易」。 */
+const showSigningExitGuard = computed(() => props.phase === 'signing');
+
 const panelReady = computed(
   () => props.detail != null && (isMpcNetworkSignFailed.value || currencyMeta.value != null),
 );
+
+const guardedPopupOpen = computed({
+  get: () => popupOpen.value,
+  set: (value: boolean) => {
+    if (value) {
+      popupOpen.value = true;
+      return;
+    }
+    if (showSigningExitGuard.value) {
+      return;
+    }
+    popupOpen.value = false;
+  },
+});
 
 function onClose() {
   popupOpen.value = false;
@@ -83,7 +100,7 @@ function onRetry() {
 <template>
   <EgPopup
     v-if="popupMounted"
-    v-model:open="popupOpen"
+    v-model:open="guardedPopupOpen"
     uses="custom"
     :box-width="SIGNING_CUSTOM_POPUP_WIDTH"
     :box-height="SIGNING_CUSTOM_POPUP_HEIGHT"
@@ -98,6 +115,7 @@ function onRetry() {
       :mpc-network-selected-index="mpcNetworkSelectedIndex"
       footer-latency-label="122ms"
       footer-latency-color="var(--status-success)"
+      :show-signing-exit-guard="showSigningExitGuard"
       @update:mpc-network-selected-index="mpcNetworkSelectedIndex = $event"
       @close="onClose"
       @retry="onRetry"

@@ -4,6 +4,7 @@ import {
   EgButton,
   EgListFieldOverflowText,
   EgTag,
+  EgFieldOvfTooltip,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import batchStyles from '../batch/batchSigning.shared.module.css';
@@ -20,9 +21,18 @@ const emit = defineEmits<{
 
 const { ui } = useAppI18n();
 
+function formatInviterLine(invitation: MultiSignInvitation): string {
+  return ui('{name} invites you to sign').replace('{name}', invitation.inviterName);
+}
+
 function formatInviterSuffix(invitation: MultiSignInvitation): string {
-  return ui('({email}) invites you to sign')
-    .replace('{email}', invitation.inviterEmailMasked);
+  const line = formatInviterLine(invitation);
+  const name = invitation.inviterName;
+  return line.startsWith(name) ? line.slice(name.length).trimStart() : line.trimStart();
+}
+
+function formatInviterTooltip(invitation: MultiSignInvitation): string {
+  return `${invitation.inviterName} (${invitation.inviterEmailMasked})`;
 }
 
 function formatAmountPrimary(invitation: MultiSignInvitation): string {
@@ -34,6 +44,10 @@ function truncateAddressMiddle(value: string, head = 6, tail = 6): string {
   if (value.length <= head + tail + 3) return value;
   return `${value.slice(0, head)}...${value.slice(-tail)}`;
 }
+
+function addressCopyLabel(address: string): string {
+  return `${ui('Copy address')} ${address}`.trim();
+}
 </script>
 
 <template>
@@ -41,7 +55,7 @@ function truncateAddressMiddle(value: string, head = 6, tail = 6): string {
     <div :class="styles.cardHeadlineRow">
       <span :class="styles.taskAvatar">
         <EgAvatar
-          size="lg"
+          size="xl"
           :name="invitation.inviterName"
           :color-index="invitation.taskAvatarColorIndex"
           :color-seed="invitation.id"
@@ -49,7 +63,16 @@ function truncateAddressMiddle(value: string, head = 6, tail = 6): string {
       </span>
       <div :class="styles.cardHeadline">
         <p :class="styles.inviterLine">
-          <span :class="styles.inviterName">{{ invitation.inviterName }}</span><span :class="styles.inviterSuffix">{{ formatInviterSuffix(invitation) }}</span>
+          <span :class="styles.inviterNameHost">
+            <EgListFieldOverflowText
+              :text="formatInviterTooltip(invitation)"
+              :display-text="invitation.inviterName"
+              variant="primary"
+              tooltip-trigger="hover"
+              boundary-selector=".multi-sign-invitation-panel-root"
+            />
+          </span>
+          <span :class="styles.inviterSuffix">{{ formatInviterSuffix(invitation) }}</span>
         </p>
         <time :class="styles.invitedAt" :datetime="invitation.invitedAtDisplay">
           {{ invitation.invitedAtDisplay }}
@@ -104,14 +127,30 @@ function truncateAddressMiddle(value: string, head = 6, tail = 6): string {
                   >
                     {{ invitation.sender.alias }}
                   </EgTag>
-                  <EgListFieldOverflowText
-                    :class="styles.addressOverflow"
-                    :text="invitation.sender.address"
-                    :display-text="truncateAddressMiddle(invitation.sender.address)"
-                    variant="secondary"
+                  <EgFieldOvfTooltip
+                    :tooltip-text="invitation.sender.address"
+                    :copy-value="invitation.sender.address"
+                    :copy-label="addressCopyLabel(invitation.sender.address)"
+                    show-tooltip-copy
+                    semantic-truncated
+                    target-tone="secondary"
+                    defer-hover-target
+                    :typography-class="styles.addressTextMeasure"
+                    :measure-class="styles.addressTextMeasure"
+                    :host-class="styles.addressOverflowHost"
                     tooltip-trigger="hover"
                     boundary-selector=".multi-sign-invitation-panel-root"
-                  />
+                  >
+                    <span
+                      :class="[
+                        styles.addressHoverTarget,
+                        'eds-hover-tooltip-trigger__target',
+                        'eds-hover-tooltip-trigger__target--secondary',
+                      ]"
+                    >
+                      {{ truncateAddressMiddle(invitation.sender.address) }}
+                    </span>
+                  </EgFieldOvfTooltip>
                 </span>
               </span>
             </div>
@@ -131,14 +170,30 @@ function truncateAddressMiddle(value: string, head = 6, tail = 6): string {
                   >
                     {{ invitation.receiver.alias }}
                   </EgTag>
-                  <EgListFieldOverflowText
-                    :class="styles.addressOverflow"
-                    :text="invitation.receiver.address"
-                    :display-text="truncateAddressMiddle(invitation.receiver.address)"
-                    variant="secondary"
+                  <EgFieldOvfTooltip
+                    :tooltip-text="invitation.receiver.address"
+                    :copy-value="invitation.receiver.address"
+                    :copy-label="addressCopyLabel(invitation.receiver.address)"
+                    show-tooltip-copy
+                    semantic-truncated
+                    target-tone="secondary"
+                    defer-hover-target
+                    :typography-class="styles.addressTextMeasure"
+                    :measure-class="styles.addressTextMeasure"
+                    :host-class="styles.addressOverflowHost"
                     tooltip-trigger="hover"
                     boundary-selector=".multi-sign-invitation-panel-root"
-                  />
+                  >
+                    <span
+                      :class="[
+                        styles.addressHoverTarget,
+                        'eds-hover-tooltip-trigger__target',
+                        'eds-hover-tooltip-trigger__target--secondary',
+                      ]"
+                    >
+                      {{ truncateAddressMiddle(invitation.receiver.address) }}
+                    </span>
+                  </EgFieldOvfTooltip>
                 </span>
               </span>
             </div>

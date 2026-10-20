@@ -1,6 +1,5 @@
 import type { EgFilterFieldCurrencyOption } from '@eds/desktop-components';
 import type { CryptoName } from '@eds/desktop-components';
-import { enrichDataListCurrencyFilterOptionsWithMultiChain } from '../../shared/dataListFilterCurrencyMultiChain';
 import { compareDataListFilterCurrencyLabels } from '../../shared/dataListFilterOptionUtils';
 import { mapRowNetworkLabelToFilterKey } from '../../shared/mapRowNetworkLabelToFilterKey';
 import { buildTasksListFieldCurrencyCustomize } from '../list-field/tasksListFieldCurrencyDefaults';
@@ -52,7 +51,7 @@ export function buildTasksDataListCurrencyFilterOptions(
     }
   }
 
-  const options = [...bySymbol.values()]
+  return [...bySymbol.values()]
     .map((entry) => {
       const networks = [...entry.networks.values()];
 
@@ -85,6 +84,4 @@ export function buildTasksDataListCurrencyFilterOptions(
       };
     })
     .sort((a, b) => compareDataListFilterCurrencyLabels(a.label, b.label));
-
-  return enrichDataListCurrencyFilterOptionsWithMultiChain(options);
 }

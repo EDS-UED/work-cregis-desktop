@@ -19,7 +19,7 @@ const { ui } = useAppI18n();
     <div :class="styles.root">
       <div :class="styles.leading">
         <EgIconButton size="md" :label="ui('Back')" @click="emit('back')">
-          <EgIcon name="eds-arrow-down-ios" fit />
+          <EgIcon name="eds-arrow-left-ios" fit />
         </EgIconButton>
         <span :class="styles.title">{{ title }}</span>
       </div>

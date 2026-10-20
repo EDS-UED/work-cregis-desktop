@@ -1,0 +1,100 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
+}
+
+.heading {
+  margin: 0;
+  padding-inline: var(--spacing-6);
+  composes: typography-body-small from global;
+  color: var(--text-base-primary);
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-025);
+  padding-inline: var(--spacing-6);
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.1fr) minmax(180px, 1fr) minmax(220px, 1.2fr);
+  gap: var(--spacing-3);
+  padding: var(--spacing-1) var(--spacing-3);
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.tableBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-025);
+}
+
+.groupBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-025);
+}
+
+.groupHeadingRow {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.1fr) minmax(180px, 1fr) minmax(220px, 1.2fr);
+  gap: var(--spacing-3);
+  align-items: center;
+  min-height: var(--scale-9);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  background: var(--material-hide);
+}
+
+.tokenCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.cryptoIcon {
+  flex-shrink: 0;
+}
+
+.tokenLabel {
+  composes: typography-body-small-strong from global;
+  color: var(--text-base-primary);
+}
+
+.multichainHint {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.networkRow {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.1fr) minmax(180px, 1fr) minmax(220px, 1.2fr);
+  gap: var(--spacing-3);
+  align-items: center;
+  min-height: var(--scale-9);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  background: var(--material-hide);
+}
+
+.networkTokenCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  padding-left: var(--spacing-6);
+}
+
+.selectCell {
+  min-width: 0;
+}
+
+.selectTrigger {
+  width: 100%;
+}

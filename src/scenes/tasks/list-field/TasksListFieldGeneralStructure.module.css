@@ -60,7 +60,16 @@
 }
 
 .hashLikeComboSecondaryRow .secondaryRowCountdown {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.hashLikeComboSecondaryRow .secondaryRowCountdown :global(.eds-anchored-tooltip) {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .hashLikeComboSecondaryRow > :global(.eds-divider) {
@@ -124,13 +133,13 @@
 }
 
 .secondaryRowAction {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   max-width: 100%;
   overflow: hidden;
 }
 
 .secondaryRowAction :global(.eds-anchored-tooltip) {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
 }
@@ -182,13 +191,15 @@
 }
 
 .avatar {
-  flex-shrink: 0;
+  composes: listFieldInlineAvatar from './listFieldInlineIcon.shared.module.css';
 }
 
-.appIcon {
-  flex-shrink: 0;
-  width: var(--avatar-xs);
-  height: var(--avatar-xs);
+.appIconXl {
+  composes: listFieldInlineAppIconXl from './listFieldInlineIcon.shared.module.css';
+}
+
+.appIconLg {
+  composes: listFieldInlineAppIconLg from './listFieldInlineIcon.shared.module.css';
 }
 
 .singleStack {
@@ -212,9 +223,7 @@
 }
 
 .countdown {
-  font-size: var(--eds-footnote-size);
-  font-weight: var(--eds-footnote-weight);
-  line-height: var(--eds-footnote-line-height);
+  composes: typography-footnote from global;
   min-width: 0;
   max-width: 100%;
 }

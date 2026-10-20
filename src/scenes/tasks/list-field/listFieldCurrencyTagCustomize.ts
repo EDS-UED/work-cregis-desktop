@@ -5,6 +5,8 @@ import type {
   TagCustomStyle,
   TagSize,
 } from '@eds/desktop-components';
+import { BLACKLIST_LABEL_KEY } from '../shared/hasBlacklistAddressTags';
+import { tasksDataListShowsAddressBlacklist } from '../tasksDataListPageData';
 import {
   MAX_CURRENCY_SIDE_ADDRESSES,
   currencyAddressTagsEnabledKey,
@@ -249,6 +251,37 @@ export function buildCurrencyAddressTags(
   };
 }
 
+function localizeTagSlot(
+  slot: CryptoAddressSideTags['system'],
+  translate: (text: string) => string,
+): CryptoAddressSideTags['system'] {
+  if (!slot) return slot;
+  const list = Array.isArray(slot) ? slot : [slot];
+  return list.map((tag) => ({
+    ...tag,
+    label: tag.label ? translate(tag.label) : tag.label,
+  }));
+}
+
+/** 地址 Tag label 走 ui()；须在 Receiver / Sender 等 UI 层调用。 */
+export function localizeCurrencyAddressTags(
+  tags: CryptoAddressSideTags,
+  translate: (text: string) => string,
+): CryptoAddressSideTags {
+  return {
+    system: localizeTagSlot(tags.system, translate),
+    custom: localizeTagSlot(tags.custom, translate),
+    ...(tags.more
+      ? {
+          more: {
+            ...tags.more,
+            label: tags.more.label ? translate(tags.more.label) : tags.more.label,
+          },
+        }
+      : {}),
+  };
+}
+
 export function buildCurrencySideTagsList(
   side: 'from' | 'to',
   customize: Record<string, unknown>,
@@ -269,6 +302,25 @@ export function currencyAddressRiskTagOverrides(
     [currencyTagShowKey(side, addressIndex, 'system')]: enabled,
     ...createCurrencyTagItemDefaults(side, addressIndex, 'system', 'custom', count, enabled),
   };
+}
+
+/** 接收方「黑名单」演示 Tag（label = Blacklist / 黑名单，非 AML 筛查结果 Danger）。 */
+export function currencyAddressBlacklistTagOverrides(
+  side: 'from' | 'to',
+  addressIndex: number,
+  count = 1,
+  enabled = true,
+): Record<string, unknown> {
+  const entries: Record<string, unknown> = {
+    ...currencyAddressRiskTagOverrides(side, addressIndex, count, enabled),
+  };
+
+  for (let tagIndex = 1; tagIndex <= count; tagIndex += 1) {
+    entries[currencyTagItemKey(side, addressIndex, 'system', 'Label', tagIndex)] =
+      BLACKLIST_LABEL_KEY;
+  }
+
+  return entries;
 }
 
 export function currencyAddressCustomTagOverrides(
@@ -315,14 +367,30 @@ export function currencyAddressSystemTagOverrides(
   return currencyAddressRiskTagOverrides(side, addressIndex, count, enabled);
 }
 
-/** Data List 演示：仅第 3 条（0-based index 2）展示地址 tag。 */
+/** Data List 演示：第 2 条（0-based index 1，TON）接收方 AML 危险 tag。 */
+export const CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX = 1;
+
+/** Data List 演示：第 3 条（0-based index 2）展示完整地址 tag 组合。 */
 export const CURRENCY_DEMO_ROW_WITH_TAGS_INDEX = 2;
+
+const CURRENCY_DEMO_ROWS_WITH_ADDRESS_TAGS = new Set<number>([
+  CURRENCY_DEMO_ROW_WITH_TAGS_INDEX,
+]);
+
+function resolveCurrencyDemoRowsWithAddressTags(menuItem?: string): Set<number> {
+  const rows = new Set(CURRENCY_DEMO_ROWS_WITH_ADDRESS_TAGS);
+  if (tasksDataListShowsAddressBlacklist(menuItem)) {
+    rows.add(CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX);
+  }
+  return rows;
+}
 
 export function applyCurrencyRowTagVisibility(
   customize: Record<string, unknown>,
   rowIndex: number,
+  menuItem?: string,
 ): Record<string, unknown> {
-  if (rowIndex === CURRENCY_DEMO_ROW_WITH_TAGS_INDEX) {
+  if (resolveCurrencyDemoRowsWithAddressTags(menuItem).has(rowIndex)) {
     return customize;
   }
 

@@ -1,5 +1,5 @@
 :root {
-  /* 客户端窗口尺寸（业务约定，非 DS token） */
+  /* 客户端窗口尺寸（业务约定，非 EDS token） */
   --app-preview-width: 1280px;
   --app-preview-height: 800px;
   --app-preview-min-width: 960px;
@@ -18,6 +18,15 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 body {
@@ -62,7 +71,7 @@ body::after {
   margin: 0;
 }
 
-/* ── 容器层：EgTooltip → effect-container-box ── */
+/* ── 容器层：EgTooltipPanel → effect-container-box ── */
 #app > .app-preview {
   position: relative;
   z-index: 1;
@@ -93,6 +102,25 @@ body::after {
   -webkit-user-select: text;
 }
 
+.app-popup-overlay-root > .detail-aml-toast-host {
+  position: absolute;
+  top: var(--spacing-6);
+  left: 50%;
+  z-index: 25;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.app-popup-overlay-root > .detail-aml-toast-host.is-active .motion-flotation {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.app-popup-overlay-root > .detail-aml-toast-host:not(.is-active) .motion-flotation {
+  opacity: 0;
+  transform: translateY(var(--spacing-2)) scale(0.98);
+}
+
 /*
  * EgFlotation / AnchoredTooltip 默认 teleport 到 body，不在 .app-preview 内。
  * 与 shell 一致：浮层文本不可选、不可复制（§1.1 禁止复制）。
@@ -103,7 +131,7 @@ body > [id^='eds-tooltip-v-'],
   -webkit-user-select: none;
 }
 
-/* 仅根容器 EgTooltip 的面板；勿用后代选择器，否则会覆盖 BatchBar 等嵌套 flotation 面板 */
+/* 仅根容器 EgTooltipPanel 的面板；勿用后代选择器，否则会覆盖 BatchBar 等嵌套 flotation 面板 */
 .app-preview > .eds-tooltip-panel {
   display: flex;
   flex-direction: column;
@@ -115,7 +143,7 @@ body > [id^='eds-tooltip-v-'],
   max-height: 100%;
   border-radius: inherit;
   background: transparent;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .app-preview > .eds-tooltip-panel > * {
@@ -146,10 +174,12 @@ body > [id^='eds-tooltip-v-'],
   width: auto;
   height: auto;
   max-height: none;
+  border-radius: inherit;
+  overflow: clip;
   pointer-events: none;
 }
 
-.app-preview > .eds-tooltip-panel > .app-popup-overlay-host {
+.app-preview > .eds-tooltip-panel > .app-popup-overlay-root > .app-popup-overlay-host {
   position: absolute;
   inset: 0;
   z-index: 20;
@@ -157,6 +187,8 @@ body > [id^='eds-tooltip-v-'],
   width: auto;
   height: auto;
   max-height: none;
+  border-radius: inherit;
+  overflow: clip;
   pointer-events: none;
 }
 
@@ -169,6 +201,8 @@ body > [id^='eds-tooltip-v-'],
 .app-popup-overlay-root .eds-popup,
 .app-popup-overlay-host .eds-popup {
   pointer-events: auto;
+  border-radius: inherit;
+  overflow: clip;
 }
 
 /*
@@ -196,8 +230,97 @@ body > [id^='eds-tooltip-v-'],
   pointer-events: auto;
 }
 
+/*
+ * EgPopup 打开时 EgDataList BatchBar 降至 shell 之下（operationBar 默认 z-index: 30；
+ * app-popup-overlay 为 20）。仅调层级，不改 selectMode 交互。
+ */
+.app-preview:has(.app-popup-overlay-host .eds-popup) .eds-data-list [class*='operationBar'] {
+  z-index: 15;
+}
+
+/*
+ * EgPopup 遮罩 opacity 入场时，列表顶 ToolBar / 底 Paginer 的 frosted backdrop-filter
+ * 与半透明 scrim 叠层会合成闪块；弹窗打开期间切实底，关闭后恢复 frostedPageChrome.css。
+ */
+.app-preview:has(.app-popup-overlay-host .eds-popup)
+  .eds-layout.eds-layout-chrome-overlay
+  :is(.eds-tool-bar, .eds-paginer)
+  .eds-frosted-page-chrome {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: var(--box-page);
+}
+
 #app > .app-preview {
-  overflow: visible;
+  overflow: clip;
+}
+
+/*
+ * App 全局隐藏滚动条（保留滚轮 / 触控板滚动）。
+ * 对齐 EDS eds-scroll-area-hidden-scrollbar。
+ */
+.app-preview,
+.app-preview *,
+body > [id^='eds-tooltip-v-'],
+body .eds-flotation-menu,
+body .eds-popover.desktopTokens {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-preview *::-webkit-scrollbar,
+body > [id^='eds-tooltip-v-']::-webkit-scrollbar,
+body .eds-flotation-menu::-webkit-scrollbar,
+body .eds-popover.desktopTokens::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/*
+ * List Field 行内图标 — 对齐 Showcase listFieldScene.cryptoInlineIcon*。
+ * 单行：icon-xl（24px）；双行主行：icon-lg（20px）。人物头像 EgAvatar size="sm"（--avatar-sm 20px）。
+ */
+.app-preview :is(.list-field-general-structure, .list-field-amount)
+  :is(
+    [class*='cryptoInlineIconXl'],
+    [class*='amountCryptoIconXl'],
+    [class*='appIconXl']
+  ) {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-xl);
+  height: var(--icon-xl);
+}
+
+.app-preview :is(.list-field-general-structure, .list-field-amount)
+  :is(
+    [class*='cryptoInlineIconLg'],
+    [class*='amountCryptoIconLg'],
+    [class*='appIconLg']
+  ) {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+}
+
+.app-preview :is(.list-field-general-structure, .list-field-amount)
+  :is(
+    [class*='cryptoInlineIconXl'],
+    [class*='cryptoInlineIconLg'],
+    [class*='amountCryptoIconXl'],
+    [class*='amountCryptoIconLg'],
+    [class*='appIconXl'],
+    [class*='appIconLg']
+  )
+  > :is([role='img'], .eds-crypto) {
+  width: 100%;
+  height: 100%;
 }
 
 /* teleport 到 .app-preview 的 AnchoredTooltip 浮层（多签邀请、详情引导等） */
@@ -233,17 +356,23 @@ body > [id^='eds-tooltip-v-'] > div:first-child:has(> :not([class*='floatingInne
 }
 
 /*
- * 可点击态：默认箭头指针，不用手型（对齐 DS EgButton / motion-ease.is-hover）。
+ * 可点击态：默认箭头指针，不用手型（对齐 EDS EgButton / motion-ease.is-paint）。
+ * 含 .app-preview 与 teleport 到 body 的业务浮层（批处理 Flotation、Tooltip Menu 等）。
  */
-.app-preview
+:is(
+  .app-preview,
+  body [id^='eds-tooltip-v-']:not(:has([data-shell-debug-ui], [data-dev-inspect-panel])),
+  body .eds-flotation-menu:not(:has([data-shell-debug-ui], [data-dev-inspect-panel])),
+  body .eds-popover.desktopTokens:not(:has([data-shell-debug-ui], [data-dev-inspect-panel]))
+)
   :is(
     button,
     [role='button'],
     [role='radio'],
     [role='tab'],
     a[href],
-    .motion-ease.is-hover,
-    .motion-ease.is-hover-enter-only
+    .motion-ease.is-paint,
+    .motion-ease.is-enter-only
   ):not(:disabled):not([aria-disabled='true']) {
   cursor: default;
 }
@@ -310,6 +439,39 @@ body > [id^='eds-tooltip-v-'] > div:first-child:has(> :not([class*='floatingInne
   min-height: 0;
   max-height: 100%;
   overflow: hidden;
+}
+
+/*
+ * Windows 预览壳（Wnd. → Windows）：模块菜单列与主内容区同色。
+ * 改 Layout 槽位 ancestor（div:has(> .eds-module-menu)），不覆盖 EgModuleMenu 根节点 token。
+ */
+#app
+  > .app-preview[data-shell-debug-windows-chrome='true']
+  .app-shell-container
+  .eds-layout:not(.eds-layout-chrome-overlay)
+  > div:has(> .eds-module-menu) {
+  background: var(--box-page);
+}
+
+#app
+  > .app-preview[data-shell-debug-windows-chrome='true']
+  .app-shell-container
+  .eds-layout:not(.eds-layout-chrome-overlay)
+  > div:has(> .eds-module-menu)
+  > .eds-module-menu {
+  background: transparent;
+}
+
+/* ModuleMenuTitle 固定栏默认 frosted box-menu；Windows 预览壳与列表区统一为 page。 */
+#app
+  > .app-preview[data-shell-debug-windows-chrome='true']
+  .app-shell-container
+  .eds-layout:not(.eds-layout-chrome-overlay)
+  > div:has(> .eds-module-menu)
+  .eds-frosted-menu-chrome {
+  background: var(--box-page);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .app-shell-container .eds-layout .main {

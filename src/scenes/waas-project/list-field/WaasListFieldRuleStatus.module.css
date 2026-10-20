@@ -1,0 +1,10 @@
+.host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.switch {
+  flex-shrink: 0;
+}

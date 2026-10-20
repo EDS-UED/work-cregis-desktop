@@ -8,24 +8,6 @@
   overflow: hidden;
 }
 
-/* Teleported under .app-preview — same host as Team Account / Team Security toast. */
-.toastHost {
-  position: absolute;
-  top: var(--spacing-10);
-  left: 50%;
-  z-index: 1200;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.toastFadeActive {
-  transition: var(--motion-recipe-fade);
-}
-
-.toastFadeFrom {
-  opacity: var(--motion-opacity-hidden);
-}
-
 .dataListNest :deep(.eds-layout) {
   flex: 1 1 auto;
   min-height: 0;
@@ -35,111 +17,6 @@
 
 .dataListNest :deep(.eds-tool-bar) {
   flex-shrink: 0;
-  /* Allow address typeahead to extend below the toolbar chrome. */
-  overflow: visible;
-}
-
-/* Let title + address input yield width before toolbar actions overflow.
- * overflow visible so View by Address typeahead can paint below the field. */
-.dataListNest :deep(.eds-tool-bar-title) {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: visible;
-}
-
-.dataListNest :deep(.eds-tool-bar-title p) {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  max-width: 100%;
-  overflow: visible;
-}
-
-.toolbarTitleWithSegmented {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  min-width: 0;
-  max-width: 100%;
-  flex: 1 1 auto;
-}
-
-.toolbarTitleWithSegmented :global(.eds-segmented) {
-  flex-shrink: 0;
-}
-
-/*
- * Preferred width ≈ Showcase EgInput sm fixed (319px) → calc(scale-40 * 2).
- * At minimum preview width the wrap flex-shrinks down to scale-40 (160px).
- */
-.addressInputWrap {
-  box-sizing: border-box;
-  flex: 1 1 auto;
-  width: calc(var(--scale-40) * 2);
-  max-width: calc(var(--scale-40) * 2);
-  min-width: var(--scale-40);
-}
-
-.addressInputWrap :global(.eds-input) {
-  width: 100%;
-  max-width: 100%;
-}
-
-/* Teleported under .app-preview; top/left/width set inline from the input wrap.
- * Opaque menu fill (not effect-flotation-box glass @ 60%). */
-.addressSuggestPanel {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-025);
-  max-height: calc(var(--scale-40) * 2);
-  padding: var(--spacing-1);
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: none;
-  border-radius: var(--radius-md);
-  border: var(--stroke-xs) solid var(--material-same-white-quaternary);
-  background: var(--box-menu);
-  box-shadow: var(--eds-shadow-light);
-}
-
-.addressSuggestItem {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--spacing-05);
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding: var(--spacing-2) var(--spacing-3);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--motion-transition-hover);
-}
-
-.addressSuggestItem:hover {
-  background: var(--event-hover);
-}
-
-.addressSuggestAlias {
-  display: flex;
-  align-items: center;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.addressSuggestAddress {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  color: var(--text-base-secondary);
-  font-size: var(--eds-body-small-size);
-  font-weight: var(--eds-body-small-weight);
-  line-height: var(--eds-body-small-line-height);
 }
 
 .dataListNest :deep(.eds-paginer) {
@@ -160,8 +37,7 @@
   flex-direction: column;
 }
 
-.currencyAddressCell,
-.tokenCell {
+.currencyAddressCell {
   display: flex;
   flex-direction: column;
   align-items: flex-start;

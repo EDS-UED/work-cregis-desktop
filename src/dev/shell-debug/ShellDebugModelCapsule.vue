@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
   EgAnchoredPopover,
   EgIcon,
@@ -12,6 +12,8 @@ import {
   useAppLocale,
 } from '@/composables/useAppLocale';
 import styles from './ShellDebugModelCapsule.module.css';
+import { markShellDebugUiInteraction } from './installShellDebugFloatLayerGuard';
+import { registerShellDebugLauncherPopover } from './shellDebugLauncherPopovers';
 import { SHELL_DEBUG_POPOVER_CHROME_HEIGHT } from './shellDebugPopover.constants';
 
 const MODEL_POPOVER_WIDTH = 240;
@@ -26,6 +28,7 @@ const { theme, setTheme } = useThemeProvider();
 const popoverAlign = ref<PopoverAlign>('end');
 const triggerRef = ref<HTMLElement | null>(null);
 const anchoredRef = ref<{ close?: () => void } | null>(null);
+let unregisterLauncherPopover: (() => void) | undefined;
 
 const languageValueLabel = computed(() => APP_LOCALE_SHELL_LABELS[locale.value]);
 const themeValueLabel = computed(() => (theme.value === 'dark' ? 'Dark' : 'Light'));
@@ -52,6 +55,11 @@ function syncPopoverAlign() {
   popoverAlign.value = resolvePopoverAlign();
 }
 
+function onLauncherPointerDown(event: PointerEvent) {
+  event.stopPropagation();
+  markShellDebugUiInteraction();
+}
+
 function onTriggerClick(event: MouseEvent, active: boolean, open: () => void) {
   event.preventDefault();
   event.stopPropagation();
@@ -75,6 +83,13 @@ function toggleTheme() {
 
 onMounted(() => {
   syncPopoverAlign();
+  unregisterLauncherPopover = registerShellDebugLauncherPopover('model', () => {
+    anchoredRef.value?.close?.();
+  });
+});
+
+onBeforeUnmount(() => {
+  unregisterLauncherPopover?.();
 });
 </script>
 
@@ -110,6 +125,7 @@ onMounted(() => {
               :class="styles.launcherButton"
               aria-label="Open model preferences"
               :aria-expanded="active"
+              @pointerdown.stop="onLauncherPointerDown"
               @click.stop.prevent="onTriggerClick($event, active, onClick)"
             >
               <span :class="styles.launcherIcon" aria-hidden="true">

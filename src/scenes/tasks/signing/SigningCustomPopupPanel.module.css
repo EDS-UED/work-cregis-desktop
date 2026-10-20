@@ -78,6 +78,24 @@
   padding: var(--spacing-0);
 }
 
+.systemBarCloseTrigger {
+  display: inline-flex;
+}
+
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled)),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):hover),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):focus-visible),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):active) {
+  background-color: var(--event-focus);
+}
+
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled) > span),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):hover > span),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):focus-visible > span),
+.systemBarCloseTriggerActive :global(.eds-icon-button:not(:disabled):active > span) {
+  color: var(--material-base-secondary);
+}
+
 .systemBarClose :global(.eds-icon-button) {
   background-color: var(--material-hide);
 }
@@ -235,8 +253,9 @@
   box-sizing: border-box;
 }
 
+/* 与 EgDetail · DetailToolbarSlot.toolbarBar 一致（勿加大 vertical padding）。 */
 .toolbarBarCustomPopup {
-  padding: var(--spacing-4) var(--spacing-6);
+  padding: var(--spacing-3) var(--spacing-4);
 }
 
 .latencyDisplayCustomPopup,
@@ -261,4 +280,5 @@
 
 .toolbarActionsRight {
   justify-content: flex-end;
+  margin-left: auto;
 }

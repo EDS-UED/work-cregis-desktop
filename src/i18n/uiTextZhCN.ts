@@ -1117,4 +1117,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   Enterprise: '企业版',
   'Switched to [{team}], AI permissions and SOP have been updated.':
     '已切换至【{team}】, AI 已更新权限与 SOP',
+  // eds-ued/main merge
+  'After closing, this transaction will not be fully signed. Are you sure you want to close?': '关闭后，本次交易将无法完成签名，是否确定关闭？',
+  'Cancel transaction': '取消交易',
 };

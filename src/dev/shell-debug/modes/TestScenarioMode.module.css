@@ -44,7 +44,7 @@
   padding-bottom: var(--spacing-2);
 }
 
-.scopeControl :global(.eds-segmented-control) {
+.scopeControl :global(.eds-segmented) {
   width: 100%;
   max-width: 100%;
 }
@@ -123,7 +123,7 @@
   overflow: hidden;
 }
 
-.deformShellScrollable :global(.motion-layout-deform-content) {
+.deformShellScrollable :global(.motion-layout-content) {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -218,7 +218,7 @@
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-md);
   background: transparent;
-  composes: motion-ease is-hover from global;
+  composes: motion-ease is-paint from global;
 }
 
 .itemRow:hover {

@@ -10,7 +10,7 @@ export type CurrencyRowPreset = {
   addressFamily?: CryptoAddressFamily;
 };
 
-/** 首列第 1–8 条固定币种（0-based rowIndex 0–7）。第 6 条 GBG：DS 暂无独立图标，暂映射 BGB。 */
+/** 首列第 1–8 条固定币种（0-based rowIndex 0–7）。第 6 条 GBG：EDS 暂无独立图标，暂映射 BGB。 */
 export const CURRENCY_ROW_PRESETS: readonly CurrencyRowPreset[] = [
   {
     symbol: 'USDT',
@@ -87,6 +87,9 @@ const CURRENCY_ROW_PRESET_OVERRIDES: Partial<Record<number, CurrencyRowPreset>> 
 export const CURRENCY_PRESET_SYMBOLS = new Set([
   ...CURRENCY_ROW_PRESETS.map((preset) => preset.symbol),
   ...Object.values(CURRENCY_ROW_PRESET_OVERRIDES).map((preset) => preset!.symbol),
+  'ADA',
+  'FIL',
+  'TRX',
 ]);
 
 export function getCurrencyRowPreset(rowIndex: number): CurrencyRowPreset | undefined {

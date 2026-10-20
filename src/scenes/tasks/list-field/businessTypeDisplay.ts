@@ -82,6 +82,16 @@ function findBusinessTypeCompositeSeparatorIndex(compositeKey: string): number {
   return fullWidth >= 0 ? fullWidth : halfWidth;
 }
 
+/** EgFilter 业务类型筛选项：仅取 composite「来源｜动作」中的动作段。 */
+export function resolveBusinessTypeFilterActionKey(compositeKey: string): string {
+  const parts = splitBusinessTypeSecondaryKey(compositeKey);
+  return parts?.actionKey ?? compositeKey;
+}
+
+export function buildBusinessTypeFilterActionLabel(rowIndex: number): string {
+  return resolveBusinessTypeFilterActionKey(buildBusinessTypeSecondaryLabel(rowIndex));
+}
+
 /** 将 composite 键拆为来源 / 动作（列表副行用 EgDivider 连接）。 */
 export function splitBusinessTypeSecondaryKey(
   compositeKey: string,

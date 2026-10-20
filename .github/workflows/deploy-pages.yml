@@ -36,8 +36,9 @@ jobs:
       - name: Checkout eds-desktop
         uses: actions/checkout@v4
         with:
-          repository: theyangsong/evergreen-design-system-desktop
-          ref: 88edb414d6242aca6d4ef442ca9d609c2eea5f71
+          repository: EDS-UED/eds-desktop
+          ref: 5fd860a84ce7c0245cde1e96fbdcf4b7cf8ec220
+          fetch-depth: 0
           path: eds-desktop
 
       - name: Log eds-desktop revision

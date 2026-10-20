@@ -1,0 +1,19 @@
+.root {
+  display: flex;
+  margin-left: calc(var(--spacing-2) - var(--spacing-3));
+}
+
+.root :global(.eds-flotation) {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.toolbarPicker :global([class*='triggerRoot']) {
+  gap: var(--spacing-1-5);
+}
+
+.toolbarPicker :global([class*='triggerSymbol']) {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+}

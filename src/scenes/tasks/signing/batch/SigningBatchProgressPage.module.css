@@ -26,18 +26,25 @@
 
 .statusProgressGroup {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  column-gap: var(--spacing-2);
+  grid-template-columns: minmax(0, 1fr);
   row-gap: var(--spacing-1-5);
   width: 100%;
   min-width: 0;
   overflow: visible;
 }
 
-.statusProgressGroup :global(.eds-progress) {
-  grid-column: 2;
-  grid-row: 1;
+/** 原 statusLabel 占位行高，去掉文案后顶边距与进度条垂直位置不变。 */
+.progressRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--eds-body-medium-line-height);
+}
+
+.progressRow :global(.eds-progress) {
+  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
   overflow: visible;
 }
@@ -46,19 +53,7 @@
   overflow: visible;
 }
 
-.statusLabel {
-  grid-column: 1;
-  grid-row: 1;
-  flex-shrink: 0;
-  color: var(--text-base-primary);
-  font-size: var(--eds-body-medium-size);
-  font-weight: var(--eds-body-medium-strong-weight);
-  line-height: var(--eds-body-medium-line-height);
-}
-
 .metrics {
-  grid-column: 2;
-  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-3);

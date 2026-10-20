@@ -8,7 +8,7 @@ import {
   EgFormSubmission,
   EgListFieldHashLikeLine,
   EgListFieldOverflowText,
-  EgTag,
+  EgStatusTag,
   type DataListItem,
   type TagStatus,
 } from '@eds/desktop-components';
@@ -36,7 +36,7 @@ import type { BatchSigningFailReason, BatchSigningTaskRow } from './types';
 import styles from './batchSigning.shared.module.css';
 
 const PROGRESS_AMOUNT_COLUMN_MIN_WIDTH = '160px';
-const PROGRESS_RECEIVER_TX_COLUMN_MIN_WIDTH = '160px';
+const PROGRESS_RECEIVER_TX_COLUMN_MIN_WIDTH = BATCH_RECEIVER_COLUMN_MIN_WIDTH;
 const PROGRESS_CREATED_TIME_COLUMN_MIN_WIDTH = '130px';
 const PROGRESS_STATUS_COLUMN_MIN_WIDTH = '150px';
 
@@ -58,7 +58,7 @@ const createdTimeSortOrder = ref<TasksDataListSortOrder | ''>('');
 const FAIL_REASON_LABELS: Record<BatchSigningFailReason, string> = {
   'already-processed': 'Transaction Already Processed',
   'quota-insufficient': 'Insufficient Withdrawal Limit',
-  'balance-insufficient': 'Insufficient Balance',
+  'balance-insufficient': 'Insufficient balance',
   'miner-fee-insufficient': 'Insufficient miner fee',
   'sign-failed': 'Signing failed',
   'broadcast-failed': 'Broadcast failed',
@@ -296,14 +296,13 @@ function rowIndexFromData(data: DataListItem) {
         <template #default="{ data }">
           <div :class="styles.batchProgressStatusCell">
             <div :class="styles.batchProgressStatusField">
-              <EgTag
-                family="status"
+              <EgStatusTag
                 size="lg"
                 truncate
                 :status="resolveRowTagStatus(data.status as BatchSigningTaskRow['status'])"
               >
                 {{ String(data.statusLabel ?? '') }}
-              </EgTag>
+              </EgStatusTag>
               <EgFormSubmission
                 v-if="data.status === 'failed' && data.failFeedbackLabel"
                 type="danger"

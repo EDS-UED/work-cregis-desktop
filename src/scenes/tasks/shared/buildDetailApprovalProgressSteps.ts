@@ -2,6 +2,7 @@ import type { ApprovalProgressMember } from '../approval/types';
 import type {
   DetailApprovalProgressInput,
   DetailApprovalProgressStep,
+  DetailAutomationSignatureRule,
 } from './detailApprovalProgress.types';
 import { parseSigningThreshold } from '../signing/multiSignWaiting.constants';
 import {
@@ -79,8 +80,11 @@ export type BuildDetailApprovalProgressOptions = {
   viewMode?: 'workflow' | 'record';
   /** 记录类详情：与列表 Status 列对齐。 */
   listStatusLabel?: string;
-  /** 待审批 workflow 列表行索引；首条用于演示特殊进度展示。 */
-  rowIndex?: number;
+  /**
+   * 待审批详情：上游审批节点 1 在 Tag 为待审批时，展示多人或签 inline（/ 分隔）。
+   * 仅 Approval 待办详情传入；签名/记录详情勿开。
+   */
+  applyFirstApprovalNodePendingDemo?: boolean;
 };
 
 /** 仅已审批/签名的成员保留 deviceInfo（有个人 atDisplay）。 */
@@ -119,6 +123,40 @@ function resolveApprovalNodeMembers(
     members: node.members.map(stripMemberActionFields),
     memberPresentation: 'acted-rows',
   };
+}
+
+/** 审批节点 1（APAC）：待审批时多人或签，姓名 / 分隔单行展示。 */
+function resolveFirstApprovalNodePendingInlineMembers(
+  node: DetailApprovalProgressInput['approvalNodes'][number],
+): ApprovalProgressMember[] {
+  return node.members.map(stripMemberActionFields);
+}
+
+function applyFirstApprovalNodePendingInlineIfNeeded(
+  step: DetailApprovalProgressStep,
+  node: DetailApprovalProgressInput['approvalNodes'][number],
+  nodeIndex: number,
+  statusLabel: string,
+): boolean {
+  if (nodeIndex !== 0) return false;
+  if (!isInFlightApprovalStatus(statusLabel)) return false;
+
+  step.members = resolveFirstApprovalNodePendingInlineMembers(node);
+  step.memberPresentation = 'pending-inline';
+  return true;
+}
+
+function normalizeFirstApprovalNodePendingInline(
+  steps: DetailApprovalProgressStep[],
+  detail: DetailApprovalProgressInput,
+): void {
+  const step = steps.find((item) => item.key === 'approval-0');
+  const node = detail.approvalNodes[0];
+  if (!step || !node) return;
+  if (step.statusLabel !== progressStatusLabelKey('Pending Approval')) return;
+
+  step.members = resolveFirstApprovalNodePendingInlineMembers(node);
+  step.memberPresentation = 'pending-inline';
 }
 
 function resolveRecordSignatureMembers(
@@ -193,7 +231,7 @@ function buildWithdrawnStep(
   if (detail.initiatorKind === 'waas') {
     return {
       key: 'withdrawn',
-      title: 'Withdrawal',
+      title: 'Withdraw',
       atDisplay,
       completed: true,
       members: [
@@ -204,21 +242,19 @@ function buildWithdrawnStep(
         ),
       ],
       memberPresentation: 'acted-rows',
-      markerTone: 'danger',
     };
   }
 
   const initiator = detail.initiatorMember;
   return {
     key: 'withdrawn',
-    title: 'Withdrawal',
+    title: 'Withdraw',
     atDisplay,
     completed: true,
     members: initiator
       ? membersWithActedDeviceInfo([{ ...initiator, atDisplay }])
       : [],
     memberPresentation: 'acted-rows',
-    markerTone: 'danger',
   };
 }
 
@@ -285,14 +321,19 @@ function setApprovalStepPresentation(
   nodeIndex: number,
 ): void {
   const completed = isProgressStepCompleted(statusLabel) || statusLabel === 'Approval Reject';
-  const { members, memberPresentation } = resolveApprovalNodeMembers(
-    node,
-    isProgressStepCompleted(statusLabel),
-  );
 
   step.statusLabel = progressStatusLabelKey(statusLabel);
   step.statusTag = resolveProgressStatusTag(statusLabel);
   step.completed = completed;
+
+  if (applyFirstApprovalNodePendingInlineIfNeeded(step, node, nodeIndex, statusLabel)) {
+    return;
+  }
+
+  const { members, memberPresentation } = resolveApprovalNodeMembers(
+    node,
+    isProgressStepCompleted(statusLabel),
+  );
   step.members = withFirstApprovalNodePassedRemarks(nodeIndex, statusLabel, members);
   step.memberPresentation = memberPresentation;
 }
@@ -303,6 +344,26 @@ function clearSignatureStep(step: DetailApprovalProgressStep): void {
   step.completed = false;
   step.members = [];
   step.memberPresentation = 'acted-rows';
+  step.automationSignatureRule = undefined;
+}
+
+function resolveAutomationSignatureRuleForStep(
+  detail: DetailApprovalProgressInput,
+  completed: boolean,
+): DetailAutomationSignatureRule | undefined {
+  if (!completed || detail.signingMode !== 'single') return undefined;
+  return detail.automationSignatureRule;
+}
+
+function applyAutomationSignatureRule(
+  step: DetailApprovalProgressStep,
+  detail: DetailApprovalProgressInput,
+): void {
+  // 自动签名标识（Tag + 规则名）仅单签且签名完成后展示；多签不支持。
+  step.automationSignatureRule = resolveAutomationSignatureRuleForStep(
+    detail,
+    step.completed,
+  );
 }
 
 function setSignatureStepPresentation(
@@ -323,6 +384,7 @@ function setSignatureStepPresentation(
   step.completed = options.completed;
   step.members = options.members ?? [];
   step.memberPresentation = 'acted-rows';
+  applyAutomationSignatureRule(step, detail);
 }
 
 function applyAllApprovalNodesPassed(
@@ -436,7 +498,7 @@ function applyWorkflowProgressPresentation(
   options: BuildDetailApprovalProgressOptions,
 ): void {
   const inFlightApprovalIndex = findFirstInFlightApprovalIndex(detail);
-  const pendingOnUpstreamDemo = options.rowIndex === 0;
+  const pendingOnUpstreamDemo = options.applyFirstApprovalNodePendingDemo === true;
 
   if (inFlightApprovalIndex >= 0) {
     if (pendingOnUpstreamDemo) {
@@ -448,9 +510,18 @@ function applyWorkflowProgressPresentation(
         step.statusLabel = progressStatusLabelKey('Pending Approval');
         step.statusTag = resolveProgressStatusTag('Pending Approval');
         step.completed = nodePassed;
-        const { members, memberPresentation } = resolveApprovalNodeMembers(node, nodePassed);
-        step.members = members;
-        step.memberPresentation = memberPresentation;
+        if (
+          !applyFirstApprovalNodePendingInlineIfNeeded(
+            step,
+            node,
+            index,
+            'Pending Approval',
+          )
+        ) {
+          const { members, memberPresentation } = resolveApprovalNodeMembers(node, nodePassed);
+          step.members = members;
+          step.memberPresentation = memberPresentation;
+        }
       }
 
       const inFlightNode = detail.approvalNodes[inFlightApprovalIndex];
@@ -591,6 +662,10 @@ export function buildDetailApprovalProgressSteps(
     members: signatureResolved.members,
     memberPresentation: signatureResolved.memberPresentation,
     subtitle: viewMode === 'record' ? options.thresholdSubtitle : undefined,
+    automationSignatureRule: resolveAutomationSignatureRuleForStep(
+      detail,
+      signatureResolved.completed,
+    ),
   });
 
   if (viewMode === 'workflow') {
@@ -600,6 +675,8 @@ export function buildDetailApprovalProgressSteps(
   if (viewMode === 'record') {
     applyRecordListStatusPresentation(steps, detail, options.listStatusLabel);
   }
+
+  normalizeFirstApprovalNodePendingInline(steps, detail);
 
   if (!shouldShowSignatureStep(detail, options.listStatusLabel)) {
     return steps.filter((step) => step.key !== 'signature');

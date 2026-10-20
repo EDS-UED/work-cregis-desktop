@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import {
   EgButton,
+  EgConfirmPopover,
   EgIcon,
   EgIconButton,
-  MOTION_LAYOUT_DEFORM_CONTENT,
-  MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
-  MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
+  EgMotionLayoutContent,
   useMotionLayoutDeformPageSwitch,
   type DetailItemData,
   type MotionLayoutDeformPageSpec,
@@ -42,12 +41,15 @@ const props = withDefaults(
     footerLatencyLabel?: string;
     footerLatencyColor?: string;
     showFooterActions?: boolean;
+    /** 单签签名步进行中：关闭二次确认 + 底栏「取消交易」。 */
+    showSigningExitGuard?: boolean;
     mpcNetworkSelectedIndex?: number | null;
   }>(),
   {
     contentVariant: 'detail',
     footerMode: 'latency',
     showFooterActions: false,
+    showSigningExitGuard: false,
     mpcNetworkSelectedIndex: null,
   },
 );
@@ -99,11 +101,8 @@ const deformShellStyle = computed(() =>
 );
 
 const deformContentClass = computed(() => [
-  MOTION_LAYOUT_DEFORM_CONTENT,
   styles.deformContent,
   contentDirection.value,
-  contentExiting.value && MOTION_LAYOUT_DEFORM_CONTENT_EXITING,
-  contentEntering.value && MOTION_LAYOUT_DEFORM_CONTENT_ENTERING,
 ]);
 
 const isSigningBodyPage = computed(() => activePage.value === 'signing');
@@ -151,6 +150,17 @@ function syncBodyPageHeights() {
 function onMpcNetworkSelectedIndexUpdate(value: number | null) {
   emit('update:mpcNetworkSelectedIndex', value);
 }
+
+function requestClose() {
+  emit('close');
+}
+
+const signingExitConfirmTitle = computed(() => ui('Warm reminder'));
+const signingExitConfirmMessage = computed(() =>
+  ui(
+    'After closing, this transaction will not be fully signed. Are you sure you want to close?',
+  ),
+);
 
 function updateScrollState() {
   const element = scrollRef.value;
@@ -248,12 +258,43 @@ watch(
   >
     <div :class="styles.root">
       <div :class="styles.systemBarClose">
+        <EgConfirmPopover
+          v-if="showSigningExitGuard"
+          height-mode="adaptive"
+          :title="signingExitConfirmTitle"
+          :message="signingExitConfirmMessage"
+          :confirm-label="ui('Confirm')"
+          :close-label="ui('Close')"
+          placement="bottom"
+          @confirm="requestClose"
+        >
+          <template #trigger="{ onClick, active }">
+            <span
+              :class="[
+                styles.systemBarCloseTrigger,
+                active && styles.systemBarCloseTriggerActive,
+              ]"
+            >
+              <EgIconButton
+                shape="square"
+                size="md"
+                :label="ui('Close')"
+                motion="asym"
+                :aria-expanded="active"
+                @click.stop="onClick"
+              >
+                <EgIcon name="eds-close-circle-fill" fit />
+              </EgIconButton>
+            </span>
+          </template>
+        </EgConfirmPopover>
         <EgIconButton
+          v-else
           shape="square"
           size="md"
           :label="ui('Close')"
           motion="asym"
-          @click="emit('close')"
+          @click="requestClose"
         >
           <EgIcon name="eds-close-circle-fill" fit />
         </EgIconButton>
@@ -268,7 +309,11 @@ watch(
         :style="deformShellStyle"
         :data-signing-body-page="activePage"
       >
-        <div :class="deformContentClass">
+        <EgMotionLayoutContent
+          :class="deformContentClass"
+          :content-exiting="contentExiting"
+          :content-entering="contentEntering"
+        >
           <div :class="styles.pageShell">
             <div
               ref="scrollRef"
@@ -322,18 +367,40 @@ watch(
               v-else
               toolbar-bar-preset="customPopup"
               :scroll-overflows="scrollOverflows"
-              :show-actions="showFooterActions"
+              :show-actions="showSigningExitGuard || showFooterActions"
               :latency-label="footerLatencyLabel"
               :latency-color="footerLatencyColor"
             >
-              <template #actions>
-                <EgButton tone="decor" variant="solid" size="md" @click="emit('close')">
-                  Close
-                </EgButton>
+              <template v-if="showSigningExitGuard" #actions>
+                <EgConfirmPopover
+                  height-mode="adaptive"
+                  :title="signingExitConfirmTitle"
+                  :message="signingExitConfirmMessage"
+                  :confirm-label="ui('Confirm')"
+                  :close-label="ui('Close')"
+                  placement="top"
+                  @confirm="requestClose"
+                >
+                  <template #trigger="{ onClick, active }">
+                    <EgButton
+                      tone="danger"
+                      variant="text"
+                      size="md"
+                      :active="active"
+                      :aria-expanded="active"
+                      @click.stop="onClick"
+                    >
+                      {{ ui('Cancel transaction') }}
+                    </EgButton>
+                  </template>
+                </EgConfirmPopover>
+              </template>
+              <template v-else-if="showFooterActions" #actions>
+                <slot name="footer-actions" />
               </template>
             </SigningFooterLatencyToolbar>
           </div>
-        </div>
+        </EgMotionLayoutContent>
       </div>
 
       <div :class="styles.measureHost" aria-hidden="true">
@@ -355,7 +422,7 @@ watch(
             :class="styles.measureFooter"
             toolbar-bar-preset="customPopup"
             :scroll-overflows="false"
-            :show-actions="showFooterActions"
+            :show-actions="showSigningExitGuard || showFooterActions"
             :latency-label="footerLatencyLabel"
             :latency-color="footerLatencyColor"
           />

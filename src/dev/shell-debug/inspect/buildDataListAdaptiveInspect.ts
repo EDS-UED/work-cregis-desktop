@@ -5,7 +5,7 @@ import {
 } from '@eds/desktop-components/organisms/data-list/useResponsiveColumns';
 import { lookupEdsCatalogByVueName } from './edsInspectCatalog';
 import type { InspectPropertyItem } from './buildElementInspectInfo';
-import { walkVueChain, type VueComponentInternal } from './resolveEdsComponentInspect';
+import { walkVueChain, type VueComponentInternal } from './inspectIdentity';
 
 const DATA_LIST_ROOT_SELECTOR = '.eds-data-list';
 const SELECT_COLUMN_WIDTH_PX = 40;
@@ -73,24 +73,6 @@ function isDataListInstance(instance: VueInternal): boolean {
   return lookupEdsCatalogByVueName(vueName)?.displayName === 'DataList';
 }
 
-function isExcludedInspectHost(element: Element): boolean {
-  return Boolean(element.closest(DATA_LIST_INSPECT_EXCLUDE_SELECTORS));
-}
-
-function resolveInspectDataListRoot(preview: Element, element: Element): HTMLElement | null {
-  if (isExcludedInspectHost(element)) return null;
-
-  const closest = element.closest(DATA_LIST_ROOT_SELECTOR);
-  if (
-    closest instanceof HTMLElement
-    && preview.contains(closest)
-    && !isExcludedInspectHost(closest)
-  ) {
-    return closest;
-  }
-
-  return null;
-}
 
 function resolveDataListVueInstance(_probe: Element, dataListRoot: HTMLElement): VueInternal | null {
   const probe = dataListRoot as Element & { __vueParentComponent?: VueInternal };
@@ -233,8 +215,10 @@ export function resolveDataListColumnLayoutMinWidth(
   preview: Element,
   element: Element,
 ): string | null {
-  const dataListEl = resolveInspectDataListRoot(preview, element);
-  if (!dataListEl) return null;
+  if (element.closest(DATA_LIST_INSPECT_EXCLUDE_SELECTORS)) return null;
+
+  const dataListEl = element.closest(DATA_LIST_ROOT_SELECTOR);
+  if (!(dataListEl instanceof HTMLElement) || !preview.contains(dataListEl)) return null;
 
   const td = element.closest('td');
   if (!(td instanceof HTMLTableCellElement) || !dataListEl.contains(td)) return null;
@@ -408,8 +392,10 @@ export function buildDataListAdaptiveInspect(
   preview: Element,
   element: Element,
 ): InspectPropertyItem[] {
-  const dataListEl = resolveInspectDataListRoot(preview, element);
-  if (!dataListEl) return [];
+  if (element.closest(DATA_LIST_INSPECT_EXCLUDE_SELECTORS)) return [];
+
+  const dataListEl = element.closest(DATA_LIST_ROOT_SELECTOR);
+  if (!(dataListEl instanceof HTMLElement) || !preview.contains(dataListEl)) return [];
 
   const instance = resolveDataListVueInstance(element, dataListEl);
   if (!instance) return [];

@@ -21,7 +21,7 @@ import {
   readDataListColumnSettings,
   readIconButtonProItem,
   readPaginerPaginationItem,
-  resolveDataListColumnMinWidthFromDataSource,
+  resolveTasksDataListPreviewColumnMinWidth,
   type DataListColumnDataSource,
   type PaginerPaginationSlotKey,
 } from './tasksDataListPageData';
@@ -47,6 +47,7 @@ export function useTasksDataListPage(
   ) => Promise<void | DataListBatchActionResult> | void | DataListBatchActionResult,
   /** 返回 true 保留行；批处理多选时用于按网络过滤全量列表（勿只滤当前页）。 */
   rowFilter?: ComputedRef<((row: Record<string, unknown>) => boolean) | null>,
+  menuItem?: Ref<string | undefined>,
 ) {
   const columnDataSources = computed(() =>
     Array.from({ length: DATA_LIST_PREVIEW_COLUMN_COUNT }, (_, offset) =>
@@ -76,9 +77,10 @@ export function useTasksDataListPage(
                       : source === 'action'
                         ? 'action'
                         : 'placeholder';
-      customize.value[`columnMinWidth${index}`] = resolveDataListColumnMinWidthFromDataSource(
+      customize.value[`columnMinWidth${index}`] = resolveTasksDataListPreviewColumnMinWidth(
         dataSource,
-        index,
+        menuItem?.value,
+        String(customize.value[`columnMinWidth${index}`] ?? ''),
       );
     });
   });
@@ -213,7 +215,8 @@ export function useTasksDataListPage(
 
   const previewColumnSettings = computed(() => {
     trackColumnSettings();
-    return readDataListColumnSettings(customize.value);
+    void menuItem?.value;
+    return readDataListColumnSettings(customize.value, menuItem?.value);
   });
 
   const settingsLevelIndex = ref(0);
@@ -228,6 +231,7 @@ export function useTasksDataListPage(
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 20;
   });
 
+  const sourceRowCount = computed(() => allDataList.value.length);
   const totalRowCount = computed(() => sortedDataList.value.length);
 
   const totalPages = computed(() => {
@@ -478,6 +482,7 @@ export function useTasksDataListPage(
     skidContentLocked,
     statisticsItems,
     toolbarActionButtons,
+    sourceRowCount,
     totalRowCount,
   };
 }

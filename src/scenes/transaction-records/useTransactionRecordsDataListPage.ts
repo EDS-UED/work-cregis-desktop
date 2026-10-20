@@ -27,7 +27,7 @@ import { sortTransactionRecordIndices } from './sortTransactionRecordIndices';
 export const TRANSACTION_RECORDS_COLUMN_HEIGHT = 66;
 export const TRANSACTION_RECORDS_HEADER_HEIGHT = 32;
 
-type ToolbarActionKey = 'filter' | 'refresh' | 'export';
+type ToolbarActionKey = 'filter' | 'refresh' | 'export' | 'legacy';
 
 function buildDefaultIndices(): number[] {
   return Array.from({ length: TRANSACTION_RECORDS_DEMO_TOTAL }, (_, index) => index);
@@ -41,6 +41,10 @@ export function useTransactionRecordsDataListPage(options?: {
     ...iconButtonProItemDefaults('filter', { label: 'Filter', icon: 'eds-filter' }),
     ...iconButtonProItemDefaults('refresh', { label: 'Refresh', icon: 'eds-arrow-refresh' }),
     ...iconButtonProItemDefaults('export', { label: 'Export', icon: 'eds-arrow-download' }),
+    ...iconButtonProItemDefaults('legacy', {
+      label: 'Switch to Legacy Version',
+      icon: 'eds-arrow-toggle-horizontal',
+    }),
     ...paginerPaginationDefaults(),
     loading: false,
   });
@@ -77,7 +81,7 @@ export function useTransactionRecordsDataListPage(options?: {
   }
 
   const toolbarActionButtons = computed(() => {
-    const keys: ToolbarActionKey[] = ['filter', 'refresh', 'export'];
+    const keys: ToolbarActionKey[] = ['filter', 'refresh', 'export', 'legacy'];
     return keys.map((key) => {
       trackSingleIconButton(key);
       return { key, item: readIconButtonProItem(customize.value, key) };

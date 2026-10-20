@@ -34,45 +34,6 @@ const TRANSACTION_TYPES = [
   '并行转出',
 ] as const;
 
-/** 演示业务类型全集；前 N 行按序展示，其余行按 index 伪随机（刷新稳定）。 */
-const BUSINESS_TYPES = [
-  '普通交易',
-  '内部转账',
-  '取消交易',
-  '交易加速',
-  '归集',
-  'WaaS提币',
-  'WaaS充值',
-  '团队账户充值',
-  '矿工费充值',
-  '矿工费代付',
-  '矿工费支出',
-  '商户结算',
-  '商户转账',
-  'EIP-7702升级',
-  '合约授权',
-  '撤销授权',
-] as const;
-
-/**
- * View by Wallet 演示：并行转出 + APT + 5 笔（列表收件地址旁 (5)，详情可「查看明细」）。
- * TxHash 固定为 EVM 演示哈希；0-based rowIndex 2/3 → 第 3、4 行（tx-3 / tx-4）。
- */
-export const TRANSACTION_RECORD_PARALLEL_OUT_DEMO_ROW_INDICES = [2, 3] as const;
-
-/** 首个 APT 演示行（详情 flow 入口）。 */
-export const TRANSACTION_RECORD_PARALLEL_OUT_DEMO_ROW_INDEX =
-  TRANSACTION_RECORD_PARALLEL_OUT_DEMO_ROW_INDICES[0];
-
-export function isTransactionRecordParallelOutDemoRow(index: number): boolean {
-  return (TRANSACTION_RECORD_PARALLEL_OUT_DEMO_ROW_INDICES as readonly number[]).includes(
-    index,
-  );
-}
-
-/** 笔数明细页展示的 5 种交易类型（汇总页仍为「并行转出」）。 */
-export const TRANSACTION_RECORD_PARALLEL_OUT_DEMO_LINE_COUNT = 5;
-
 const SECONDARY_WALLET_NAMES = [
   'Main Vault',
   'Operations',
@@ -80,13 +41,6 @@ const SECONDARY_WALLET_NAMES = [
 ] as const;
 
 const FROM_ALIASES = ['laocl', 'ops', 'treasury', 'vault'] as const;
-
-const PROJECT_NAMES = [
-  'Checkout Pro',
-  'WaaS Gateway',
-  'Settlement Hub',
-  'Merchant Pay',
-] as const;
 
 /** 演示数据内可查看的团队钱包（与所属钱包列取值一致）。 */
 export const TRANSACTION_RECORDS_DEMO_WALLET_NAMES = [
@@ -103,22 +57,11 @@ function formatDemoFiat(index: number): string {
 }
 
 function resolveTransactionType(index: number): string {
-  if (isTransactionRecordParallelOutDemoRow(index)) {
-    return TRANSACTION_RECORD_DETAIL_PARALLEL_OUT;
-  }
   if (index < TRANSACTION_TYPES.length) {
     return TRANSACTION_TYPES[index]!;
   }
   const seed = (index + 1) * 7919;
   return TRANSACTION_TYPES[seed % TRANSACTION_TYPES.length]!;
-}
-
-function resolveBusinessType(index: number): string {
-  if (index < BUSINESS_TYPES.length) {
-    return BUSINESS_TYPES[index]!;
-  }
-  const seed = (index + 1) * 8081;
-  return BUSINESS_TYPES[seed % BUSINESS_TYPES.length]!;
 }
 
 function resolveTransactionDirection(transactionType: string): TransactionRecordDirection {
@@ -129,34 +72,7 @@ function resolveTransactionDirection(transactionType: string): TransactionRecord
 }
 
 function formatTransactionDirectionLabel(direction: TransactionRecordDirection): string {
-  // 收支类型列：简中／繁中均为「收入」「支出」（非「转入／转出」）。
-  return direction === 'in' ? '收入' : '支出';
-}
-
-/**
- * View by Address：收支类型以已选搜索地址为视角。
- * - 选中地址为收款方 → 收入
- * - 选中地址为付款方 → 支出
- * 未传视角地址时沿用行上的 directionLabel（按交易类型）。
- */
-export function resolveDirectionLabelForPerspectiveAddress(
-  row: TransactionRecordRow,
-  perspectiveAddress?: string,
-): string {
-  const selected = perspectiveAddress?.trim().toLowerCase() ?? '';
-  if (!selected) {
-    return row.directionLabel;
-  }
-
-  const fromMatch = row.fromAddress.toLowerCase() === selected;
-  const toMatch = row.toAddress.toLowerCase() === selected;
-  if (toMatch && !fromMatch) {
-    return '收入';
-  }
-  if (fromMatch && !toMatch) {
-    return '支出';
-  }
-  return row.directionLabel;
+  return direction === 'in' ? '转入' : '转出';
 }
 
 function formatDemoTimestamp(offsetMs: number): string {
@@ -186,38 +102,26 @@ function formatCreatedTime(index: number): string {
 const MINER_FEE_AMOUNTS = ['0.00266', '0.0002198', '0.000812'] as const;
 
 function resolveMinerFeeDisplay(index: number, symbol: string): string {
-  if (isTransactionRecordParallelOutDemoRow(index)) {
-    return formatGroupedAmountText(`0.082 ${symbol}`);
-  }
   const amount = MINER_FEE_AMOUNTS[index % MINER_FEE_AMOUNTS.length] ?? MINER_FEE_AMOUNTS[0];
   return formatGroupedAmountText(`${amount} ${symbol} ≈ $1.87`);
 }
 
-function resolveMinerFeeCategory(index: number): 'sponsored' | 'native' {
-  return index % 2 === 0 ? 'sponsored' : 'native';
-}
+/** 演示并行转出 + BTC + 8 笔明细链接（0-based rowIndex 9 → tx-10）。 */
+export const TRANSACTION_RECORD_PARALLEL_OUT_DEMO_ROW_INDEX = 9;
 
-const MINER_FEE_TOKENS = ['TRX', 'ETH', 'BTC', 'BNB'] as const;
+const TRANSACTION_RECORD_PARALLEL_OUT_BTC_ROW_INDEX =
+  TRANSACTION_RECORD_PARALLEL_OUT_DEMO_ROW_INDEX;
 
-function resolveMinerFeeToken(index: number, symbol: string): string {
-  const category = resolveMinerFeeCategory(index);
-  if (category === 'native') {
-    return MINER_FEE_TOKENS[index % MINER_FEE_TOKENS.length] ?? 'ETH';
-  }
-  // 代付：演示用与交易币种或稳定币
-  return index % 3 === 0 ? symbol : 'USDT';
-}
-
-const TRANSACTION_RECORD_PARALLEL_OUT_APT_PRESET: CurrencyRowPreset = {
-  symbol: 'APT',
-  cryptoName: 'eds-apt-aptos',
+const TRANSACTION_RECORD_PARALLEL_OUT_BTC_PRESET: CurrencyRowPreset = {
+  symbol: 'BTC',
+  cryptoName: 'eds-btc-bitcoin',
   showNetwork: false,
-  addressFamily: 'evm',
+  addressFamily: 'btc',
 };
 
 function resolveTransactionRecordCurrencyPreset(index: number): CurrencyRowPreset {
-  if (isTransactionRecordParallelOutDemoRow(index)) {
-    return TRANSACTION_RECORD_PARALLEL_OUT_APT_PRESET;
+  if (index === TRANSACTION_RECORD_PARALLEL_OUT_BTC_ROW_INDEX) {
+    return TRANSACTION_RECORD_PARALLEL_OUT_BTC_PRESET;
   }
   return resolveCurrencyRowPreset(index);
 }
@@ -230,29 +134,9 @@ function resolveTransactionCount(transactionType: string, symbol: string): strin
     return formatGroupedNumber(3);
   }
   if (transactionType === TRANSACTION_RECORD_DETAIL_PARALLEL_OUT) {
-    if (symbol === 'APT') {
-      return formatGroupedNumber(TRANSACTION_RECORD_PARALLEL_OUT_DEMO_LINE_COUNT);
-    }
-    if (symbol === 'BTC') return formatGroupedNumber(8);
-    return formatGroupedNumber(5);
+    return symbol === 'BTC' ? formatGroupedNumber(8) : formatGroupedNumber(5);
   }
   return formatGroupedNumber(1);
-}
-
-/** 解析交易笔数；无效时回落 1。 */
-export function parseTransactionRecordCount(row: Pick<TransactionRecordRow, 'transactionCount'>): number {
-  const parsed = Number(String(row.transactionCount).replace(/,/g, ''));
-  if (Number.isFinite(parsed) && parsed > 0) {
-    return Math.floor(parsed);
-  }
-  return 1;
-}
-
-/** View by Wallet 且笔数 > 1 时：列表 (x) + 详情「查看明细」。 */
-export function transactionRecordShowsMultiTxDetail(
-  row: Pick<TransactionRecordRow, 'transactionCount' | 'transactionCountShowsDetailLink'>,
-): boolean {
-  return Boolean(row.transactionCountShowsDetailLink) && parseTransactionRecordCount(row) > 1;
 }
 
 const INITIATOR_DISPLAYS = [
@@ -292,9 +176,6 @@ function resolveManualWalletRemark(index: number): string {
 }
 
 function resolveWalletName(index: number): string {
-  if (isTransactionRecordParallelOutDemoRow(index)) {
-    return '主用钱包';
-  }
   if (index % 4 !== 3) {
     return TRANSACTION_RECORDS_DEMO_WALLET_NAMES[0];
   }
@@ -305,14 +186,7 @@ function resolveFromAlias(index: number): string {
   return FROM_ALIASES[index % FROM_ALIASES.length]!;
 }
 
-/** 并行转出 APT 演示行固定 TxHash（与产品稿一致）。 */
-const TRANSACTION_RECORD_PARALLEL_OUT_DEMO_TX_HASH =
-  '0x88df016429684c080b592563784f0f7d8f93424e9a53675635306611782962';
-
 function resolveTransactionHash(index: number, addressFamily?: CryptoAddressFamily): string {
-  if (isTransactionRecordParallelOutDemoRow(index)) {
-    return TRANSACTION_RECORD_PARALLEL_OUT_DEMO_TX_HASH;
-  }
   return resolveVerifiedTxHashForRow(index, addressFamily ?? 'evm');
 }
 
@@ -337,6 +211,7 @@ export function buildTransactionRecordRow(index: number): TransactionRecordRow {
           thirdPartyRef: resolveThirdPartyRef(index),
           initiatorDisplay: resolveInitiatorDisplay(index),
           signerDisplay: resolveSignerDisplay(index),
+          remark: resolveManualWalletRemark(index),
         }
       : transactionType === TRANSACTION_RECORD_DETAIL_ON_CHAIN_OPERATION
         ? {
@@ -353,11 +228,6 @@ export function buildTransactionRecordRow(index: number): TransactionRecordRow {
             }
           : {};
 
-  const transactionCount = resolveTransactionCount(transactionType, preset.symbol);
-  const isParallelOutDemo = isTransactionRecordParallelOutDemoRow(index);
-  const amount = isParallelOutDemo ? '0.5' : formatDemoAmount(index);
-  const fiatAmount = isParallelOutDemo ? '$0.12' : formatDemoFiat(index);
-
   return {
     id: `tx-${index + 1}`,
     createdTime: formatCreatedTime(index),
@@ -371,21 +241,16 @@ export function buildTransactionRecordRow(index: number): TransactionRecordRow {
     toAddress,
     txHash: resolveTransactionHash(index, preset.addressFamily),
     walletName: resolveWalletName(index),
-    projectName: PROJECT_NAMES[index % PROJECT_NAMES.length],
     transactionType,
-    businessType: resolveBusinessType(index),
     directionLabel: formatTransactionDirectionLabel(direction),
-    transactionCount,
+    transactionCount: resolveTransactionCount(transactionType, preset.symbol),
     transactionCountShowsDetailLink:
       transactionType === TRANSACTION_RECORD_DETAIL_PARALLEL_OUT
-      && Number(String(transactionCount).replace(/,/g, '')) > 1,
+      && preset.symbol === 'BTC',
     minerFeeDisplay: resolveMinerFeeDisplay(index, preset.symbol),
-    minerFeeCategory: isParallelOutDemo ? 'native' : resolveMinerFeeCategory(index),
-    minerFeeToken: isParallelOutDemo ? preset.symbol : resolveMinerFeeToken(index, preset.symbol),
     ...detailFields,
-    remark: resolveManualWalletRemark(index),
-    amount,
-    fiatAmount,
+    amount: formatDemoAmount(index),
+    fiatAmount: formatDemoFiat(index),
   };
 }
 

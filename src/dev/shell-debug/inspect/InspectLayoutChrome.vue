@@ -3,18 +3,25 @@ import { computed } from 'vue';
 import { buildLayoutChromeModel, boxRectStyle } from './buildLayoutMeasurement';
 import { DEV_INSPECT_PINNED_ACCENT } from './devInspectTheme';
 
-const props = defineProps<{
-  preview: Element;
-  componentLabel: string;
-  pinnedElement: Element;
-  pinnedRect: DOMRect;
-  accent?: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    preview: Element;
+    componentLabel: string;
+    pinnedElement: Element;
+    pinnedRect: DOMRect;
+    accent?: string;
+    /** hover 与 pin 共用 padding / gap 测量；命名解析仍走轻量路径。 */
+    variant?: 'full' | 'hover';
+  }>(),
+  { variant: 'full' },
+);
 
 const layoutModel = computed(() => {
   void props.pinnedRect;
   return buildLayoutChromeModel(props.pinnedElement, props.preview);
 });
+
+const selectionRectStyle = computed(() => boxRectStyle(layoutModel.value.selectionRect));
 
 const accentStyle = computed(
   () =>
@@ -26,7 +33,7 @@ const accentStyle = computed(
 
 <template>
   <div :class="$style.root" :style="accentStyle">
-    <div :class="$style.selectionShell" :style="boxRectStyle(layoutModel.selectionRect)">
+    <div :class="$style.selectionShell" :style="selectionRectStyle">
       <span :class="$style.componentLabel">{{ componentLabel }}</span>
     </div>
 
@@ -79,8 +86,9 @@ const accentStyle = computed(
   padding: var(--spacing-025) var(--spacing-1);
   border-radius: var(--radius-xs);
   background: var(--dev-inspect-accent, #ff308d);
-  font-size: var(--eds-footnote-size);
-  line-height: var(--eds-footnote-line-height);
+  font-size: var(--eds-body-small-strong-size);
+  font-weight: var(--eds-body-small-strong-weight);
+  line-height: var(--eds-body-small-strong-line-height);
   color: #ffffff;
   white-space: nowrap;
 }
@@ -130,7 +138,7 @@ const accentStyle = computed(
   border-radius: var(--radius-full);
   background: var(--dev-inspect-accent, #ff308d);
   font-family: var(--eds-family-mono, ui-monospace, monospace);
-  font-size: var(--eds-footnote-size);
+  font-size: var(--eds-caption-size, var(--eds-footnote-size));
   line-height: var(--eds-footnote-line-height);
   color: #ffffff;
   white-space: nowrap;

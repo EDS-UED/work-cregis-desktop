@@ -1,0 +1,171 @@
+.manualHint {
+  composes: typography-body-small from global;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-0-5);
+  margin: 0;
+  padding: 0 var(--spacing-3);
+  color: var(--text-base-secondary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 100%;
+}
+
+.sectionHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  padding: 0 var(--spacing-3);
+}
+
+.sectionIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--scale-5);
+  height: var(--scale-5);
+  border-radius: var(--radius-full);
+  color: var(--text-same-white-primary);
+}
+
+.sectionIconGlyph {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  --eds-icon-stroke-screen: var(--stroke-lg);
+}
+
+.sectionIconSource {
+  background-color: var(--material-brand-primary);
+}
+
+.sectionIconDestination {
+  background-color: var(--material-match-primary);
+}
+
+.sectionTitle {
+  composes: typography-body-small-strong from global;
+  color: var(--text-base-primary);
+}
+
+.objectList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-025);
+  width: 100%;
+}
+
+.objectBlock {
+  --aml-trace-label-width: calc(var(--scale-30) + var(--scale-6));
+  --aml-trace-detail-indent: calc(var(--spacing-3) + var(--aml-trace-label-width) + var(--spacing-2));
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.objectBlockExpanded {
+  border-radius: var(--radius-sm);
+  background-color: var(--material-card-subtle);
+}
+
+.objectBlock:not(.objectBlockExpanded):hover {
+  border-radius: var(--radius-sm);
+  background-color: var(--event-hover);
+}
+
+.objectRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  composes: motion-ease is-paint from global;
+}
+
+.objectBlockExpanded .objectRow {
+  border-radius: 0;
+}
+
+.objectRowInteractive {
+  cursor: pointer;
+}
+
+.objectLabelRow {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-0-5);
+  width: var(--aml-trace-label-width);
+  min-width: var(--aml-trace-label-width);
+}
+
+.objectLabel {
+  composes: typography-body-small from global;
+  color: var(--text-base-secondary);
+}
+
+.objectInfoIcon {
+  flex-shrink: 0;
+  color: var(--text-base-tertiary);
+}
+
+.objectValue {
+  composes: typography-body-small from global;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-base-primary);
+  word-break: break-word;
+}
+
+.objectChevron {
+  flex-shrink: 0;
+  color: var(--text-base-tertiary);
+}
+
+.objectDetailDivider {
+  flex-shrink: 0;
+  width: calc(100% - var(--aml-trace-detail-indent) - var(--spacing-3));
+  margin-top: var(--spacing-1);
+  margin-bottom: var(--spacing-3);
+  margin-inline: var(--aml-trace-detail-indent) var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.objectDetail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1-5);
+  padding: 0 var(--spacing-3) var(--spacing-3);
+  padding-left: var(--aml-trace-detail-indent);
+  box-sizing: border-box;
+}
+
+.detailRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-1);
+  box-sizing: border-box;
+}
+
+.detailLabel {
+  composes: typography-footnote from global;
+  flex-shrink: 0;
+  width: calc(var(--scale-18) + var(--scale-6));
+  min-width: calc(var(--scale-18) + var(--scale-6));
+  color: var(--text-base-secondary);
+}
+
+.detailValue {
+  composes: typography-footnote from global;
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-base-primary);
+  word-break: break-word;
+}

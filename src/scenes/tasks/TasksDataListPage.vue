@@ -7,6 +7,7 @@ import {
   reactive,
   ref,
   toRef,
+  unref,
   watch,
   type ComponentPublicInstance,
 } from 'vue';
@@ -19,14 +20,17 @@ import {
   EgFlotation,
   EgIcon,
   EgIconButton,
-  EgIconButtonPro,
+  EgIconProButton,
   EgLayout,
   EgPaginer,
-  EgPaginationItem,
+  EgPaginationGroupButton,
   EgToast,
   EgToolBar,
   POPOVER_PRESET_WIDTH_BASE,
   closeAllAnchoredTooltips,
+  type EgFilterCondition,
+  type EgFilterField,
+  type EgFilterLogicMode,
 } from '@eds/desktop-components';
 import TasksDataListColumnCell from './list-field/TasksDataListColumnCell.vue';
 import SentRequestAmountListCell from './list-field/sentRequest/SentRequestAmountListCell.vue';
@@ -35,15 +39,6 @@ import SentRequestReceiverListCell from './list-field/sentRequest/SentRequestRec
 import SentRequestSenderListCell from './list-field/sentRequest/SentRequestSenderListCell.vue';
 import SentRequestStatusListCell from './list-field/sentRequest/SentRequestStatusListCell.vue';
 import DataListHeaderSortTrigger from './DataListHeaderSortTrigger.vue';
-import ConditionFilterTrigger from '@/components/condition-filter/ConditionFilterTrigger.vue';
-import {
-  defaultFilterConditions,
-  filledFilterConditions,
-  rowMatchesFilterConditions,
-  TASKS_DATA_LIST_FILTER_DEFAULT_KEYS,
-  TASKS_DATA_LIST_FILTER_FIELDS,
-  type TasksDataListFilterCondition,
-} from './tasksDataListFilter';
 import pageStyles from './TasksDataListPage.module.css';
 import {
   DATA_LIST_FIGMA_HEADER_HEIGHT,
@@ -51,9 +46,9 @@ import {
   DATA_LIST_FIGMA_TOOLBAR,
   tasksDataListCustomizeDefaults,
   tasksDataListDefaultRowCount,
-  dataListColumnSettingDefaults,
   migrateDataListColumnSettings,
   syncSentRequestDataListColumnSettings,
+  syncTasksDataListColumnMinWidths,
   resolveTasksDataListMenuItem,
   DATA_LIST_PRIMARY_ACTION_LABEL,
   DATA_LIST_PRIMARY_ACTION_LABEL_EN,
@@ -62,6 +57,7 @@ import {
   tasksDataListShowsExport,
   tasksDataListShowsAutomation,
   tasksDataListShowsBatch,
+  tasksDataListShowsEgFilter,
   tasksDataListShowsStatusColumn,
   tasksDataListAmountColumnAlign,
   tasksDataListAmountColumnFlexGrow,
@@ -93,6 +89,7 @@ import {
   type TasksDataListCustomizeState,
 } from './tasksDataListPageData';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import { useListRegionInteractionBlock } from '@/composables/useListRegionInteractionBlock';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
 import ApprovalRemarkPopoverPanel from './approval/ApprovalRemarkPopoverPanel.vue';
@@ -104,6 +101,8 @@ import { setBatchSigningListRefreshHandler, suspendBatchSigningProgressPopup } f
 import { useSigningBatchFlow } from './signing/batch/useSigningBatchFlow';
 import SigningBatchNetworkPickerMenu from './signing/batch/SigningBatchNetworkPickerMenu.vue';
 import {
+  BATCH_CURRENCY_PICKER_EMPTY_MAX_HEIGHT,
+  BATCH_CURRENCY_PICKER_EMPTY_WIDTH,
   BATCH_CURRENCY_PICKER_MAX_HEIGHT,
   BATCH_CURRENCY_PICKER_WIDTH,
   BATCH_NETWORK_PICKER_CROSS_AXIS_OFFSET_PX,
@@ -118,6 +117,7 @@ import {
 } from './approval/useApprovalFlow';
 import { registerSigningFlow } from './signing/signingFlowContext';
 import {
+  SIGNING_SUCCESS_MESSAGE,
   useSigningFlow,
 } from './signing/useSigningFlow';
 import { useDataListSelectAllShortcut } from './shared/useDataListSelectAllShortcut';
@@ -128,10 +128,22 @@ import {
 } from './shared/dataListSelectMode';
 import { useTasksDataListPage } from './useTasksDataListPage';
 import { registerTasksDataListShellApi } from './tasksDataListShellApi';
+import { syncTasksModuleMenuDataVolume } from './tasksModuleMenuDataVolume';
 import type {
   TasksDataListActiveSort,
   TasksDataListSortOrder,
 } from './tasksDataListSort';
+import {
+  applyEgFilterConditions,
+  hasActiveEgFilterConditions,
+} from '../shared/applyEgFilterConditions';
+import { resolveDataListFilterSourceRowCount } from '../shared/buildListDerivedFilterOptions';
+import { buildTasksDataListFilterRowSnapshot } from './filter/buildTasksDataListFilterRowSnapshot';
+import {
+  buildTasksDataListFilterFields,
+  TASKS_DATA_LIST_FILTER_OPERATORS,
+} from './filter/tasksDataListFilterFields';
+import TasksToolbarFilter from './filter/TasksToolbarFilter.vue';
 
 const props = defineProps<{
   toolbarTitle?: string;
@@ -163,13 +175,12 @@ function applySentRequestDataListColumnRepair() {
   dataListRemountKey.value += 1;
 }
 
-/** HMR / 旧会话：补齐列配置；我发起的勿用通用 defaults 覆盖 preview 列（避免 status 污染第 2 列）。 */
+/** HMR / 旧会话：补齐列配置；切换模块时同步 min-width，避免 dev 分配参数与 EgDataListColumn 不一致。 */
 onMounted(() => {
   migrateDataListColumnSettings(customize);
+  syncTasksDataListColumnMinWidths(customize, menuItem.value, locale.value);
   if (isSentRequestDataListMenu(menuItem.value, locale.value)) {
     applySentRequestDataListColumnRepair();
-  } else {
-    Object.assign(customize, dataListColumnSettingDefaults());
   }
   for (const [key, value] of Object.entries(tasksDataListCustomizeDefaults)) {
     if (customize[key as keyof TasksDataListCustomizeState] === undefined) {
@@ -185,6 +196,7 @@ watch(
     customize.showBatch = tasksDataListShowsBatch(item);
     activeSort.value = null;
     migrateDataListColumnSettings(customize);
+    syncTasksDataListColumnMinWidths(customize, item, locale.value);
     if (isSentRequestDataListMenu(item, locale.value)) {
       applySentRequestDataListColumnRepair();
     }
@@ -255,7 +267,7 @@ const businessTypeColumnSecondaryLabel = computed(() =>
 const businessTypeColumnSecondarySortable = computed(() =>
   tasksDataListBusinessTypeColumnSecondarySortable(menuItem.value),
 );
-/** Sent Request 第 1–4 列（金额 / 业务类型 / 接收方 / 发送方）无固定 width，均分剩余空间。 */
+/** Sent Request 第 1–4 列（金额｜业务类型 / 申请时间 / 接收方 / 发送方）无固定 width，均分剩余空间。 */
 const amountColumnFlexGrow = computed(() =>
   tasksDataListAmountColumnFlexGrow(menuItem.value),
 );
@@ -267,6 +279,27 @@ const amountColumnMinWidth = computed(() =>
 );
 
 const isApprovalMenu = computed(() => menuItem.value === 'Approval');
+
+const usesTasksEgFilter = computed(() =>
+  tasksDataListShowsEgFilter(menuItem.value, locale.value),
+);
+
+const tasksFilterConditions = ref<EgFilterCondition[]>([]);
+const tasksFilterLogicMode = ref<EgFilterLogicMode>('all');
+
+const tasksFilterFields = computed((): EgFilterField[] => {
+  if (!usesTasksEgFilter.value) return [];
+  return buildTasksDataListFilterFields(
+    menuItem.value,
+    (key) => ui(key),
+    locale.value,
+    resolveDataListFilterSourceRowCount(
+      Boolean(customize.empty),
+      tasksDataListDefaultRowCount(menuItem.value),
+    ),
+  );
+});
+
 const isSigningMenu = computed(() => menuItem.value === 'Signing');
 const isSentRequestMenu = computed(
   () =>
@@ -419,7 +452,7 @@ const signingBatchFlow = useSigningBatchFlow({
     dataListRemountKey.value += 1;
   },
   showError: (message) => showListError(message),
-  showSuccess: () => showListSuccess(),
+  showSuccess: () => showListSuccess(SIGNING_SUCCESS_MESSAGE),
 });
 
 const signingFlow = useSigningFlow({
@@ -505,8 +538,6 @@ async function handleBatchAction(
   });
 }
 
-const appliedFilterConditions = ref<TasksDataListFilterCondition[]>(defaultFilterConditions());
-
 const {
   DATA_LIST_FIGMA_PAGINER,
   automationButton,
@@ -545,6 +576,7 @@ const {
   skidContentLocked,
   statisticsItems,
   toolbarActionButtons,
+  sourceRowCount,
   totalRowCount,
 } = useTasksDataListPage(
   customizeRef,
@@ -552,26 +584,73 @@ const {
   activeSort,
   handleBatchAction,
   computed(() => {
-    const signingFilter =
-      isSigningMenu.value && customize.selectMode
-        ? (row: Record<string, unknown>) =>
-            !signingBatchFlow.shouldFilterRow(Number(row.id))
-        : null;
-    const hasListFilter = filledFilterConditions(appliedFilterConditions.value).length > 0;
-    if (!signingFilter && !hasListFilter) return null;
-    return (row: Record<string, unknown>) => {
-      if (signingFilter && !signingFilter(row)) return false;
-      return rowMatchesFilterConditions(row, appliedFilterConditions.value);
-    };
+    const matchers: Array<(row: Record<string, unknown>) => boolean> = [];
+
+    if (isSigningMenu.value && customize.selectMode) {
+      matchers.push(
+        (row) => !signingBatchFlow.shouldFilterRow(Number(row.id)),
+      );
+    }
+
+    if (
+      usesTasksEgFilter.value
+      && hasActiveEgFilterConditions(tasksFilterConditions.value)
+    ) {
+      const conditions = tasksFilterConditions.value;
+      const fields = tasksFilterFields.value;
+      const logicMode = tasksFilterLogicMode.value;
+      matchers.push((row) => {
+        const rowIndex = Number(row.id);
+        if (!Number.isFinite(rowIndex)) return false;
+        try {
+          return applyEgFilterConditions({
+            snapshot: buildTasksDataListFilterRowSnapshot(rowIndex, {
+              translate: (key) => ui(key),
+              locale: locale.value,
+              menuItem: menuItem.value,
+            }),
+            conditions,
+            fields,
+            logicMode,
+          });
+        } catch {
+          return true;
+        }
+      });
+    }
+
+    if (matchers.length === 0) return null;
+    return (row: Record<string, unknown>) => matchers.every((match) => match(row));
   }),
+  menuItem,
 );
 
-const filterToolbarButton = computed(() =>
-  toolbarActionButtons.value.find((button) => button.key === 'filter'),
+watch(
+  tasksFilterConditions,
+  () => {
+    if (hasActiveEgFilterConditions(tasksFilterConditions.value)) {
+      goFirstPage();
+    }
+  },
+  { deep: true },
 );
-const otherToolbarActionButtons = computed(() =>
-  toolbarActionButtons.value.filter((button) => button.key !== 'filter'),
-);
+
+watch(usesTasksEgFilter, (enabled) => {
+  if (!enabled) {
+    tasksFilterConditions.value = [];
+    tasksFilterLogicMode.value = 'all';
+  }
+});
+
+watch(menuItem, () => {
+  tasksFilterConditions.value = [];
+  tasksFilterLogicMode.value = 'all';
+});
+
+function resolveToolbarActionButtonsForMenu(usesEgFilter: boolean) {
+  const buttons = unref(toolbarActionButtons) ?? [];
+  return usesEgFilter ? buttons.filter((button) => button.key !== 'filter') : buttons;
+}
 
 const listRegionRef = ref<HTMLElement | null>(null);
 
@@ -638,9 +717,13 @@ watch(
   { immediate: true },
 );
 
-watch(isRecordMenu, (enabled) => {
-  registerRecordDetailFlow(enabled ? recordDetailFlow : null);
-});
+watch(
+  [isRecordMenu, () => menuItem.value],
+  ([enabled, item]) => {
+    registerRecordDetailFlow(enabled ? recordDetailFlow : null, enabled ? item : undefined);
+  },
+  { immediate: true },
+);
 
 function refreshListFromToolbar() {
   void nextTick(() => {
@@ -653,8 +736,12 @@ onMounted(() => {
     setListEmpty: (empty) => {
       if (empty) {
         customize.loading = false;
+        customize.initing = false;
       }
       customize.empty = empty;
+    },
+    setListIniting: (initing) => {
+      customize.initing = initing;
     },
     setListLoading: (loading) => {
       customize.loading = loading;
@@ -671,7 +758,9 @@ onMounted(() => {
     registerSigningFlow(signingFlow);
     registerSigningBatchFlow(signingBatchFlow);
   }
-  if (isRecordMenu.value) registerRecordDetailFlow(recordDetailFlow);
+  if (isRecordMenu.value) {
+    registerRecordDetailFlow(recordDetailFlow, menuItem.value);
+  }
   setBatchSigningListRefreshHandler(refreshListFromToolbar);
 });
 
@@ -734,17 +823,85 @@ watch(
   },
 );
 
+watch(
+  [menuItem, sourceRowCount, () => customize.empty],
+  ([item, rowCount, empty]) => {
+    if (!item || !isTasksDataListMenuItem(item)) return;
+    syncTasksModuleMenuDataVolume(item, empty ? 0 : rowCount);
+  },
+  { immediate: true },
+);
+
 const signingBatchUsesNetworkFlotation = computed(() =>
   isSigningMenu.value && signingBatchFlow.shouldUseNetworkPickerFlotation(),
 );
 
+const signingBatchPickerIsEmpty = computed(
+  () => isSigningMenu.value && signingBatchFlow.currencyGroups.value.length === 0,
+);
+
+const signingBatchPickerFlotationWidth = computed(() =>
+  signingBatchPickerIsEmpty.value
+    ? BATCH_CURRENCY_PICKER_EMPTY_WIDTH
+    : BATCH_CURRENCY_PICKER_WIDTH,
+);
+
+const signingBatchPickerFlotationMaxHeight = computed(() =>
+  signingBatchPickerIsEmpty.value
+    ? BATCH_CURRENCY_PICKER_EMPTY_MAX_HEIGHT
+    : BATCH_CURRENCY_PICKER_MAX_HEIGHT,
+);
+
+/** 空列表：禁用批处理 / 自动化与表头排序（含筛选后 0 条）。 */
+const isDataListEmpty = computed(
+  () => Boolean(customize.empty) || totalRowCount.value === 0,
+);
+
+/** 筛选已生效时，即使结果为 0 条也须保持筛选钮可点以便修改/清空条件。 */
+const canEditTasksFilter = computed(
+  () =>
+    usesTasksEgFilter.value
+    && hasActiveEgFilterConditions(tasksFilterConditions.value),
+);
+
+const isBatchSelectModeActive = computed(() => Boolean(customize.selectMode));
+
+/** 批处理多选进行中：工具栏批处理钮禁用（退出走 Batch Bar / Esc，勿再点工具栏切换）。 */
+const isBatchToolbarDisabled = computed(
+  () =>
+    skidContentLocked.value
+    || batchButton.value.disabled
+    || isBatchSelectModeActive.value
+    || isDataListEmpty.value,
+);
+
+/** 批处理多选：自动化 / 筛选禁用。 */
+const isToolbarAutomationDisabled = computed(
+  () =>
+    skidContentLocked.value
+    || automationButton.value.disabled
+    || isDataListEmpty.value
+    || isBatchSelectModeActive.value,
+);
+
+const isToolbarFilterDisabled = computed(
+  () =>
+    skidContentLocked.value
+    || isBatchSelectModeActive.value
+    || (isDataListEmpty.value && !canEditTasksFilter.value),
+);
+
+/** 待审批 / 待签名批处理时表头排序仍可用。 */
+const isHeaderSortDisabled = computed(
+  () =>
+    isDataListEmpty.value
+    || (isBatchSelectModeActive.value && !isApprovalMenu.value && !isSigningMenu.value),
+);
+
 function onToolbarBatchClick() {
+  if (isBatchToolbarDisabled.value) return;
   if (isSigningMenu.value) {
     signingBatchFlow.onBatchButtonClick();
-    return;
-  }
-  if (customize.selectMode) {
-    requestCloseDataListSelectMode();
     return;
   }
   requestOpenDataListSelectMode();
@@ -773,7 +930,9 @@ function onAmountSort(order: TasksDataListSortOrder | null) {
 }
 
 /** 批处理过滤已在 useTasksDataListPage.sortedDataList 全量应用，勿再滤当前页。 */
-const displayDataList = computed(() => paginatedDataList.value);
+const { contentReady } = useDeferredContentMount();
+
+const displayDataList = computed(() => (contentReady.value ? paginatedDataList.value : []));
 
 useDataListSelectAllShortcut({
   selectMode: computed(() => Boolean(customize.selectMode)),
@@ -814,12 +973,12 @@ const displayStatisticsItems = computed(() =>
 const displayBatchActions = computed(() => {
   const actions = isApprovalMenu.value
     ? [
-        { key: 'reject', label: 'Reject', danger: true, popover: true, popoverTitle: 'Batch Rejection' },
-        { key: 'pass', label: 'Pass', popover: true, popoverTitle: 'Batch Approve' },
+        { key: 'reject', label: 'Reject', danger: true, popover: true, popoverTitle: 'Batch Reject' },
+        { key: 'pass', label: 'Pass', popover: true, popoverTitle: 'Batch Approved' },
       ]
     : isSigningMenu.value
       ? [
-          { key: 'reject', label: 'Reject', danger: true, popover: true, popoverTitle: 'Batch Rejection' },
+          { key: 'reject', label: 'Reject', danger: true, popover: true, popoverTitle: 'Batch Reject' },
           { key: 'pass', label: 'Sign' },
         ]
       : dataListBatchActions;
@@ -850,27 +1009,27 @@ const displayBatchActions = computed(() => {
               placement="bottom"
               align="end"
               width-mode="fixed"
-              :width="BATCH_CURRENCY_PICKER_WIDTH"
+              :width="signingBatchPickerFlotationWidth"
               height-mode="adaptive"
-              :max-height="BATCH_CURRENCY_PICKER_MAX_HEIGHT"
+              :max-height="signingBatchPickerFlotationMaxHeight"
               :cross-axis-offset="BATCH_NETWORK_PICKER_CROSS_AXIS_OFFSET_PX"
               :show-add="false"
               :show-menu-divider="false"
               boundary-selector=".app-preview"
               flip
               close-on-scroll
-              :disabled="skidContentLocked || batchButton.disabled"
+              :disabled="isBatchToolbarDisabled"
             >
               <template #trigger="{ expanded }">
                 <!--
-                  勿把整颗 EgIconButtonPro（button）放进 #trigger：
+                  勿把整颗 EgIconProButton（button）放进 #trigger：
                   AnchoredTooltip 会优先量到 button，主轴锚在含文案的 48×38 上。
                   仅 iconSlot 标 data-eds-trigger-metrics；文案仍在 trigger 内可点。
                 -->
                 <span
                   :class="[
                     pageStyles.batchProTriggerRoot,
-                    (skidContentLocked || batchButton.disabled) && pageStyles.batchProTriggerDisabled,
+                    (isBatchToolbarDisabled) && pageStyles.batchProTriggerDisabled,
                     expanded && pageStyles.batchFlotationTriggerExpanded,
                   ]"
                 >
@@ -884,7 +1043,7 @@ const displayBatchActions = computed(() => {
                       shape="rectangular"
                       size="sm"
                       :label="ui(batchButton.label)"
-                      :disabled="skidContentLocked || batchButton.disabled"
+                      :disabled="isBatchToolbarDisabled"
                     >
                       <EgIcon :name="batchButton.icon" size="sm" />
                     </EgIconButton>
@@ -920,81 +1079,84 @@ const displayBatchActions = computed(() => {
                 />
               </template>
             </EgFlotation>
-            <EgIconButtonPro
+            <EgIconProButton
               v-else
               :label="ui(batchButton.label)"
               :badge="batchButton.badge"
               :show-badge="batchButton.showBadge"
               :show-reddot="batchButton.showReddot"
-              :disabled="skidContentLocked || batchButton.disabled"
+              :disabled="isBatchToolbarDisabled"
               @click="onToolbarBatchClick"
             >
               <EgIcon :name="batchButton.icon" size="sm" />
-            </EgIconButtonPro>
-            <EgIconButtonPro
+            </EgIconProButton>
+            <EgIconProButton
               v-if="showAutomationButton"
               :label="ui(automationButton.label)"
               :badge="automationButton.badge"
               :show-badge="automationButton.showBadge"
               :show-reddot="automationButton.showReddot"
-              :disabled="skidContentLocked || automationButton.disabled"
+              :disabled="isToolbarAutomationDisabled"
             >
               <EgIcon :name="automationButton.icon" size="sm" />
-            </EgIconButtonPro>
+            </EgIconProButton>
           </template>
           <template v-if="showToolBarSectionForMenu" #section>
-            <ConditionFilterTrigger
-              v-if="filterToolbarButton"
-              :label="ui(filterToolbarButton.item.label)"
-              :icon="filterToolbarButton.item.icon"
-              :fields="TASKS_DATA_LIST_FILTER_FIELDS"
-              :default-field-keys="TASKS_DATA_LIST_FILTER_DEFAULT_KEYS"
-              :disabled="skidContentLocked || filterToolbarButton.item.disabled"
-              v-model:applied="appliedFilterConditions"
+            <TasksToolbarFilter
+              v-if="usesTasksEgFilter"
+              v-model="tasksFilterConditions"
+              v-model:logic-mode="tasksFilterLogicMode"
+              :fields="tasksFilterFields"
+              :operators="TASKS_DATA_LIST_FILTER_OPERATORS"
+              :disabled="isToolbarFilterDisabled"
             />
-            <EgIconButtonPro
-              v-for="button in otherToolbarActionButtons"
+            <EgIconProButton
+              v-for="button in resolveToolbarActionButtonsForMenu(usesTasksEgFilter)"
               :key="button.key"
               :label="ui(button.item.label)"
               :badge="button.item.badge"
               :show-badge="button.item.showBadge"
               :show-reddot="button.item.showReddot"
-              :disabled="skidContentLocked || button.item.disabled"
+              :disabled="
+                skidContentLocked
+                  || button.item.disabled
+                  || (button.key === 'filter' && isToolbarFilterDisabled)
+              "
               @click="onToolbarActionClick(button.key)"
             >
               <EgIcon :name="button.item.icon" size="sm" />
-            </EgIconButtonPro>
+            </EgIconProButton>
           </template>
           <template v-else #functional>
-            <ConditionFilterTrigger
-              v-if="filterToolbarButton"
-              :label="ui(filterToolbarButton.item.label)"
-              :icon="filterToolbarButton.item.icon"
-              :fields="TASKS_DATA_LIST_FILTER_FIELDS"
-              :default-field-keys="TASKS_DATA_LIST_FILTER_DEFAULT_KEYS"
-              :disabled="skidContentLocked || filterToolbarButton.item.disabled"
-              v-model:applied="appliedFilterConditions"
+            <TasksToolbarFilter
+              v-if="usesTasksEgFilter"
+              v-model="tasksFilterConditions"
+              v-model:logic-mode="tasksFilterLogicMode"
+              :fields="tasksFilterFields"
+              :operators="TASKS_DATA_LIST_FILTER_OPERATORS"
+              :disabled="isToolbarFilterDisabled"
             />
-            <EgIconButtonPro
-              v-for="button in otherToolbarActionButtons"
+            <EgIconProButton
+              v-for="button in resolveToolbarActionButtonsForMenu(usesTasksEgFilter)"
               :key="`functional-${button.key}`"
               :label="ui(button.item.label)"
               :badge="button.item.badge"
               :show-badge="button.item.showBadge"
               :show-reddot="button.item.showReddot"
-              :disabled="skidContentLocked || button.item.disabled"
+              :disabled="
+                skidContentLocked
+                  || button.item.disabled
+                  || (button.key === 'filter' && isToolbarFilterDisabled)
+              "
               @click="onToolbarActionClick(button.key)"
             >
               <EgIcon :name="button.item.icon" size="sm" />
-            </EgIconButtonPro>
+            </EgIconProButton>
           </template>
         </EgToolBar>
       </template>
 
-      <div
-        ref="listRegionRef"
-        :class="pageStyles.listRegion"
-      >
+      <div ref="listRegionRef" :class="pageStyles.listRegion">
         <div
           v-if="listInteractionBlockActive"
           :class="pageStyles.listInteractionBlocker"
@@ -1008,7 +1170,8 @@ const displayBatchActions = computed(() => {
           :header-height="DATA_LIST_FIGMA_HEADER_HEIGHT"
           :column-height="columnHeight"
           :loading="Boolean(customize.loading)"
-          :initing="Boolean(customize.initing)"
+          :initing="Boolean(customize.initing) || !contentReady"
+          :initing-text="ui('Loading')"
           :skid-open="skidOpen"
           :batch-actions="displayBatchActions"
           :on-batch-action="onBatchAction"
@@ -1037,7 +1200,7 @@ const displayBatchActions = computed(() => {
               v-if="isApprovalMenu"
               :selected-count="selectedCount"
               :remark="approvalFlow.remark.value"
-              placeholder-key="Please enter remark"
+              placeholder-key="Please enter"
               @update:remark="approvalFlow.remark.value = $event"
               @confirm="confirm"
               @cancel="close"
@@ -1046,7 +1209,7 @@ const displayBatchActions = computed(() => {
               v-else
               :selected-count="selectedCount"
               :remark="signingBatchFlow.remark.value"
-              placeholder-key="Please enter remark"
+              placeholder-key="Please enter"
               @update:remark="signingBatchFlow.remark.value = $event"
               @confirm="confirm"
               @cancel="close"
@@ -1077,6 +1240,7 @@ const displayBatchActions = computed(() => {
                     </div>
                     <DataListHeaderSortTrigger
                       label="Amount"
+                      :disabled="isHeaderSortDisabled"
                       :active-order="amountSortOrder"
                       @sort-change="onAmountSort"
                     />
@@ -1088,14 +1252,9 @@ const displayBatchActions = computed(() => {
                         :content-class="pageStyles.comboHeaderSegmentText"
                         context="header"
                       >
-                        {{ ui('Created Time') }}
+                        {{ ui('Operation Type') }}
                       </EgDataListCellOverflow>
                     </div>
-                    <DataListHeaderSortTrigger
-                      label="Created Time"
-                      :active-order="createdTimeSortOrder"
-                      @sort-change="onCreatedTimeSort"
-                    />
                   </div>
                 </div>
               </template>
@@ -1109,15 +1268,15 @@ const displayBatchActions = computed(() => {
             </EgDataListColumn>
 
             <EgDataListColumn
-              key="sent-request-operation-type"
+              key="sent-request-created-time"
               :hidden="!isSentRequestMenu"
-              prop="operationType"
-              :label="ui('Operation Type')"
+              prop="createdTime"
+              :label="ui('Created Time')"
               :min-width="createdTimeColumnMinWidth"
               :flex-grow="true"
               align="left"
               :sortable="false"
-              :display-order="2"
+              :display-order="createdTimeColumnDisplayOrder"
             >
               <template #header>
                 <div :class="pageStyles.comboHeaderSegment">
@@ -1126,9 +1285,15 @@ const displayBatchActions = computed(() => {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui('Operation Type') }}
+                      {{ ui('Created Time') }}
                     </EgDataListCellOverflow>
                   </div>
+                  <DataListHeaderSortTrigger
+                    label="Created Time"
+                    :disabled="isHeaderSortDisabled"
+                    :active-order="createdTimeSortOrder"
+                    @sort-change="onCreatedTimeSort"
+                  />
                 </div>
               </template>
               <template #default="{ data }">
@@ -1223,6 +1388,7 @@ const displayBatchActions = computed(() => {
                   <DataListHeaderSortTrigger
                     v-if="previewColumnSettings[0].sortable"
                     :label="previewColumnSettings[0].label"
+                    :disabled="isHeaderSortDisabled"
                   />
                 </div>
                 <EgDivider type="navigator" direction="vertical" />
@@ -1238,6 +1404,7 @@ const displayBatchActions = computed(() => {
                   <DataListHeaderSortTrigger
                     v-if="previewColumnSettings[0].secondarySortable"
                     :label="previewColumnSettings[0].secondaryLabel ?? ''"
+                    :disabled="isHeaderSortDisabled"
                     :active-order="createdTimeSortOrder"
                     @sort-change="onCreatedTimeSort"
                   />
@@ -1281,6 +1448,7 @@ const displayBatchActions = computed(() => {
                   </div>
                   <DataListHeaderSortTrigger
                     :label="previewColumnSettings[1].label"
+                    :disabled="isHeaderSortDisabled"
                     :active-order="amountSortOrder"
                     @sort-change="onAmountSort"
                   />
@@ -1298,6 +1466,7 @@ const displayBatchActions = computed(() => {
                   <DataListHeaderSortTrigger
                     v-if="previewColumnSettings[1].secondarySortable"
                     :label="previewColumnSettings[1].secondaryLabel ?? ''"
+                    :disabled="isHeaderSortDisabled"
                     :active-order="createdTimeSortOrder"
                     @sort-change="onCreatedTimeSort"
                   />
@@ -1371,6 +1540,7 @@ const displayBatchActions = computed(() => {
                   <DataListHeaderSortTrigger
                     v-if="businessTypeColumnSecondarySortable"
                     :label="businessTypeColumnSecondaryLabel"
+                    :disabled="isHeaderSortDisabled"
                     :active-order="createdTimeSortOrder"
                     @sort-change="onCreatedTimeSort"
                   />
@@ -1439,24 +1609,24 @@ const displayBatchActions = computed(() => {
           :settings-jump-placeholder="ui('Please Enter')"
           @settings-jump="onSettingsJump"
         >
-          <EgPaginationItem
+          <EgPaginationGroupButton
             :kind="firstPagination.kind"
             :tone="firstPagination.tone"
             :disabled="prevNavDisabled || firstPagination.disabled"
             @click="goFirstPage"
           >
             <EgIcon name="eds-arrow-go-first" fit />
-          </EgPaginationItem>
-          <EgPaginationItem
+          </EgPaginationGroupButton>
+          <EgPaginationGroupButton
             :kind="prevPagination.kind"
             :tone="prevPagination.tone"
             :disabled="prevNavDisabled || prevPagination.disabled"
             @click="goPrevPage"
           >
             <EgIcon name="eds-arrow-left-mini-ios" fit />
-          </EgPaginationItem>
+          </EgPaginationGroupButton>
           <template v-if="!isManyPagination">
-            <EgPaginationItem
+            <EgPaginationGroupButton
               :kind="pagePagination.kind"
               :tone="pagePagination.tone"
               selected
@@ -1465,7 +1635,7 @@ const displayBatchActions = computed(() => {
             />
           </template>
           <template v-else>
-            <EgPaginationItem
+            <EgPaginationGroupButton
               v-for="(item, index) in manyPageItems"
               :key="`${item.kind}-${item.label}-${index}`"
               :kind="pagePagination.kind"
@@ -1477,22 +1647,22 @@ const displayBatchActions = computed(() => {
               @click="onManyPageItemClick(item)"
             />
           </template>
-          <EgPaginationItem
+          <EgPaginationGroupButton
             :kind="nextPagination.kind"
             :tone="nextPagination.tone"
             :disabled="nextNavDisabled || nextPagination.disabled"
             @click="goNextPage"
           >
             <EgIcon name="eds-arrow-right-mini-ios" fit />
-          </EgPaginationItem>
-          <EgPaginationItem
+          </EgPaginationGroupButton>
+          <EgPaginationGroupButton
             :kind="lastPagination.kind"
             :tone="lastPagination.tone"
             :disabled="nextNavDisabled || lastPagination.disabled"
             @click="goLastPage"
           >
             <EgIcon name="eds-arrow-go-last" fit />
-          </EgPaginationItem>
+          </EgPaginationGroupButton>
         </EgPaginer>
       </template>
     </EgLayout>

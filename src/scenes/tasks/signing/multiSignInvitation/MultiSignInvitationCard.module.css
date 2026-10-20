@@ -22,7 +22,7 @@
   min-width: 0;
   padding: var(--spacing-2) var(--spacing-3);
   border-radius: var(--radius-sm);
-  composes: motion-ease is-hover from global;
+  composes: motion-ease is-paint from global;
 }
 
 .cardHeadlineRow:hover {
@@ -50,19 +50,25 @@
 }
 
 .inviterLine {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: var(--spacing-1);
   flex: 1 1 auto;
   min-width: 0;
   margin: 0;
   color: var(--text-base-primary);
 }
 
-.inviterName {
-  font-size: var(--eds-body-medium-size);
-  font-weight: var(--eds-body-medium-weight);
-  line-height: var(--eds-body-medium-line-height);
+.inviterNameHost {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .inviterSuffix {
+  flex: 0 0 auto;
   font-size: var(--eds-body-medium-size);
   font-weight: var(--eds-body-medium-weight);
   line-height: var(--eds-body-medium-line-height);
@@ -96,7 +102,7 @@
   padding: var(--spacing-1) var(--spacing-2);
   border-radius: var(--radius-sm);
   justify-content: space-between;
-  composes: motion-ease is-hover from global;
+  composes: motion-ease is-paint from global;
 }
 
 .detailListRow:hover {
@@ -108,7 +114,6 @@
 }
 
 .detailListRowAddress:hover .walletName,
-.detailListRowAddress:hover .addressOverflow :global([class*='textSecondary']),
 .detailListRowAddress:hover .amountPrimary {
   color: var(--text-base-primary);
 }
@@ -144,14 +149,31 @@
   max-width: 100%;
 }
 
-.addressOverflow {
+.addressOverflowHost {
   flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;
 }
 
-.addressOverflow :global([class*='measure']) {
-  text-align: left;
+.addressTextMeasure {
+  composes: typography-footnote from global;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--text-base-secondary);
+}
+
+.addressHoverTarget {
+  composes: typography-footnote motion-ease is-paint from global;
+  overflow: visible;
+  white-space: nowrap;
+  text-overflow: unset;
+}
+
+.addressAliasTag {
+  flex-shrink: 0;
 }
 
 .walletName {
@@ -159,14 +181,6 @@
   font-size: var(--eds-footnote-size);
   font-weight: var(--eds-footnote-strong-weight);
   line-height: var(--eds-footnote-strong-line-height);
-  color: var(--text-base-secondary);
-}
-
-.addressAliasTag {
-  flex-shrink: 0;
-}
-
-.addressOverflow :global([class*='textSecondary']) {
   color: var(--text-base-secondary);
 }
 

@@ -1,0 +1,165 @@
+/**
+ * R2 组件根判定 —— 见 `inspectNamingRules.ts` 的五条统一规则。
+ *
+ * **【禁止】** 子树借名：EDS 组件只在「节点自身带 catalog `eds-*` 根类」或
+ * 「节点就是该组件的 Vue DOM 根」时才算 owner。内层普通容器走 R4 / R5。
+ */
+import {
+  lookupEdsCatalogByDomClass,
+  lookupEdsCatalogByVueName,
+  type EdsInspectCatalogEntry,
+} from './edsInspectCatalog';
+import { isStructuralEdsDomClass } from './edsInspectStructuralDom';
+
+export type VueComponentInternal = {
+  type?: { name?: string; __name?: string };
+  parent?: VueComponentInternal;
+  props?: Record<string, unknown>;
+  subTree?: { el?: Element | null };
+  vnode?: { el?: Element | null };
+};
+
+export type VueCatalogOwnerMatch = {
+  entry: EdsInspectCatalogEntry;
+  instance: VueComponentInternal;
+  root: Element;
+  depth: number;
+};
+
+function resolveVueComponentName(instance: VueComponentInternal): string | null {
+  return instance.type?.name || instance.type?.__name || null;
+}
+
+export function resolveComponentRootElement(instance: VueComponentInternal): Element | null {
+  const subTreeEl = instance.subTree?.el;
+  if (subTreeEl instanceof Element) return subTreeEl;
+  const vnodeEl = instance.vnode?.el;
+  if (vnodeEl instanceof Element) return vnodeEl;
+  return null;
+}
+
+export function walkVueChain(element: Element): VueComponentInternal[] {
+  const chain: VueComponentInternal[] = [];
+  const probe = element as Element & { __vueParentComponent?: VueComponentInternal };
+  let current = probe.__vueParentComponent;
+  while (current) {
+    chain.push(current);
+    current = current.parent;
+  }
+  return chain;
+}
+
+type ElementWithVue = Element & {
+  __vueParentComponent?: VueComponentInternal;
+  __vnode?: { component?: VueComponentInternal };
+};
+
+function pushInstanceIfDomRoot(
+  target: Element,
+  instance: VueComponentInternal | null | undefined,
+  matches: VueComponentInternal[],
+  seen: Set<VueComponentInternal>,
+): void {
+  if (!instance || seen.has(instance)) return;
+  if (resolveComponentRootElement(instance) !== target) return;
+  seen.add(instance);
+  matches.push(instance);
+}
+
+/**
+ * 找出 Vue DOM 根 === target 的组件实例。
+ * production 须配合 vite `__VUE_PROD_DEVTOOLS__` 才有 `__vueParentComponent`。
+ */
+export function findVueInstancesWithDomRoot(target: Element): VueComponentInternal[] {
+  // root !== element：只收 resolveComponentRootElement(instance) === target 的实例。
+  const matches: VueComponentInternal[] = [];
+  const seen = new Set<VueComponentInternal>();
+  const probe = target as ElementWithVue;
+
+  pushInstanceIfDomRoot(target, probe.__vnode?.component, matches, seen);
+  pushInstanceIfDomRoot(target, probe.__vueParentComponent, matches, seen);
+
+  for (const instance of walkVueChain(target)) {
+    pushInstanceIfDomRoot(target, instance, matches, seen);
+  }
+
+  return matches;
+}
+
+function resolveCatalogForVueName(vueName: string | null | undefined): EdsInspectCatalogEntry | null {
+  if (!vueName) return null;
+  return lookupEdsCatalogByVueName(vueName) ?? lookupEdsCatalogByVueName(`Eg${vueName}`) ?? null;
+}
+
+export function measureInspectOwnerDepth(from: Element, root: Element): number {
+  let depth = 0;
+  let node: Element | null = from;
+  while (node) {
+    if (node === root) return depth;
+    node = node.parentElement;
+    depth += 1;
+  }
+  return Number.POSITIVE_INFINITY;
+}
+
+/** 节点**自身**的 catalog `eds-*` 根类（不向上冒泡）。 */
+export function findDirectDomCatalogEntry(
+  element: Element,
+): { entry: EdsInspectCatalogEntry; root: Element } | null {
+  let best: { entry: EdsInspectCatalogEntry; root: Element } | null = null;
+
+  for (const className of element.classList) {
+    if (!className.startsWith('eds-')) continue;
+    if (isStructuralEdsDomClass(className)) continue;
+    const entry = lookupEdsCatalogByDomClass(className);
+    if (!entry || entry.domClass !== className) continue;
+    if (!best || entry.priority > best.entry.priority) {
+      best = { entry, root: element };
+    }
+  }
+
+  return best;
+}
+
+/**
+ * 节点**就是**某已入 catalog 的 EDS 组件的 Vue DOM 根时返回该组件。
+ * 子树内节点一律不匹配 —— 这是全站统一「点谁是谁」的关键约束。
+ */
+export function findComponentRootOwner(element: Element): VueCatalogOwnerMatch | null {
+  // root !== element：委托 findVueInstancesWithDomRoot，只在 root === target 时命中。
+  for (const instance of findVueInstancesWithDomRoot(element)) {
+    const entry = resolveCatalogForVueName(resolveVueComponentName(instance));
+    if (entry) return { entry, instance, root: element, depth: 0 };
+  }
+
+  return null;
+}
+
+/** EDS 组件源码位置标记（dev 下 plugin-vue 注入 `__file`）。 */
+const EDS_COMPONENT_FILE_MARKER = 'eds-desktop/packages/components/';
+
+/** 该实例是否为 EDS 包组件（build 下 `__file` 缺失时回退 catalog 名）。 */
+function isEdsPackageInstance(instance: VueComponentInternal): boolean {
+  const file = (instance.type as { __file?: unknown } | undefined)?.__file;
+  if (typeof file === 'string') return file.includes(EDS_COMPONENT_FILE_MARKER);
+  return Boolean(resolveCatalogForVueName(resolveVueComponentName(instance)));
+}
+
+/**
+ * 节点是否为**任意** EDS 包组件的 Vue DOM 根（含未入 catalog 的 33 个内部组件）。
+ * 未入 catalog 只意味着「没有精选 props」，**不应**让它退化成继承祖先名 —— 那会
+ * 让 `CryptoAddress` / `Verify` / `MinerFee*Panel` 等与外层弹窗重名。
+ */
+export function findEdsComponentRootInstance(
+  element: Element,
+): { vueName: string; instance: VueComponentInternal } | null {
+  // root !== element：委托 findVueInstancesWithDomRoot，只在 root === target 时命中。
+  for (const instance of findVueInstancesWithDomRoot(element)) {
+    const vueName = resolveVueComponentName(instance);
+    if (!vueName) continue;
+    if (!isEdsPackageInstance(instance) && !vueName.startsWith('Eg')) continue;
+
+    return { vueName, instance };
+  }
+  return null;
+}
