@@ -105,7 +105,7 @@ function buildWalletPayoutCallbackMetaItems(
     {
       ...createDetailApplyItemRow('text', {
         key: 'wallet-payout-callback-address',
-        title: translate('Callback Address'),
+        title: translate('Callback URL'),
         value: detail.callbackAddress,
       }),
       titleIcon: 'eds-link',

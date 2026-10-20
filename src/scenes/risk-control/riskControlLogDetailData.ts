@@ -21,7 +21,8 @@ export type RiskControlLogDetailKind =
   | 'trigger-strategy'
   | 'strategy-snapshot'
   | 'team-api-create'
-  | 'team-api-update';
+  | 'team-api-update'
+  | 'webhook-operation';
 
 export type RiskControlLogDetailRecord = {
   kind: RiskControlLogDetailKind;
@@ -56,6 +57,9 @@ export type RiskControlLogDetailRecord = {
     permissionsLabel: string;
     ipWhitelist: string;
   };
+  webhookName: string;
+  webhookEndpointUrl: string;
+  webhookEventTypeKey: string;
 };
 
 const LOG_API_SNAPSHOT = {
@@ -79,6 +83,10 @@ function resolveLogDetailKind(row: PaymentEngineRecordRow): RiskControlLogDetail
     return 'team-api-create';
   }
 
+  if (logTypeKey === 'Webhook') {
+    return 'webhook-operation';
+  }
+
   return 'strategy-snapshot';
 }
 
@@ -89,6 +97,7 @@ function resolveLogDetailHeadlineKey(
   if (kind === 'trigger-strategy') return 'Trigger Strategy';
   if (kind === 'team-api-create') return 'Created API';
   if (kind === 'team-api-update') return 'Updated API';
+  if (kind === 'webhook-operation') return logActionKey || 'Webhook Log Detail';
   return logActionKey || 'Log Detail';
 }
 
@@ -137,6 +146,10 @@ export function resolveRiskControlLogRecordDetail(
     ipWhitelist: LOG_API_SNAPSHOT.ipWhitelist,
     apiSnapshotBefore: { ...LOG_API_SNAPSHOT },
     apiSnapshotAfter: { ...LOG_API_SNAPSHOT },
+    webhookName: row.logWebhookName?.trim() || row.ruleName?.trim() || 'AML Production Hook',
+    webhookEndpointUrl:
+      row.logWebhookEndpointUrl?.trim() || row.callbackUrl?.trim() || 'https://hooks.example.com/aml/danger',
+    webhookEventTypeKey: row.logWebhookEventTypeKey?.trim() || 'Dangerous transaction',
   };
 }
 

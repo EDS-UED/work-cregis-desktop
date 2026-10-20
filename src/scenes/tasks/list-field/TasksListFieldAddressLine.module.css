@@ -24,6 +24,11 @@
   min-width: 0;
 }
 
+/** defer-hover-target：EDS 隐藏 measure 为 absolute，锚定在 targetShell。 */
+.addressTooltipHost :global(.eds-flotation [class*='targetShell']) {
+  position: relative;
+}
+
 .addressTooltipHostAlignEnd {
   align-items: flex-end;
   margin-left: auto;
@@ -65,29 +70,36 @@
 }
 
 .walletAliasHost .walletMetaRow :global(.eds-hover-tooltip-trigger__target--secondary) {
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
   overflow: visible;
   white-space: nowrap;
   text-overflow: unset;
 }
 
-/** Flotation trigger 仅包裹地址；不收缩，避免 Tag 挤占前8后6 地址宽度。 */
-.walletAliasHost .walletMetaRow .addressTooltipHost {
+.walletAliasHost
+  .walletMetaRow
+  :global(.eds-hover-tooltip-trigger__target--secondary)
+  .walletMetaAddressMeasure {
+  color: inherit;
+}
+
+/** 副行：地址 hug；Tag 列 flex 收缩 + EgTag.truncate 内省略（对齐 EDS ListFieldAddressLine · metaRow / CryptoAddressTags §16）。 */
+.walletAliasHost .walletMetaRow .walletMetaAddressLine,
+.walletAliasHost .walletMetaRow .walletMetaAddressLine :global(.copyFlotationHost),
+.walletAliasHost .walletMetaRow .walletMetaAddressLine :global(.eds-hover-tooltip-trigger),
+.walletAliasHost .walletMetaRow .walletMetaAddressLine :global(.eds-hover-tooltip-trigger > span) {
   flex: 0 0 auto;
-  width: auto;
+  width: max-content;
   max-width: 100%;
   min-width: 0;
 }
 
-.walletAliasHost .walletMetaRow .addressTooltipHost :global(.eds-hover-tooltip-trigger) {
-  display: inline-flex;
-  width: auto;
+.walletAliasHost .walletMetaRow .walletMetaAddressLine :global(.measure) {
+  width: max-content;
   max-width: 100%;
-}
-
-.walletAliasHost .walletMetaRow .addressTooltipHost :global(.eds-hover-tooltip-trigger > span) {
-  width: auto;
-  max-width: 100%;
-  min-width: 0;
+  text-overflow: unset;
 }
 
 .tooltipTriggerBody {
@@ -159,13 +171,14 @@
   max-width: 100%;
 }
 
+/** 主行钱包名 + 多签 Tag 紧跟；禁 width:100% / flex-grow 把 Tag 推到列右（work §7.4）。 */
 .walletAliasHost .aliasPrimaryRow {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--spacing-1);
-  width: 100%;
-  min-width: 0;
+  width: max-content;
   max-width: 100%;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -179,15 +192,15 @@
 
 .walletPrimaryText > :global(span) {
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
-  width: 100%;
+  width: auto;
   overflow: hidden;
 }
 
 .walletPrimaryText :global(.hostFlex) {
-  width: 100%;
+  width: auto;
   max-width: 100%;
 }
 
@@ -298,7 +311,7 @@
 }
 
 .walletAliasHost .aliasPrimaryRow :global(.eds-anchored-tooltip) {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
 }
@@ -310,17 +323,17 @@
 }
 
 .walletMetaRow {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--spacing-1);
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
 }
 
 .walletMetaRowAlignEnd {
-  justify-content: flex-end;
+  width: max-content;
+  max-width: 100%;
   margin-left: auto;
 }
 
@@ -331,29 +344,66 @@
   white-space: nowrap;
 }
 
-.walletMetaTags {
+.walletAliasHost .walletMetaRow .walletMetaTags {
   display: inline-flex;
-  flex: 1 1 auto;
   align-items: center;
   gap: var(--spacing-1);
-  min-width: 0;
-  overflow: hidden;
-}
-
-.walletMetaTags > :global(span) {
-  display: inline-flex;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
 }
 
-.walletMetaTags :global(.eds-tag) {
-  flex: 0 1 auto;
-  flex-shrink: 1;
+/**
+ * CryptoAddressTags · inlineTag 为 EDS CSS Modules 类名（非 global .inlineTag）。
+ * 结构：walletMetaTags > inlineTag > EgTooltip root > trigger > .eds-tag.truncate
+ */
+.walletAliasHost .walletMetaRow .walletMetaTags > span {
+  display: inline-flex;
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: var(--scale-16);
-  overflow: hidden;
+  max-width: 100%;
+}
+
+.walletAliasHost .walletMetaRow .walletMetaTags > span > span {
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.walletAliasHost .walletMetaRow .walletMetaTags > span > span > span {
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.walletAliasHost .walletMetaRow .walletMetaTags :global(.eds-tag.truncate) {
+  display: inline-flex;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/** 发送方副行 · EgFieldOvfTooltip（复制 Menu，与别名地址行一致）。 */
+.walletMetaAddressLine {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.walletMetaAddressTooltipHost {
+  position: relative;
+}
+
+.walletMetaAddressMeasure {
+  composes: typography-footnote from global;
+  color: inherit;
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: unset;
 }
 
 /** 发送方副行地址：Footnote 角色；中间省略由 JS 完成，禁止 CSS 二次 ellipsis。 */

@@ -13,6 +13,11 @@ import {
 } from '../waasStandardMenuData';
 import { resolveWaasStandardRecordRowCount } from '../waasStandardRecordData';
 import type { WaasSubAddressCurrencySelection } from '../waasSubAddressCurrencyPickerData';
+import {
+  buildWaasCallbackBusinessTypeFilterOptions,
+  buildWaasCallbackPushMethodFilterOptions,
+  buildWaasCallbackPushStatusFilterOptions,
+} from './buildWaasCallbackFilterOptions';
 import { buildWaasDataListFilterOptionsFromRows } from './buildWaasDataListFilterOptionsFromRows';
 import { buildWaasDataListStatusFilterOptions } from './buildWaasDataListStatusFilterOptions';
 import {
@@ -431,7 +436,11 @@ export function buildWaasDataListFilterFields(
         return {
           ...field,
           selectionMode: 'multi' as const,
-          dropdownOptions: rowOptions.businessTypeOptions,
+          dropdownOptions: buildWaasCallbackBusinessTypeFilterOptions(
+            translate,
+            sourceRowCount,
+            menuItem,
+          ),
         };
       }
 
@@ -439,7 +448,11 @@ export function buildWaasDataListFilterFields(
         return {
           ...field,
           selectionMode: 'single' as const,
-          dropdownOptions: rowOptions.pushMethodOptions,
+          dropdownOptions: buildWaasCallbackPushMethodFilterOptions(
+            translate,
+            sourceRowCount,
+            menuItem,
+          ),
         };
       }
 
@@ -447,12 +460,7 @@ export function buildWaasDataListFilterFields(
         return {
           ...field,
           selectionMode: 'single' as const,
-          statusOptions: buildWaasDataListStatusFilterOptions(
-            sourceRowCount,
-            menuItem,
-            'pushStatus',
-            subAddressCurrency,
-          ),
+          statusOptions: buildWaasCallbackPushStatusFilterOptions(translate),
         };
       }
 

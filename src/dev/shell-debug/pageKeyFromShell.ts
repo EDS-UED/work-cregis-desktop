@@ -14,6 +14,14 @@ import {
   WAAS_SETTINGS_MENU_ITEM,
 } from '@/scenes/waas-project/waasMenuData';
 import {
+  DEFAULT_MANAGE_MENU_ITEM,
+  MANAGE_SELECTABLE_MENU_ITEMS,
+} from '@/scenes/manage/manageMenuData';
+import {
+  DEFAULT_RISK_CONTROL_MENU_ITEM,
+  RISK_CONTROL_SELECTABLE_MENU_ITEMS,
+} from '@/scenes/risk-control/riskControlMenuData';
+import {
   isTasksDataListMenuItem,
   normalizeTasksMenuLabel,
   resolveTasksDataListMenuItem,
@@ -100,6 +108,18 @@ function isWaasNavLabel(raw: string | null): boolean {
   return normalized === 'WaaS' || normalized === 'WaaS项目' || normalized === 'WaaS項目';
 }
 
+function isManageNavLabel(raw: string | null): boolean {
+  if (!raw) return false;
+  const normalized = normalizeModuleMenuLabel(raw);
+  return normalized === 'Manage' || normalized === '管理';
+}
+
+function isRiskControlNavLabel(raw: string | null): boolean {
+  if (!raw) return false;
+  const normalized = normalizeModuleMenuLabel(raw);
+  return normalized === 'Risk Control' || normalized === '风控';
+}
+
 function readModuleMenuCrumbText(preview: Element): string {
   const crumb = preview.querySelector('.eds-module-menu [class*="crumb"]');
   return crumb?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
@@ -149,6 +169,10 @@ const WAAS_MENU_ITEM_KEYS = [
   ...WAAS_ORDER_MODE_MENU_ITEMS,
   WAAS_SETTINGS_MENU_ITEM,
 ] as const;
+
+const MANAGE_MENU_ITEM_KEYS = [...MANAGE_SELECTABLE_MENU_ITEMS] as readonly string[];
+
+const RISK_CONTROL_MENU_ITEM_KEYS = [...RISK_CONTROL_SELECTABLE_MENU_ITEMS] as readonly string[];
 
 function resolvePaymentEngineMenuItemLabel(preview: Element): string | null {
   const locale = readAppLocale();
@@ -209,6 +233,48 @@ function resolvePaymentEnginePageKeyFromPreview(preview: Element): ShellPageKey 
 
   const menuItem = resolvePaymentEngineMenuItemLabel(preview);
   return `Payment Engine:${menuItem ?? DEFAULT_PAYMENT_ENGINE_MENU_ITEM}`;
+}
+
+function resolveManageMenuItemLabel(preview: Element): string | null {
+  const locale = readAppLocale();
+  const menuLabel = readFocusedModuleMenuLabel(preview);
+  if (menuLabel) {
+    return resolveEnglishCatalogMenuItem(menuLabel, locale, MANAGE_MENU_ITEM_KEYS);
+  }
+
+  const toolbarTitle = readDataListToolbarTitle(preview);
+  if (!toolbarTitle) return null;
+  return resolveEnglishCatalogMenuItem(toolbarTitle, locale, MANAGE_MENU_ITEM_KEYS);
+}
+
+function resolveManagePageKeyFromPreview(preview: Element): ShellPageKey | null {
+  if (!isManageNavLabel(readActiveNavModuleLabel(preview))) {
+    return null;
+  }
+
+  const menuItem = resolveManageMenuItemLabel(preview);
+  return `Manage:${menuItem ?? DEFAULT_MANAGE_MENU_ITEM}`;
+}
+
+function resolveRiskControlMenuItemLabel(preview: Element): string | null {
+  const locale = readAppLocale();
+  const menuLabel = readFocusedModuleMenuLabel(preview);
+  if (menuLabel) {
+    return resolveEnglishCatalogMenuItem(menuLabel, locale, RISK_CONTROL_MENU_ITEM_KEYS);
+  }
+
+  const toolbarTitle = readDataListToolbarTitle(preview);
+  if (!toolbarTitle) return null;
+  return resolveEnglishCatalogMenuItem(toolbarTitle, locale, RISK_CONTROL_MENU_ITEM_KEYS);
+}
+
+function resolveRiskControlPageKeyFromPreview(preview: Element): ShellPageKey | null {
+  if (!isRiskControlNavLabel(readActiveNavModuleLabel(preview))) {
+    return null;
+  }
+
+  const menuItem = resolveRiskControlMenuItemLabel(preview);
+  return `Risk Control:${menuItem ?? DEFAULT_RISK_CONTROL_MENU_ITEM}`;
 }
 
 function resolveWaasPageKeyFromPreview(preview: Element): ShellPageKey | null {
@@ -281,6 +347,16 @@ export function resolvePageKeyFromDom(): ShellPageKey {
     return paymentEnginePageKey;
   }
 
+  const managePageKey = resolveManagePageKeyFromPreview(preview);
+  if (managePageKey) {
+    return managePageKey;
+  }
+
+  const riskControlPageKey = resolveRiskControlPageKeyFromPreview(preview);
+  if (riskControlPageKey) {
+    return riskControlPageKey;
+  }
+
   if (preview.querySelector('.eds-data-list')) {
     return resolveTasksPageKeyFromPreview(preview);
   }
@@ -322,7 +398,12 @@ export function resolveShellPageDisplayName(
     return ui('Report');
   }
 
-  if (module === 'Payment Engine' || module === 'WaaS') {
+  if (
+    module === 'Payment Engine'
+    || module === 'WaaS'
+    || module === 'Manage'
+    || module === 'Risk Control'
+  ) {
     return ui(page);
   }
 

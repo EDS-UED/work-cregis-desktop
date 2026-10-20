@@ -9,6 +9,14 @@
   box-sizing: border-box;
 }
 
+.hostCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
 .hostAlignEnd {
   align-items: flex-end;
   margin-left: auto;

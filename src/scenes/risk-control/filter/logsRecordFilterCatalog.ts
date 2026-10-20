@@ -3,6 +3,7 @@ export const LOGS_RECORD_LOG_TYPE_KEYS = [
   'Policy',
   'Automation',
   'AML',
+  'Webhook',
   'Team API',
 ] as const;
 

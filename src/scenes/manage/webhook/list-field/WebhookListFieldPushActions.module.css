@@ -1,0 +1,14 @@
+.actionCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-1);
+  width: 100%;
+  min-width: 0;
+}
+
+.placeholder {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  color: var(--text-base-secondary);
+}

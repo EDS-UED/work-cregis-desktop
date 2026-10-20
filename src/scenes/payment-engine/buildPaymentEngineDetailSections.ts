@@ -193,7 +193,13 @@ export function buildPaymentEngineDetailSections(
   } else if (menuItem === 'Payment Exception Record') {
     return buildPaymentEnginePaymentExceptionDetailSections(row, translate);
   } else if (menuItem === 'Callback Error' || menuItem === 'History Callback') {
-    return buildPaymentEngineCallbackErrorDetailSections(row, 0, translate, menuItem);
+    return buildPaymentEngineCallbackErrorDetailSections(
+      row,
+      0,
+      translate,
+      menuItem,
+      'standard',
+    );
   } else if (isRiskControlAmlMenuItem(menuItem)) {
     return buildRiskControlAmlRecordDetailSections(row, 0, translate);
   } else if (isRiskControlAutoRulesMenuItem(menuItem)) {

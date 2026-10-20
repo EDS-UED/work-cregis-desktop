@@ -12,7 +12,7 @@ export const RISK_CONTROL_DATA_LIST_MENU_ITEMS = [
 
 export type RiskControlDataListMenuItem = (typeof RISK_CONTROL_DATA_LIST_MENU_ITEMS)[number];
 
-/** tier-2 分组父级：仅展开子菜单，无独立列表页。 */
+/** tier-2 分组父级：无独立列表页；展开默认子项见 work.mdc §4.3 · AppShellView。 */
 export const RISK_CONTROL_MENU_BRANCH_ONLY_ITEMS = new Set(['AML']);
 
 export const RISK_CONTROL_AML_QUERY_MENU_ITEM = 'AML Query' as const;

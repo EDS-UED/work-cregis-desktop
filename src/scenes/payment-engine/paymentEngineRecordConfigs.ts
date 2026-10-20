@@ -281,6 +281,23 @@ export type PaymentEngineRecordRow = {
   autoRuleWaasProject?: string;
   /** AML 自动规则 · 服务商。 */
   autoRuleServiceProvider?: string;
+  /** Manage · Webhook 事件 i18n key。 */
+  webhookEventKey?: string;
+  webhookEndpointVerified?: boolean;
+  webhookSecretKey?: string;
+  webhookPushStatusKey?: 'success' | 'failed' | 'retrying';
+  webhookPushRetryAttempt?: number;
+  webhookPushFailureReasonKey?: string;
+  webhookPushPayloadJson?: string;
+  webhookPushAttemptCount?: number;
+  webhookAmlEventId?: string;
+  webhookManuallyRetried?: boolean;
+  webhookCreatorEmail?: string;
+  webhookCreatorDisplay?: string;
+  /** 风控日志 · Webhook 名称（Event 列）。 */
+  logWebhookName?: string;
+  logWebhookEndpointUrl?: string;
+  logWebhookEventTypeKey?: string;
 };
 
 export type RiskControlAmlEntityTag = {
@@ -434,7 +451,9 @@ export type PaymentEngineCallbackErrorDetailRecord = {
   senderAddress?: string;
   receiverAddress?: string;
   receiverAlias?: string;
+  senderAlias?: string;
   remark?: string;
+  memo?: string;
 };
 
 export type PaymentEnginePaymentExceptionTransferApprovalStatus =
@@ -480,7 +499,12 @@ export type PaymentEngineRecordColumnKey =
   | 'callbackEvent'
   | 'callbackAmount'
   | 'callbackAmountTime'
+  | 'callbackAmountBusinessType'
+  | 'callbackSender'
+  | 'callbackReceiver'
+  | 'callbackAddressTime'
   | 'callbackStatus'
+  | 'callbackPushMethod'
   | 'callbackTime'
   | 'callbackUrl'
   | 'callbackActions'
@@ -518,7 +542,23 @@ export type PaymentEngineRecordColumnKey =
   | 'amlRiskScore'
   | 'autoRuleWaasProject'
   | 'autoRuleServiceProvider'
-  | 'autoRuleActions';
+  | 'autoRuleActions'
+  | 'webhookNameId'
+  | 'webhookNameEvent'
+  | 'webhookEvent'
+  | 'webhookCreator'
+  | 'webhookCreatorTime'
+  | 'createdTime'
+  | 'webhookEnabled'
+  | 'webhookConfigActions'
+  | 'webhookPushName'
+  | 'webhookPushEvent'
+  | 'webhookPushTime'
+  | 'webhookPushStatus'
+  | 'webhookPushActions'
+  | 'roleName'
+  | 'roleCreatorTime'
+  | 'roleActions';
 
 export type PaymentEngineDataListToolbarPreset =
   | 'default'
@@ -526,6 +566,7 @@ export type PaymentEngineDataListToolbarPreset =
   | 'batch-filter-refresh'
   | 'rule-configuration'
   | 'filter-refresh-add-export'
+  | 'filter-refresh-add'
   | 'filter-add';
 
 export type PaymentEngineColumnAlign = 'start' | 'center' | 'end';
@@ -555,6 +596,8 @@ export type PaymentEngineRecordPageConfig = {
   rowCount?: number;
   /** DataList 行高（px）；默认 66（Xl），Md = 48。 */
   columnHeight?: number;
+  /** 撑满列表区 flex 高度，EgDataList 补 blank 行显示斑马线。 */
+  dataListFill?: boolean;
   toolbarPreset?: PaymentEngineDataListToolbarPreset;
   columns: PaymentEngineRecordColumnConfig[];
   statistics?: Array<{ labelKey: string; value: string }>;
@@ -634,9 +677,14 @@ export const PAYMENT_ENGINE_REFUND_ACTIONS_COLUMN_MIN_WIDTH = '120px';
 
 /** 异常/历史回调 DataList 列 min-width（§7.7）。
  * 1280 预览 DataList 预算 ≈887px（−80px reserve）。
- * 历史回调 4 列 Σ min 808px：事件 208 + 金额|时间 272 + 状态 128 + URL 200（flex）。
- * 异常回调 4 列 Σ min 848px：事件 208 + 金额|时间 272 + URL 200（flex）+ 操作 168。 */
+ * 历史回调（支付引擎 / 订单模式）4 列：事件（flex）+ URL 200（flex）+ 状态 128 + 金额|时间 272（尾列 end）。
+ * 标准 WaaS 历史回调列见 waasStandardHistoryCallbackColumns.ts。
+ * 异常回调 5 列 Σ min 860px：金额|业务 184 + 发送 180（flex）+ 接收 192 + 地址|时间 136 + 操作 168；金额|业务让出 min 给接收方。 */
 export const PAYMENT_ENGINE_CALLBACK_EVENT_COLUMN_MIN_WIDTH = '208px';
+export const PAYMENT_ENGINE_CALLBACK_AMOUNT_BUSINESS_COLUMN_MIN_WIDTH = '184px';
+export const PAYMENT_ENGINE_CALLBACK_SENDER_COLUMN_MIN_WIDTH = '180px';
+export const PAYMENT_ENGINE_CALLBACK_RECEIVER_COLUMN_MIN_WIDTH = '192px';
+export const PAYMENT_ENGINE_CALLBACK_ADDRESS_TIME_COLUMN_MIN_WIDTH = '136px';
 export const PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH = '272px';
 export const PAYMENT_ENGINE_CALLBACK_STATUS_COLUMN_MIN_WIDTH = '128px';
 export const PAYMENT_ENGINE_CALLBACK_URL_COLUMN_MIN_WIDTH = '200px';
@@ -797,23 +845,22 @@ const WALLET_PAYOUT_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   },
 ];
 
-const HISTORY_CALLBACK_COLUMNS: PaymentEngineRecordColumnConfig[] = [
-  {
-    key: 'callbackAmountTime',
-    labelKey: 'Amount',
-    secondaryLabelKey: 'Creation Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
-    headerKind: 'combo',
-    sortable: true,
-    secondarySortable: true,
-    displayOrder: 1,
-  },
+/** 支付引擎 + WaaS 订单模式 · 历史回调 4 列（事件|事件号、URL、状态、金额|时间尾列右对齐）。 */
+const ORDER_MODE_HISTORY_CALLBACK_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   {
     key: 'callbackEvent',
     labelKey: 'Callback Event',
     secondaryLabelKey: 'Callback Event ID',
     minWidth: PAYMENT_ENGINE_CALLBACK_EVENT_COLUMN_MIN_WIDTH,
     headerKind: 'combo',
+    flexGrow: true,
+    displayOrder: 1,
+  },
+  {
+    key: 'callbackUrl',
+    labelKey: 'Callback URL',
+    minWidth: PAYMENT_ENGINE_CALLBACK_URL_COLUMN_MIN_WIDTH,
+    flexGrow: true,
     displayOrder: 2,
   },
   {
@@ -824,16 +871,31 @@ const HISTORY_CALLBACK_COLUMNS: PaymentEngineRecordColumnConfig[] = [
     displayOrder: 3,
   },
   {
-    key: 'callbackUrl',
-    labelKey: 'Callback URL',
-    minWidth: PAYMENT_ENGINE_CALLBACK_URL_COLUMN_MIN_WIDTH,
-    flexGrow: true,
+    key: 'callbackAmountTime',
+    labelKey: 'Amount',
+    secondaryLabelKey: 'Creation Time UTC+08:00',
+    minWidth: PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    sortable: true,
+    secondarySortable: true,
     align: 'end',
+    comboAlignEnd: true,
     displayOrder: 4,
   },
 ];
 
-const CALLBACK_ERROR_COLUMNS: PaymentEngineRecordColumnConfig[] = [
+const HISTORY_CALLBACK_COLUMNS = ORDER_MODE_HISTORY_CALLBACK_COLUMNS;
+
+/** 支付引擎 + WaaS 订单模式 · 异常回调 4 列（事件/金额/URL/操作）。 */
+const CALLBACK_ERROR_ORDER_MODE_COLUMNS: PaymentEngineRecordColumnConfig[] = [
+  {
+    key: 'callbackEvent',
+    labelKey: 'Callback Event',
+    secondaryLabelKey: 'Callback Event ID',
+    minWidth: PAYMENT_ENGINE_CALLBACK_EVENT_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    displayOrder: 1,
+  },
   {
     key: 'callbackAmountTime',
     labelKey: 'Amount',
@@ -842,14 +904,6 @@ const CALLBACK_ERROR_COLUMNS: PaymentEngineRecordColumnConfig[] = [
     headerKind: 'combo',
     sortable: true,
     secondarySortable: true,
-    displayOrder: 1,
-  },
-  {
-    key: 'callbackEvent',
-    labelKey: 'Callback Event',
-    secondaryLabelKey: 'Callback Event ID',
-    minWidth: PAYMENT_ENGINE_CALLBACK_EVENT_COLUMN_MIN_WIDTH,
-    headerKind: 'combo',
     displayOrder: 2,
   },
   {
@@ -868,6 +922,51 @@ const CALLBACK_ERROR_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   },
 ];
 
+/** 标准 WaaS（非订单模式）· 异常回调 5 列（金额|业务类型、发送方、接收方、回调|时间、操作）。 */
+const CALLBACK_ERROR_COLUMNS: PaymentEngineRecordColumnConfig[] = [
+  {
+    key: 'callbackAmountBusinessType',
+    labelKey: 'Amount',
+    secondaryLabelKey: 'Business Type',
+    minWidth: PAYMENT_ENGINE_CALLBACK_AMOUNT_BUSINESS_COLUMN_MIN_WIDTH,
+    flexGrow: false,
+    headerKind: 'combo',
+    sortable: true,
+    displayOrder: 1,
+  },
+  {
+    key: 'callbackSender',
+    labelKey: 'Sender',
+    minWidth: PAYMENT_ENGINE_CALLBACK_SENDER_COLUMN_MIN_WIDTH,
+    flexGrow: true,
+    displayOrder: 2,
+  },
+  {
+    key: 'callbackReceiver',
+    labelKey: 'Receiver',
+    minWidth: PAYMENT_ENGINE_CALLBACK_RECEIVER_COLUMN_MIN_WIDTH,
+    flexGrow: false,
+    displayOrder: 3,
+  },
+  {
+    key: 'callbackAddressTime',
+    labelKey: 'Callback URL',
+    secondaryLabelKey: 'Creation Time UTC+08:00',
+    minWidth: PAYMENT_ENGINE_CALLBACK_ADDRESS_TIME_COLUMN_MIN_WIDTH,
+    flexGrow: false,
+    headerKind: 'combo',
+    secondarySortable: true,
+    displayOrder: 4,
+  },
+  {
+    key: 'callbackActions',
+    labelKey: 'Actions',
+    minWidth: PAYMENT_ENGINE_CALLBACK_ACTIONS_COLUMN_MIN_WIDTH,
+    align: 'end',
+    displayOrder: 5,
+  },
+];
+
 /** WaaS 订单记录 / 支付引擎订单记录共用列表配置（筛选角标 + 统计项）。 */
 export const PAYMENT_ENGINE_ORDER_RECORD_LIST_PAGE_CONFIG: PaymentEngineRecordPageConfig = {
   showExport: true,
@@ -880,7 +979,9 @@ export const PAYMENT_ENGINE_ORDER_RECORD_LIST_PAGE_CONFIG: PaymentEngineRecordPa
 export {
   BULK_TRANSFER_COLUMNS,
   CALLBACK_ERROR_COLUMNS,
+  CALLBACK_ERROR_ORDER_MODE_COLUMNS,
   HISTORY_CALLBACK_COLUMNS,
+  ORDER_MODE_HISTORY_CALLBACK_COLUMNS,
   ORDER_RECORD_COLUMNS,
   PAYMENT_EXCEPTION_COLUMNS,
   REFUND_COLUMNS,
@@ -907,7 +1008,7 @@ export const PAYMENT_ENGINE_RECORD_PAGE_CONFIG: Record<
     showExport: false,
     showBatchSelect: true,
     toolbarPreset: 'batch-filter-refresh',
-    columns: CALLBACK_ERROR_COLUMNS,
+    columns: CALLBACK_ERROR_ORDER_MODE_COLUMNS,
   },
   'History Callback': {
     showExport: false,

@@ -13,7 +13,6 @@ import type {
   PaymentEngineCallbackTriggerMode,
   PaymentEngineRecordRow,
 } from './paymentEngineRecordConfigs';
-
 /** @deprecated 使用 resolveEgDataListDemoRowIndex */
 export const resolvePaymentEngineDemoRowIndex = resolveEgDataListDemoRowIndex;
 
@@ -179,6 +178,12 @@ const CALLBACK_EVENT_TYPE_SHOWCASE: readonly PaymentEngineCallbackEventType[] = 
   'waas-order',
   'payment-exception',
   'waas-refund',
+];
+
+/** 标准 WaaS 异常回调 · 金额|业务类型副行：第 1 行充值、第 2 行提币，其后均为子地址提币。 */
+const CALLBACK_ERROR_BUSINESS_TYPE_SHOWCASE: readonly string[] = [
+  'Deposit',
+  'Withdrawal',
 ];
 
 const CALLBACK_RECORD_SEEDS: readonly CallbackRecordSeed[] = [
@@ -571,8 +576,15 @@ function buildCallbackRecordRows(count = PAYMENT_ENGINE_RECORD_ROW_COUNT): Payme
   return Array.from({ length: count }, (_, index) => {
     const showcaseIndex = index % CALLBACK_EVENT_TYPE_SHOWCASE.length;
     const seed = CALLBACK_RECORD_SEEDS[showcaseIndex]!;
+    const preset = resolveCurrencyRowPreset(index);
+    const crypto = mapPaymentEngineCryptoPreset(index);
     const amountRow = resolveDemoAmountRowValues(index);
     const amount = amountRow.cryptoValue;
+    const eventType = CALLBACK_EVENT_TYPE_SHOWCASE[showcaseIndex]!;
+    const walletFromAddress = resolveDemoWalletAddress(index, preset, 'from');
+    const walletToAddress = resolveDemoWalletAddress(index, preset, 'to');
+    /** 接收方别名：仅第 1 行 showcase（0-based 0）；其余行只展示地址。 */
+    const walletToAlias = index === 0 ? 'Alex Mah.' : undefined;
 
     return {
       id: `CB-${91001 + index}`,
@@ -580,12 +592,24 @@ function buildCallbackRecordRows(count = PAYMENT_ENGINE_RECORD_ROW_COUNT): Payme
       status: 'success',
       createdAt: '2032-10-23 12:22:54',
       receivedAmount: amount,
-      receivedSymbol: seed.symbol,
+      receivedSymbol: crypto.symbol,
       orderAmount: amount,
-      orderSymbol: seed.symbol,
+      orderSymbol: crypto.symbol,
       orderFiat: amountRow.fiatValue,
-      networkLabel: seed.networkLabel,
-      callbackEventType: CALLBACK_EVENT_TYPE_SHOWCASE[showcaseIndex],
+      networkLabel: crypto.showNetwork ? crypto.network : seed.networkLabel,
+      currencySymbol: crypto.symbol,
+      currencyCryptoName: crypto.cryptoName,
+      currencyNetwork: crypto.network,
+      currencyShowNetwork: crypto.showNetwork,
+      walletFromAddress,
+      walletToAddress,
+      walletToAlias,
+      businessTypeKey: resolveShowcaseThenCompletedStatus(
+        index,
+        CALLBACK_ERROR_BUSINESS_TYPE_SHOWCASE,
+        'Sub-Address Payout',
+      ),
+      callbackEventType: eventType,
       callbackTriggerMode: seed.triggerMode,
       callbackEventId: buildDemoHexRecordId(index + 100),
       callbackUrl: seed.callbackUrl,
@@ -624,6 +648,8 @@ export function isCallbackRecordDetailMenuItem(menuItem: string): boolean {
 
 /** 异常回调 showcase 行：提币 / WaaS 订单 / 异常支付单 / WaaS 退款单。 */
 export const CALLBACK_ERROR_WALLET_PAYOUT_SHOWCASE_ROW_INDEX = 0;
+/** 第 1 行提币 showcase · 发送方主行钱包名（非地址别名）。 */
+export const CALLBACK_ERROR_WALLET_PAYOUT_SENDER_WALLET_NAME = 'Mr. Wang';
 export const CALLBACK_ERROR_WAAS_ORDER_SHOWCASE_ROW_INDEX = 1;
 export const CALLBACK_ERROR_PAYMENT_EXCEPTION_SHOWCASE_ROW_INDEX = 2;
 export const CALLBACK_ERROR_WAAS_REFUND_SHOWCASE_ROW_INDEX = 3;

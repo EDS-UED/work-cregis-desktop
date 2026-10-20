@@ -3,7 +3,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--spacing-0-5);
+  gap: var(--spacing-05);
   margin: 0;
   padding: 0 var(--spacing-3);
   color: var(--text-base-secondary);

@@ -9,6 +9,9 @@ import './scenarios/waasBulkTransferScenarioPack';
 import './scenarios/waasWalletPayoutScenarioPack';
 import './scenarios/waasCallbackErrorScenarioPack';
 import './scenarios/waasHistoryCallbackScenarioPack';
+import './scenarios/webhookPushScenarioPack';
+import './scenarios/webhookConfigScenarioPack';
+import './scenarios/riskControlLogsScenarioPack';
 
 export { registerCommonScenarioPack } from './scenarios/commonScenarioPack';
 export { registerWaasScenarioPack } from './scenarios/waasScenarioPack';
@@ -21,3 +24,4 @@ export { registerWaasBulkTransferScenarioPack } from './scenarios/waasBulkTransf
 export { registerWaasWalletPayoutScenarioPack } from './scenarios/waasWalletPayoutScenarioPack';
 export { registerWaasCallbackErrorScenarioPack } from './scenarios/waasCallbackErrorScenarioPack';
 export { registerWaasHistoryCallbackScenarioPack } from './scenarios/waasHistoryCallbackScenarioPack';
+export { registerWebhookPushScenarioPack } from './scenarios/webhookPushScenarioPack';

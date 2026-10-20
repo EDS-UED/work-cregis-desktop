@@ -17,9 +17,12 @@ const operatorName = computed(
   () => props.row.logOperatorName?.trim() || props.row.id,
 );
 const actionLabel = computed(() => ui(props.row.logActionKey ?? 'created Policy'));
-const strategyName = computed(
-  () => props.row.logStrategyName?.trim() || props.row.ruleName?.trim() || '',
-);
+const strategyName = computed(() => {
+  if ((props.row.logTypeKey ?? 'Policy') === 'Webhook') {
+    return props.row.logWebhookName?.trim() || '';
+  }
+  return props.row.logStrategyName?.trim() || props.row.ruleName?.trim() || '';
+});
 const avatarColorSeed = computed(
   () => resolveLogsRecordOperatorAvatarColorSeed(operatorName.value) || operatorName.value,
 );

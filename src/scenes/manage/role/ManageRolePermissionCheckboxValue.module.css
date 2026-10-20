@@ -1,0 +1,15 @@
+.rolePermissionValue {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+  width: 100%;
+}
+
+.label {
+  composes: typography-body-medium from global;
+  flex: 0 1 auto;
+  min-width: 0;
+  color: var(--text-base-primary);
+}

@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { EgCregisModuleMenu, EgCregisNavBar, EgLayout } from '@eds/desktop-components';
+import {
+  EgCregisModuleMenu,
+  EgCregisNavBar,
+  EgLayout,
+  getCregisModuleMenuGroups,
+  type ModuleMenuPresetGroup,
+} from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import PreferencePage from '@/scenes/account-settings/PreferencePage.vue';
 import {
@@ -9,6 +15,8 @@ import {
   resolveNavBarClickState,
   type CregisModuleMenuBusinessTitle,
 } from '@/presets/module-menu/businessModuleTitles';
+import { resolveFirstSubitemForBranchLabel } from '@/presets/module-menu/resolveModuleMenuBranchDefaultItem';
+import { syncModuleMenuItemFocus } from '@/presets/module-menu/syncModuleMenuItemFocus';
 import { resolveEnglishUiText } from '@/i18n/translateUiText';
 import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
 import {
@@ -35,7 +43,6 @@ import {
 } from '@/scenes/tasks/tasksDataListPageData';
 import WaasProjectShell from '@/scenes/waas-project/WaasProjectShell.vue';
 import {
-  isWaasMenuBranchOnlyItem,
   isWaasMenuItemValidForProject,
   isWaasOrderModeProject,
   resolveDefaultWaasMenuItem,
@@ -50,6 +57,12 @@ import {
   isRiskControlDataListMenuItem,
   isRiskControlModuleMenuItem,
 } from '@/scenes/risk-control/riskControlMenuData';
+import ManageModuleShell from '@/scenes/manage/ManageModuleShell.vue';
+import {
+  DEFAULT_MANAGE_MENU_ITEM,
+  isManageModuleMenuItem,
+} from '@/scenes/manage/manageMenuData';
+import { useManageModuleMenuGroups } from '@/scenes/manage/useManageModuleMenuGroups';
 
 const { messages, ui, locale } = useAppI18n();
 const {
@@ -81,6 +94,7 @@ const activeModuleMenuItem = ref<string | null>(null);
 const isWaasModule = computed(() => isWaasModuleTitle(activeModuleTitle.value));
 const isPaymentEngineModule = computed(() => isPaymentEngineModuleTitle(activeModuleTitle.value));
 const isRiskControlModule = computed(() => activeModuleTitle.value === 'Risk Control');
+const isManageModule = computed(() => activeModuleTitle.value === 'Manage');
 const showReportPage = computed(() => isReportModuleTitle(activeModuleTitle.value));
 
 const showModuleMenu = computed(() => {
@@ -132,17 +146,26 @@ const showRiskControlDataList = computed(
 
 const tasksModuleMenuGroups = useTasksModuleMenuGroups();
 const waasModuleMenuGroups = useWaasModuleMenuGroups();
+const manageModuleMenuGroups = useManageModuleMenuGroups();
 const {
   titleFlotationItems: paymentEngineTitleFlotationItems,
   titleFlotationSelectedIndex: paymentEngineTitleFlotationSelectedIndex,
   selectProjectByFlotationIndex,
 } = usePaymentEngineProjectStore();
 
-const moduleMenuGroups = computed(() => {
-  if (activeModuleTitle.value === 'Tasks') return tasksModuleMenuGroups.value;
-  if (isWaasModule.value) return waasModuleMenuGroups.value;
+const moduleMenuGroups = computed(() => resolveShellModuleMenuGroups());
+
+function resolveShellModuleMenuGroups(): ModuleMenuPresetGroup[] | undefined {
+  const title = activeModuleTitle.value;
+  if (title === 'Tasks') return tasksModuleMenuGroups.value;
+  if (isWaasModuleTitle(title)) return waasModuleMenuGroups.value;
+  if (title === 'Manage') return manageModuleMenuGroups.value;
+  if (title === 'Risk Control') return getCregisModuleMenuGroups('Risk Control');
+  if (isPaymentEngineModuleTitle(title)) {
+    return getCregisModuleMenuGroups('Payment Engine');
+  }
   return undefined;
-});
+}
 
 const moduleMenuRemountKey = computed(() => {
   if (isWaasModule.value) {
@@ -151,6 +174,9 @@ const moduleMenuRemountKey = computed(() => {
   }
   if (isPaymentEngineModule.value) {
     return 'payment-engine';
+  }
+  if (isManageModule.value) {
+    return 'manage';
   }
   return activeModuleTitle.value;
 });
@@ -202,6 +228,10 @@ watch(activeModuleTitle, (title) => {
     activeModuleMenuItem.value = DEFAULT_RISK_CONTROL_MENU_ITEM;
     return;
   }
+  if (title === 'Manage') {
+    activeModuleMenuItem.value = DEFAULT_MANAGE_MENU_ITEM;
+    return;
+  }
   if (title === 'Report') {
     activeModuleMenuItem.value = null;
     return;
@@ -251,6 +281,16 @@ function onNavClick(event: MouseEvent) {
 }
 
 function onModuleMenuItemSelect(label: string) {
+  const branchDefault = resolveFirstSubitemForBranchLabel(
+    resolveShellModuleMenuGroups(),
+    label,
+  );
+  if (branchDefault) {
+    syncModuleMenuItemFocus(translateModuleMenu(branchDefault));
+    onModuleMenuItemSelect(branchDefault);
+    return;
+  }
+
   if (activeModuleTitle.value === 'Tasks') {
     if (isTasksDataListMenuItem(label)) {
       activeModuleMenuItem.value = label as TasksDataListMenuItemLabel;
@@ -264,7 +304,6 @@ function onModuleMenuItemSelect(label: string) {
   }
 
   if (isWaasModuleTitle(activeModuleTitle.value)) {
-    if (isWaasMenuBranchOnlyItem(label)) return;
     activeModuleMenuItem.value = label;
     return;
   }
@@ -276,6 +315,13 @@ function onModuleMenuItemSelect(label: string) {
 
   if (activeModuleTitle.value === 'Risk Control') {
     if (isRiskControlModuleMenuItem(label)) {
+      activeModuleMenuItem.value = label;
+    }
+    return;
+  }
+
+  if (activeModuleTitle.value === 'Manage') {
+    if (isManageModuleMenuItem(label)) {
       activeModuleMenuItem.value = label;
     }
   }
@@ -360,6 +406,12 @@ function onModuleMenuTitleFlotationItemSelect(_label: string, index: number) {
     <RiskControlDataListPage
       v-else-if="showRiskControlDataList && activeModuleMenuItem"
       :key="activeModuleMenuItem"
+      :menu-item="activeModuleMenuItem"
+    />
+
+    <ManageModuleShell
+      v-else-if="isManageModule"
+      :key="activeModuleMenuItem ?? 'manage-default'"
       :menu-item="activeModuleMenuItem"
     />
 

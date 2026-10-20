@@ -1,0 +1,84 @@
+.row {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-radius: var(--radius-sm);
+  background-color: var(--material-card-moderate);
+  composes: motion-ease is-paint from global;
+}
+
+.row:hover,
+.rowCopyable:focus-visible {
+  background-color: var(--event-hover);
+}
+
+.rowCopyable {
+  cursor: pointer;
+  outline: none;
+}
+
+.keyStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  width: 100%;
+  min-width: 0;
+}
+
+.keyLabel {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.keyValueLine {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-1);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.keyValue {
+  display: inline-flex;
+  flex: 0 1 auto;
+  justify-content: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  text-align: start;
+}
+
+.keyValue :global([class*='_text_']) {
+  font-family: var(--eds-family-mono, ui-monospace, monospace);
+  font-size: var(--eds-body-medium-strong-size);
+  font-weight: var(--eds-body-medium-strong-weight);
+  line-height: var(--eds-body-medium-strong-line-height);
+  font-variant-numeric: tabular-nums;
+}
+
+.keyValue :global(.hostFlex) {
+  width: max-content;
+  max-width: 100%;
+}
+
+.rowActions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-05);
+}
+
+.rowAction {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.rowActionCopied :global(.eds-icon-button .symbol) {
+  color: var(--status-success);
+}
+
+.rowActionCopied :global(.eds-icon .eds-i-f),
+.rowActionCopied :global(.eds-icon path) {
+  fill: var(--status-success);
+}

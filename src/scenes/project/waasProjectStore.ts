@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 import {
+  closeAllAnchoredTooltips,
   cregisModuleMenuTitleFlotationItems,
   type FlotationMenuItemPreset,
 } from '@eds/desktop-components';
@@ -125,6 +126,7 @@ function syncShellViewFromProjects() {
 }
 
 function openCreateProject() {
+  closeAllAnchoredTooltips();
   createReturnView.value =
     shellView.value === 'empty' || projects.value.length === 0 ? 'empty' : 'content';
   shellView.value = 'create';

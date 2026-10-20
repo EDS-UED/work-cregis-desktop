@@ -1,0 +1,120 @@
+.root {
+  box-sizing: border-box;
+  width: calc(100% - 2 * var(--spacing-3));
+  margin: 0 var(--spacing-3);
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background-color: var(--material-card-subtle);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.language {
+  composes: typography-body-small-strong from global;
+  color: var(--text-base-secondary);
+  text-transform: uppercase;
+}
+
+.copyHost {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.copyAction {
+  display: inline-flex;
+  align-items: center;
+}
+
+.copyActionCopied :global(.eds-icon-button .symbol) {
+  color: var(--status-success);
+}
+
+.copyActionCopied :global(.eds-icon .eds-i-f),
+.copyActionCopied :global(.eds-icon path) {
+  fill: var(--status-success);
+}
+
+.body {
+  margin: 0;
+  padding: var(--spacing-2) var(--spacing-5) var(--spacing-5);
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.code {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: min-content;
+  margin: 0;
+  font-family: var(--eds-family-mono, ui-monospace, monospace);
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+}
+
+.line {
+  display: block;
+  white-space: pre;
+  min-height: 0;
+}
+
+/*
+ * JSON 语法色 — 对齐 eds-desktop Showcase CodeSnippet.module.css（hljs 主题）。
+ * 仅本组件；非 Desktop token spec。
+ */
+
+.tokenPlain,
+.tokenPunct {
+  color: var(--text-base-primary);
+}
+
+.tokenKey {
+  color: #006d42;
+  color: color(display-p3 0 0.4275 0.2588);
+}
+
+.tokenString {
+  color: #b45309;
+  color: color(display-p3 0.7059 0.3255 0.0353);
+}
+
+.tokenNumber {
+  color: #9333ea;
+  color: color(display-p3 0.5765 0.2 0.9176);
+}
+
+.tokenBoolean,
+.tokenNull {
+  color: #006d42;
+  color: color(display-p3 0 0.4275 0.2588);
+}
+
+:global([data-theme='dark']) .tokenKey {
+  color: #2dd4bf;
+  color: color(display-p3 0.1765 0.8314 0.749);
+}
+
+:global([data-theme='dark']) .tokenBoolean,
+:global([data-theme='dark']) .tokenNull {
+  color: #f472b6;
+  color: color(display-p3 0.9569 0.4471 0.7137);
+}
+
+:global([data-theme='dark']) .tokenString {
+  color: #fbbf24;
+  color: color(display-p3 0.9843 0.749 0.1412);
+}
+
+:global([data-theme='dark']) .tokenNumber {
+  color: #c084fc;
+  color: color(display-p3 0.7529 0.5176 0.9882);
+}

@@ -12,3 +12,8 @@
   color: var(--text-base-primary);
   white-space: nowrap;
 }
+
+.tooltipLabelAlignEnd {
+  justify-content: flex-end;
+  text-align: end;
+}

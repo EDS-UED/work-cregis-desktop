@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, unref, watch } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, ref, unref, watch } from 'vue';
 import {
   EgLayout,
   EgToolBar,
@@ -8,6 +8,7 @@ import {
   type EgFilterField,
   type EgFilterLogicMode,
 } from '@eds/desktop-components';
+import { showAppEndFeedback } from '@/composables/appEndFeedback';
 import { useAppI18n } from '@/composables/useAppI18n';
 import {
   applyEgFilterConditions,
@@ -18,6 +19,7 @@ import { resolveDataListFilterSourceRowCount } from '@/scenes/shared/buildListDe
 import { buildWaasDataListFilterRowSnapshot } from '@/scenes/waas-project/filter/buildWaasDataListFilterRowSnapshot';
 import { buildWaasOrderModeFilterRowSnapshot } from '@/scenes/waas-project/filter/buildWaasOrderModeFilterRowSnapshot';
 import WaasToolbarFilter from '@/scenes/waas-project/filter/WaasToolbarFilter.vue';
+import RiskControlLogsFilterGuidance from '@/scenes/risk-control/RiskControlLogsFilterGuidance.vue';
 import {
   WAAS_DATA_LIST_FILTER_OPERATORS,
   buildWaasDataListFilterFields,
@@ -41,7 +43,10 @@ import {
   shouldUsePaymentRecordEgFilterSchema,
   shouldUseSettlementRecordEgFilterSchema,
 } from '@/scenes/payment-engine/filter/paymentEngineShowsEgFilter';
-import { shouldUseWaasOrderModeEgFilterSchema } from '@/scenes/waas-project/filter/shouldUseWaasOrderModeEgFilterSchema';
+import {
+  shouldUseWaasOrderModeEgFilterSchema,
+  type WaasEgFilterListMode,
+} from '@/scenes/waas-project/filter/shouldUseWaasOrderModeEgFilterSchema';
 import { waasDataListShowsEgFilter } from '@/scenes/waas-project/filter/waasDataListShowsEgFilter';
 import { buildLogsRecordFilterRowSnapshot } from '@/scenes/risk-control/filter/buildLogsRecordFilterRowSnapshot';
 import {
@@ -82,12 +87,37 @@ import {
   shouldUseAutomationRecordEgFilterSchema,
   shouldUseQueryRecordsRecordEgFilterSchema,
 } from '@/scenes/risk-control/filter/riskControlShowsEgFilter';
+import { buildWebhookConfigRecordFilterRowSnapshot } from '@/scenes/manage/webhook/filter/buildWebhookConfigRecordFilterRowSnapshot';
+import {
+  WEBHOOK_CONFIG_RECORD_FILTER_OPERATORS,
+  buildWebhookConfigRecordFilterFields,
+} from '@/scenes/manage/webhook/filter/webhookConfigRecordFilterFields';
+import {
+  manageWebhookDataListShowsEgFilter,
+  shouldUseWebhookConfigRecordEgFilterSchema,
+  shouldUseWebhookPushRecordEgFilterSchema,
+} from '@/scenes/manage/webhook/filter/manageWebhookShowsEgFilter';
+import { buildRoleRecordFilterRowSnapshot } from '@/scenes/manage/role/filter/buildRoleRecordFilterRowSnapshot';
+import {
+  ROLE_RECORD_FILTER_OPERATORS,
+  buildRoleRecordFilterFields,
+} from '@/scenes/manage/role/filter/roleRecordFilterFields';
+import {
+  manageRoleDataListShowsEgFilter,
+  shouldUseManageRoleRecordEgFilterSchema,
+} from '@/scenes/manage/role/filter/manageRoleShowsEgFilter';
+import { buildWebhookPushRecordFilterRowSnapshot } from '@/scenes/manage/webhook/filter/buildWebhookPushRecordFilterRowSnapshot';
+import {
+  WEBHOOK_PUSH_RECORD_FILTER_OPERATORS,
+  buildWebhookPushRecordFilterFields,
+} from '@/scenes/manage/webhook/filter/webhookPushRecordFilterFields';
 import { resolveWaasStandardRecordRowCount } from '@/scenes/waas-project/waasStandardRecordData';
 import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import LayoutChromePageStack from '@/scenes/project/LayoutChromePageStack.vue';
 import { buildPaymentOrderRecordPaginerStatistics } from './buildPaymentOrderRecordPaginerStatistics';
 import {
   buildPaymentEngineRecordRows,
+  isCallbackErrorRecordMenuItem,
   isPaymentBulkTransferRecordMenuItem,
   isPaymentCollectionDetailMenuItem,
   resolvePaymentEngineRecordRowCount,
@@ -97,6 +127,8 @@ import {
   type PaymentEngineRecordRow,
 } from './paymentEngineRecordConfigs';
 import { usePaymentEngineDataListPage, PAYMENT_ENGINE_COLUMN_HEIGHT } from './usePaymentEngineDataListPage';
+import { registerPaymentEngineDataListShellApi } from './paymentEngineDataListShellApi';
+import { resolvePaymentEngineCallbackExperience } from './paymentEngineCallbackExperience';
 import { registerPaymentEngineDetailFlow } from './paymentEngineDetailFlowContext';
 import { usePaymentEngineDetailFlow } from './usePaymentEngineDetailFlow';
 import PaymentEngineBulkTransferDetailPage from './PaymentEngineBulkTransferDetailPage.vue';
@@ -108,6 +140,7 @@ import WaasSubAddressCurrencyPicker from '@/scenes/waas-project/WaasSubAddressCu
 import { useWaasSubAddressCurrencySelection } from '@/scenes/waas-project/useWaasSubAddressCurrencySelection';
 import { buildWaasStandardRecordRows } from '@/scenes/waas-project/waasStandardRecordData';
 import type { PaymentEngineRecordSortTarget } from './paymentEngineRecordSort';
+import { webhookFlowKey } from '@/scenes/manage/webhook/webhookFlowContext';
 import styles from './PaymentEngineDataListPage.module.css';
 
 const props = withDefaults(
@@ -120,11 +153,20 @@ const props = withDefaults(
       row: PaymentEngineRecordRow,
       menuItem: string,
     ) => boolean;
+    toolbarActionHandler?: (key: string) => boolean;
+    rowClickHandler?: (row: PaymentEngineRecordRow, menuItem: string) => boolean;
+    /** Manage Webhook 配置：列表↔创建/编辑整页 motion-page（ToolBar/Paginer 同壳）。 */
+    moduleLayoutPageStack?: boolean;
+    /** WaaS 标准 / 订单模式列表壳：同 menu label 使用不同 EgFilter 字段集。 */
+    waasEgFilterListMode?: WaasEgFilterListMode;
   }>(),
   {
     openDetailOnRowClick: true,
+    moduleLayoutPageStack: false,
   },
 );
+
+const webhookFlow = inject(webhookFlowKey, null);
 
 const { ui } = useAppI18n();
 
@@ -160,11 +202,28 @@ const usesPaymentEngineEgFilter = computed(() =>
 );
 const usesWaasEgFilter = computed(() => waasDataListShowsEgFilter(props.menuItem));
 const usesRiskControlEgFilter = computed(() => riskControlDataListShowsEgFilter(props.menuItem));
+const usesManageWebhookEgFilter = computed(() =>
+  manageWebhookDataListShowsEgFilter(props.menuItem),
+);
+const usesManageRoleEgFilter = computed(() =>
+  manageRoleDataListShowsEgFilter(props.menuItem),
+);
 const usesEgFilter = computed(
   () =>
     usesPaymentEngineEgFilter.value
     || usesWaasEgFilter.value
-    || usesRiskControlEgFilter.value,
+    || usesRiskControlEgFilter.value
+    || usesManageWebhookEgFilter.value
+    || usesManageRoleEgFilter.value,
+);
+const usesWebhookConfigRecordEgFilter = computed(() =>
+  shouldUseWebhookConfigRecordEgFilterSchema(props.menuItem),
+);
+const usesWebhookPushRecordEgFilter = computed(() =>
+  shouldUseWebhookPushRecordEgFilterSchema(props.menuItem),
+);
+const usesManageRoleRecordEgFilter = computed(() =>
+  shouldUseManageRoleRecordEgFilterSchema(props.menuItem),
 );
 const usesLogsRecordEgFilter = computed(() => shouldUseLogsRecordEgFilterSchema(props.menuItem));
 const usesAutoRulesRecordEgFilter = computed(() =>
@@ -189,7 +248,7 @@ const usesSettlementRecordEgFilter = computed(() =>
   shouldUseSettlementRecordEgFilterSchema(props.menuItem),
 );
 const usesWaasOrderModeEgFilter = computed(() =>
-  shouldUseWaasOrderModeEgFilterSchema(props.menuItem),
+  shouldUseWaasOrderModeEgFilterSchema(props.menuItem, props.waasEgFilterListMode),
 );
 
 const waasFilterConditions = ref<EgFilterCondition[]>([]);
@@ -205,7 +264,10 @@ function resolveWaasFilterSourceRowCount(): number {
     || usesPolicySettingsRecordEgFilter.value
     || usesAutomationRecordEgFilter.value
     || usesQueryRecordsRecordEgFilter.value
-    || usesAddressBookRecordEgFilter.value;
+    || usesAddressBookRecordEgFilter.value
+    || usesWebhookConfigRecordEgFilter.value
+    || usesWebhookPushRecordEgFilter.value
+    || usesManageRoleRecordEgFilter.value;
   const baseCount = usesPaymentEngineRowSource
     ? resolvePaymentEngineRecordRowCount(props.menuItem)
     : resolveWaasStandardRecordRowCount(props.menuItem);
@@ -239,6 +301,15 @@ function buildFilterRowSnapshot(rowIndex: number, row: PaymentEngineRecordRow) {
   }
   if (usesAddressBookRecordEgFilter.value) {
     return buildAddressBookRecordFilterRowSnapshot(rowIndex, row);
+  }
+  if (usesWebhookConfigRecordEgFilter.value) {
+    return buildWebhookConfigRecordFilterRowSnapshot(rowIndex, row);
+  }
+  if (usesWebhookPushRecordEgFilter.value) {
+    return buildWebhookPushRecordFilterRowSnapshot(rowIndex, row);
+  }
+  if (usesManageRoleRecordEgFilter.value) {
+    return buildRoleRecordFilterRowSnapshot(rowIndex, row);
   }
   return buildWaasDataListFilterRowSnapshot(rowIndex, row, props.menuItem);
 }
@@ -277,6 +348,15 @@ const waasFilterFields = computed((): EgFilterField[] => {
       sourceRowCount,
     );
   }
+  if (usesWebhookConfigRecordEgFilter.value) {
+    return buildWebhookConfigRecordFilterFields((key) => ui(key), sourceRowCount);
+  }
+  if (usesWebhookPushRecordEgFilter.value) {
+    return buildWebhookPushRecordFilterFields((key) => ui(key), sourceRowCount);
+  }
+  if (usesManageRoleRecordEgFilter.value) {
+    return buildRoleRecordFilterFields((key) => ui(key), sourceRowCount);
+  }
   return buildWaasDataListFilterFields(
     props.menuItem,
     (key) => ui(key),
@@ -295,6 +375,9 @@ const waasFilterOperators = computed(() => {
   if (usesAutomationRecordEgFilter.value) return AUTOMATION_RECORD_FILTER_OPERATORS;
   if (usesQueryRecordsRecordEgFilter.value) return QUERY_RECORDS_FILTER_OPERATORS;
   if (usesAddressBookRecordEgFilter.value) return ADDRESS_BOOK_RECORD_FILTER_OPERATORS;
+  if (usesWebhookConfigRecordEgFilter.value) return WEBHOOK_CONFIG_RECORD_FILTER_OPERATORS;
+  if (usesWebhookPushRecordEgFilter.value) return WEBHOOK_PUSH_RECORD_FILTER_OPERATORS;
+  if (usesManageRoleRecordEgFilter.value) return ROLE_RECORD_FILTER_OPERATORS;
   return WAAS_DATA_LIST_FILTER_OPERATORS;
 });
 
@@ -377,17 +460,66 @@ const {
   toolbarPreset: computed(() => pageConfig.value.toolbarPreset),
 });
 
+function handleToolbarActionClick(key: string) {
+  if (
+    isToolbarLockedInBatchSelect.value
+    && (key === 'batch' || key === 'filter')
+  ) {
+    return;
+  }
+  if (props.toolbarActionHandler?.(key)) return;
+  onToolbarActionClick(key);
+}
+
 function resolveToolbarButtonsWithoutFilter<T extends { key: string }>(buttons: readonly T[]): T[] {
   if (!usesEgFilter.value) return [...buttons];
   return buttons.filter((button) => button.key !== 'filter');
 }
 
+type ToolbarIconButton = {
+  key: string;
+  item: {
+    label: string;
+    icon: string;
+    badge?: string;
+    showBadge?: boolean;
+    showReddot?: boolean;
+    disabled?: boolean;
+  };
+};
+
+/** 批处理 selectMode：禁用批处理 / 筛选（仍展示，勿隐藏）。 */
+function withBatchSelectToolbarDisabled(
+  buttons: readonly ToolbarIconButton[],
+  batchSelectActive: boolean,
+): ToolbarIconButton[] {
+  if (!batchSelectActive) return [...buttons];
+  return buttons.map((button) => {
+    if (button.key !== 'batch' && button.key !== 'filter') return button;
+    return {
+      ...button,
+      item: {
+        ...button.item,
+        disabled: true,
+      },
+    };
+  });
+}
+
+const isToolbarLockedInBatchSelect = computed(() => selectMode.value);
+
 const displayToolbarActionButtons = computed(() =>
-  resolveToolbarButtonsWithoutFilter(unref(toolbarActionButtons) ?? []),
+  withBatchSelectToolbarDisabled(
+    resolveToolbarButtonsWithoutFilter(unref(toolbarActionButtons) ?? []),
+    isToolbarLockedInBatchSelect.value,
+  ),
 );
 
 const displayToolbarSectionButtons = computed(() =>
-  resolveToolbarButtonsWithoutFilter(unref(toolbarSectionButtons) ?? []),
+  withBatchSelectToolbarDisabled(
+    resolveToolbarButtonsWithoutFilter(unref(toolbarSectionButtons) ?? []),
+    isToolbarLockedInBatchSelect.value,
+  ),
 );
 
 watch(waasFilterConditions, () => {
@@ -418,20 +550,46 @@ const selectMode = computed({
   },
 });
 
-const displayBatchActions = computed(() =>
-  dataListBatchActions.value.map((action) => ({
-    ...action,
-    label: ui(action.label),
-  })),
+const displayToolbarFunctionalButtons = computed(() =>
+  withBatchSelectToolbarDisabled(
+    unref(toolbarFunctionalButtons) ?? [],
+    isToolbarLockedInBatchSelect.value,
+  ),
 );
 
-const { contentReady } = useDeferredContentMount();
+const displayBatchActions = computed(() => {
+  const actions = isCallbackErrorRecordMenuItem(props.menuItem)
+    ? [
+        { key: 'ignore', label: 'Ignore' },
+        { key: 'push-order', label: 'Push Order' },
+      ]
+    : dataListBatchActions.value;
+  return actions.map((action) => ({
+    ...action,
+    label: ui(action.label),
+  }));
+});
+
+const { contentReady, setContentReady } = useDeferredContentMount();
+const listForcedEmpty = ref(false);
+const qaInitingHeld = ref(false);
+const listIniting = computed(() => qaInitingHeld.value || !contentReady.value);
 const detailFlow = usePaymentEngineDetailFlow();
 
 const usesLayoutDetailPageStack = computed(() =>
   isPaymentBulkTransferRecordMenuItem(props.menuItem)
   || isPaymentCollectionDetailMenuItem(props.menuItem),
 );
+
+const usesWebhookModulePageStack = computed(
+  () => props.moduleLayoutPageStack && Boolean(webhookFlow),
+);
+
+const usesIntegratedLayoutPageStack = computed(
+  () => usesLayoutDetailPageStack.value || usesWebhookModulePageStack.value,
+);
+
+const hidesEgLayoutChrome = computed(() => usesIntegratedLayoutPageStack.value);
 
 const layoutDetailPageMotionRef = ref<InstanceType<typeof LayoutChromePageStack> | null>(null);
 
@@ -445,12 +603,18 @@ const layoutDetailOpen = computed(() => {
   return false;
 });
 
+const integratedPageKey = computed(() => {
+  if (usesWebhookModulePageStack.value && webhookFlow?.configFormOpen.value) {
+    return 'create';
+  }
+  if (usesLayoutDetailPageStack.value && layoutDetailOpen.value) {
+    return 'detail';
+  }
+  return 'list';
+});
+
 const bulkTransferDetailRow = computed(() => detailFlow.bulkTransferDetailRow.value);
 const collectionDetailRow = computed(() => detailFlow.collectionDetailRow.value);
-
-const layoutDetailPageKey = computed(() =>
-  layoutDetailOpen.value ? 'detail' : 'list',
-);
 
 const layoutDetailToolbarTitleKey = computed(() => {
   if (isPaymentCollectionDetailMenuItem(props.menuItem)) {
@@ -459,18 +623,105 @@ const layoutDetailToolbarTitleKey = computed(() => {
   return 'Bulk Transfer Detail';
 });
 
-const displayRows = computed(() => (contentReady.value ? paginatedRows.value : []));
+const displayRows = computed(() => {
+  if (listForcedEmpty.value) {
+    return [];
+  }
+  return contentReady.value ? paginatedRows.value : [];
+});
+
+watch(
+  () => resolvePaymentEngineCallbackExperience(props.menuItem, pageConfig.value.columns),
+  (experience) => {
+    detailFlow.callbackExperience.value = experience;
+  },
+  { immediate: true },
+);
 
 onMounted(() => {
   registerPaymentEngineDetailFlow(detailFlow);
+  registerPaymentEngineDataListShellApi({
+    setListEmpty: (empty) => {
+      listForcedEmpty.value = empty;
+      if (empty) {
+        customize.value.loading = false;
+        qaInitingHeld.value = false;
+        setContentReady(true);
+      }
+    },
+    setListIniting: (initing) => {
+      qaInitingHeld.value = initing;
+      if (initing) {
+        listForcedEmpty.value = false;
+        customize.value.loading = false;
+        setContentReady(false);
+        return;
+      }
+      setContentReady(true);
+    },
+    setListLoading: (loading) => {
+      customize.value.loading = loading;
+      if (loading) {
+        listForcedEmpty.value = false;
+        qaInitingHeld.value = false;
+        setContentReady(true);
+      }
+    },
+    showDangerToast: (message) => {
+      console.warn(`[payment-engine QA] ${message}`);
+    },
+  });
 });
 
 onBeforeUnmount(() => {
   registerPaymentEngineDetailFlow(null);
+  registerPaymentEngineDataListShellApi(null);
 });
+
+function finishCallbackBatchSelectIfNeeded() {
+  if (customize.value.selectMode) {
+    customize.value.selectMode = false;
+  }
+}
+
+function openCallbackPushOrderDialog(row: PaymentEngineRecordRow) {
+  detailFlow.openPushOrderDialog(row.callbackUrl ?? '', finishCallbackBatchSelectIfNeeded);
+}
+
+function onCallbackPushOrder(row: PaymentEngineRecordRow) {
+  openCallbackPushOrderDialog(row);
+}
+
+function onCallbackIgnore(_row: PaymentEngineRecordRow) {
+  detailFlow.openCallbackIgnoreConfirm();
+}
+
+async function handleBatchAction(
+  key: string,
+  rows: Array<Record<string, unknown> & { _index: number }>,
+) {
+  if (isCallbackErrorRecordMenuItem(props.menuItem) && key === 'push-order') {
+    const first = rows[0];
+    if (first) {
+      openCallbackPushOrderDialog(recordRow(first as DataListItem));
+    }
+    return;
+  }
+  if (isCallbackErrorRecordMenuItem(props.menuItem) && key === 'ignore') {
+    detailFlow.openCallbackIgnoreConfirm(async () => {
+      await onBatchAction(key, rows);
+    });
+    return;
+  }
+  await onBatchAction(key, rows);
+  if (key === 'ignore') {
+    showAppEndFeedback();
+  }
+}
 
 function onRowClick(data: DataListItem) {
   const row = recordRow(data);
+  if (props.rowClickHandler?.(row, props.menuItem)) return;
   const canOpen = props.canOpenDetailOnRowClick
     ? props.canOpenDetailOnRowClick(row, props.menuItem)
     : props.openDetailOnRowClick;
@@ -503,6 +754,36 @@ function onLayoutDetailPageSettled() {
     }
   }
 }
+
+function onIntegratedLayoutPageSettled() {
+  onLayoutDetailPageSettled();
+  if (usesWebhookModulePageStack.value && webhookFlow && !webhookFlow.configFormOpen.value) {
+    webhookFlow.onConfigFormPageSettled();
+  }
+}
+
+watch(
+  () => webhookFlow?.configFormOpen.value,
+  (next, previous) => {
+    if (!usesWebhookModulePageStack.value || !webhookFlow) return;
+    if (next && !previous) {
+      layoutDetailPageMotionRef.value?.setDirection('forward');
+      return;
+    }
+    if (!next && previous) {
+      layoutDetailPageMotionRef.value?.setDirection('backward');
+    }
+  },
+);
+
+watch(
+  () => props.menuItem,
+  () => {
+    if (!usesWebhookModulePageStack.value || !webhookFlow?.configFormOpen.value) return;
+    layoutDetailPageMotionRef.value?.setDirection('none');
+    webhookFlow.closeConfigForm();
+  },
+);
 
 function dismissLayoutDetail(instant = false) {
   if (instant) {
@@ -574,75 +855,115 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
   <div :class="styles.dataListNest">
     <EgLayout
       type="empty"
-      :show-toolbar="!usesLayoutDetailPageStack"
-      :show-paginer="!usesLayoutDetailPageStack"
+      :show-toolbar="!hidesEgLayoutChrome"
+      :show-paginer="!hidesEgLayoutChrome"
     >
-      <template #toolbar>
+      <template v-if="!hidesEgLayoutChrome" #toolbar>
         <PaymentEngineRecordListToolbar
           :title="displayToolbarTitle"
           :show-toolbar-section="showToolbarSection"
-          :toolbar-functional-buttons="toolbarFunctionalButtons"
+          :toolbar-functional-buttons="displayToolbarFunctionalButtons"
           :toolbar-section-buttons="displayToolbarSectionButtons"
           :toolbar-action-buttons="displayToolbarActionButtons"
           :translate="ui"
-          @toolbar-action="onToolbarActionClick"
+          @toolbar-action="handleToolbarActionClick"
         >
           <template v-if="usesSubAddressCurrencyToolbar" #title>
             <WaasSubAddressCurrencyPicker />
           </template>
           <template v-if="usesEgFilter && showToolbarSection" #section-prefix>
-            <WaasToolbarFilter
+            <RiskControlLogsFilterGuidance
+              v-if="usesLogsRecordEgFilter"
               v-model="waasFilterConditions"
               v-model:logic-mode="waasFilterLogicMode"
               :fields="waasFilterFields"
               :operators="waasFilterOperators"
+              :disabled="isToolbarLockedInBatchSelect"
+            />
+            <WaasToolbarFilter
+              v-else
+              v-model="waasFilterConditions"
+              v-model:logic-mode="waasFilterLogicMode"
+              :fields="waasFilterFields"
+              :operators="waasFilterOperators"
+              :disabled="isToolbarLockedInBatchSelect"
             />
           </template>
           <template v-else-if="usesEgFilter" #functional-prefix>
-            <WaasToolbarFilter
+            <RiskControlLogsFilterGuidance
+              v-if="usesLogsRecordEgFilter"
               v-model="waasFilterConditions"
               v-model:logic-mode="waasFilterLogicMode"
               :fields="waasFilterFields"
               :operators="waasFilterOperators"
+              :disabled="isToolbarLockedInBatchSelect"
+            />
+            <WaasToolbarFilter
+              v-else
+              v-model="waasFilterConditions"
+              v-model:logic-mode="waasFilterLogicMode"
+              :fields="waasFilterFields"
+              :operators="waasFilterOperators"
+              :disabled="isToolbarLockedInBatchSelect"
             />
           </template>
         </PaymentEngineRecordListToolbar>
       </template>
 
       <LayoutChromePageStack
-        v-if="usesLayoutDetailPageStack"
+        v-if="usesIntegratedLayoutPageStack"
         ref="layoutDetailPageMotionRef"
         :enabled="true"
-        :page-key="layoutDetailPageKey"
-        @page-settled="onLayoutDetailPageSettled"
+        :page-key="integratedPageKey"
+        @page-settled="onIntegratedLayoutPageSettled"
       >
         <template #list-toolbar>
           <PaymentEngineRecordListToolbar
             :title="displayToolbarTitle"
             :show-toolbar-section="showToolbarSection"
-            :toolbar-functional-buttons="toolbarFunctionalButtons"
+            :toolbar-functional-buttons="displayToolbarFunctionalButtons"
             :toolbar-section-buttons="displayToolbarSectionButtons"
             :toolbar-action-buttons="displayToolbarActionButtons"
             :translate="ui"
-            @toolbar-action="onToolbarActionClick"
+            @toolbar-action="handleToolbarActionClick"
           >
             <template v-if="usesSubAddressCurrencyToolbar" #title>
               <WaasSubAddressCurrencyPicker />
             </template>
             <template v-if="usesEgFilter && showToolbarSection" #section-prefix>
-              <WaasToolbarFilter
+              <RiskControlLogsFilterGuidance
+                v-if="usesLogsRecordEgFilter"
                 v-model="waasFilterConditions"
                 v-model:logic-mode="waasFilterLogicMode"
                 :fields="waasFilterFields"
                 :operators="waasFilterOperators"
+                :disabled="isToolbarLockedInBatchSelect"
+              />
+              <WaasToolbarFilter
+                v-else
+                v-model="waasFilterConditions"
+                v-model:logic-mode="waasFilterLogicMode"
+                :fields="waasFilterFields"
+                :operators="waasFilterOperators"
+                :disabled="isToolbarLockedInBatchSelect"
               />
             </template>
             <template v-else-if="usesEgFilter" #functional-prefix>
-              <WaasToolbarFilter
+              <RiskControlLogsFilterGuidance
+                v-if="usesLogsRecordEgFilter"
                 v-model="waasFilterConditions"
                 v-model:logic-mode="waasFilterLogicMode"
                 :fields="waasFilterFields"
                 :operators="waasFilterOperators"
+                :disabled="isToolbarLockedInBatchSelect"
+              />
+              <WaasToolbarFilter
+                v-else
+                v-model="waasFilterConditions"
+                v-model:logic-mode="waasFilterLogicMode"
+                :fields="waasFilterFields"
+                :operators="waasFilterOperators"
+                :disabled="isToolbarLockedInBatchSelect"
               />
             </template>
           </PaymentEngineRecordListToolbar>
@@ -670,6 +991,14 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
             :detail="collectionDetailRow"
             :menu-item="props.menuItem"
           />
+        </template>
+
+        <template v-if="usesWebhookModulePageStack" #create-toolbar>
+          <slot name="module-stack-create-toolbar" />
+        </template>
+
+        <template v-if="usesWebhookModulePageStack" #create>
+          <slot name="module-stack-create" />
         </template>
 
         <template #list-paginer>
@@ -712,13 +1041,16 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
             :columns="pageConfig.columns"
             :rows="displayRows"
             :loading="Boolean(customize.loading)"
-            :initing="!contentReady"
+            :initing="listIniting"
             :batch-actions="displayBatchActions"
-            :on-batch-action="onBatchAction"
+            :on-batch-action="handleBatchAction"
             :active-sort="activeSort"
             :column-height="listColumnHeight"
+            :data-list-fill="pageConfig.dataListFill ?? false"
             @row-click="onRowClick"
             @sort-change="onColumnSortChange"
+            @callback-push-order="onCallbackPushOrder"
+            @callback-ignore="onCallbackIgnore"
           />
         </template>
       </LayoutChromePageStack>
@@ -734,17 +1066,20 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
           :columns="pageConfig.columns"
           :rows="displayRows"
           :loading="Boolean(customize.loading)"
-          :initing="!contentReady"
+          :initing="listIniting"
           :batch-actions="displayBatchActions"
-          :on-batch-action="onBatchAction"
+          :on-batch-action="handleBatchAction"
           :active-sort="activeSort"
           :column-height="listColumnHeight"
+          :data-list-fill="pageConfig.dataListFill ?? false"
           @row-click="onRowClick"
           @sort-change="onColumnSortChange"
+          @callback-push-order="onCallbackPushOrder"
+          @callback-ignore="onCallbackIgnore"
         />
       </LayoutChromePageStack>
 
-      <template #paginer>
+      <template v-if="!hidesEgLayoutChrome" #paginer>
         <PaymentEngineRecordListPaginer
           v-model:settings-level-index="settingsLevelIndex"
           v-model:settings-jump-value="settingsJumpValue"

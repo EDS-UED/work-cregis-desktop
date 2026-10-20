@@ -68,17 +68,20 @@ function buildCallbackErrorRecordDetail(
     orderId: buildCallbackRecordId(rowIndex + 11),
     merchantOrderId: row.merchantOrderId,
     callbackEventStatus,
-    businessTypeKey: resolveCallbackEventLabelKey(eventType),
+    businessTypeKey: row.businessTypeKey ?? resolveCallbackEventLabelKey(eventType),
     thirdPartyBusinessNo: buildThirdPartyBusinessNo(rowIndex),
     walletType: eventType === 'wallet-payout' ? 'SingleSig' : 'Treasury',
     senderAddress: row.walletFromAddress
       ?? resolveDemoWalletAddress(addressOffset, currencyPreset, 'from'),
     receiverAddress: row.walletToAddress
       ?? resolveDemoWalletAddress(addressOffset, currencyPreset, 'to'),
-    receiverAlias: rowIndex % 2 === 0 ? 'EverGreen' : '',
+    receiverAlias: row.walletToAlias?.trim() ?? '',
+    senderAlias: '',
     txHash: resolveVerifiedTxHashForRow(rowIndex + 73, addressFamily),
     blockNumber: buildBlockNumber(rowIndex),
     remark: rowIndex % 5 === 0 ? 'This is a text.' : '',
+    memo: rowIndex % 3 === 0 ? 'Memo text for callback.' : '',
+    transStatus: 'success',
   };
 
   if (eventType === 'waas-refund') {

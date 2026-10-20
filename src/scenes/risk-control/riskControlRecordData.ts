@@ -122,6 +122,7 @@ const LOG_OPERATOR_POOL = [
 const LOG_POLICY_ROW_COUNT = 6;
 const LOG_AUTOMATION_ROW_COUNT = 6;
 const LOG_AML_ROW_COUNT = 5;
+const LOG_WEBHOOK_ROW_COUNT = 4;
 const LOG_TEAM_API_SHOWCASE_ROW_COUNT = 4;
 
 const LOG_POLICY_ACTIONS = [
@@ -148,6 +149,20 @@ const LOG_AML_ACTIONS = [
   'deleted rule',
   'enabled rule',
   'closed rule',
+] as const;
+
+const LOG_WEBHOOK_ACTIONS = [
+  'created Webhook',
+  'edited Webhook',
+  'enabled Webhook',
+  'deleted Webhook',
+] as const;
+
+const LOG_WEBHOOK_NAME_SHOWCASE = [
+  'AML Production Hook',
+  'Ember Exchange Alerts',
+  'Sandbox Listener',
+  'AML Production Hook',
 ] as const;
 
 const LOG_TEAM_API_SHOWCASE_ACTIONS = [
@@ -357,11 +372,19 @@ function resolveDemoLogStrategyName(rowIndex: number): string {
   return resolveDemoPolicyName(rowIndex);
 }
 
+function resolveDemoLogWebhookStartIndex(): number {
+  return LOG_POLICY_ROW_COUNT + LOG_AUTOMATION_ROW_COUNT + LOG_AML_ROW_COUNT;
+}
+
 function resolveDemoLogTypeKey(rowIndex: number): string {
   if (rowIndex < LOG_POLICY_ROW_COUNT) return 'Policy';
   if (rowIndex < LOG_POLICY_ROW_COUNT + LOG_AUTOMATION_ROW_COUNT) return 'Automation';
-  if (rowIndex < LOG_POLICY_ROW_COUNT + LOG_AUTOMATION_ROW_COUNT + LOG_AML_ROW_COUNT) {
+  if (rowIndex < resolveDemoLogWebhookStartIndex()) {
     return 'AML';
+  }
+  const webhookStart = resolveDemoLogWebhookStartIndex();
+  if (rowIndex < webhookStart + LOG_WEBHOOK_ROW_COUNT) {
+    return 'Webhook';
   }
   return 'Team API';
 }
@@ -381,7 +404,12 @@ function resolveDemoLogActionKey(rowIndex: number): string {
     return LOG_AML_ACTIONS[rowIndex - amlStart]!;
   }
 
-  const teamApiStart = amlStart + LOG_AML_ROW_COUNT;
+  const webhookStart = amlStart + LOG_AML_ROW_COUNT;
+  if (rowIndex < webhookStart + LOG_WEBHOOK_ROW_COUNT) {
+    return LOG_WEBHOOK_ACTIONS[rowIndex - webhookStart]!;
+  }
+
+  const teamApiStart = webhookStart + LOG_WEBHOOK_ROW_COUNT;
   const teamApiIndex = rowIndex - teamApiStart;
   if (teamApiIndex < LOG_TEAM_API_SHOWCASE_ROW_COUNT) {
     return LOG_TEAM_API_SHOWCASE_ACTIONS[teamApiIndex]!;
@@ -461,8 +489,26 @@ function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
   };
 }
 
+function resolveDemoLogWebhookFields(rowIndex: number): Pick<
+  PaymentEngineRecordRow,
+  'logWebhookName' | 'logWebhookEndpointUrl' | 'logWebhookEventTypeKey'
+> | null {
+  const webhookStart = resolveDemoLogWebhookStartIndex();
+  if (rowIndex < webhookStart || rowIndex >= webhookStart + LOG_WEBHOOK_ROW_COUNT) {
+    return null;
+  }
+  const webhookIndex = rowIndex - webhookStart;
+  return {
+    logWebhookName: LOG_WEBHOOK_NAME_SHOWCASE[webhookIndex]!,
+    logWebhookEndpointUrl: 'https://hooks.example.com/aml/danger',
+    logWebhookEventTypeKey: 'Dangerous transaction',
+  };
+}
+
 function buildLogsRow(rowIndex: number): PaymentEngineRecordRow {
   const id = buildLogRecordId(rowIndex);
+  const logTypeKey = resolveDemoLogTypeKey(rowIndex);
+  const webhookFields = resolveDemoLogWebhookFields(rowIndex);
 
   return {
     id,
@@ -475,9 +521,11 @@ function buildLogsRow(rowIndex: number): PaymentEngineRecordRow {
     receivedSymbol: 'USDT',
     logOperatorName: resolveDemoLogOperatorName(rowIndex),
     logActionKey: resolveDemoLogActionKey(rowIndex),
-    logTypeKey: resolveDemoLogTypeKey(rowIndex),
-    logStrategyName: resolveDemoLogStrategyName(rowIndex),
+    logTypeKey,
+    logStrategyName:
+      logTypeKey === 'Webhook' ? undefined : resolveDemoLogStrategyName(rowIndex),
     logStrategyNumber: buildPolicyNumber(rowIndex),
+    ...(webhookFields ?? {}),
   };
 }
 

@@ -8,8 +8,26 @@
 }
 
 .pageEmbedded {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
+  min-height: 0;
+}
+
+.embeddedShell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.standaloneShell {
+  display: contents;
 }
 
 .pageEmbedded :global(.eds-layout) {
@@ -31,6 +49,10 @@
   flex-direction: row;
   justify-content: flex-start;
   min-height: 100%;
+}
+
+.formRowEmbedded {
+  min-height: 0;
 }
 
 .formBlock {
@@ -100,6 +122,10 @@
   align-items: flex-start;
   gap: var(--spacing-1);
   color: var(--text-base-secondary);
+}
+
+.infoIcon {
+  flex-shrink: 0;
 }
 
 .infoText {

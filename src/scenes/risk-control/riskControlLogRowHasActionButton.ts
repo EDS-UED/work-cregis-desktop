@@ -18,6 +18,12 @@ const TEAM_API_ACTIONS_WITH_BUTTON = new Set([
   'upgraded API',
 ]);
 
+const WEBHOOK_ACTIONS_WITH_BUTTON = new Set([
+  'created Webhook',
+  'edited Webhook',
+  'deleted Webhook',
+]);
+
 /** 风控日志 · Action 列是否展示 View 按钮（否则显示 `--`）。 */
 export function riskControlLogRowHasActionButton(
   row: Pick<PaymentEngineRecordRow, 'logTypeKey' | 'logActionKey'>,
@@ -27,6 +33,10 @@ export function riskControlLogRowHasActionButton(
 
   if (logTypeKey === 'AML') {
     return false;
+  }
+
+  if (logTypeKey === 'Webhook') {
+    return WEBHOOK_ACTIONS_WITH_BUTTON.has(logActionKey);
   }
 
   if (logTypeKey === 'Automation') {
