@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import {
   EgButton,
   EgDataList,
@@ -10,7 +10,7 @@ import {
   EgLayout,
   EgListFieldOverflowText,
   EgPaginer,
-  EgPaginationItem,
+  EgPaginationGroupButton,
   EgToast,
   EgToolBar,
   type DataListItem,
@@ -35,10 +35,11 @@ import {
   txDisplayTitleKey,
 } from './teamAccountData';
 import { TEAM_ACCOUNT_FILTER_OPERATORS } from './teamAccountFilter';
+import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
 import { useTeamAccountPage } from './useTeamAccountPage';
 import styles from './TeamAccountPage.module.css';
 
-const DATA_LIST_COLUMN_HEIGHT = 66;
+const DATA_LIST_COLUMN_HEIGHT = 48;
 
 const { ui, locale } = useAppI18n();
 const {
@@ -97,6 +98,30 @@ const monthlyExportHistory = computed(() =>
   })),
 );
 
+const txListFillRef = ref<HTMLElement | null>(null);
+const txListScrollRef = ref<HTMLElement | null>(null);
+
+const { topScrim: txListHeaderScrim, update: updateTxListScrollChrome } =
+  useScrollChromeScrim(txListScrollRef, { contentRef: txListFillRef });
+
+function syncTxListScrollTarget() {
+  const host = txListFillRef.value;
+  txListScrollRef.value =
+    (host?.querySelector('.eds-data-list [class*="tableContent"]') as HTMLElement | null) ??
+    null;
+}
+
+function refreshTxListScrollChrome() {
+  void nextTick(() => {
+    syncTxListScrollTarget();
+    updateTxListScrollChrome();
+  });
+}
+
+onMounted(refreshTxListScrollChrome);
+
+watch([pagedTx, currentPage, txDataList], refreshTxListScrollChrome);
+
 function onTxRowClick(row: DataListItem) {
   const tx = pagedTx.value.find((item) => item.id === String(row.id));
   if (tx) openTx(tx);
@@ -132,7 +157,10 @@ function resolveMonthlyHistoryEntry() {
   <section :class="styles.page">
     <header :class="styles.hero">
       <div :class="styles.heroBalance">
-        <p :class="styles.heroLabel">{{ ui('Available Balance (USD)') }}</p>
+        <p :class="styles.heroLabel">
+          <span :class="styles.heroLabelDot" aria-hidden="true" />
+          {{ ui('Available Balance (USD)') }}
+        </p>
         <div :class="styles.heroAmountRow">
           <p :class="styles.heroAmount">{{ availableBalance }}</p>
           <EgButton
@@ -220,7 +248,14 @@ function resolveMonthlyHistoryEntry() {
           </template>
 
           <div :class="styles.listRegion">
-            <div :class="[styles.listFill, styles.txListFill]">
+            <div
+              ref="txListFillRef"
+              :class="[
+                styles.listFill,
+                styles.txListFill,
+                txListHeaderScrim && styles.txListFillHeaderScrim,
+              ]"
+            >
               <EgDataList
                 :data-list="txDataList"
                 :header-height="DATA_LIST_FIGMA_HEADER_HEIGHT"
@@ -352,24 +387,24 @@ function resolveMonthlyHistoryEntry() {
               :settings-jump-placeholder="ui('Please Enter')"
               @settings-jump="onSettingsJump"
             >
-              <EgPaginationItem
+              <EgPaginationGroupButton
                 :kind="firstPagination.kind"
                 :tone="firstPagination.tone"
                 :disabled="prevNavDisabled || firstPagination.disabled"
                 @click="goFirstPage"
               >
                 <EgIcon name="eds-arrow-go-first" fit />
-              </EgPaginationItem>
-              <EgPaginationItem
+              </EgPaginationGroupButton>
+              <EgPaginationGroupButton
                 :kind="prevPagination.kind"
                 :tone="prevPagination.tone"
                 :disabled="prevNavDisabled || prevPagination.disabled"
                 @click="goPrevPage"
               >
                 <EgIcon name="eds-arrow-left-mini-ios" fit />
-              </EgPaginationItem>
+              </EgPaginationGroupButton>
               <template v-if="!isManyPagination">
-                <EgPaginationItem
+                <EgPaginationGroupButton
                   :kind="pagePagination.kind"
                   :tone="pagePagination.tone"
                   selected
@@ -378,7 +413,7 @@ function resolveMonthlyHistoryEntry() {
                 />
               </template>
               <template v-else>
-                <EgPaginationItem
+                <EgPaginationGroupButton
                   v-for="(item, index) in manyPageItems"
                   :key="`${item.kind}-${item.label}-${index}`"
                   :kind="pagePagination.kind"
@@ -390,22 +425,22 @@ function resolveMonthlyHistoryEntry() {
                   @click="onManyPageItemClick(item)"
                 />
               </template>
-              <EgPaginationItem
+              <EgPaginationGroupButton
                 :kind="nextPagination.kind"
                 :tone="nextPagination.tone"
                 :disabled="nextNavDisabled || nextPagination.disabled"
                 @click="goNextPage"
               >
                 <EgIcon name="eds-arrow-right-mini-ios" fit />
-              </EgPaginationItem>
-              <EgPaginationItem
+              </EgPaginationGroupButton>
+              <EgPaginationGroupButton
                 :kind="lastPagination.kind"
                 :tone="lastPagination.tone"
                 :disabled="nextNavDisabled || lastPagination.disabled"
                 @click="goLastPage"
               >
                 <EgIcon name="eds-arrow-go-last" fit />
-              </EgPaginationItem>
+              </EgPaginationGroupButton>
             </EgPaginer>
           </template>
         </EgLayout>

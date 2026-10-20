@@ -29,11 +29,22 @@
 }
 
 .heroLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
   margin: 0;
-  color: var(--text-base-secondary);
-  font-size: var(--eds-body-small-size);
-  font-weight: var(--eds-body-small-strong-weight);
-  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-primary);
+  font-size: var(--eds-body-medium-strong-size);
+  font-weight: var(--eds-body-medium-strong-weight);
+  line-height: var(--eds-body-medium-strong-line-height);
+}
+
+.heroLabelDot {
+  flex-shrink: 0;
+  width: var(--scale-2);
+  height: var(--scale-2);
+  border-radius: var(--radius-full);
+  background: var(--status-success);
 }
 
 .heroAmountRow {
@@ -46,10 +57,10 @@
 
 .heroAmount {
   margin: 0;
-  color: var(--text-base-secondary);
-  font-size: var(--eds-title-size);
-  font-weight: var(--eds-title-weight);
-  line-height: var(--eds-title-line-height);
+  color: var(--text-base-primary);
+  font-size: var(--eds-headline-size);
+  font-weight: var(--eds-headline-weight);
+  line-height: var(--eds-headline-line-height);
   font-variant-numeric: tabular-nums;
 }
 
@@ -79,8 +90,8 @@
 .stat {
   padding: var(--spacing-4);
   border-radius: var(--radius-md);
-  border: var(--stroke-sm) solid var(--stroke-divider-module);
-  background: var(--box-page);
+  border: none;
+  background: var(--material-card-shallow);
 }
 
 .statLabel {
@@ -93,7 +104,7 @@
 
 .statValue {
   margin: var(--spacing-1) 0 0;
-  color: var(--text-base-secondary);
+  color: var(--text-base-primary);
   font-size: var(--eds-title-size);
   font-weight: var(--eds-title-weight);
   line-height: var(--eds-title-line-height);
@@ -201,6 +212,39 @@
   padding-top: max(var(--eds-layout-chrome-inset-top, 0px), var(--scale-15));
 }
 
+/* At scroll top: no header tint; after rows scroll under sticky header → DS frosted backdrop. */
+.txListFill :global(.eds-data-list [class*='headerBackdrop']) {
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
+.txListFillHeaderScrim :global(.eds-data-list [class*='headerBackdrop']) {
+  background-color: var(--data-table-head);
+  -webkit-backdrop-filter: saturate(120%) blur(var(--blur-shallow));
+  backdrop-filter: saturate(120%) blur(var(--blur-shallow));
+}
+
+/* Flat rows at rest; row hover when pointer is on the row. */
+.txListFill :global(.eds-data-list tbody[class*='body'] tr:not(.loadingRow):not(.blankRow)) {
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color var(--motion-transition-hover);
+}
+
+.txListFill :global(.eds-data-list tbody[class*='body'] tr:not(.loadingRow):not(.blankRow):hover) {
+  background-color: var(--event-hover);
+}
+
+.txListFill :global(.eds-data-list tbody[class*='body'] tr:not(.loadingRow):not(.blankRow):hover td:first-child) {
+  border-top-left-radius: var(--radius-sm);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.txListFill :global(.eds-data-list tbody[class*='body'] tr:not(.loadingRow):not(.blankRow):hover td:last-child) {
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
 .listFill :global(.eds-data-list) {
   width: 100%;
   height: 100%;
@@ -271,9 +315,9 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 22px;
-  height: 22px;
-  padding: var(--spacing-1-5);
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+  padding: var(--spacing-1);
   flex-shrink: 0;
   border-radius: var(--radius-full);
   box-shadow: 0 0 0 var(--stroke-xl) var(--stroke-face-primary);
@@ -289,9 +333,12 @@
 }
 
 .dirIconGlyph {
-  display: flex;
-  width: 100%;
-  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--spacing-2-5);
+  height: var(--spacing-2-5);
 }
 
 .txType {
