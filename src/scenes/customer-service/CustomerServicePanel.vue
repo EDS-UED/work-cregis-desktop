@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import {
-  EgAvatar,
   EgDivider,
   EgIcon,
   EgIconButton,
@@ -270,12 +269,9 @@ watch(locale, () => {
     >
       <header :class="[styles.header, topScrim && styles.headerScrim]">
         <div :class="styles.brand">
-          <EgAvatar
-            size="sm"
-            variant="robot"
-            name="CregisAI"
-            :label="ui('CregisAI Assistant')"
-          />
+          <span :class="styles.assistantAvatarSm" aria-hidden="true">
+            <EgIcon name="eds-sparkle" size="sm" fit />
+          </span>
           <div :class="styles.brandCopy">
             <h2 :class="styles.title">{{ ui('CregisAI Assistant') }}</h2>
             <div :class="styles.subtitle">
@@ -371,13 +367,13 @@ watch(locale, () => {
               message.role === 'user' ? styles.rowUser : styles.rowAssistant,
             ]"
           >
-            <EgAvatar
+            <span
               v-if="message.role === 'assistant'"
-              size="xs"
-              variant="robot"
-              name="CregisAI"
-              :label="ui('CregisAI Assistant')"
-            />
+              :class="styles.assistantAvatarXs"
+              aria-hidden="true"
+            >
+              <EgIcon name="eds-sparkle" size="sm" fit />
+            </span>
             <p :class="[styles.bubble, message.role === 'user' && styles.bubbleUser]">
               {{ message.text }}
             </p>

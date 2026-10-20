@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
-import { EgLayout, EgNavBar } from '@eds/desktop-components';
+import {
+  EgIcon,
+  EgLayout,
+  EgNavBar,
+  EgNavBarBottomIcon,
+  navBarDefaultBottomUtilities,
+} from '@eds/desktop-components';
 import CregisModuleMenu from '@/components/CregisModuleMenu.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { useAppShellNavigation } from '@/composables/useAppShellNavigation';
@@ -33,6 +39,17 @@ import { customerServiceState } from '@/scenes/customer-service/customerServiceS
 
 const { messages, ui } = useAppI18n();
 const { state: shellNavState } = useAppShellNavigation();
+
+const navBarBottomUtilities = computed(() =>
+  navBarDefaultBottomUtilities.map((utility) => {
+    if (utility.label !== 'Earphone') return utility;
+    return {
+      ...utility,
+      icon: 'eds-question',
+      focusIcon: 'eds-question',
+    };
+  }),
+);
 
 const navBarAttrs = computed(() => ({
   ...cregisNavBarDeclarativeAttrs,
@@ -285,7 +302,20 @@ watch(
   <EgLayout type="free">
     <template #nav>
       <div class="app-shell-nav" @click.capture="onNavClick">
-        <EgNavBar v-bind="navBarAttrs" />
+        <EgNavBar v-bind="navBarAttrs">
+          <template #utilities>
+            <EgNavBarBottomIcon
+              v-for="(utility, index) in navBarBottomUtilities"
+              :key="`nav-utility-${index}`"
+              :label="utility.label"
+            >
+              <EgIcon :name="utility.icon" size="sm" fit />
+              <template #focusIcon>
+                <EgIcon :name="utility.focusIcon" size="sm" fit />
+              </template>
+            </EgNavBarBottomIcon>
+          </template>
+        </EgNavBar>
       </div>
     </template>
 

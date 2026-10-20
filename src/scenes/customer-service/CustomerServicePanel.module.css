@@ -67,6 +67,27 @@
   min-width: 0;
 }
 
+.assistantAvatarSm,
+.assistantAvatarXs {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--material-brand-primary);
+  color: var(--text-same-white-primary);
+}
+
+.assistantAvatarSm {
+  width: var(--avatar-sm);
+  height: var(--avatar-sm);
+}
+
+.assistantAvatarXs {
+  width: var(--avatar-xs);
+  height: var(--avatar-xs);
+}
+
 .brandCopy {
   display: flex;
   flex: 1 1 auto;
