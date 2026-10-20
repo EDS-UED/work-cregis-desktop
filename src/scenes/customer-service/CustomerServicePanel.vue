@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import {
+  EgButton,
   EgIcon,
   EgIconButton,
   EgInput,
@@ -9,14 +10,15 @@ import {
 import { useAppI18n } from '@/composables/useAppI18n';
 import { getActiveTeamWorkspace, useAppTeamWorkspace } from '@/composables/appTeamWorkspace';
 import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
+import CustomerServiceFeedbackSheet from './CustomerServiceFeedbackSheet.vue';
 import {
   CUSTOMER_SERVICE_DEMO_HISTORY,
-  CUSTOMER_SERVICE_FEEDBACK_OPTION_KEYS,
-  CUSTOMER_SERVICE_FEEDBACK_OTHER_KEY,
-  CUSTOMER_SERVICE_FEEDBACK_OTHER_PROMPT_KEY,
-  CUSTOMER_SERVICE_FEEDBACK_QUESTION_KEY,
+  CUSTOMER_SERVICE_FEEDBACK_THUMB_DOWN_GLYPH,
+  CUSTOMER_SERVICE_FEEDBACK_THUMB_UP_GLYPH,
   CUSTOMER_SERVICE_GREETING_KEY,
   CUSTOMER_SERVICE_HANDOFF_KEY,
+  CUSTOMER_SERVICE_HANDOFF_OFFER_ACTION_KEY,
+  CUSTOMER_SERVICE_HANDOFF_OFFER_PROMPT_KEY,
   CUSTOMER_SERVICE_HANDOFF_REP_MESSAGE_KEY,
   CUSTOMER_SERVICE_HANDOFF_REP_NAME,
   CUSTOMER_SERVICE_HISTORY_TITLE_KEY,
@@ -25,6 +27,7 @@ import {
   CUSTOMER_SERVICE_REFUSAL_REPLY_KEY,
   CUSTOMER_SERVICE_SUGGESTION_KEYS,
   CUSTOMER_SERVICE_TEAM_SWITCH_ANNOUNCEMENT_KEY,
+  CUSTOMER_SERVICE_TEAM_SWITCH_TIP_ICON,
   type CustomerServiceChatSpace,
 } from './customerService.constants';
 import { customerServiceState } from './customerServiceState';
@@ -43,11 +46,6 @@ type ChatMessage = {
 
 type MessageFeedback = 'up' | 'down';
 
-type PendingFeedback = {
-  phase: 'choices' | 'other';
-  promptMessageId: string;
-};
-
 type ChatSession = {
   id: string;
   topic: string;
@@ -57,9 +55,10 @@ type ChatSession = {
   time: string;
   messages: ChatMessage[];
   humanHandoff: boolean;
-  thumbsDownCount: number;
+  handoffOfferPending: boolean;
+  /** Unique assistant messages the user has disliked (handoff after 2+). */
+  thumbsDownMessageIds: string[];
   messageFeedback: Record<string, MessageFeedback>;
-  pendingFeedback: PendingFeedback | null;
 };
 
 const emit = defineEmits<{
@@ -72,10 +71,14 @@ const { activeTeamDisplay } = useAppTeamWorkspace(ui);
 const teamPlanLabel = computed(() => activeTeamDisplay.value);
 
 const view = ref<'chat' | 'history'>('chat');
+/** History rows ignore :hover until the pointer moves (avoids a stuck row after opening history). */
+const historyRowHoverEnabled = ref(true);
 const draft = ref('');
 const attachInputRef = ref<HTMLInputElement | null>(null);
 const scrollRef = ref<HTMLElement | null>(null);
 const contentRef = ref<HTMLElement | null>(null);
+const feedbackSheetOpen = ref(false);
+const feedbackSheetMessageId = ref<string | null>(null);
 
 let nextId = 1;
 
@@ -117,9 +120,9 @@ function createSessionBase(): Omit<ChatSession, 'id' | 'messages' | 'time' | 'to
     space: 'team',
     teamName: activeTeamDisplay.value,
     humanHandoff: false,
-    thumbsDownCount: 0,
+    handoffOfferPending: false,
+    thumbsDownMessageIds: [],
     messageFeedback: {},
-    pendingFeedback: null,
   };
 }
 
@@ -154,9 +157,9 @@ function createDemoSession(
       },
     ],
     humanHandoff: false,
-    thumbsDownCount: 0,
+    handoffOfferPending: false,
+    thumbsDownMessageIds: [],
     messageFeedback: {},
-    pendingFeedback: null,
   };
 }
 
@@ -174,6 +177,8 @@ const sessions = ref<ChatSession[]>([
   ...CUSTOMER_SERVICE_DEMO_HISTORY.map(createDemoSession),
 ]);
 const activeSessionId = ref(sessions.value[0]!.id);
+/** Thumbs / feedback flows only on the live chat — not when browsing history sessions. */
+const liveFeedbackSessionId = ref<string | null>(sessions.value[0]!.id);
 
 const activeSession = computed(
   () => sessions.value.find((session) => session.id === activeSessionId.value) ?? sessions.value[0]!,
@@ -184,25 +189,26 @@ const messages = computed(() => activeSession.value.messages);
 const showSuggestions = computed(
   () =>
     view.value === 'chat'
+    && isLiveFeedbackSession()
     && messages.value.length === 1
     && messages.value[0]?.role === 'assistant'
-    && !activeSession.value.pendingFeedback,
+    && !feedbackSheetOpen.value,
 );
 
-const composerPlaceholder = computed(() => {
-  if (activeSession.value.pendingFeedback?.phase === 'other') {
-    return ui(CUSTOMER_SERVICE_FEEDBACK_OTHER_PROMPT_KEY);
-  }
-  return ui('Ask a question');
-});
+const composerPlaceholder = computed(() => ui('Ask a question'));
 
 function firstAssistantMessageIndex(list: ChatMessage[]) {
   return list.findIndex((message) => message.role === 'assistant');
 }
 
+function isLiveFeedbackSession() {
+  return activeSession.value.id === liveFeedbackSessionId.value;
+}
+
 function shouldShowMessageFeedback(message: ChatMessage, messageIndex: number) {
   const session = activeSession.value;
-  if (session.humanHandoff) return false;
+  if (!isLiveFeedbackSession()) return false;
+  if (session.humanHandoff || session.handoffOfferPending) return false;
   if (message.role !== 'assistant' || message.kind !== 'normal') return false;
   return messageIndex !== firstAssistantMessageIndex(messages.value);
 }
@@ -232,7 +238,8 @@ const HUMAN_HANDOFF_LOAD_DELAY_MS = 1200;
 function triggerHumanHandoff(session: ChatSession) {
   if (session.humanHandoff) return;
   session.humanHandoff = true;
-  session.pendingFeedback = null;
+  session.handoffOfferPending = false;
+  feedbackSheetOpen.value = false;
 
   const connectingText = ui('Connecting you to a human agent…');
   const lastMessage = session.messages[session.messages.length - 1];
@@ -288,64 +295,42 @@ function assistantReplyFor(userText: string): string {
   return ui('I can help with that. Please tell me more.');
 }
 
+function onAcceptHandoffOffer() {
+  const session = activeSession.value;
+  if (!session.handoffOfferPending || session.humanHandoff) return;
+  triggerHumanHandoff(session);
+}
+
 function onThumbUp(messageId: string) {
   const session = activeSession.value;
-  if (session.humanHandoff) return;
+  if (session.humanHandoff || session.handoffOfferPending) return;
   session.messageFeedback[messageId] = 'up';
+}
+
+function openFeedbackSheet(messageId: string) {
+  feedbackSheetMessageId.value = messageId;
+  feedbackSheetOpen.value = true;
 }
 
 function onThumbDown(messageId: string) {
   const session = activeSession.value;
-  if (session.humanHandoff) return;
+  if (session.humanHandoff || session.handoffOfferPending) return;
+  if (session.messageFeedback[messageId] === 'down') return;
 
   session.messageFeedback[messageId] = 'down';
-  session.thumbsDownCount += 1;
 
-  if (session.thumbsDownCount >= 2) {
-    triggerHumanHandoff(session);
-    return;
+  const isFirstDownOnMessage = !session.thumbsDownMessageIds.includes(messageId);
+  if (isFirstDownOnMessage) {
+    session.thumbsDownMessageIds.push(messageId);
   }
 
-  if (session.pendingFeedback) return;
+  openFeedbackSheet(messageId);
 
-  const promptId = createId('msg');
-  session.messages.push({
-    id: promptId,
-    role: 'assistant',
-    text: ui(CUSTOMER_SERVICE_FEEDBACK_QUESTION_KEY),
-    kind: 'feedback-question',
-  });
-  session.pendingFeedback = { phase: 'choices', promptMessageId: promptId };
-  session.time = formatSessionTime();
-  void scrollToLatest();
-}
-
-function onFeedbackChoice(key: string) {
-  const session = activeSession.value;
-  const pending = session.pendingFeedback;
-  if (!pending || pending.phase !== 'choices') return;
-
-  session.messages.push({
-    id: createId('msg'),
-    role: 'user',
-    text: ui(key),
-    kind: 'normal',
-  });
-  session.pendingFeedback = null;
-
-  if (key === CUSTOMER_SERVICE_FEEDBACK_OTHER_KEY) {
-    const promptId = createId('msg');
-    session.messages.push({
-      id: promptId,
-      role: 'assistant',
-      text: ui(CUSTOMER_SERVICE_FEEDBACK_OTHER_PROMPT_KEY),
-      kind: 'feedback-question',
-    });
-    session.pendingFeedback = { phase: 'other', promptMessageId: promptId };
+  if (session.thumbsDownMessageIds.length >= 2 && !session.handoffOfferPending) {
+    session.handoffOfferPending = true;
+    session.time = formatSessionTime();
+    void scrollToLatest();
   }
-
-  session.time = formatSessionTime();
-  void scrollToLatest();
 }
 
 function hasUserMessage(session: ChatSession) {
@@ -359,20 +344,6 @@ function pushUserMessage(text: string, topicKey?: string) {
   if (!trimmed) return;
 
   const session = activeSession.value;
-
-  if (session.pendingFeedback?.phase === 'other') {
-    session.messages.push({
-      id: createId('msg'),
-      role: 'user',
-      text: trimmed,
-      kind: 'normal',
-    });
-    session.pendingFeedback = null;
-    session.time = formatSessionTime();
-    view.value = 'chat';
-    void scrollToLatest();
-    return;
-  }
 
   session.messages.push({
     id: createId('msg'),
@@ -423,6 +394,9 @@ function onNewChat() {
   const session = createSession();
   sessions.value = [session, ...sessions.value];
   activeSessionId.value = session.id;
+  liveFeedbackSessionId.value = session.id;
+  feedbackSheetOpen.value = false;
+  feedbackSheetMessageId.value = null;
   draft.value = '';
   view.value = 'chat';
   void scrollToLatest();
@@ -433,8 +407,15 @@ function onOpenHistory() {
   void nextTick(() => update());
 }
 
+function onHistoryListPointerMove() {
+  historyRowHoverEnabled.value = true;
+}
+
 function onSelectSession(id: string) {
   activeSessionId.value = id;
+  liveFeedbackSessionId.value = null;
+  feedbackSheetOpen.value = false;
+  feedbackSheetMessageId.value = null;
   view.value = 'chat';
   void scrollToLatest();
 }
@@ -451,12 +432,29 @@ function onAttachChange(event: Event) {
   pushUserMessage(file.name);
 }
 
+watch(feedbackSheetOpen, (isOpen) => {
+  if (!isOpen) {
+    feedbackSheetMessageId.value = null;
+  }
+});
+
 watch(
   () => [view.value, messages.value.length, sessions.value.length] as const,
   () => {
     void nextTick(() => update());
   },
 );
+
+watch(view, (nextView) => {
+  if (nextView !== 'history') {
+    historyRowHoverEnabled.value = true;
+    return;
+  }
+  historyRowHoverEnabled.value = false;
+  void nextTick(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+  });
+});
 
 watch(locale, () => {
   const session = activeSession.value;
@@ -537,15 +535,19 @@ watch(
           <p v-if="historySessions.length === 0" :class="styles.empty">
             {{ ui('No chat history') }}
           </p>
-          <div v-else :class="styles.historyList">
+          <div
+            v-else
+            :class="[
+              styles.historyList,
+              !historyRowHoverEnabled && styles.historyListHoverLocked,
+            ]"
+            @pointermove="onHistoryListPointerMove"
+          >
             <button
               v-for="session in historySessions"
               :key="session.id"
               type="button"
-              :class="[
-                styles.historyItem,
-                session.id === activeSessionId && styles.historyItemActive,
-              ]"
+              :class="styles.historyItem"
               @click="onSelectSession(session.id)"
             >
               <span :class="styles.historyTopic">
@@ -572,6 +574,7 @@ watch(
 
         <template v-else>
           <template v-for="(message, messageIndex) in messages" :key="message.id">
+            <template v-if="message.kind !== 'feedback-question'">
             <div
               v-if="
                 message.kind === 'team-switch-announcement' || message.kind === 'handoff'
@@ -584,7 +587,7 @@ watch(
                   :class="styles.announcementIcon"
                   aria-hidden="true"
                 >
-                  💡
+                  <EgIcon :name="CUSTOMER_SERVICE_TEAM_SWITCH_TIP_ICON" size="sm" fit />
                 </span>
                 <span :class="styles.announcementText">{{ message.text }}</span>
               </p>
@@ -611,47 +614,32 @@ watch(
               v-if="shouldShowMessageFeedback(message, messageIndex)"
               :class="styles.feedbackRow"
             >
-              <button
-                type="button"
-                :class="[
-                  styles.feedbackBtn,
-                  activeSession.messageFeedback[message.id] === 'up' && styles.feedbackBtnActive,
-                ]"
-                :aria-label="ui('Helpful')"
+              <EgIconButton
+                shape="square"
+                size="sm"
+                motion="ease"
+                :label="ui('Helpful')"
+                :active="activeSession.messageFeedback[message.id] === 'up'"
                 @click="onThumbUp(message.id)"
               >
-                👍
-              </button>
-              <button
-                type="button"
-                :class="[
-                  styles.feedbackBtn,
-                  activeSession.messageFeedback[message.id] === 'down' && styles.feedbackBtnActive,
-                ]"
-                :aria-label="ui('Not helpful')"
+                <span :class="styles.feedbackGlyph" aria-hidden="true">
+                  {{ CUSTOMER_SERVICE_FEEDBACK_THUMB_UP_GLYPH }}
+                </span>
+              </EgIconButton>
+              <EgIconButton
+                shape="square"
+                size="sm"
+                motion="ease"
+                :label="ui('Not helpful')"
+                :active="activeSession.messageFeedback[message.id] === 'down'"
                 @click="onThumbDown(message.id)"
               >
-                👎
-              </button>
+                <span :class="styles.feedbackGlyph" aria-hidden="true">
+                  {{ CUSTOMER_SERVICE_FEEDBACK_THUMB_DOWN_GLYPH }}
+                </span>
+              </EgIconButton>
             </div>
-            <div
-              v-if="
-                message.kind === 'feedback-question'
-                  && activeSession.pendingFeedback?.promptMessageId === message.id
-                  && activeSession.pendingFeedback.phase === 'choices'
-              "
-              :class="styles.feedbackChoices"
-            >
-              <button
-                v-for="key in CUSTOMER_SERVICE_FEEDBACK_OPTION_KEYS"
-                :key="key"
-                type="button"
-                :class="styles.feedbackChoice"
-                @click="onFeedbackChoice(key)"
-              >
-                {{ ui(key) }}
-              </button>
-            </div>
+            </template>
           </template>
 
           <div v-if="showSuggestions" :class="styles.suggestions">
@@ -664,6 +652,29 @@ watch(
             >
               {{ ui(key) }}
             </button>
+          </div>
+
+          <div
+            v-if="
+              isLiveFeedbackSession()
+                && activeSession.handoffOfferPending
+                && !activeSession.humanHandoff
+            "
+            :class="styles.announcementRow"
+          >
+            <div :class="styles.handoffOffer">
+              <p :class="styles.handoffOfferPrompt">
+                {{ ui(CUSTOMER_SERVICE_HANDOFF_OFFER_PROMPT_KEY) }}
+              </p>
+              <EgButton
+                variant="outline"
+                tone="subtle"
+                size="sm"
+                @click="onAcceptHandoffOffer"
+              >
+                {{ ui(CUSTOMER_SERVICE_HANDOFF_OFFER_ACTION_KEY) }}
+              </EgButton>
+            </div>
           </div>
         </template>
       </div>
@@ -708,5 +719,10 @@ watch(
         </form>
       </footer>
     </div>
+
+    <CustomerServiceFeedbackSheet
+      v-if="isLiveFeedbackSession()"
+      v-model:open="feedbackSheetOpen"
+    />
   </div>
 </template>

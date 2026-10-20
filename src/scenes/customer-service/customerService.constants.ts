@@ -23,11 +23,21 @@ export const CUSTOMER_SERVICE_REFUSAL_DEMO_TRIGGER = 'refuse-demo';
 export const CUSTOMER_SERVICE_REFUSAL_REPLY_KEY =
   'I’m unable to help with that request.';
 
-export const CUSTOMER_SERVICE_FEEDBACK_QUESTION_KEY =
-  'What went wrong with this response?';
+/** Message feedback glyphs (display only — not i18n). */
+export const CUSTOMER_SERVICE_FEEDBACK_THUMB_UP_GLYPH = '👍';
+export const CUSTOMER_SERVICE_FEEDBACK_THUMB_DOWN_GLYPH = '👎';
 
-export const CUSTOMER_SERVICE_FEEDBACK_OTHER_PROMPT_KEY =
-  'Please describe what went wrong.';
+export const CUSTOMER_SERVICE_TEAM_SWITCH_TIP_ICON = 'eds-light';
+
+export const CUSTOMER_SERVICE_FEEDBACK_TITLE_KEY = 'Feedback';
+
+export const CUSTOMER_SERVICE_FEEDBACK_DETAIL_PLACEHOLDER_KEY =
+  'We want to know why you are dissatisfied with this answer, and what you think would be a better answer.';
+
+export const CUSTOMER_SERVICE_HANDOFF_OFFER_PROMPT_KEY =
+  'Would you like to learn more from a human agent?';
+
+export const CUSTOMER_SERVICE_HANDOFF_OFFER_ACTION_KEY = 'Transfer to human agent';
 
 export const CUSTOMER_SERVICE_HANDOFF_REP_MESSAGE_KEY =
   'You are speaking with customer service representative "{name}".';
@@ -39,9 +49,9 @@ export const CUSTOMER_SERVICE_TEAM_SWITCH_ANNOUNCEMENT_KEY =
   'Switched to [{team}], AI permissions and SOP have been updated.';
 
 export const CUSTOMER_SERVICE_FEEDBACK_OPTION_KEYS = [
-  'Inaccurate answer',
-  'Ineffective steps',
-  'Irrelevant response',
+  'Harmful or unsafe',
+  'False information',
+  'Not helpful feedback',
   'Others',
 ] as const;
 
