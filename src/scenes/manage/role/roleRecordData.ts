@@ -1,12 +1,16 @@
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { formatWebhookCreatorDisplay } from '@/scenes/manage/webhook/webhookMockData';
 import { MANAGE_ROLE_MENU_ITEM } from '../manageMenuData';
+import { isManageRoleRecordDeleted } from './manageRoleDeletedRecordIds';
+
+/** 列表首行固定为全权限角色（mock）。 */
+export const MANAGE_ROLE_SUPER_ADMIN_RECORD_ID = 'ROLE-0001';
 
 const ROLE_NAME_FIXED = [
   '超级管理员',
   '管理员',
-  '财务',
-  '普通成员',
+  '财务部门·结算审批与对账专员·跨境与多币种台账复核',
+  '普通成员·只读提单',
 ] as const;
 
 const ROLE_NAME_TEST_PREFIX = 'Test_';
@@ -81,5 +85,7 @@ function buildRoleRow(rowIndex: number): PaymentEngineRecordRow {
 export function buildManageRoleRecordRows(menuItem: string, count: number): PaymentEngineRecordRow[] {
   if (menuItem !== MANAGE_ROLE_MENU_ITEM) return [];
   const safeCount = Math.max(0, count);
-  return Array.from({ length: safeCount }, (_, index) => buildRoleRow(index));
+  return Array.from({ length: safeCount }, (_, index) => buildRoleRow(index)).filter(
+    (row) => !isManageRoleRecordDeleted(row.id),
+  );
 }

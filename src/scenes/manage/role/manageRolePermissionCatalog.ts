@@ -49,6 +49,7 @@ export const MANAGE_ROLE_PERMISSION_ITEM_KEYS = [
     'Edit Rule',
     'Enable / Disable Rule',
   ],
+  ['View', 'Manage', 'Delete', 'Retry Push'],
   [
     'View',
     'Modify Whitelist',
@@ -68,9 +69,5 @@ export const MANAGE_ROLE_PERMISSION_ITEM_KEYS = [
   ['View', 'Modify Member', 'Invite Member', 'Delete Member'],
   ['View', 'Modify Role', 'Add Role', 'Delete Role'],
   ['Start Certification', 'View Certification Information'],
-  [
-    'Role App Permission Hint',
-    'View',
-    'Manage Application',
-  ],
+  ['View', 'Manage Application'],
 ] as const;

@@ -17,8 +17,9 @@ const ROLE_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
     key: 'roleName',
     labelKey: 'Role Name',
     minWidth: ROLE_NAME_MIN,
+    width: ROLE_NAME_MIN,
     displayOrder: 1,
-    flexGrow: true,
+    flexGrow: false,
   },
   {
     key: 'roleCreatorTime',

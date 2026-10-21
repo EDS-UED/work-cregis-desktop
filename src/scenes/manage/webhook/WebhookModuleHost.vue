@@ -23,6 +23,8 @@ import {
 } from './webhookStore';
 import { webhookFlowKey, type WebhookVerifyIntent } from './webhookFlowContext';
 import { registerWebhookModuleShellApi } from './webhookModuleShellApi';
+import { filterWebhookPushRecordsRepushEligible } from './webhookPushRecordRepush';
+import { showAppEndFeedbackAfterOverlay } from '@/composables/appEndFeedback';
 import styles from './WebhookModuleHost.module.css';
 
 const props = defineProps<{
@@ -48,6 +50,8 @@ const pushDetailRow = ref<PaymentEngineRecordRow | null>(null);
 
 const deleteDialogOpen = ref(false);
 const deleteTargetRow = ref<PaymentEngineRecordRow | null>(null);
+const pendingBatchRepushIds = ref<string[]>([]);
+const repushSettledCallback = ref<(() => void) | null>(null);
 
 watch(
   () => props.menuItem,
@@ -163,13 +167,37 @@ function onVerifyComplete() {
     pendingRow.value = null;
     deleteTargetRow.value = null;
     deleteDialogOpen.value = false;
+    showAppEndFeedbackAfterOverlay();
     return;
   }
 
-  if (intent === 'repush' && pendingRow.value) {
-    markPushRecordRetried(pendingRow.value.id);
+  if (intent === 'repush') {
+    const batchIds = pendingBatchRepushIds.value;
+    if (batchIds.length > 0) {
+      for (const id of batchIds) {
+        markPushRecordRetried(id);
+      }
+      pendingBatchRepushIds.value = [];
+    } else if (pendingRow.value) {
+      markPushRecordRetried(pendingRow.value.id);
+    }
     pendingRow.value = null;
+    repushSettledCallback.value?.();
+    repushSettledCallback.value = null;
+    showAppEndFeedbackAfterOverlay();
   }
+}
+
+function requestBatchRepush(
+  rows: PaymentEngineRecordRow[],
+  onSettled?: () => void,
+) {
+  const eligible = filterWebhookPushRecordsRepushEligible(rows);
+  if (eligible.length === 0) return;
+  pendingBatchRepushIds.value = eligible.map((row) => row.id);
+  pendingRow.value = eligible[0] ?? null;
+  repushSettledCallback.value = onSettled ?? null;
+  startVerify('repush');
 }
 
 function onToolbarAction(key: string): boolean {
@@ -201,9 +229,12 @@ provide(webhookFlowKey, {
     pushDetailOpen.value = true;
   },
   requestRepush(row) {
+    pendingBatchRepushIds.value = [];
+    repushSettledCallback.value = null;
     pendingRow.value = row;
     startVerify('repush');
   },
+  requestBatchRepush,
   draftConfig: editDraft,
   configFormOpen: createPageOpen,
   closeConfigForm: closeForm,
@@ -221,6 +252,8 @@ const formMode = () => (editDraft.value ? 'edit' : 'create');
 
 function onPushDetailRepush() {
   if (!pushDetailRow.value) return;
+  pendingBatchRepushIds.value = [];
+  repushSettledCallback.value = null;
   pendingRow.value = pushDetailRow.value;
   startVerify('repush');
 }

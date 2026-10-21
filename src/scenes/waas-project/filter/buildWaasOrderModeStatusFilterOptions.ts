@@ -9,7 +9,7 @@ import {
   PAYMENT_ENGINE_ORDER_STATUS_LABEL_KEYS,
   resolvePaymentEngineOrderStatusLabelKey,
 } from '../../payment-engine/paymentEngineOrderStatusLabels';
-import { buildPaymentEngineRecordRows } from '../../payment-engine/paymentEngineOrderRecordData';
+import { buildWaasOrderModeRecordRows } from '../waasOrderModeRecordData';
 
 const ORDER_MODE_STATUS_NAMESPACE = 'waas-order-mode-status';
 
@@ -69,7 +69,7 @@ export function buildWaasOrderModeStatusFilterOptions(
     return [...CALLBACK_PUSH_STATUS_OPTIONS];
   }
 
-  const rows = buildPaymentEngineRecordRows(menuItem, Math.max(0, rowCount));
+  const rows = buildWaasOrderModeRecordRows(menuItem, Math.max(0, rowCount));
   return uniqueStatusOptionsFromRows(rows, menuItem);
 }
 
@@ -79,7 +79,10 @@ export function resolveWaasOrderModeFilterStatusOptionId(
   fieldId: string,
   rowIndex = 0,
 ): string {
-  if (menuItem === 'History Callback' && fieldId === 'pushStatus') {
+  if (
+    (menuItem === 'History Callback' || menuItem === 'Callback Error')
+    && fieldId === 'pushStatus'
+  ) {
     return row.callbackStatus === 'ignore' ? 'waas-callback-ignore' : 'waas-callback-normal';
   }
 

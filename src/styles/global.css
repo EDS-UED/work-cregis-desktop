@@ -317,11 +317,21 @@ body .eds-popover.desktopTokens::-webkit-scrollbar {
   z-index: 1100;
 }
 
-/* 全局业务成功反馈 · 高于 EgPopup shell（20）与 DataList BatchBar（30） */
-.app-preview > [data-app-end-feedback-host] {
+/*
+ * 全局 EgEndFeedbackCard（AppEndFeedbackHost）· 与 app-popup-overlay-root 同级，铺满预览框。
+ * 组件用法与 showcase 一致：<EgEndFeedbackCard :text="…" />；禁覆盖 .eds-end-feedback-card。
+ */
+.app-preview > .eds-tooltip-panel > .app-end-feedback-host,
+.app-preview > .eds-tooltip-panel > [data-app-end-feedback-host] {
   position: absolute;
   inset: 0;
-  z-index: 1101;
+  z-index: 1110;
+  flex: none;
+  width: auto;
+  height: auto;
+  max-height: none;
+  border-radius: inherit;
+  overflow: visible;
   pointer-events: none;
 }
 

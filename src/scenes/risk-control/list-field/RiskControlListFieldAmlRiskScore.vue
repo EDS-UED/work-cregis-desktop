@@ -17,12 +17,16 @@ const props = defineProps<{
 
 const { ui } = useAppI18n();
 
+const isException = computed(() => Boolean(props.row.amlQueryException));
+
 const riskLabelKey = computed(() => props.row.amlRiskLabelKey ?? 'Safe');
 const riskLabel = computed(() => ui(riskLabelKey.value));
 const riskVisual = computed(() =>
-  resolveAmlRiskRatingVisual(props.row.amlRiskCustomStyle),
+  isException.value
+    ? resolveAmlRiskRatingVisual('aml-suspicious')
+    : resolveAmlRiskRatingVisual(props.row.amlRiskCustomStyle),
 );
-const riskScore = computed(() => props.row.amlRiskScore ?? '0.0');
+const riskScore = computed(() => (isException.value ? 'NA' : (props.row.amlRiskScore ?? '0.0')));
 
 const riskToneClass = computed(() => {
   if (riskVisual.value.tone === 'danger') return styles.riskToneDanger;

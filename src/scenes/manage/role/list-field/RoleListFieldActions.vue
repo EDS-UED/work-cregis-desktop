@@ -13,14 +13,24 @@ const props = defineProps<{
 const { ui } = useAppI18n();
 const manageRoleFlow = inject(manageRoleFlowKey, null);
 
+function onDeleteClick() {
+  manageRoleFlow?.requestDeleteRole(props.row);
+}
+
 function onEditPermissionsClick() {
-  manageRoleFlow?.openDetailForRow(props.row);
+  manageRoleFlow?.requestEditPermissions(props.row);
 }
 </script>
 
 <template>
   <div :class="styles.actionCell" @click.stop>
-    <EgButton variant="text" tone="subtle" size="md" :class="styles.deleteButton">
+    <EgButton
+      variant="text"
+      tone="subtle"
+      size="md"
+      :class="styles.deleteButton"
+      @click="onDeleteClick"
+    >
       {{ ui('Delete') }}
     </EgButton>
     <EgButton variant="solid" size="md" tone="decor" @click="onEditPermissionsClick">

@@ -32,11 +32,8 @@ import {
   isRiskControlAutoRulesMenuItem,
   isRiskControlLogsMenuItem,
 } from '@/scenes/risk-control/riskControlMenuData';
-import { showAppEndFeedback } from '@/composables/appEndFeedback';
-import {
-  isOrderModeCallbackExperience,
-  type PaymentEngineCallbackExperience,
-} from './paymentEngineCallbackExperience';
+import { showAppEndFeedbackAfterOverlay } from '@/composables/appEndFeedback';
+import type { PaymentEngineCallbackExperience } from './paymentEngineCallbackExperience';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 
 export function usePaymentEngineDetailFlow() {
@@ -177,11 +174,18 @@ export function usePaymentEngineDetailFlow() {
     pushOrderGoogleVerifyOpen.value = true;
   }
 
+  /** 批处理推单等场景：跳过推单确认 Dialog，直接 Google 验证。 */
+  function openPushOrderGoogleVerify(afterVerify?: () => void) {
+    pushOrderAfterConfirm = undefined;
+    pushOrderPendingAfterVerify = afterVerify;
+    pushOrderGoogleVerifyOpen.value = true;
+  }
+
   function onPushOrderGoogleVerified() {
     pushOrderGoogleVerifyOpen.value = false;
     pushOrderPendingAfterVerify?.();
     pushOrderPendingAfterVerify = undefined;
-    showAppEndFeedback();
+    showAppEndFeedbackAfterOverlay();
   }
 
   function onPushOrderGoogleVerifyDismissed() {
@@ -202,22 +206,12 @@ export function usePaymentEngineDetailFlow() {
     const afterConfirm = callbackIgnoreAfterConfirm;
     callbackIgnoreAfterConfirm = undefined;
     await afterConfirm?.();
-    await nextTick();
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => resolve());
-      });
-    });
-    showAppEndFeedback();
+    showAppEndFeedbackAfterOverlay();
   }
 
   async function confirmCallbackIgnore() {
     callbackIgnoreConfirmOpen.value = false;
-    if (isOrderModeCallbackExperience(callbackExperience.value)) {
-      callbackIgnoreGoogleVerifyOpen.value = true;
-      return;
-    }
-    await finishCallbackIgnoreAfterConfirm();
+    callbackIgnoreGoogleVerifyOpen.value = true;
   }
 
   function onCallbackIgnoreGoogleVerified() {
@@ -249,6 +243,7 @@ export function usePaymentEngineDetailFlow() {
     pushOrderDialogCallbackUrl,
     pushOrderGoogleVerifyOpen,
     openPushOrderDialog,
+    openPushOrderGoogleVerify,
     closePushOrderDialog,
     confirmPushOrderDialog,
     onPushOrderGoogleVerified,

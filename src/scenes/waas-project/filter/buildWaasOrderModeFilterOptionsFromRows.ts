@@ -5,7 +5,7 @@ import type {
 import { buildDataListCurrencyFilterOptionsFromRows } from '../../shared/buildDataListCurrencyFilterOptionsFromRows';
 import { uniqueDataListFilterOptions } from '../../shared/dataListFilterOptionUtils';
 import { resolveCallbackEventLabelKey } from '../../payment-engine/paymentEngineListFieldCustomize';
-import { buildPaymentEngineRecordRows } from '../../payment-engine/paymentEngineOrderRecordData';
+import { buildWaasOrderModeRecordRows } from '../waasOrderModeRecordData';
 import { resolvePaymentRefundRecordDetail } from '../../payment-engine/paymentEngineRefundRecordDetailData';
 import { buildWaasOrderModeStatusFilterOptions } from './buildWaasOrderModeStatusFilterOptions';
 
@@ -30,7 +30,7 @@ export function buildWaasOrderModeFilterOptionsFromRows(
   menuItem: string,
 ): WaasOrderModeFilterRowOptions {
   const safeRowCount = Math.max(0, rowCount);
-  const rows = buildPaymentEngineRecordRows(menuItem, safeRowCount);
+  const rows = buildWaasOrderModeRecordRows(menuItem, safeRowCount);
 
   const refundReasonLabels: string[] = [];
   const refundTypeLabels: string[] = [];

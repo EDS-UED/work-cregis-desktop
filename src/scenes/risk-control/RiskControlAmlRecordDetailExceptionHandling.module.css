@@ -1,0 +1,43 @@
+.host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: var(--spacing-4) var(--spacing-3) var(--spacing-2);
+  box-sizing: border-box;
+}
+
+.title {
+  color: var(--text-base-primary);
+}
+
+.lead {
+  color: var(--text-base-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  width: 100%;
+}
+
+.actionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-1);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  background: var(--material-base-secondary);
+  box-sizing: border-box;
+}
+
+.actionTitle {
+  color: var(--text-base-primary);
+}
+
+.actionDesc {
+  color: var(--text-base-tertiary);
+  margin-bottom: var(--spacing-1);
+}

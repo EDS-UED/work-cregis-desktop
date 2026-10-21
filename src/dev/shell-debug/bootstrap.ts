@@ -12,6 +12,7 @@ import './scenarios/waasHistoryCallbackScenarioPack';
 import './scenarios/webhookPushScenarioPack';
 import './scenarios/webhookConfigScenarioPack';
 import './scenarios/riskControlLogsScenarioPack';
+import './scenarios/riskControlAmlScenarioPack';
 
 export { registerCommonScenarioPack } from './scenarios/commonScenarioPack';
 export { registerWaasScenarioPack } from './scenarios/waasScenarioPack';

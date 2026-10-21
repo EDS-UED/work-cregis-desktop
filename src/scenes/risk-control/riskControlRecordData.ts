@@ -292,8 +292,21 @@ function buildPolicySettingsRow(rowIndex: number): PaymentEngineRecordRow {
   };
 }
 
+function resolveAutoRuleDirection(rowIndex: number): 'inflow' | 'outflow' {
+  return rowIndex % 3 === 0 ? 'outflow' : 'inflow';
+}
+
+function resolveAutoRuleScopeKey(rowIndex: number, direction: 'inflow' | 'outflow'): string {
+  if (direction === 'outflow') {
+    return rowIndex % 2 === 0 ? 'Manual Transfer' : 'API Payout';
+  }
+  return rowIndex % 2 === 0 ? 'Manual Transfer' : 'API Payout';
+}
+
 function buildAutoRulesRow(rowIndex: number): PaymentEngineRecordRow {
   const ruleNumber = buildPolicyNumber(rowIndex);
+  const direction = resolveAutoRuleDirection(rowIndex);
+  const scopeKey = resolveAutoRuleScopeKey(rowIndex, direction);
 
   return {
     id: ruleNumber,
@@ -306,8 +319,12 @@ function buildAutoRulesRow(rowIndex: number): PaymentEngineRecordRow {
     receivedSymbol: 'USDT',
     ruleName: resolveDemoPolicyName(rowIndex),
     ruleNumber,
+    autoRuleDirection: direction,
+    autoRuleScopeKey: scopeKey,
     autoRuleWaasProject: AUTO_RULE_WAAS_PROJECT_SHOWCASE[rowIndex % AUTO_RULE_WAAS_PROJECT_SHOWCASE.length],
-    autoRuleServiceProvider: AUTO_RULE_PROVIDER_SHOWCASE[rowIndex % AUTO_RULE_PROVIDER_SHOWCASE.length],
+    autoRuleServiceProvider: rowIndex % 4 === 0
+      ? 'Elliptic'
+      : AUTO_RULE_PROVIDER_SHOWCASE[rowIndex % AUTO_RULE_PROVIDER_SHOWCASE.length],
     ruleEnabled: rowIndex < AUTO_RULE_ENABLED_SHOWCASE.length
       ? AUTO_RULE_ENABLED_SHOWCASE[rowIndex]
       : rowIndex % 5 !== 0,
@@ -457,27 +474,50 @@ function buildAmlRecordId(rowIndex: number): string {
   return `AML-${String(rowIndex + 1).padStart(5, '0')}`;
 }
 
+const AML_EXCEPTION_DEMO_ROW_COUNT = 3;
+const AML_OUTFLOW_AUTO_RULE_NAMES = [
+  'Outflow Guard Alpha',
+  'API Payout AML Scan',
+  'Treasury Withdraw Watch',
+] as const;
+
 function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
   const id = buildAmlRecordId(rowIndex);
-  const risk = resolveDemoAmlRisk(rowIndex);
   const preset = resolveCurrencyRowPreset(rowIndex);
-  const requesterName = resolveDemoAmlRequesterName(rowIndex);
+  const isException = rowIndex < AML_EXCEPTION_DEMO_ROW_COUNT;
+  const isOutflowAuto = !isException && rowIndex % 4 === 3;
+  const risk = isException
+    ? { labelKey: 'AML Exception', customStyle: 'aml-suspicious' as const, score: 'NA' }
+    : resolveDemoAmlRisk(rowIndex);
+  const outflowRuleName = AML_OUTFLOW_AUTO_RULE_NAMES[
+    rowIndex % AML_OUTFLOW_AUTO_RULE_NAMES.length
+  ]!;
+  const exceptionRuleName = AML_OUTFLOW_AUTO_RULE_NAMES[
+    rowIndex % AML_OUTFLOW_AUTO_RULE_NAMES.length
+  ]!;
+  const requesterName = isException
+    ? exceptionRuleName
+    : isOutflowAuto
+      ? outflowRuleName
+      : resolveDemoAmlRequesterName(rowIndex);
 
   return {
     id,
     merchantOrderId: id,
     status: 'success',
-    createdAt: '2027-12-23 10:23:00',
+    createdAt: isException && rowIndex === 0 ? '' : '2027-12-23 10:23:00',
     receivedAmount: '0',
     orderAmount: '0',
     orderSymbol: 'USDT',
     receivedSymbol: 'USDT',
     amlTargetValue: resolveDemoAmlTargetValue(rowIndex),
     amlNetworkLabel: resolveDemoAmlNetworkLabel(rowIndex),
-    amlTriggerModeKey: AML_TRIGGER_MODE_KEYS[rowIndex % AML_TRIGGER_MODE_KEYS.length],
+    amlTriggerModeKey: (isOutflowAuto || isException)
+      ? 'Automatic'
+      : AML_TRIGGER_MODE_KEYS[rowIndex % AML_TRIGGER_MODE_KEYS.length],
     amlRequesterName: requesterName,
-    amlRequesterAvatarName: requesterName,
-    amlServiceProvider: resolveDemoAmlServiceProvider(rowIndex),
+    amlRequesterAvatarName: (isOutflowAuto || isException) ? undefined : requesterName,
+    amlServiceProvider: rowIndex % 3 === 0 ? 'Elliptic' : resolveDemoAmlServiceProvider(rowIndex),
     amlRiskLabelKey: risk.labelKey,
     amlRiskCustomStyle: risk.customStyle,
     amlRiskScore: risk.score,
@@ -486,7 +526,30 @@ function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
     amlCurrencySymbol: preset.symbol,
     amlCurrencyCryptoName: preset.cryptoName,
     amlCurrencyNetworkLabel: preset.networkLabel,
+    amlQueryException: isException,
+    amlQueryExceptionKind: isException
+      ? (rowIndex === 2 ? 'designated-handler' : rowIndex === 1 ? 'timeout' : 'balance')
+      : undefined,
+    amlOutflowAutoQuery: isOutflowAuto || isException,
+    amlTriggeredRuleName: (isOutflowAuto || isException) ? (isException ? exceptionRuleName : outflowRuleName) : undefined,
+    amlQueryTimeDisplay: isException && rowIndex === 0 ? '--' : undefined,
+    amlBelongingEntity: isException ? '--' : undefined,
+    amlEntityTags: isException ? [] : undefined,
   };
+}
+
+function compareAmlRecordRowsForList(
+  left: PaymentEngineRecordRow,
+  right: PaymentEngineRecordRow,
+): number {
+  const leftPriority = left.amlQueryExceptionKind === 'designated-handler' ? 0
+    : left.amlQueryException ? 1
+      : 2;
+  const rightPriority = right.amlQueryExceptionKind === 'designated-handler' ? 0
+    : right.amlQueryException ? 1
+      : 2;
+  if (leftPriority !== rightPriority) return leftPriority - rightPriority;
+  return left.id.localeCompare(right.id);
 }
 
 function resolveDemoLogWebhookFields(rowIndex: number): Pick<
@@ -574,7 +637,8 @@ export function buildRiskControlRecordRows(
   }
 
   if (resolvedMenuItem === 'AML') {
-    return Array.from({ length: count }, (_, rowIndex) => buildAmlRow(rowIndex));
+    const rows = Array.from({ length: count }, (_, rowIndex) => buildAmlRow(rowIndex));
+    return [...rows].sort(compareAmlRecordRowsForList);
   }
 
   if (resolvedMenuItem === 'Logs') {

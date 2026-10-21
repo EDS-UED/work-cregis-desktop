@@ -1,9 +1,13 @@
 import { closeAllAnchoredTooltips } from '@eds/desktop-components';
 import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import {
-  CALLBACK_ERROR_PAYMENT_EXCEPTION_SHOWCASE_ROW_INDEX,
   buildPaymentEngineRecordRows,
 } from '@/scenes/payment-engine/paymentEngineOrderRecordData';
+
+/** 第 6 行 · 异常支付单 · 未转账。 */
+const PAYMENT_ENGINE_CALLBACK_ERROR_EXCEPTION_CALLBACK_TAB_ROW_INDEX = 5;
+/** 第 8 行 · 异常支付单 · 转账成功。 */
+const PAYMENT_ENGINE_CALLBACK_ERROR_EXCEPTION_RELATED_TAB_ROW_INDEX = 7;
 import { clearQaLoadingTimeout } from './commonScenarioActions';
 import { waitForPaymentEngineDetailFlow } from './waitForPaymentEngineDetailFlow';
 
@@ -33,12 +37,18 @@ export async function applyCallbackErrorDetailScenario(
   flow.openDetailForRow(row, 'Callback Error', activeTab);
 }
 
-/** 第 3 行 · 异常支付单 · 回调 Tab。 */
+/** 第 6 行 · 异常支付单 · 回调 Tab。 */
 export function applyCallbackErrorPaymentExceptionCallbackTabScenario() {
-  applyCallbackErrorDetailScenario(CALLBACK_ERROR_PAYMENT_EXCEPTION_SHOWCASE_ROW_INDEX, 0);
+  applyCallbackErrorDetailScenario(
+    PAYMENT_ENGINE_CALLBACK_ERROR_EXCEPTION_CALLBACK_TAB_ROW_INDEX,
+    0,
+  );
 }
 
-/** 第 3 行 · 异常支付单 · 收款相关 Tab。 */
+/** 第 8 行 · 异常支付单 · 收款相关 Tab。 */
 export function applyCallbackErrorPaymentExceptionRelatedTabScenario() {
-  applyCallbackErrorDetailScenario(CALLBACK_ERROR_PAYMENT_EXCEPTION_SHOWCASE_ROW_INDEX, 1);
+  applyCallbackErrorDetailScenario(
+    PAYMENT_ENGINE_CALLBACK_ERROR_EXCEPTION_RELATED_TAB_ROW_INDEX,
+    1,
+  );
 }

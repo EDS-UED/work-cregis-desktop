@@ -1,8 +1,3 @@
-/** 锚点 Teleport 挂载在 EgDetail 滚动视口内，相对视口固定于右侧。 */
-.detailPermissionHost :global(.eds-detail [class*='scroll_']) {
-  position: relative;
-}
-
 .detailPermissionHost :global(.eds-detail [class*='sections']) {
   gap: var(--spacing-4);
 }
@@ -11,48 +6,144 @@
   display: none;
 }
 
-/** 锚点滚动：区块标题对齐滚动区顶缘。 */
-.detailPermissionHost :global(.eds-detail [class*='sectionTitleRow']) {
-  scroll-margin-top: var(--spacing-6);
-}
-
 /** Checkbox 权限行：收起左侧 Title 列，由 Value 槽承载 checkbox + 文案。 */
 .detailPermissionHost
-  :global(.eds-detail [class*='item']:has([class*='rolePermissionValue']) [class*='itemTitle']) {
+  :global(.eds-detail [class*='item']:has([data-manage-role-permission-value]) [class*='itemTitle']) {
   display: none;
 }
 
 .detailPermissionHost
-  :global(.eds-detail [class*='item']:has([class*='rolePermissionValue']) [class*='itemValue']) {
+  :global(.eds-detail [class*='item']:has([data-manage-role-permission-value]) [class*='itemValue']) {
+  display: flex;
   flex: 1 1 auto;
+  align-items: center;
+  align-self: stretch;
   min-width: 0;
 }
 
-/** 权限项两列，左右各 50%；说明类整行通栏；右侧为锚点条留列宽。 */
+/** 权限项两列，左右各 50%；说明类整行通栏。 */
 .detailPermissionHost :global(.eds-detail [class*='itemList']) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: var(--spacing-0);
-  row-gap: var(--spacing-05);
+  row-gap: var(--spacing-025);
   width: 100%;
-  padding-inline-end: var(--spacing-6);
 }
 
 .detailPermissionHost
-  :global(.eds-detail [class*='item']:has([class*='rolePermissionValue'])) {
+  :global(.eds-detail [class*='item']:has([data-manage-role-permission-value])) {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
 
 .detailPermissionHost
-  :global(.eds-detail [class*='item']:not(:has([class*='rolePermissionValue']))) {
+  :global(.eds-detail [class*='item']:not(:has([data-manage-role-permission-value]))) {
   grid-column: 1 / -1;
   width: 100%;
 }
 
-.detailPermissionHost
-  :global(.eds-detail [class*='item']:has([class*='rolePermissionValue']) [class*='itemRow']) {
-  width: 100%;
+/** 权限 Popup 内 Apply_Item 行（EDS 默认 --spacing-2，稿 --spacing-1-5）；itemList 内 itemRow 统一 padding。 */
+.detailPermissionHost :global(.eds-detail [class*='itemList'] [class*='itemRow']) {
+  padding: var(--spacing-1-5) var(--spacing-3);
   box-sizing: border-box;
+}
+
+.detailPermissionHost
+  :global(.eds-detail [class*='item']:has([data-manage-role-permission-value]) [class*='itemRow']) {
+  width: 100%;
+}
+
+/** Section 标题 + 副文案同组（ManageRolePermissionSectionHint）。 */
+.permissionSectionTitleGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-05);
+  box-sizing: border-box;
+}
+
+.permissionSectionTitleGroup :global([class*='sectionTitle']) {
+  padding-bottom: var(--spacing-0);
+}
+
+/** 编辑未保存时：EgConfirmPopover 覆盖 EgDetail 关闭钮（对齐 Detail.systemBarClose 位）。 */
+.detailCloseConfirmHost {
+  position: absolute;
+  top: var(--spacing-1);
+  right: var(--spacing-1);
+  z-index: 4;
+  display: inline-flex;
+}
+
+.detailCloseConfirmTrigger {
+  display: inline-flex;
+}
+
+/** 与 MultiSignWaitingPanel systemBarClose 一致：默认浅色底，Popover 打开为点按态（不变深灰块）。 */
+.detailCloseConfirmHost :global(.eds-icon-button) {
+  background-color: var(--material-hide);
+}
+
+.detailCloseConfirmHost :global(.eds-icon-button > span) {
+  color: var(--material-base-tertiary);
+}
+
+.detailCloseConfirmHost :global(.eds-icon-button .eds-icon .eds-i-f),
+.detailCloseConfirmHost :global(.eds-icon-button .eds-icon path) {
+  fill: currentColor;
+}
+
+.detailCloseConfirmHost :global(.eds-icon-button:hover:not(:disabled):not(.isDisabled)),
+.detailCloseConfirmHost :global(.eds-icon-button:focus-visible:not(:disabled):not(.isDisabled)),
+.detailCloseConfirmHost :global(.eds-icon-button:active:not(:disabled):not(.isDisabled)) {
+  background-color: var(--event-hover);
+}
+
+.detailCloseConfirmHost :global(.eds-icon-button:hover:not(:disabled):not(.isDisabled) > span),
+.detailCloseConfirmHost :global(.eds-icon-button:focus-visible:not(:disabled):not(.isDisabled) > span) {
+  color: var(--material-base-secondary);
+}
+
+.detailCloseConfirmHost :global(.eds-icon-button:active:not(:disabled):not(.isDisabled) > span) {
+  color: var(--material-base-tertiary);
+}
+
+.detailCloseConfirmTriggerActive :global(.eds-icon-button:not(:disabled)),
+.detailCloseConfirmTriggerActive :global(.eds-icon-button:not(:disabled):hover),
+.detailCloseConfirmTriggerActive :global(.eds-icon-button:not(:disabled):focus-visible),
+.detailCloseConfirmTriggerActive :global(.eds-icon-button:not(:disabled):active) {
+  background-color: var(--event-focus);
+}
+
+.detailCloseConfirmTriggerActive :global(.eds-icon-button:not(:disabled) > span),
+.detailCloseConfirmTriggerActive :global(.eds-icon-button:not(:disabled):hover > span),
+.detailCloseConfirmTriggerActive :global(.eds-icon-button:not(:disabled):focus-visible > span),
+.detailCloseConfirmTriggerActive :global(.eds-icon-button:not(:disabled):active > span) {
+  color: var(--material-base-secondary);
+}
+
+/** EgConfirmPopover 面板：标题 / 正文 / 确定 居中对齐。 */
+.detailPermissionHost :global([data-eds-confirm-popover]) {
+  align-items: center;
+  text-align: center;
+}
+
+.detailPermissionHost :global([data-eds-confirm-popover] [class*='inlineHeaderTitle']) {
+  text-align: center;
+}
+
+.detailPermissionHost :global([data-eds-confirm-popover] [class*='message']) {
+  text-align: center;
+}
+
+.detailPermissionHost :global([data-eds-confirm-popover] [class*='actions']) {
+  justify-content: center;
+  width: 100%;
+}
+
+/** 未保存退出走 EgConfirmPopover 关闭钮；隐藏 EgDetail 原生关闭，避免双入口。 */
+.detailPermissionHostUnsavedExit :global(.eds-detail [class*='systemBarClose']) {
+  visibility: hidden;
+  pointer-events: none;
 }

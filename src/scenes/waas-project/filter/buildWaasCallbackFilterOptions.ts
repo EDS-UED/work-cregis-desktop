@@ -10,7 +10,7 @@ import {
   resolveWaasPushMethodLabel,
 } from './waasDataListFilterShared';
 
-/** 与标准 WaaS 异常回调列表 · 业务类型 showcase 一致（§7.8）。 */
+/** 与标准 WaaS 回调列表 · 业务类型 showcase 一致（§7.8）：充值 / 提币 / 子地址提币。 */
 const WAAS_CALLBACK_BUSINESS_TYPE_CATALOG_KEYS = [
   'Deposit',
   'Withdrawal',

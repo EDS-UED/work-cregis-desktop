@@ -10,14 +10,14 @@ export const PAYMENT_ENGINE_CALLBACK_ERROR_DETAIL_SCENARIOS = [
     id: 'payment-engine-callback-error-detail-callback-tab',
     pageKey: 'Payment Engine:Callback Error' as const,
     label: '详情 · 回调 Tab',
-    description: '第 3 行异常支付单 · 回调 Tab：回调事件编号 / 回调 URL / 更新时间 / 异常原因。',
+    description: '第 6 行异常支付单 · 回调 Tab：回调事件编号 / 回调 URL / 更新时间 / 异常原因。',
     apply: applyCallbackErrorPaymentExceptionCallbackTabScenario,
   },
   {
     id: 'payment-engine-callback-error-detail-payment-exception-related',
     pageKey: 'Payment Engine:Callback Error' as const,
     label: '详情 · 收款相关（异常支付单）',
-    description: '第 3 行异常支付单 · 收款相关 Tab：回调事件状态为已转账。',
+    description: '第 8 行异常支付单 · 收款相关 Tab：回调事件状态为转账成功。',
     apply: applyCallbackErrorPaymentExceptionRelatedTabScenario,
   },
 ];

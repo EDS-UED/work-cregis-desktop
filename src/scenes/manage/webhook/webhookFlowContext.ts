@@ -17,6 +17,10 @@ export type WebhookFlowApi = {
   requestDelete: (row: PaymentEngineRecordRow) => void;
   openPushDetail: (row: PaymentEngineRecordRow) => void;
   requestRepush: (row: PaymentEngineRecordRow) => void;
+  requestBatchRepush: (
+    rows: PaymentEngineRecordRow[],
+    onSettled?: () => void,
+  ) => void;
   draftConfig: Ref<WebhookConfigRecord | null>;
   /** Webhook 配置 · 列表↔创建/编辑 motion-page。 */
   configFormOpen: Ref<boolean>;

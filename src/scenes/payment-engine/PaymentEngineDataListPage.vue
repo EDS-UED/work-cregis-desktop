@@ -8,7 +8,7 @@ import {
   type EgFilterField,
   type EgFilterLogicMode,
 } from '@eds/desktop-components';
-import { showAppEndFeedback } from '@/composables/appEndFeedback';
+import { showAppEndFeedbackAfterOverlay } from '@/composables/appEndFeedback';
 import { useAppI18n } from '@/composables/useAppI18n';
 import {
   applyEgFilterConditions,
@@ -140,6 +140,7 @@ import WaasSubAddressCurrencyPicker from '@/scenes/waas-project/WaasSubAddressCu
 import { useWaasSubAddressCurrencySelection } from '@/scenes/waas-project/useWaasSubAddressCurrencySelection';
 import { buildWaasStandardRecordRows } from '@/scenes/waas-project/waasStandardRecordData';
 import type { PaymentEngineRecordSortTarget } from './paymentEngineRecordSort';
+import { isManageWebhookPushRecordsMenuItem } from '@/scenes/manage/manageMenuData';
 import { webhookFlowKey } from '@/scenes/manage/webhook/webhookFlowContext';
 import styles from './PaymentEngineDataListPage.module.css';
 
@@ -558,12 +559,15 @@ const displayToolbarFunctionalButtons = computed(() =>
 );
 
 const displayBatchActions = computed(() => {
-  const actions = isCallbackErrorRecordMenuItem(props.menuItem)
-    ? [
-        { key: 'ignore', label: 'Ignore' },
-        { key: 'push-order', label: 'Push Order' },
-      ]
-    : dataListBatchActions.value;
+  let actions = dataListBatchActions.value;
+  if (isCallbackErrorRecordMenuItem(props.menuItem)) {
+    actions = [
+      { key: 'ignore', label: 'Ignore' },
+      { key: 'push-order', label: 'Push Order' },
+    ];
+  } else if (isManageWebhookPushRecordsMenuItem(props.menuItem)) {
+    actions = [{ key: 'repush', label: 'Repush' }];
+  }
   return actions.map((action) => ({
     ...action,
     label: ui(action.label),
@@ -631,7 +635,11 @@ const displayRows = computed(() => {
 });
 
 watch(
-  () => resolvePaymentEngineCallbackExperience(props.menuItem, pageConfig.value.columns),
+  () => resolvePaymentEngineCallbackExperience(
+    props.menuItem,
+    pageConfig.value.columns,
+    props.waasEgFilterListMode,
+  ),
   (experience) => {
     detailFlow.callbackExperience.value = experience;
   },
@@ -700,11 +708,15 @@ async function handleBatchAction(
   key: string,
   rows: Array<Record<string, unknown> & { _index: number }>,
 ) {
+  if (isManageWebhookPushRecordsMenuItem(props.menuItem) && key === 'repush') {
+    const recordRows = rows.map((item) => recordRow(item as DataListItem));
+    webhookFlow?.requestBatchRepush(recordRows, () => {
+      customize.value.selectMode = false;
+    });
+    return;
+  }
   if (isCallbackErrorRecordMenuItem(props.menuItem) && key === 'push-order') {
-    const first = rows[0];
-    if (first) {
-      openCallbackPushOrderDialog(recordRow(first as DataListItem));
-    }
+    detailFlow.openPushOrderGoogleVerify(finishCallbackBatchSelectIfNeeded);
     return;
   }
   if (isCallbackErrorRecordMenuItem(props.menuItem) && key === 'ignore') {
@@ -715,7 +727,7 @@ async function handleBatchAction(
   }
   await onBatchAction(key, rows);
   if (key === 'ignore') {
-    showAppEndFeedback();
+    showAppEndFeedbackAfterOverlay();
   }
 }
 

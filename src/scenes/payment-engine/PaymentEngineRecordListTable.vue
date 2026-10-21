@@ -20,6 +20,8 @@ import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
 import PaymentEngineListFieldAmount from './list-field/PaymentEngineListFieldAmount.vue';
 import PaymentEngineListFieldAmountAddress from './list-field/PaymentEngineListFieldAmountAddress.vue';
 import PaymentEngineListFieldCallbackAmountBusiness from './list-field/PaymentEngineListFieldCallbackAmountBusiness.vue';
+import PaymentEngineListFieldCallbackBusinessTypeAddress from './list-field/PaymentEngineListFieldCallbackBusinessTypeAddress.vue';
+import PaymentEngineListFieldCallbackBusinessTypeUrl from './list-field/PaymentEngineListFieldCallbackBusinessTypeUrl.vue';
 import PaymentEngineListFieldCallbackAmountTime from './list-field/PaymentEngineListFieldCallbackAmountTime.vue';
 import PaymentEngineListFieldCallbackAddressTime from './list-field/PaymentEngineListFieldCallbackAddressTime.vue';
 import PaymentEngineListFieldCallbackEvent from './list-field/PaymentEngineListFieldCallbackEvent.vue';
@@ -82,6 +84,9 @@ import WebhookListFieldStatus from '@/scenes/manage/webhook/list-field/WebhookLi
 import RiskControlListFieldAmlAddressRequester from '@/scenes/risk-control/list-field/RiskControlListFieldAmlAddressRequester.vue';
 import RiskControlListFieldAmlRiskScore from '@/scenes/risk-control/list-field/RiskControlListFieldAmlRiskScore.vue';
 import RiskControlListFieldAutoRuleActions from '@/scenes/risk-control/list-field/RiskControlListFieldAutoRuleActions.vue';
+import RiskControlListFieldAutoRuleNameId from '@/scenes/risk-control/list-field/RiskControlListFieldAutoRuleNameId.vue';
+import RiskControlListFieldAutoRuleScope from '@/scenes/risk-control/list-field/RiskControlListFieldAutoRuleScope.vue';
+import RiskControlListFieldAutoRuleStatus from '@/scenes/risk-control/list-field/RiskControlListFieldAutoRuleStatus.vue';
 import {
   isRiskControlAmlMenuItem,
   isRiskControlAutoRulesMenuItem,
@@ -200,7 +205,15 @@ function columnProp(column: PaymentEngineRecordColumnConfig): string {
     column.key === 'callbackAmount'
     || column.key === 'callbackAmountTime'
     || column.key === 'callbackAmountBusinessType'
+    || column.key === 'callbackBusinessTypeAddress'
+    || column.key === 'callbackBusinessTypeUrl'
   ) {
+    if (
+      column.key === 'callbackBusinessTypeAddress'
+      || column.key === 'callbackBusinessTypeUrl'
+    ) {
+      return 'businessTypeKey';
+    }
     return 'orderAmount';
   }
   if (column.key === 'callbackSender') return 'walletFromAddress';
@@ -588,10 +601,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               <template
                 v-else-if="column.key === 'autoRuleWaasProject' && isRiskControlAutoRulesMenuItem(menuItem)"
               >
-                <EgListFieldOverflowText
-                  :text="recordRow(data).autoRuleWaasProject ?? 'WaaS Project'"
-                  variant="primary"
-                />
+                <RiskControlListFieldAutoRuleScope :row="recordRow(data)" />
               </template>
 
               <template
@@ -618,7 +628,14 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               </template>
 
               <template v-else-if="column.key === 'amlQueryTime' && isRiskControlAmlMenuItem(menuItem)">
+                <EgListFieldOverflowText
+                  v-if="recordRow(data).amlQueryTimeDisplay"
+                  :text="recordRow(data).amlQueryTimeDisplay ?? '--'"
+                  variant="primary"
+                  tabular
+                />
                 <TasksListFieldTime
+                  v-else
                   :customize="{
                     ...buildTasksListFieldTimeCustomize(column.minWidth),
                     datetime: recordRow(data).createdAt,
@@ -694,6 +711,21 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 <PaymentEngineListFieldCallbackEvent
                   :row="recordRow(data)"
                   :show-trigger-mode-tag="menuItem === 'History Callback'"
+                />
+              </template>
+
+              <template v-else-if="column.key === 'callbackBusinessTypeUrl'">
+                <PaymentEngineListFieldCallbackBusinessTypeUrl
+                  :business-type-key="resolveCallbackRowBusinessTypeLabelKey(recordRow(data))"
+                  :callback-url="recordRow(data).callbackUrl ?? ''"
+                  :trigger-mode="recordRow(data).callbackTriggerMode"
+                />
+              </template>
+
+              <template v-else-if="column.key === 'callbackBusinessTypeAddress'">
+                <PaymentEngineListFieldCallbackBusinessTypeAddress
+                  :business-type-key="resolveCallbackRowBusinessTypeLabelKey(recordRow(data))"
+                  :callback-url="recordRow(data).callbackUrl ?? ''"
                 />
               </template>
 
@@ -914,7 +946,12 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               </template>
 
               <template v-else-if="column.key === 'ruleNameId'">
+                <RiskControlListFieldAutoRuleNameId
+                  v-if="isRiskControlAutoRulesMenuItem(menuItem)"
+                  :row="recordRow(data)"
+                />
                 <WaasListFieldRuleNameId
+                  v-else
                   :rule-name="recordRow(data).ruleName ?? recordRow(data).id"
                   :rule-number="recordRow(data).ruleNumber ?? recordRow(data).merchantOrderId"
                 />
@@ -928,7 +965,14 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               </template>
 
               <template v-else-if="column.key === 'ruleEnabled'">
-                <WaasListFieldRuleStatus :enabled="Boolean(recordRow(data).ruleEnabled)" />
+                <RiskControlListFieldAutoRuleStatus
+                  v-if="isRiskControlAutoRulesMenuItem(menuItem)"
+                  :row="recordRow(data)"
+                />
+                <WaasListFieldRuleStatus
+                  v-else
+                  :enabled="Boolean(recordRow(data).ruleEnabled)"
+                />
               </template>
 
               <template v-else-if="column.key === 'policyWeight'">

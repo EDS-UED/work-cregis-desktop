@@ -5,6 +5,7 @@ import { useAppI18n } from '@/composables/useAppI18n';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { RISK_CONTROL_LOG_ACTION_PLACEHOLDER } from '@/scenes/risk-control/riskControlLogRowHasActionButton';
 import { webhookFlowKey } from '../webhookFlowContext';
+import { isWebhookPushRecordRepushEligible } from '../webhookPushRecordRepush';
 import styles from './WebhookListFieldPushActions.module.css';
 
 const props = defineProps<{

@@ -112,7 +112,8 @@ const WEBHOOK_CONFIG_PAGE: PaymentEngineRecordPageConfig = {
 
 const WEBHOOK_PUSH_PAGE: PaymentEngineRecordPageConfig = {
   showExport: false,
-  toolbarPreset: 'filter-refresh',
+  showBatchSelect: true,
+  toolbarPreset: 'batch-filter-refresh',
   rowCount: PAYMENT_ENGINE_RECORD_ROW_COUNT,
   columnHeight: DATA_LIST_COLUMN_HEIGHT_XL,
   columns: WEBHOOK_PUSH_COLUMNS,

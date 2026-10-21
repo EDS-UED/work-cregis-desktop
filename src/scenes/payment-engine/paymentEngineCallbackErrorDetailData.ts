@@ -53,7 +53,8 @@ function buildCallbackErrorRecordDetail(
   rowIndex: number,
 ): PaymentEngineCallbackErrorDetailRecord {
   const eventType = row.callbackEventType ?? 'wallet-payout';
-  const callbackEventStatus = CALLBACK_EVENT_STATUS_BY_TYPE[eventType];
+  const callbackEventStatus = row.callbackDetailEventStatus
+    ?? CALLBACK_EVENT_STATUS_BY_TYPE[eventType];
   const currencyPreset = resolveCurrencyRowPreset(rowIndex);
   const addressOffset = rowIndex + 9;
   const addressFamily = row.orderSymbol === 'TON' ? 'ton' as const : 'evm';
@@ -82,6 +83,8 @@ function buildCallbackErrorRecordDetail(
     remark: rowIndex % 5 === 0 ? 'This is a text.' : '',
     memo: rowIndex % 3 === 0 ? 'Memo text for callback.' : '',
     transStatus: 'success',
+    callbackEventStatusLabelKey: row.callbackDetailEventStatusLabelKey,
+    callbackEventStatusTagStatus: row.callbackDetailEventStatusTagStatus,
   };
 
   if (eventType === 'waas-refund') {

@@ -100,14 +100,14 @@ function buildTransStatusDetailItem(
   };
 }
 
-/** 异常回调详情 Headline 旁交易状态 Tag（原详情「交易状态」行）。 */
+/** 异常回调详情 Headline 旁推送状态 Tag：忽略 / 正常（与列表 callbackStatus 一致）。 */
 export function resolvePaymentEngineCallbackErrorHeadlineStatus(
-  _row: PaymentEngineRecordRow,
+  row: PaymentEngineRecordRow,
   translate: (key: string) => string,
 ): { label: string; status: TagStatus } {
   return {
-    label: translate('Success'),
-    status: 'success',
+    label: resolvePaymentEngineRecordStatusDetailLabel(row, 'Callback Error', translate),
+    status: resolvePaymentEngineRecordStatusDetailTagStatus(row, 'Callback Error'),
   };
 }
 
@@ -483,11 +483,6 @@ function buildWalletPayoutRelatedTabItems(
   const detail = resolvePaymentCallbackErrorRecordDetail(row);
 
   const items: DetailItemData[] = [
-    createDetailApplyItemRow('type', {
-      key: 'callback-wallet-payout-callback',
-      title: translate('Callback Tab'),
-      value: translate('Wallet Payout'),
-    }),
     {
       ...createDetailApplyItemRow('text', {
         key: 'callback-wallet-type',

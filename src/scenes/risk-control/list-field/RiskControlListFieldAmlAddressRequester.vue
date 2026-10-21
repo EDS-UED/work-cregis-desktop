@@ -22,6 +22,7 @@ const targetValue = computed(
 );
 const networkLabel = computed(() => props.row.amlNetworkLabel?.trim() ?? '');
 const triggerModeLabel = computed(() => ui(props.row.amlTriggerModeKey ?? 'Manual'));
+const isAutoOutflow = computed(() => Boolean(props.row.amlOutflowAutoQuery));
 const requesterName = computed(
   () => props.row.amlRequesterName?.trim() || props.row.id,
 );
@@ -50,12 +51,28 @@ const avatarColorSeed = computed(() => `risk-aml-${requesterName.value}`);
         >
           {{ networkLabel }}
         </EgTag>
-        <EgTag family="system" system-type="gray" size="sm" truncate>
+        <EgTag
+          v-if="!isAutoOutflow"
+          family="system"
+          system-type="gray"
+          size="sm"
+          truncate
+        >
           {{ triggerModeLabel }}
+        </EgTag>
+        <EgTag
+          v-else
+          family="system"
+          system-type="stroke-subtle"
+          size="sm"
+          truncate
+        >
+          {{ ui('Automatic') }}
         </EgTag>
       </div>
       <div :class="styles.requesterRow">
         <EgAvatar
+          v-if="!isAutoOutflow"
           size="xs"
           :name="requesterName"
           :color-seed="avatarColorSeed"

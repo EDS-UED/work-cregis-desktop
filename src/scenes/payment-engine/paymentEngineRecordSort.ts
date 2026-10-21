@@ -58,6 +58,16 @@ function compareRows(
     return compareAmountValue(rowA.orderAmount, rowB.orderAmount);
   }
 
+  if (columnKey === 'callbackBusinessTypeAddress' || columnKey === 'callbackBusinessTypeUrl') {
+    if (segment === 'secondary') {
+      return compareText(rowA.callbackUrl ?? '', rowB.callbackUrl ?? '');
+    }
+    return compareText(
+      resolveCallbackRowBusinessTypeLabelKey(rowA),
+      resolveCallbackRowBusinessTypeLabelKey(rowB),
+    );
+  }
+
   if (columnKey === 'callbackAddressTime') {
     if (segment === 'secondary') {
       return compareCreatedTime(rowA, rowB);

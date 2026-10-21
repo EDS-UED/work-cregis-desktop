@@ -11,8 +11,10 @@ import type {
   PaymentEngineCallbackEventType,
   PaymentEngineCallbackStatus,
   PaymentEngineCallbackTriggerMode,
+  PaymentEngineOrderStatus,
   PaymentEngineRecordRow,
 } from './paymentEngineRecordConfigs';
+import { resolveCallbackEventLabelKey } from './paymentEngineListFieldCustomize';
 /** @deprecated 使用 resolveEgDataListDemoRowIndex */
 export const resolvePaymentEngineDemoRowIndex = resolveEgDataListDemoRowIndex;
 
@@ -172,19 +174,165 @@ const HISTORY_CALLBACK_STATUS_SHOWCASE: readonly PaymentEngineCallbackStatus[] =
   'normal',
 ];
 
-/** 回调事件：前 4 行依次展示提币 / WaaS 订单 / 异常支付单 / WaaS 退款单。 */
-const CALLBACK_EVENT_TYPE_SHOWCASE: readonly PaymentEngineCallbackEventType[] = [
+/** WaaS 订单模式 · 回调事件：前 4 行依次展示提币 / 订单 / 异常支付单 / WaaS 推单；第 5 行起均为订单。 */
+const ORDER_MODE_CALLBACK_EVENT_TYPE_SHOWCASE: readonly PaymentEngineCallbackEventType[] = [
   'wallet-payout',
   'waas-order',
   'payment-exception',
   'waas-refund',
 ];
 
-/** 标准 WaaS 异常回调 · 金额|业务类型副行：第 1 行充值、第 2 行提币，其后均为子地址提币。 */
-const CALLBACK_ERROR_BUSINESS_TYPE_SHOWCASE: readonly string[] = [
+function resolveOrderModeCallbackEventType(index: number): PaymentEngineCallbackEventType {
+  if (index < ORDER_MODE_CALLBACK_EVENT_TYPE_SHOWCASE.length) {
+    return ORDER_MODE_CALLBACK_EVENT_TYPE_SHOWCASE[index]!;
+  }
+  return 'waas-order';
+}
+
+/** 支付引擎 · 回调事件仅订单与异常支付单。 */
+const PAYMENT_ENGINE_CALLBACK_EVENT_TYPE_SHOWCASE: readonly PaymentEngineCallbackEventType[] = [
+  'waas-order',
+  'payment-exception',
+];
+
+export type CallbackRecordDataset = 'standard' | 'order-mode' | 'payment-engine';
+
+function resolveCallbackEventTypeShowcase(
+  dataset: CallbackRecordDataset,
+): readonly PaymentEngineCallbackEventType[] {
+  if (dataset === 'payment-engine') {
+    return PAYMENT_ENGINE_CALLBACK_EVENT_TYPE_SHOWCASE;
+  }
+  return ORDER_MODE_CALLBACK_EVENT_TYPE_SHOWCASE;
+}
+
+function resolveCallbackRecordSeed(
+  eventType: PaymentEngineCallbackEventType,
+): CallbackRecordSeed {
+  return (
+    CALLBACK_RECORD_SEEDS.find((seed) => seed.eventType === eventType)
+    ?? CALLBACK_RECORD_SEEDS[0]!
+  );
+}
+
+/** 支付引擎 · 前 5 行订单、接着 4 行异常支付单，其后均为订单。 */
+export const PAYMENT_ENGINE_CALLBACK_ERROR_ORDER_ROW_COUNT = 5;
+export const PAYMENT_ENGINE_CALLBACK_ERROR_PAYMENT_EXCEPTION_ROW_COUNT = 4;
+
+const PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUS_LABEL_KEYS = [
+  'Paid',
+  'Partial Paid',
+  'Overpaid',
+  'Canceled',
+  'Expired',
+] as const;
+
+const PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUSES: readonly PaymentEngineOrderStatus[] = [
+  'paid',
+  'paid',
+  'paid',
+  'cancelled',
+  'expired',
+];
+
+const PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUS_TAG_STATUSES = [
+  'success',
+  'warning',
+  'warning',
+  'invalid',
+  'invalid',
+] as const;
+
+const PAYMENT_ENGINE_PAYMENT_EXCEPTION_CALLBACK_EVENT_STATUS_LABEL_KEYS = [
+  'Not Transferred',
+  'Transferring',
+  'Transfer Successful',
+  'Transfer Failed',
+] as const;
+
+const PAYMENT_ENGINE_PAYMENT_EXCEPTION_CALLBACK_EVENT_STATUSES: readonly PaymentEngineOrderStatus[] = [
+  'pending',
+  'approving',
+  'success',
+  'failed',
+];
+
+const PAYMENT_ENGINE_PAYMENT_EXCEPTION_CALLBACK_EVENT_STATUS_TAG_STATUSES = [
+  'invalid',
+  'warning',
+  'success',
+  'danger',
+] as const;
+
+function resolvePaymentEngineCallbackEventType(rowIndex: number): PaymentEngineCallbackEventType {
+  if (rowIndex < PAYMENT_ENGINE_CALLBACK_ERROR_ORDER_ROW_COUNT) {
+    return 'waas-order';
+  }
+  const exceptionBlockEnd = PAYMENT_ENGINE_CALLBACK_ERROR_ORDER_ROW_COUNT
+    + PAYMENT_ENGINE_CALLBACK_ERROR_PAYMENT_EXCEPTION_ROW_COUNT;
+  if (rowIndex < exceptionBlockEnd) {
+    return 'payment-exception';
+  }
+  return 'waas-order';
+}
+
+function resolvePaymentEngineCallbackDetailEventStatusFields(
+  rowIndex: number,
+): Pick<
+  PaymentEngineRecordRow,
+  | 'callbackDetailEventStatus'
+  | 'callbackDetailEventStatusLabelKey'
+  | 'callbackDetailEventStatusTagStatus'
+> {
+  const exceptionBlockStart = PAYMENT_ENGINE_CALLBACK_ERROR_ORDER_ROW_COUNT;
+  const exceptionBlockEnd = exceptionBlockStart
+    + PAYMENT_ENGINE_CALLBACK_ERROR_PAYMENT_EXCEPTION_ROW_COUNT;
+
+  if (rowIndex < exceptionBlockStart) {
+    return {
+      callbackDetailEventStatus: PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUSES[rowIndex],
+      callbackDetailEventStatusLabelKey:
+        PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUS_LABEL_KEYS[rowIndex],
+      callbackDetailEventStatusTagStatus:
+        PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUS_TAG_STATUSES[rowIndex],
+    };
+  }
+
+  if (rowIndex < exceptionBlockEnd) {
+    const exceptionIndex = rowIndex - exceptionBlockStart;
+    return {
+      callbackDetailEventStatus:
+        PAYMENT_ENGINE_PAYMENT_EXCEPTION_CALLBACK_EVENT_STATUSES[exceptionIndex],
+      callbackDetailEventStatusLabelKey:
+        PAYMENT_ENGINE_PAYMENT_EXCEPTION_CALLBACK_EVENT_STATUS_LABEL_KEYS[exceptionIndex],
+      callbackDetailEventStatusTagStatus:
+        PAYMENT_ENGINE_PAYMENT_EXCEPTION_CALLBACK_EVENT_STATUS_TAG_STATUSES[exceptionIndex],
+    };
+  }
+
+  const trailingOrderIndex = (rowIndex - exceptionBlockEnd)
+    % PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUS_LABEL_KEYS.length;
+
+  return {
+    callbackDetailEventStatus:
+      PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUSES[trailingOrderIndex],
+    callbackDetailEventStatusLabelKey:
+      PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUS_LABEL_KEYS[trailingOrderIndex],
+    callbackDetailEventStatusTagStatus:
+      PAYMENT_ENGINE_ORDER_CALLBACK_EVENT_STATUS_TAG_STATUSES[trailingOrderIndex],
+  };
+}
+
+/** 标准 WaaS 回调 · 业务类型：第 1 行充值、第 2 行提币、第 3 行子地址提币，其后均为提币。 */
+const STANDARD_CALLBACK_BUSINESS_TYPE_SHOWCASE: readonly string[] = [
   'Deposit',
   'Withdrawal',
+  'Sub-Address Payout',
 ];
+
+function resolveStandardCallbackBusinessTypeKey(index: number): string {
+  return STANDARD_CALLBACK_BUSINESS_TYPE_SHOWCASE[index] ?? 'Withdrawal';
+}
 
 const CALLBACK_RECORD_SEEDS: readonly CallbackRecordSeed[] = [
   {
@@ -572,15 +720,26 @@ function buildRefundRecordRows(count = PAYMENT_ENGINE_RECORD_ROW_COUNT): Payment
   });
 }
 
-function buildCallbackRecordRows(count = PAYMENT_ENGINE_RECORD_ROW_COUNT): PaymentEngineRecordRow[] {
+export function buildCallbackRecordRows(
+  count = PAYMENT_ENGINE_RECORD_ROW_COUNT,
+  dataset: CallbackRecordDataset = 'payment-engine',
+): PaymentEngineRecordRow[] {
+  const eventShowcase = resolveCallbackEventTypeShowcase(dataset);
+
   return Array.from({ length: count }, (_, index) => {
-    const showcaseIndex = index % CALLBACK_EVENT_TYPE_SHOWCASE.length;
-    const seed = CALLBACK_RECORD_SEEDS[showcaseIndex]!;
+    const eventType = dataset === 'payment-engine'
+      ? resolvePaymentEngineCallbackEventType(index)
+      : dataset === 'order-mode'
+        ? resolveOrderModeCallbackEventType(index)
+        : eventShowcase[index % eventShowcase.length]!;
+    const seed = resolveCallbackRecordSeed(eventType);
+    const paymentEngineStatusFields = dataset === 'payment-engine'
+      ? resolvePaymentEngineCallbackDetailEventStatusFields(index)
+      : {};
     const preset = resolveCurrencyRowPreset(index);
     const crypto = mapPaymentEngineCryptoPreset(index);
     const amountRow = resolveDemoAmountRowValues(index);
     const amount = amountRow.cryptoValue;
-    const eventType = CALLBACK_EVENT_TYPE_SHOWCASE[showcaseIndex]!;
     const walletFromAddress = resolveDemoWalletAddress(index, preset, 'from');
     const walletToAddress = resolveDemoWalletAddress(index, preset, 'to');
     /** 接收方别名：仅第 1 行 showcase（0-based 0）；其余行只展示地址。 */
@@ -604,11 +763,9 @@ function buildCallbackRecordRows(count = PAYMENT_ENGINE_RECORD_ROW_COUNT): Payme
       walletFromAddress,
       walletToAddress,
       walletToAlias,
-      businessTypeKey: resolveShowcaseThenCompletedStatus(
-        index,
-        CALLBACK_ERROR_BUSINESS_TYPE_SHOWCASE,
-        'Sub-Address Payout',
-      ),
+      businessTypeKey: dataset === 'standard'
+        ? resolveStandardCallbackBusinessTypeKey(index)
+        : resolveCallbackEventLabelKey(eventType),
       callbackEventType: eventType,
       callbackTriggerMode: seed.triggerMode,
       callbackEventId: buildDemoHexRecordId(index + 100),
@@ -618,6 +775,7 @@ function buildCallbackRecordRows(count = PAYMENT_ENGINE_RECORD_ROW_COUNT): Payme
         HISTORY_CALLBACK_STATUS_SHOWCASE,
         'normal',
       ),
+      ...paymentEngineStatusFields,
     };
   });
 }
@@ -646,13 +804,17 @@ export function isCallbackRecordDetailMenuItem(menuItem: string): boolean {
   return isCallbackErrorRecordMenuItem(menuItem) || isHistoryCallbackRecordMenuItem(menuItem);
 }
 
-/** 异常回调 showcase 行：提币 / WaaS 订单 / 异常支付单 / WaaS 退款单。 */
+/** WaaS 订单模式 · 异常回调 showcase 行：提币 / 订单 / 异常支付单 / WaaS 推单。 */
 export const CALLBACK_ERROR_WALLET_PAYOUT_SHOWCASE_ROW_INDEX = 0;
 /** 第 1 行提币 showcase · 发送方主行钱包名（非地址别名）。 */
 export const CALLBACK_ERROR_WALLET_PAYOUT_SENDER_WALLET_NAME = 'Mr. Wang';
 export const CALLBACK_ERROR_WAAS_ORDER_SHOWCASE_ROW_INDEX = 1;
 export const CALLBACK_ERROR_PAYMENT_EXCEPTION_SHOWCASE_ROW_INDEX = 2;
 export const CALLBACK_ERROR_WAAS_REFUND_SHOWCASE_ROW_INDEX = 3;
+
+/** 支付引擎 · 异常回调 showcase：前 5 行订单、第 6–9 行异常支付单、第 10 行起订单。 */
+export const PAYMENT_ENGINE_CALLBACK_ERROR_ORDER_SHOWCASE_ROW_INDEX = 0;
+export const PAYMENT_ENGINE_CALLBACK_ERROR_PAYMENT_EXCEPTION_SHOWCASE_ROW_INDEX = 5;
 
 export function isPaymentSettlementRecordMenuItem(menuItem: string): boolean {
   return PAYMENT_SETTLEMENT_RECORD_MENU_ITEMS.has(menuItem);
@@ -707,7 +869,7 @@ export function buildPaymentEngineRecordRows(
   }
 
   if (PAYMENT_CALLBACK_RECORD_MENU_ITEMS.has(menuItem)) {
-    return buildCallbackRecordRows(count);
+    return buildCallbackRecordRows(count, 'payment-engine');
   }
 
   if (menuItem === 'Settlement Record') {

@@ -116,19 +116,24 @@ export function resolveRiskControlAmlQueryRecordDetail(
 ): RiskControlAmlQueryRecordDetail {
   const rowIndex = resolveRowIndex(row);
   const preset = resolveCurrencyRowPreset(rowIndex);
-  const riskScore = row.amlRiskScore?.trim() || '6.8';
+  const isException = Boolean(row.amlQueryException);
+  const riskScore = isException ? 'NA' : (row.amlRiskScore?.trim() || '6.8');
   const targetValue = row.amlTargetValue?.trim() || row.id;
   const requesterName = row.amlRequesterName?.trim() || row.id;
 
   return {
     riskScore,
-    riskLabelKey: row.amlRiskLabelKey ?? 'Safe',
-    riskCustomStyle: row.amlRiskCustomStyle ?? 'aml-safe',
-    serviceProvider: row.amlServiceProvider?.trim() || 'Regtank',
-    belongingEntity: row.amlBelongingEntity?.trim() || resolveDemoBelongingEntity(rowIndex),
-    entityTags: row.amlEntityTags?.length
-      ? [...row.amlEntityTags]
-      : [...AML_ENTITY_TAG_SHOWCASE],
+    riskLabelKey: isException ? 'AML Exception' : (row.amlRiskLabelKey ?? 'Safe'),
+    riskCustomStyle: isException ? 'aml-suspicious' : (row.amlRiskCustomStyle ?? 'aml-safe'),
+    serviceProvider: row.amlServiceProvider?.trim() || 'Elliptic',
+    belongingEntity: isException
+      ? '--'
+      : (row.amlBelongingEntity?.trim() || resolveDemoBelongingEntity(rowIndex)),
+    entityTags: isException
+      ? []
+      : (row.amlEntityTags?.length
+        ? [...row.amlEntityTags]
+        : [...AML_ENTITY_TAG_SHOWCASE]),
     waasProject: row.amlWaasProject?.trim() || resolveDemoWaasProject(rowIndex),
     ruleName: row.amlTriggeredRuleName?.trim() || resolveDemoRuleName(rowIndex),
     ruleNumber: row.amlTriggeredRuleNumber?.trim() || `AML143768224306790${rowIndex}`,

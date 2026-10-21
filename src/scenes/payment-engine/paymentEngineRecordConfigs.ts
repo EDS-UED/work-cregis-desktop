@@ -165,6 +165,10 @@ export type PaymentEngineRecordRow = {
   callbackEventId?: string;
   callbackUrl?: string;
   callbackStatus?: PaymentEngineCallbackStatus;
+  /** 异常回调详情 ·「回调事件状态」按行 mock（覆盖事件类型默认）。 */
+  callbackDetailEventStatus?: PaymentEngineOrderStatus;
+  callbackDetailEventStatusLabelKey?: string;
+  callbackDetailEventStatusTagStatus?: TagStatus;
   /** 订单详情 · 汇率（由订单 mock 派生）。 */
   exchangeRate?: string;
   /** 订单详情 · 支付信息 Tab 分区列表。 */
@@ -277,10 +281,22 @@ export type PaymentEngineRecordRow = {
   amlRequesterAvatarName?: string;
   /** AML · 查询人脱敏邮箱。 */
   amlRequesterEmailMasked?: string;
-  /** AML 自动规则 · WaaS 项目。 */
+  /** AML 自动规则 · WaaS 项目（收款 / 筛选用）。 */
   autoRuleWaasProject?: string;
+  /** AML 自动规则 · 筛查方向。 */
+  autoRuleDirection?: 'inflow' | 'outflow';
+  /** AML 自动规则 · 适用范围 i18n key（Manual Transfer / API Payout 等）。 */
+  autoRuleScopeKey?: string;
   /** AML 自动规则 · 服务商。 */
   autoRuleServiceProvider?: string;
+  /** AML 查询记录 · 异常行（列表 NA / 详情占位）。 */
+  amlQueryException?: boolean;
+  /** AML 查询异常 · 需指定处理人展示处置区。 */
+  amlQueryExceptionKind?: 'balance' | 'timeout' | 'designated-handler';
+  /** AML 出款自动查询（查询人为规则名）。 */
+  amlOutflowAutoQuery?: boolean;
+  /** AML 列表 · 查询时间展示（余额不足等可为 `--`）。 */
+  amlQueryTimeDisplay?: string;
   /** Manage · Webhook 事件 i18n key。 */
   webhookEventKey?: string;
   webhookEndpointVerified?: boolean;
@@ -341,8 +357,18 @@ export type RiskControlAutoRuleDetailRecord = {
   hiddenCurrencyConditionCount: number;
   riskRatingCriteria: string;
   alertRecipientName: string;
-  alertRecipientAvatarName: string;
-  alertRecipientEmailMasked: string;
+  alertRecipientAvatarName?: string;
+  alertRecipientEmailMasked?: string;
+  direction: 'inflow' | 'outflow';
+  withdrawalTypeKey?: string;
+  scopeLabel?: string;
+  skipWhitelistEnabled?: boolean;
+  skipInternalTeamEnabled?: boolean;
+  screeningNodeKey?: string;
+  riskControlActionKey?: string;
+  exceptionHandlingKey?: string;
+  exceptionHandlerName?: string;
+  exceptionHandlerAvatarName?: string;
 };
 
 export type PaymentEngineSettlementRecordDetail = {
@@ -500,6 +526,8 @@ export type PaymentEngineRecordColumnKey =
   | 'callbackAmount'
   | 'callbackAmountTime'
   | 'callbackAmountBusinessType'
+  | 'callbackBusinessTypeAddress'
+  | 'callbackBusinessTypeUrl'
   | 'callbackSender'
   | 'callbackReceiver'
   | 'callbackAddressTime'

@@ -142,7 +142,7 @@ const AUTO_RULES_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   },
   {
     key: 'autoRuleWaasProject',
-    labelKey: 'WaaS Project',
+    labelKey: 'Applicable Scope',
     minWidth: AUTO_RULE_WAAS_PROJECT_COLUMN_MIN_WIDTH,
     flexGrow: true,
     displayOrder: 2,

@@ -3,23 +3,18 @@ import { resolveManageRolePermissionEnabled } from './buildManageRoleDetailSecti
 
 export type ManageRolePermissionValueSlot = {
   key: string;
-  label: string;
+  labelKey: string;
   enabled: boolean;
 };
 
-export function buildManageRolePermissionValueSlots(
-  roleId: string,
-  translate: (key: string) => string,
-): ManageRolePermissionValueSlot[] {
+export function buildManageRolePermissionValueSlots(roleId: string): ManageRolePermissionValueSlot[] {
   const slots: ManageRolePermissionValueSlot[] = [];
 
   MANAGE_ROLE_PERMISSION_ITEM_KEYS.forEach((permissionKeys, tabIndex) => {
     permissionKeys.forEach((permissionKey, itemIndex) => {
-      if (permissionKey === 'Role App Permission Hint') return;
-
       slots.push({
         key: `role-perm-${tabIndex}-${itemIndex}`,
-        label: translate(permissionKey),
+        labelKey: permissionKey,
         enabled: resolveManageRolePermissionEnabled(roleId, tabIndex, itemIndex),
       });
     });

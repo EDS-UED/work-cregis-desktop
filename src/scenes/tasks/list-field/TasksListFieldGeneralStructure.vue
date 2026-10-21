@@ -428,12 +428,14 @@ const hashLikeMinWidthStyle = computed(() => {
             :color-seed="avatarColorSeed"
             :class="styles.avatar"
           />
-          <EgListFieldOverflowText
-            :text="initiatorPrimaryTooltipText"
-            :display-text="initiatorPrimaryDisplayText"
-            variant="primary"
-            :tooltip-trigger="tooltipTrigger"
-          />
+          <div :class="styles.titleTextSlot">
+            <EgListFieldOverflowText
+              :text="initiatorPrimaryTooltipText"
+              :display-text="initiatorPrimaryDisplayText"
+              variant="primary"
+              :tooltip-trigger="tooltipTrigger"
+            />
+          </div>
         </div>
         <span v-if="showCountdown" :class="styles.countdown">
           <span :class="styles.countdownTime">{{ countdownStaticTime }}</span>

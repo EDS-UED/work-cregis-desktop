@@ -25,7 +25,7 @@ const CALLBACK_EVENT_LABEL_KEYS: Record<
   'wallet-payout': 'Withdrawal',
   'waas-order': 'Order',
   'payment-exception': 'Payment Exception',
-  'waas-refund': 'WaaS Refund',
+  'waas-refund': 'WaaS Push Order',
 };
 
 export function resolveCallbackEventLabelKey(

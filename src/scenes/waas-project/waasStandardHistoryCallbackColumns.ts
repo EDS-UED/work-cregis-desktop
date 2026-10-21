@@ -1,21 +1,22 @@
 import {
-  PAYMENT_ENGINE_CALLBACK_ADDRESS_TIME_COLUMN_MIN_WIDTH,
   PAYMENT_ENGINE_CALLBACK_AMOUNT_BUSINESS_COLUMN_MIN_WIDTH,
+  PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
   PAYMENT_ENGINE_CALLBACK_RECEIVER_COLUMN_MIN_WIDTH,
   PAYMENT_ENGINE_CALLBACK_STATUS_COLUMN_MIN_WIDTH,
   type PaymentEngineRecordColumnConfig,
 } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 
-/** 标准 WaaS（非订单模式）· 历史回调 4 列；支付引擎 / 订单模式仍用 HISTORY_CALLBACK_COLUMNS。 */
+/** 标准 WaaS（非订单模式）· 历史回调 4 列：业务类型|回调 URL、接收方、状态、金额|时间。 */
 export const WAAS_STANDARD_HISTORY_CALLBACK_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   {
-    key: 'callbackAmountBusinessType',
-    labelKey: 'Amount',
-    secondaryLabelKey: 'Business Type',
+    key: 'callbackBusinessTypeUrl',
+    labelKey: 'Business Type',
+    secondaryLabelKey: 'Callback URL',
     minWidth: PAYMENT_ENGINE_CALLBACK_AMOUNT_BUSINESS_COLUMN_MIN_WIDTH,
-    flexGrow: false,
+    flexGrow: true,
     headerKind: 'combo',
     sortable: true,
+    secondarySortable: true,
     displayOrder: 1,
   },
   {
@@ -33,15 +34,13 @@ export const WAAS_STANDARD_HISTORY_CALLBACK_COLUMNS: PaymentEngineRecordColumnCo
     displayOrder: 3,
   },
   {
-    key: 'callbackAddressTime',
-    labelKey: 'Callback URL',
-    secondaryLabelKey: 'Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_CALLBACK_ADDRESS_TIME_COLUMN_MIN_WIDTH,
-    flexGrow: true,
+    key: 'callbackAmountTime',
+    labelKey: 'Amount',
+    secondaryLabelKey: 'Creation Time UTC+08:00',
+    minWidth: PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
     headerKind: 'combo',
-    comboAlignEnd: true,
+    sortable: true,
     secondarySortable: true,
-    align: 'end',
     displayOrder: 4,
   },
 ];

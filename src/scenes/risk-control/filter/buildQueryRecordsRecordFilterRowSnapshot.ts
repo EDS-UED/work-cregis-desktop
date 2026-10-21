@@ -15,7 +15,9 @@ export function buildQueryRecordsRecordFilterRowSnapshot(
   return {
     amlCurrency: resolveQueryRecordsCurrencyFilterId(row.amlCurrencySymbol),
     amlWaasProject: row.amlWaasProject ?? '',
-    amlQueryResult: resolveQueryRecordsResultFilterId(row.amlRiskLabelKey),
+    amlQueryResult: row.amlQueryException
+      ? resolveQueryRecordsResultFilterId('AML Exception')
+      : resolveQueryRecordsResultFilterId(row.amlRiskLabelKey),
     amlServiceProvider: resolveQueryRecordsProviderFilterId(row.amlServiceProvider),
     amlQueryObject: resolveQueryRecordsObjectFilterId(row.amlQueryObjectKey),
     amlQueryType: resolveQueryRecordsTypeFilterId(row.amlTriggerModeKey),

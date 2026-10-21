@@ -12,6 +12,7 @@ import {
 } from '@/scenes/tasks/list-field/listFieldCryptoSampleAddresses';
 import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
 import {
+  buildCallbackRecordRows,
   buildPaymentEngineRecordRows,
   PAYMENT_ENGINE_RECORD_ROW_COUNT,
 } from '@/scenes/payment-engine/paymentEngineOrderRecordData';
@@ -494,7 +495,7 @@ export function buildWaasStandardRecordRows(
   }
 
   if (menuItem === 'Callback Error' || menuItem === 'History Callback') {
-    return buildPaymentEngineRecordRows(menuItem, count);
+    return buildCallbackRecordRows(count, 'standard');
   }
 
   return [];

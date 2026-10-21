@@ -1,0 +1,15 @@
+.hint {
+  composes: typography-footnote from global;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-05);
+  margin: 0;
+  padding: 0 0 var(--spacing-2) var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.hintLead {
+  composes: typography-footnote from global;
+  color: var(--text-base-primary);
+}

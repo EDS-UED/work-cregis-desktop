@@ -47,13 +47,15 @@
 }
 
 .hostAlignEnd .titleRow {
-  display: inline-flex;
-  width: auto;
+  display: flex;
+  width: 100%;
   max-width: 100%;
   flex-wrap: nowrap;
+  justify-content: flex-end;
 }
 
 .hostAlignEnd .titleRow :global(.eds-anchored-tooltip) {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
 }

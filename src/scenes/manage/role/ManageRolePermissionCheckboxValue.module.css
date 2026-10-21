@@ -13,3 +13,12 @@
   min-width: 0;
   color: var(--text-base-primary);
 }
+
+/** 负 margin 对齐 Detail itemRow padding，编辑态整行可点（与 itemRow hover 同区）。 */
+.rolePermissionValueEditable {
+  box-sizing: border-box;
+  margin: calc(-1 * var(--spacing-1-5)) calc(-1 * var(--spacing-3));
+  padding: var(--spacing-1-5) var(--spacing-3);
+  width: calc(100% + 2 * var(--spacing-3));
+  cursor: pointer;
+}

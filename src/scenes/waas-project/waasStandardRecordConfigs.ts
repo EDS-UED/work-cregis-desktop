@@ -1,5 +1,4 @@
 import {
-  CALLBACK_ERROR_COLUMNS,
   PAYMENT_ENGINE_BULK_TRANSFER_AMOUNT_COLUMN_MIN_WIDTH,
   PAYMENT_ENGINE_BULK_TRANSFER_STATUS_COLUMN_MIN_WIDTH,
   PAYMENT_ENGINE_BULK_TRANSFER_TOKEN_ADDRESS_COLUMN_MIN_WIDTH,
@@ -10,6 +9,7 @@ import {
 } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import type { WaasStandardDataListMenuItem } from './waasStandardMenuData';
 import { WAAS_STANDARD_HISTORY_CALLBACK_COLUMNS } from './waasStandardHistoryCallbackColumns';
+import { WAAS_STANDARD_CALLBACK_ERROR_COLUMNS } from './waasStandardCallbackErrorColumns';
 import {
   WAAS_DATA_LIST_FILTER_FIELD_LABEL_KEYS as L,
   waasDataListTimeColumnLabelKey as timeCol,
@@ -400,7 +400,7 @@ export const WAAS_STANDARD_RECORD_PAGE_CONFIG: Record<
     showExport: false,
     showBatchSelect: true,
     toolbarPreset: 'batch-filter-refresh',
-    columns: CALLBACK_ERROR_COLUMNS,
+    columns: WAAS_STANDARD_CALLBACK_ERROR_COLUMNS,
   },
   'History Callback': {
     showExport: false,

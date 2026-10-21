@@ -9,6 +9,7 @@ export const MANAGE_ROLE_PERMISSION_TAB_LABEL_KEYS = [
   'Policy',
   'Automation',
   'AML Query',
+  'Webhook',
   'Address Book',
   'Subscription',
   'Member Management',

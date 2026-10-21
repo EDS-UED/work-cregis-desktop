@@ -5,12 +5,14 @@ import {
 } from '@eds/desktop-components';
 import { MANAGE_ROLE_PERMISSION_ITEM_KEYS } from './manageRolePermissionCatalog';
 import { MANAGE_ROLE_PERMISSION_TAB_LABEL_KEYS } from './manageRolePermissionTabLabelKeys';
+import { MANAGE_ROLE_SUPER_ADMIN_RECORD_ID } from './roleRecordData';
 
 export function resolveManageRolePermissionEnabled(
   roleId: string,
   tabIndex: number,
   rowIndex: number,
 ): boolean {
+  if (roleId === MANAGE_ROLE_SUPER_ADMIN_RECORD_ID) return true;
   const seed = roleId.charCodeAt(roleId.length - 1) + tabIndex * 7 + rowIndex * 13;
   return seed % 3 !== 0;
 }
@@ -20,20 +22,7 @@ function buildPermissionItem(
   tabIndex: number,
   itemIndex: number,
   permissionKey: string,
-  translate: (key: string) => string,
 ): DetailItemData {
-  const isHint = permissionKey === 'Role App Permission Hint';
-  if (isHint) {
-    return {
-      ...createDetailApplyItemRow('text', {
-        key: `role-perm-${tabIndex}-hint`,
-        title: '',
-        value: translate(permissionKey),
-      }),
-      showTitleIcon: false,
-    };
-  }
-
   return {
     ...createDetailApplyItemRow('text', {
       key: `role-perm-${tabIndex}-${itemIndex}`,
@@ -56,7 +45,7 @@ export function buildManageRoleDetailSections(
       title: translate(tabKey),
       showDivider: false,
       items: permissionKeys.map((permissionKey, itemIndex) =>
-        buildPermissionItem(roleId, tabIndex, itemIndex, permissionKey, translate),
+        buildPermissionItem(roleId, tabIndex, itemIndex, permissionKey),
       ),
     };
   });

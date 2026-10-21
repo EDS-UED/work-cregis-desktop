@@ -3,13 +3,31 @@ import { compareDataListFilterCurrencyLabels } from '@/scenes/shared/dataListFil
 import { resolveDataListFilterOptionId } from '@/scenes/shared/dataListFilterOptionUtils';
 import { buildRiskControlRecordRows } from '@/scenes/risk-control/riskControlRecordData';
 import {
+  AUTO_RULES_RECORD_DIRECTION_KEYS,
   AUTO_RULES_RECORD_PROVIDER_KEYS,
   AUTO_RULES_RECORD_STATUS_KEYS,
 } from './autoRulesRecordFilterCatalog';
 import {
+  AUTO_RULES_RECORD_DIRECTION_NAMESPACE,
   AUTO_RULES_RECORD_PROVIDER_NAMESPACE,
   AUTO_RULES_RECORD_STATUS_NAMESPACE,
 } from './autoRulesRecordFilterNamespaces';
+
+export function buildAutoRulesRecordDirectionFilterOptions(
+  translate: (key: string) => string,
+): EgFilterFieldDropdownOption[] {
+  return AUTO_RULES_RECORD_DIRECTION_KEYS.map((key) => ({
+    id: resolveDataListFilterOptionId(AUTO_RULES_RECORD_DIRECTION_NAMESPACE, key),
+    label: translate(key),
+  }));
+}
+
+export function resolveAutoRulesRecordDirectionFilterId(
+  direction: 'inflow' | 'outflow' | undefined,
+): string {
+  const key = direction === 'outflow' ? 'Outflow' : 'Inflow';
+  return resolveDataListFilterOptionId(AUTO_RULES_RECORD_DIRECTION_NAMESPACE, key);
+}
 
 export function buildAutoRulesRecordStatusFilterOptions(
   translate: (key: string) => string,

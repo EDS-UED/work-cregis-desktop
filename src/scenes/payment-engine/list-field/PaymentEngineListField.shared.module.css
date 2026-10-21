@@ -27,10 +27,17 @@
 }
 
 .callbackEventTitleRow {
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   align-items: center;
   gap: var(--spacing-1);
+  min-width: 0;
+  max-width: 100%;
+  width: auto;
+}
+
+.callbackEventTitleRow :global(.eds-anchored-tooltip) {
+  flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
 }

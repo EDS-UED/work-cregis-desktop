@@ -6,6 +6,7 @@ import {
 } from '@eds/desktop-components';
 import { resolvePaymentEngineRecordRowCount } from '@/scenes/payment-engine/paymentEngineOrderRecordData';
 import {
+  buildAutoRulesRecordDirectionFilterOptions,
   buildAutoRulesRecordProviderFilterOptions,
   buildAutoRulesRecordStatusFilterOptions,
   buildAutoRulesRecordWaasProjectFilterOptions,
@@ -16,6 +17,7 @@ import {
 } from './autoRulesRecordFilterFieldLabelKeys';
 
 const AUTO_RULES_RECORD_FILTER_FIELD_IDS: readonly AutoRulesRecordFilterFieldId[] = [
+  'autoRuleScreeningDirection',
   'autoRuleWaasProject',
   'autoRuleStatus',
   'autoRuleServiceProvider',
@@ -33,6 +35,14 @@ function buildFieldCatalog(
   rowCount: number,
 ): Record<AutoRulesRecordFilterFieldId, EgFilterField> {
   return {
+    autoRuleScreeningDirection: {
+      id: 'autoRuleScreeningDirection',
+      label: filterLabel(translate, 'autoRuleScreeningDirection'),
+      kind: 'dropdown',
+      selectionMode: 'multi',
+      placeholder: FILTER_SELECT_PLACEHOLDER,
+      dropdownOptions: buildAutoRulesRecordDirectionFilterOptions(translate),
+    },
     autoRuleWaasProject: {
       id: 'autoRuleWaasProject',
       label: filterLabel(translate, 'autoRuleWaasProject'),
