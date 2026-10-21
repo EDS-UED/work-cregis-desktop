@@ -15,8 +15,6 @@ export const WAAS_STANDARD_HISTORY_CALLBACK_COLUMNS: PaymentEngineRecordColumnCo
     minWidth: PAYMENT_ENGINE_CALLBACK_AMOUNT_BUSINESS_COLUMN_MIN_WIDTH,
     flexGrow: true,
     headerKind: 'combo',
-    sortable: true,
-    secondarySortable: true,
     displayOrder: 1,
   },
   {

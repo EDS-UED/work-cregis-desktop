@@ -7,9 +7,23 @@ import {
   EgIcon,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
+import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
+import { isRiskControlAutoRulesMenuItem } from '@/scenes/risk-control/riskControlMenuData';
 import styles from './RiskControlListFieldAutoRuleActions.module.css';
 
+const props = defineProps<{
+  row: PaymentEngineRecordRow;
+  menuItem: string;
+}>();
+
 const { ui } = useAppI18n();
+
+function onEditClick() {
+  const flow = paymentEngineDetailFlowRegistry.value;
+  if (!flow || !isRiskControlAutoRulesMenuItem(props.menuItem)) return;
+  flow.openDetailForRow(props.row, 'Auto Rules');
+}
 </script>
 
 <template>
@@ -67,7 +81,7 @@ const { ui } = useAppI18n();
       </template>
     </EgFlotation>
 
-    <EgButton variant="solid" size="md" tone="decor">
+    <EgButton variant="solid" size="md" tone="decor" @click="onEditClick">
       {{ ui('Edit') }}
     </EgButton>
   </div>

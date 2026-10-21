@@ -141,6 +141,8 @@ import { useWaasSubAddressCurrencySelection } from '@/scenes/waas-project/useWaa
 import { buildWaasStandardRecordRows } from '@/scenes/waas-project/waasStandardRecordData';
 import type { PaymentEngineRecordSortTarget } from './paymentEngineRecordSort';
 import { isManageWebhookPushRecordsMenuItem } from '@/scenes/manage/manageMenuData';
+import { buildRiskControlAutoRuleCreatePlaceholderRow } from '@/scenes/risk-control/riskControlAutoRuleCreatePlaceholder';
+import { isRiskControlAutoRulesMenuItem } from '@/scenes/risk-control/riskControlMenuData';
 import { webhookFlowKey } from '@/scenes/manage/webhook/webhookFlowContext';
 import styles from './PaymentEngineDataListPage.module.css';
 
@@ -469,6 +471,15 @@ function handleToolbarActionClick(key: string) {
     return;
   }
   if (props.toolbarActionHandler?.(key)) return;
+
+  if (key === 'addNew' && isRiskControlAutoRulesMenuItem(props.menuItem)) {
+    detailFlow.openDetailForRow(
+      buildRiskControlAutoRuleCreatePlaceholderRow(),
+      'Auto Rules',
+    );
+    return;
+  }
+
   onToolbarActionClick(key);
 }
 

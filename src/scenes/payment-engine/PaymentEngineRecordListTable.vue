@@ -497,6 +497,8 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
 
               <RiskControlListFieldAutoRuleActions
                 v-else-if="column.key === 'autoRuleActions' && isRiskControlAutoRulesMenuItem(menuItem)"
+                :row="recordRow(data)"
+                :menu-item="menuItem"
               />
 
               <RiskControlListFieldAddressBookActions
