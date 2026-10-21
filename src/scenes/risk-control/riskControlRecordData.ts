@@ -463,18 +463,12 @@ function resolveDemoAmlServiceProvider(rowIndex: number): string {
   return AML_PROVIDER_SHOWCASE[rowIndex % AML_PROVIDER_SHOWCASE.length]!;
 }
 
-function resolveDemoAmlRisk(rowIndex: number): AmlRiskDemoPreset {
-  if (rowIndex < AML_RISK_SHOWCASE.length) {
-    return AML_RISK_SHOWCASE[rowIndex]!;
-  }
-  return AML_RISK_COMPLETED;
-}
-
 function buildAmlRecordId(rowIndex: number): string {
   return `AML-${String(rowIndex + 1).padStart(5, '0')}`;
 }
 
-const AML_EXCEPTION_DEMO_ROW_COUNT = 3;
+/** 查询记录 · 第 1 行危险、第 2 行异常、其余安全（§7.8）。 */
+const AML_QUERY_EXCEPTION_ROW_INDEX = 1;
 const AML_OUTFLOW_AUTO_RULE_NAMES = [
   'Outflow Guard Alpha',
   'API Payout AML Scan',
@@ -484,11 +478,14 @@ const AML_OUTFLOW_AUTO_RULE_NAMES = [
 function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
   const id = buildAmlRecordId(rowIndex);
   const preset = resolveCurrencyRowPreset(rowIndex);
-  const isException = rowIndex < AML_EXCEPTION_DEMO_ROW_COUNT;
-  const isOutflowAuto = !isException && rowIndex % 4 === 3;
+  const isException = rowIndex === AML_QUERY_EXCEPTION_ROW_INDEX;
+  const isDangerShowcase = rowIndex === 0;
+  const isOutflowAuto = !isException && !isDangerShowcase && rowIndex % 4 === 3;
   const risk = isException
     ? { labelKey: 'AML Exception', customStyle: 'aml-suspicious' as const, score: 'NA' }
-    : resolveDemoAmlRisk(rowIndex);
+    : isDangerShowcase
+      ? AML_RISK_SHOWCASE[0]!
+      : AML_RISK_COMPLETED;
   const outflowRuleName = AML_OUTFLOW_AUTO_RULE_NAMES[
     rowIndex % AML_OUTFLOW_AUTO_RULE_NAMES.length
   ]!;
@@ -505,7 +502,7 @@ function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
     id,
     merchantOrderId: id,
     status: 'success',
-    createdAt: isException && rowIndex === 0 ? '' : '2027-12-23 10:23:00',
+    createdAt: '2027-12-23 10:23:00',
     receivedAmount: '0',
     orderAmount: '0',
     orderSymbol: 'USDT',
@@ -527,29 +524,13 @@ function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
     amlCurrencyCryptoName: preset.cryptoName,
     amlCurrencyNetworkLabel: preset.networkLabel,
     amlQueryException: isException,
-    amlQueryExceptionKind: isException
-      ? (rowIndex === 2 ? 'designated-handler' : rowIndex === 1 ? 'timeout' : 'balance')
-      : undefined,
+    amlQueryExceptionKind: isException ? 'designated-handler' : undefined,
     amlOutflowAutoQuery: isOutflowAuto || isException,
     amlTriggeredRuleName: (isOutflowAuto || isException) ? (isException ? exceptionRuleName : outflowRuleName) : undefined,
-    amlQueryTimeDisplay: isException && rowIndex === 0 ? '--' : undefined,
+    amlQueryTimeDisplay: undefined,
     amlBelongingEntity: isException ? '--' : undefined,
     amlEntityTags: isException ? [] : undefined,
   };
-}
-
-function compareAmlRecordRowsForList(
-  left: PaymentEngineRecordRow,
-  right: PaymentEngineRecordRow,
-): number {
-  const leftPriority = left.amlQueryExceptionKind === 'designated-handler' ? 0
-    : left.amlQueryException ? 1
-      : 2;
-  const rightPriority = right.amlQueryExceptionKind === 'designated-handler' ? 0
-    : right.amlQueryException ? 1
-      : 2;
-  if (leftPriority !== rightPriority) return leftPriority - rightPriority;
-  return left.id.localeCompare(right.id);
 }
 
 function resolveDemoLogWebhookFields(rowIndex: number): Pick<
@@ -637,8 +618,7 @@ export function buildRiskControlRecordRows(
   }
 
   if (resolvedMenuItem === 'AML') {
-    const rows = Array.from({ length: count }, (_, rowIndex) => buildAmlRow(rowIndex));
-    return [...rows].sort(compareAmlRecordRowsForList);
+    return Array.from({ length: count }, (_, rowIndex) => buildAmlRow(rowIndex));
   }
 
   if (resolvedMenuItem === 'Logs') {

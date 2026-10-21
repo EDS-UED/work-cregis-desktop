@@ -48,8 +48,6 @@ export const WAAS_STANDARD_CALLBACK_ERROR_COLUMNS: PaymentEngineRecordColumnConf
     headerKind: 'combo',
     sortable: true,
     secondarySortable: true,
-    align: 'end',
-    comboAlignEnd: true,
     displayOrder: 4,
   },
   {

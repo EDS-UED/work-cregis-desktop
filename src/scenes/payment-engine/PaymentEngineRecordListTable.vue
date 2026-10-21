@@ -95,6 +95,7 @@ import { isWaasAmountAddressMenuItem, isWaasProcessingMenuItem } from '@/scenes/
 import WaasListFieldTaskCount from '@/scenes/waas-project/list-field/WaasListFieldTaskCount.vue';
 import WaasListFieldTaskCurrencyId from '@/scenes/waas-project/list-field/WaasListFieldTaskCurrencyId.vue';
 import {
+  isCallbackErrorRecordMenuItem,
   isPaymentEngineAmountAddressMenuItem,
   isPaymentOrderRecordMenuItem,
   isPaymentSettlementRecordMenuItem,
@@ -273,8 +274,33 @@ function columnAlign(column: PaymentEngineRecordColumnConfig): 'left' | 'center'
   return 'left';
 }
 
+/** 异常回调 · 金额|时间：列表左对齐，批选右对齐。 */
+function resolveCallbackAmountTimeAlignEnd(column: PaymentEngineRecordColumnConfig): boolean {
+  if (column.key !== 'callbackAmountTime') {
+    return column.align === 'end';
+  }
+  if (isCallbackErrorRecordMenuItem(props.menuItem)) {
+    return selectMode.value;
+  }
+  return column.align === 'end';
+}
+
+function resolveDataListColumnAlign(column: PaymentEngineRecordColumnConfig): 'left' | 'center' | 'right' {
+  if (column.key === 'callbackAmountTime' && isCallbackErrorRecordMenuItem(props.menuItem)) {
+    return selectMode.value ? 'right' : 'left';
+  }
+  return columnAlign(column);
+}
+
 function columnHeaderAlign(column: PaymentEngineRecordColumnConfig): 'start' | 'end' {
-  return column.align === 'end' ? 'end' : 'start';
+  return resolveCallbackAmountTimeAlignEnd(column) ? 'end' : 'start';
+}
+
+function resolveComboHeaderAlignEnd(column: PaymentEngineRecordColumnConfig): boolean {
+  if (column.key === 'callbackAmountTime' && isCallbackErrorRecordMenuItem(props.menuItem)) {
+    return selectMode.value;
+  }
+  return Boolean(column.comboAlignEnd);
 }
 
 function resolveSortOrder(
@@ -358,7 +384,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
             :width="column.width"
             :flex-grow="resolveColumnFlexGrow(column)"
             :display-order="column.displayOrder"
-            :align="columnAlign(column)"
+            :align="resolveDataListColumnAlign(column)"
             :sortable="false"
             :is-action="isActionColumn(column)"
             :hidden="selectMode && isActionColumn(column)"
@@ -367,7 +393,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               <div
                 :class="[
                   pageStyles.comboHeader,
-                  column.comboAlignEnd && pageStyles.comboHeaderAlignEnd,
+                  resolveComboHeaderAlignEnd(column) && pageStyles.comboHeaderAlignEnd,
                 ]"
               >
                 <div :class="pageStyles.comboHeaderSegment">
@@ -749,7 +775,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                     ?? recordRow(data).networkLabel
                   "
                   :datetime="recordRow(data).createdAt"
-                  :align-end="column.align === 'end'"
+                  :align-end="resolveCallbackAmountTimeAlignEnd(column)"
                 />
               </template>
 

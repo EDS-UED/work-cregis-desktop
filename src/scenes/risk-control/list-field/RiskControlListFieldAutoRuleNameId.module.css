@@ -2,31 +2,7 @@
   min-width: 0;
 }
 
-.nameRow {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  min-width: 0;
-}
-
 .nameText {
-  flex: 1 1 auto;
   min-width: 0;
-}
-
-.directionBadge {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: var(--scale-4);
-  height: var(--scale-4);
-  border-radius: var(--radius-xs);
-  background: var(--material-base-secondary);
-  color: var(--material-base-tertiary);
-}
-
-.directionBadgeOutflow {
-  background: color-mix(in display-p3, var(--material-decor-primary) 18%, var(--material-base-secondary));
-  color: var(--material-decor-primary);
+  max-width: 100%;
 }

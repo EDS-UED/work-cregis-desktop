@@ -41,6 +41,8 @@ export const WAAS_STANDARD_HISTORY_CALLBACK_COLUMNS: PaymentEngineRecordColumnCo
     headerKind: 'combo',
     sortable: true,
     secondarySortable: true,
+    align: 'end',
+    comboAlignEnd: true,
     displayOrder: 4,
   },
 ];
