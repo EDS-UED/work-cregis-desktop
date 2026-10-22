@@ -1,0 +1,192 @@
+/**
+ * append 内正文与 EgDetail `.sections` / Apply_Item 行左缘对齐：
+ * appendSection 已有 spacing-3 水平 padding，正文再 inset spacing-3（同 sectionTitle）。
+ */
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding-inline: var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.riskProfileCardRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--spacing-3);
+  width: 100%;
+}
+
+.subsection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.shallowSubsectionCard {
+  composes: subsection;
+  composes: motion-ease is-paint from global;
+  flex: 1 1 0;
+  min-width: min(100%, calc(var(--scale-30) + var(--scale-10)));
+  max-width: 100%;
+  padding: var(--spacing-4) var(--spacing-5);
+  border: var(--stroke-xs) solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--material-card-shallow);
+  transition: var(--motion-recipe-hover);
+}
+
+.shallowSubsectionCard:hover {
+  background-color: var(--event-hover);
+}
+
+.subsectionTitle {
+  composes: typography-body-small-strong from global;
+  color: var(--text-base-secondary);
+}
+
+.directionLabel {
+  composes: typography-body-medium from global;
+  font-weight: var(--eds-body-medium-weight);
+  color: var(--text-base-primary);
+}
+
+.directionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.categoryRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.handlingIntro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+}
+
+.handlingSectionTitle {
+  margin: 0;
+  padding: 0;
+}
+
+.handlingLead {
+  composes: typography-footnote from global;
+  font-weight: var(--eds-footnote-weight);
+  margin: 0;
+  color: var(--text-base-secondary);
+}
+
+.actionCardRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--spacing-3);
+  width: 100%;
+}
+
+.actionCard {
+  composes: motion-ease is-paint from global;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-6);
+  min-width: min(100%, calc(var(--scale-30) + var(--scale-10)));
+  max-width: 100%;
+  padding: var(--spacing-4) var(--spacing-5);
+  border: var(--stroke-xs) solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--material-card-shallow);
+  box-sizing: border-box;
+  transition: var(--motion-recipe-hover);
+}
+
+.actionCard:hover {
+  background-color: var(--event-hover);
+}
+
+.actionCardHead {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.actionCardIconShell {
+  display: inline-flex;
+  flex: 0 0 var(--avatar-xl);
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-xl);
+  height: var(--avatar-xl);
+  line-height: 0;
+  color: var(--text-base-secondary);
+}
+
+.actionCardIconShell :global(.eds-icon) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.actionCardCopy {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.actionTitle {
+  composes: typography-body-medium from global;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  color: var(--text-base-primary);
+}
+
+.actionDesc {
+  composes: typography-footnote from global;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  font-weight: var(--eds-footnote-weight);
+  color: var(--text-base-secondary);
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-base-secondary);
+}
+
+.tableWrap {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.table {
+  width: 100%;
+  min-width: 0;
+}

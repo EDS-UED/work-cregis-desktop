@@ -44,6 +44,104 @@ html[data-theme='dark'] .networkPickerRoot.desktopTokens.effect-flotation-box {
   padding: var(--spacing-3) var(--spacing-4) var(--spacing-1);
 }
 
+/** EgTooltip 筛查方向：上 spacing-2 / 左右 spacing-3 / 下 spacing-1（8·12·4px）。 */
+.networkPickerHeaderAutoRuleDirection {
+  padding: var(--spacing-2) var(--spacing-3) var(--spacing-1);
+}
+
+.networkPickerHeaderAutoRuleDirection p {
+  margin: 0;
+}
+
+/** 13px → Body Small；60% → `--text-base-secondary`（eds-base / .6）。 */
+.networkPickerAutoRuleDirectionHint {
+  color: var(--text-base-secondary);
+}
+
+/** 筛查方向 Tooltip：内容随高，勿撑满固定面板。 */
+.networkPickerRowsAutoRuleDirection {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.networkPickerListAutoRuleDirection {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--spacing-2);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-3) var(--spacing-3);
+}
+
+.networkPickerListAutoRuleDirection > * {
+  flex: 1 1 0;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.networkPickerListAutoRuleDirection .option {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.networkPickerListAutoRuleDirection .option > div {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.networkPickerListAutoRuleDirection .itemRowAmlDirection {
+  flex: 1 1 auto;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/** AML 方向卡图标底：40×40=`--avatar-2xl`；圆角 `--radius-sm`；内图标 `--icon-sm`。 */
+.networkPickerAutoRuleDirectionIcon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-2xl);
+  height: var(--avatar-2xl);
+  overflow: hidden;
+  box-sizing: border-box;
+  border: var(--stroke-xs) solid var(--stroke-outline-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--material-same-white-quaternary);
+}
+
+/*
+ * 设计 sm = `--icon-sm`（12px）；EgIcon prop size=sm 为 16px（--icon-md）。
+ * 在 12px 槽内 fit（对齐 CopyActionIconButton / EgIconButton xs），勿 fit 撑满 40×40 底。
+ */
+.networkPickerAutoRuleDirectionIconGlyph {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  color: inherit;
+}
+
+.networkPickerAutoRuleDirectionIconInflow {
+  color: var(--stroke-color-success);
+}
+
+.networkPickerAutoRuleDirectionIconOutflow {
+  color: var(--stroke-color-danger);
+}
+
+
 .networkPickerHeaderDivider {
   flex-shrink: 0;
   align-self: stretch;

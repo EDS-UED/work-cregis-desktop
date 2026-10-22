@@ -34,13 +34,14 @@ function buildAutoRuleDetailRecord(row: PaymentEngineRecordRow): RiskControlAuto
     scopeLabel: row.autoRuleScopeKey,
     skipWhitelistEnabled: true,
     skipInternalTeamEnabled: true,
-    screeningNodeKey: isOutflow
-      ? 'Before signature, after approval (if required)'
-      : 'Before approval process',
+    screeningNodeKey: 'Before approval process',
     riskControlActionKey: 'Alarm the reviewer(s)/signer(s)',
-    exceptionHandlingKey: 'Bypass the query, proceed and notify the operator',
-    exceptionHandlerName: isOutflow ? 'Morgan Lee' : undefined,
-    exceptionHandlerAvatarName: isOutflow ? 'Morgan Lee' : undefined,
+    exceptionHandlingKey: 'Skip the query',
+    riskAlertRecipientKeys: isOutflow ? ['In-app notification'] : [],
+    riskAlertInAppRecipientIds: isOutflow ? ['alex-mah'] : [],
+    riskAlertEmailTeamMemberIds: [],
+    riskAlertOtherEmails: [],
+    exceptionHandlerMemberIds: isOutflow ? ['morgan-lee'] : undefined,
   };
 }
 

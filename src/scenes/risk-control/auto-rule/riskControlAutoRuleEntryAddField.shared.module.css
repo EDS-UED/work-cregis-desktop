@@ -1,0 +1,40 @@
+/**
+ * 币种 / 成员 entry + Add 行共用 rhythm。
+ * 币种 / 成员 Add：`EgFlotation` + `EgIconButton`（`RiskControlAutoRuleOutflowCurrencyAddPicker` / `RiskControlAutoRuleRecipientPicker`）。
+ */
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.entryList {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.addRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+/** 与 ProjectSettingsIpWhitelistPanel delete 行一致：EgIconButton rectangular sm + eds-recycle。 */
+.entryDeleteButton :global(.symbol) {
+  color: var(--stroke-color-danger);
+}
+
+.entryDeleteIcon {
+  color: var(--stroke-color-danger);
+  --eds-icon-stroke-screen: var(--stroke-lg);
+}

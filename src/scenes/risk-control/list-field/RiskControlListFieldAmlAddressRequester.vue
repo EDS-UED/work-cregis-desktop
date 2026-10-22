@@ -52,22 +52,12 @@ const avatarColorSeed = computed(() => `risk-aml-${requesterName.value}`);
           {{ networkLabel }}
         </EgTag>
         <EgTag
-          v-if="!isAutoOutflow"
           family="system"
           system-type="gray"
           size="sm"
           truncate
         >
-          {{ triggerModeLabel }}
-        </EgTag>
-        <EgTag
-          v-else
-          family="system"
-          system-type="stroke-subtle"
-          size="sm"
-          truncate
-        >
-          {{ ui('Automatic') }}
+          {{ isAutoOutflow ? ui('Automatic') : triggerModeLabel }}
         </EgTag>
       </div>
       <div :class="styles.requesterRow">

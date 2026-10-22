@@ -1,0 +1,115 @@
+.formStack {
+  composes: formStack from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldBlock {
+  composes: fieldBlock from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldLabel {
+  composes: fieldLabel from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldLabelGroup {
+  composes: fieldLabelGroup from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldBlockContent {
+  composes: fieldBlockContent from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldBlockContentOptionCards {
+  composes: fieldBlockContentOptionCards from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.embeddedPanelBody {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-5);
+  width: 100%;
+  min-width: 0;
+}
+
+.cardBodyField {
+  composes: cardBodyField from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.cardBodySectionTitle {
+  composes: cardBodySectionTitle from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.scopeFlotationHost {
+  composes: scopeFlotationHost from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.scopeFlotationTrigger {
+  composes: scopeFlotationTrigger from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.networkFlotationTrigger {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.networkTriggerSymbol {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+  overflow: hidden;
+}
+
+.networkTriggerSymbol :global(.eds-crypto),
+.networkTriggerSymbol :global([role='img']),
+.networkTriggerSymbol :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.serviceProviderLogo {
+  composes: serviceProviderLogo from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.queryFeeLine {
+  margin: 0;
+  color: var(--text-base-primary);
+}
+
+.queryFeeAmount {
+  font-size: var(--eds-title-size);
+  font-weight: var(--eds-title-weight);
+  line-height: var(--eds-title-line-height);
+  color: var(--text-base-primary);
+}
+
+.sectionDivider {
+  width: 100%;
+}
+
+.warmReminderLabel {
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-strong-weight);
+  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-secondary);
+}
+
+.noticeList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  margin: 0;
+  padding-inline-start: var(--spacing-5);
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-secondary);
+}
+
+.noticeItem {
+  padding-inline-start: var(--spacing-05);
+}

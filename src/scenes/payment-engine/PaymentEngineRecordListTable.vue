@@ -82,6 +82,7 @@ import WebhookListFieldPushActions from '@/scenes/manage/webhook/list-field/Webh
 import WebhookListFieldPushStatus from '@/scenes/manage/webhook/list-field/WebhookListFieldPushStatus.vue';
 import WebhookListFieldStatus from '@/scenes/manage/webhook/list-field/WebhookListFieldStatus.vue';
 import RiskControlListFieldAmlAddressRequester from '@/scenes/risk-control/list-field/RiskControlListFieldAmlAddressRequester.vue';
+import RiskControlListFieldAmlEntityAndTags from '@/scenes/risk-control/list-field/RiskControlListFieldAmlEntityAndTags.vue';
 import RiskControlListFieldAmlRiskScore from '@/scenes/risk-control/list-field/RiskControlListFieldAmlRiskScore.vue';
 import RiskControlListFieldAutoRuleActions from '@/scenes/risk-control/list-field/RiskControlListFieldAutoRuleActions.vue';
 import RiskControlListFieldAutoRuleNameId from '@/scenes/risk-control/list-field/RiskControlListFieldAutoRuleNameId.vue';
@@ -347,6 +348,8 @@ function isActionColumn(column: PaymentEngineRecordColumnConfig): boolean {
 }
 
 function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean {
+  /** 风控列表首列 width 锁定，不参与 leading flex 均分。 */
+  if (column.key === 'amlAddressRequester' || column.key === 'ruleNameId') return false;
   if (column.flexGrow != null) return column.flexGrow;
   if (isActionColumn(column)) return false;
   if (column.width) return false;
@@ -649,10 +652,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               </template>
 
               <template v-else-if="column.key === 'amlServiceProvider' && isRiskControlAmlMenuItem(menuItem)">
-                <EgListFieldOverflowText
-                  :text="recordRow(data).amlServiceProvider ?? 'Regtank'"
-                  variant="primary"
-                />
+                <RiskControlListFieldAmlEntityAndTags :row="recordRow(data)" />
               </template>
 
               <template v-else-if="column.key === 'amlQueryTime' && isRiskControlAmlMenuItem(menuItem)">

@@ -1,0 +1,43 @@
+.addIconTriggerHost {
+  composes: addIconTriggerHost from './riskControlAutoRuleAddIconTrigger.shared.module.css';
+}
+
+.addIconTriggerExpanded {
+  composes: addIconTriggerExpanded from './riskControlAutoRuleAddIconTrigger.shared.module.css';
+}
+
+.selectAllIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-sm);
+  height: var(--avatar-sm);
+  border-radius: var(--radius-full);
+  background: var(--material-base-primary);
+  color: var(--stroke-face-primary);
+}
+
+.selectAllIconGlyph {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.selectAllIconGlyph :global(.eds-icon) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.selectAllIconGlyph :global(.svgHost),
+.selectAllIconGlyph :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

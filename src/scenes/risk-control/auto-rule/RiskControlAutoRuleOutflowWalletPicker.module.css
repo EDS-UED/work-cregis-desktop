@@ -1,0 +1,160 @@
+.root {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.root :global(.eds-flotation) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.root :global(.eds-flotation > span) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.root :global(.eds-flotation-trigger) {
+  width: 100%;
+  max-width: 100%;
+}
+
+.menu:global(.desktopTokens.effect-flotation-box) {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.menu :global(.eds-tooltip-panel) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.menu :global(.eds-flotation-menu-body) {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.menu :global(.eds-flotation-menu-body) > :global(div:last-child) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pickerRows {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.pickerAction {
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.pickerAction :global(.eds-divider) {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.searchHeader {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-1-5);
+}
+
+.headerDivider {
+  flex-shrink: 0;
+  align-self: stretch;
+  width: 100%;
+}
+
+.listScrollFadeBottom {
+  -webkit-mask-image: linear-gradient(to top, transparent 0, #000 var(--spacing-2));
+  mask-image: linear-gradient(to top, transparent 0, #000 var(--spacing-2));
+  transition: var(--motion-recipe-scroll-fade);
+}
+
+.optionListScroll {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.optionListScrollEmpty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.optionListScroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  box-sizing: border-box;
+  margin: var(--spacing-1);
+}
+
+.searchEmpty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  color: var(--text-base-secondary);
+}
+
+.searchEmptyIcon {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+  color: var(--stroke-face-primary);
+}
+
+.searchEmptyText {
+  color: var(--text-base-secondary);
+}

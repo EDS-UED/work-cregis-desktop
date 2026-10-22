@@ -9,6 +9,7 @@ import {
   buildRiskControlExpandedCurrencyValueEntries,
 } from './buildRiskControlCurrencyDetailItem';
 import { resolveRiskControlAutoRuleRecordDetail } from './riskControlAutoRuleDetailData';
+import { autoRuleTeamMemberById } from './auto-rule/riskControlAutoRuleMemberOptions';
 
 export const AUTO_RULE_CREATOR_ITEM_KEY = 'auto-rule-creator';
 export const AUTO_RULE_ALERT_RECIPIENT_ITEM_KEY = 'auto-rule-alert-recipient';
@@ -38,11 +39,14 @@ function buildOutflowTriggerItems(
     : translate('Wallet');
 
   const items: DetailItemData[] = [
-    createDetailApplyItemRow('text', {
-      key: 'auto-rule-withdrawal-type',
-      title: translate('Withdrawal Type'),
-      value: translate(detail.withdrawalTypeKey ?? 'Manual Transfer'),
-    }),
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'auto-rule-withdrawal-type',
+        title: translate('Withdrawal Type'),
+        value: translate(detail.withdrawalTypeKey ?? 'Manual Transfer'),
+      }),
+      titleIcon: 'eds-business-type',
+    },
     {
       ...createDetailApplyItemRow('text', {
         key: 'auto-rule-outflow-scope-target',
@@ -51,16 +55,22 @@ function buildOutflowTriggerItems(
       }),
       titleIcon: detail.withdrawalTypeKey === 'API Payout' ? 'eds-floder-favorite' : 'eds-wallet',
     },
-    createDetailApplyItemRow('text', {
-      key: 'auto-rule-skip-whitelist',
-      title: translate('Skip addresses in whitelist'),
-      value: detail.skipWhitelistEnabled ? translate('Enable') : translate('Disabled'),
-    }),
-    createDetailApplyItemRow('text', {
-      key: 'auto-rule-skip-internal',
-      title: translate('Skip internal team addresses'),
-      value: detail.skipInternalTeamEnabled ? translate('Enable') : translate('Disabled'),
-    }),
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'auto-rule-skip-whitelist',
+        title: translate('Skip addresses in whitelist'),
+        value: detail.skipWhitelistEnabled ? translate('Enable') : translate('Disabled'),
+      }),
+      titleIcon: 'eds-white-list',
+    },
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'auto-rule-skip-internal',
+        title: translate('Skip internal team addresses'),
+        value: detail.skipInternalTeamEnabled ? translate('Enable') : translate('Disabled'),
+      }),
+      titleIcon: 'eds-associates',
+    },
   ];
 
   const currencyItem = buildRiskControlCurrencyConditionsItem({
@@ -81,11 +91,14 @@ function buildOutflowTriggerItems(
       }),
       titleIcon: 'eds-circle-pentagram',
     },
-    createDetailApplyItemRow('text', {
-      key: 'auto-rule-screening-node',
-      title: translate('Screening Node'),
-      value: translate(detail.screeningNodeKey ?? 'Before approval process'),
-    }),
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'auto-rule-screening-node',
+        title: translate('Screening Node'),
+        value: translate(detail.screeningNodeKey ?? 'Before approval process'),
+      }),
+      titleIcon: 'eds-arrow-workflow',
+    },
     {
       ...createDetailApplyItemRow('text', {
         key: 'auto-rule-risk-rating-criteria',
@@ -94,35 +107,52 @@ function buildOutflowTriggerItems(
       }),
       titleIcon: 'eds-triangle-flag',
     },
-    createDetailApplyItemRow('text', {
-      key: 'auto-rule-risk-control-action',
-      title: translate('Risk control action'),
-      value: translate(detail.riskControlActionKey ?? 'Alarm the reviewer(s)/signer(s)'),
-    }),
-    createDetailApplyItemRow('text', {
-      key: 'auto-rule-exception-handling',
-      title: translate('Screening Exception handling'),
-      value: translate(detail.exceptionHandlingKey ?? 'Bypass the query, proceed and notify the operator'),
-    }),
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'auto-rule-risk-control-action',
+        title: translate('Risk control action'),
+        value: translate(detail.riskControlActionKey ?? 'Alarm the reviewer(s)/signer(s)'),
+      }),
+      titleIcon: 'eds-aml-warning',
+    },
+    {
+      ...createDetailApplyItemRow('text', {
+        key: 'auto-rule-exception-handling',
+        title: translate('Screening Exception handling'),
+        value: translate(detail.exceptionHandlingKey ?? 'Skip the query'),
+      }),
+      titleIcon: 'eds-abnormal-orders',
+    },
   );
 
-  if (detail.exceptionHandlerName) {
-    items.push({
-      ...createDetailApplyItemRow('initiated-by', {
-        key: 'auto-rule-exception-handler',
-        title: translate('Handler'),
-        value: detail.exceptionHandlerName,
-        valueSymbolAvatarName: detail.exceptionHandlerAvatarName,
-      }),
-      titleIcon: 'eds-user-notification',
-    });
+  const alertRecipientParts: string[] = [];
+  const alertKeys = detail.riskAlertRecipientKeys ?? [];
+  if (alertKeys.includes('In-app notification')) {
+    const names = (detail.riskAlertInAppRecipientIds ?? [])
+      .map((id) => autoRuleTeamMemberById(id)?.name ?? id)
+      .join(', ');
+    alertRecipientParts.push(
+      names
+        ? `${translate('In-app notification')}: ${names}`
+        : translate('In-app notification'),
+    );
   }
-
+  if (alertKeys.includes('Email notification')) {
+    const teamNames = (detail.riskAlertEmailTeamMemberIds ?? [])
+      .map((id) => autoRuleTeamMemberById(id)?.name ?? id)
+      .join(', ');
+    alertRecipientParts.push(
+      teamNames
+        ? `${translate('Email notification')}: ${teamNames}`
+        : translate('Email notification'),
+    );
+  }
+  const alertRecipientValue = alertRecipientParts.join(' · ');
   items.push({
     ...createDetailApplyItemRow('text', {
       key: AUTO_RULE_ALERT_RECIPIENT_ITEM_KEY,
       title: translate('Risk Alert Recipient'),
-      value: translate('Withdrawal initiator'),
+      value: alertRecipientValue,
     }),
     titleIcon: 'eds-user-notification',
   });
@@ -144,6 +174,11 @@ export function buildRiskControlAutoRuleDetailSections(
   });
 
   const overviewItems: DetailItemData[] = [
+    createDetailApplyItemRow('brand-number', {
+      key: 'auto-rule-record-number',
+      title: translate('Rule Number'),
+      value: detail.recordNumber,
+    }),
     createDetailApplyItemRow('initiated-by', {
       key: AUTO_RULE_CREATOR_ITEM_KEY,
       title: translate('Creator'),
@@ -155,11 +190,6 @@ export function buildRiskControlAutoRuleDetailSections(
       key: 'auto-rule-created-at',
       title: translate('Creation Time'),
       value: detail.createdAt,
-    }),
-    createDetailApplyItemRow('brand-number', {
-      key: 'auto-rule-record-number',
-      title: translate('Number'),
-      value: detail.recordNumber,
     }),
   ];
 
@@ -216,7 +246,7 @@ export function buildRiskControlAutoRuleDetailSections(
     },
     {
       key: 'auto-rule-trigger-rules',
-      title: translate('Trigger Rules'),
+      title: translate('Auto rule trigger condition'),
       items: triggerItems,
     },
   ];

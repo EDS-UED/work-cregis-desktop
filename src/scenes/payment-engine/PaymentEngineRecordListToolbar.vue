@@ -22,8 +22,12 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  'toolbar-action': [key: string];
+  'toolbar-action': [key: string, event: MouseEvent];
 }>();
+
+function renderAddNewSlot(button: ToolbarButton) {
+  return button.key === 'addNew';
+}
 </script>
 
 <template>
@@ -45,40 +49,52 @@ const emit = defineEmits<{
         :show-badge="button.item.showBadge"
         :show-reddot="button.item.showReddot"
         :disabled="button.item.disabled"
-        @click="emit('toolbar-action', button.key)"
+        @click="(event) => emit('toolbar-action', button.key, event)"
       >
         <EgIcon :name="button.item.icon" size="sm" />
       </EgIconProButton>
     </template>
     <template v-if="showToolbarSection" #section>
       <slot name="section-prefix" />
-      <EgIconProButton
-        v-for="button in toolbarSectionButtons"
-        :key="button.key"
-        :label="translate(button.item.label)"
-        :badge="button.item.badge"
-        :show-badge="button.item.showBadge"
-        :show-reddot="button.item.showReddot"
-        :disabled="button.item.disabled"
-        @click="emit('toolbar-action', button.key)"
-      >
-        <EgIcon :name="button.item.icon" size="sm" />
-      </EgIconProButton>
+      <template v-for="button in toolbarSectionButtons" :key="button.key">
+        <slot
+          v-if="renderAddNewSlot(button) && $slots['add-new']"
+          name="add-new"
+          :button="button"
+        />
+        <EgIconProButton
+          v-else
+          :label="translate(button.item.label)"
+          :badge="button.item.badge"
+          :show-badge="button.item.showBadge"
+          :show-reddot="button.item.showReddot"
+          :disabled="button.item.disabled"
+          @click="(event) => emit('toolbar-action', button.key, event)"
+        >
+          <EgIcon :name="button.item.icon" size="sm" />
+        </EgIconProButton>
+      </template>
     </template>
     <template v-else #functional>
       <slot name="functional-prefix" />
-      <EgIconProButton
-        v-for="button in toolbarActionButtons"
-        :key="`functional-${button.key}`"
-        :label="translate(button.item.label)"
-        :badge="button.item.badge"
-        :show-badge="button.item.showBadge"
-        :show-reddot="button.item.showReddot"
-        :disabled="button.item.disabled"
-        @click="emit('toolbar-action', button.key)"
-      >
-        <EgIcon :name="button.item.icon" size="sm" />
-      </EgIconProButton>
+      <template v-for="button in toolbarActionButtons" :key="`functional-${button.key}`">
+        <slot
+          v-if="renderAddNewSlot(button) && $slots['add-new']"
+          name="add-new"
+          :button="button"
+        />
+        <EgIconProButton
+          v-else
+          :label="translate(button.item.label)"
+          :badge="button.item.badge"
+          :show-badge="button.item.showBadge"
+          :show-reddot="button.item.showReddot"
+          :disabled="button.item.disabled"
+          @click="(event) => emit('toolbar-action', button.key, event)"
+        >
+          <EgIcon :name="button.item.icon" size="sm" />
+        </EgIconProButton>
+      </template>
     </template>
   </EgToolBar>
 </template>

@@ -45,6 +45,13 @@
   line-height: var(--eds-body-small-line-height);
 }
 
+/** AML 查询记录 · headline-main 为 eyebrow + 顶端卡片并列根节点，撑满 headlineMain。 */
+.detailHost:has([data-aml-record-top-card]) :global([class*='headlineMain']) {
+  align-self: stretch;
+  width: 100%;
+  gap: var(--spacing-3);
+}
+
 /** EgDetail headlineMain 内 eyebrow 插槽：对齐 EDS `.eyebrow` 排版，不额外包一层 group。 */
 .detailHeadlineEyebrowHost {
   display: block;
@@ -153,7 +160,8 @@
 }
 
 .sectionTitle {
-  padding: var(--spacing-0) 0 var(--spacing-4) var(--spacing-3);
+  margin: 0;
+  padding: var(--spacing-1) 0 var(--spacing-2) var(--spacing-3);
   box-sizing: border-box;
   color: var(--text-base-primary);
   font-size: var(--eds-body-small-strong-size);

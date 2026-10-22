@@ -56,9 +56,9 @@
 }
 
 .riskLabel :global(.eds-hover-tooltip-trigger__target) {
-  font-size: var(--eds-body-medium-size);
-  line-height: var(--eds-body-medium-line-height);
-  font-weight: var(--eds-body-medium-weight);
+  font-size: var(--eds-body-small-size);
+  line-height: var(--eds-body-small-line-height);
+  font-weight: var(--eds-body-small-weight);
   color: inherit;
 }
 

@@ -1,4 +1,4 @@
-import type { TagColorfulStyle, TagStatus } from '@eds/desktop-components';
+import type { TagCustomStyle, TagColorfulStyle, TagStatus } from '@eds/desktop-components';
 import type { DetailProgressMemberDeviceInfo } from '@/scenes/tasks/shared/detailProgressMemberDeviceInfo.types';
 import type { PaymentEngineRecordMenuItem } from './paymentEngineMenuData';
 
@@ -291,12 +291,18 @@ export type PaymentEngineRecordRow = {
   autoRuleServiceProvider?: string;
   /** AML 查询记录 · 异常行（列表 NA / 详情占位）。 */
   amlQueryException?: boolean;
+  /** AML 查询记录 · 查询失败（列表仅展示 NA）。 */
+  amlQueryFailed?: boolean;
   /** AML 查询异常 · 需指定处理人展示处置区。 */
   amlQueryExceptionKind?: 'balance' | 'timeout' | 'designated-handler';
   /** AML 出款自动查询（查询人为规则名）。 */
   amlOutflowAutoQuery?: boolean;
   /** AML 列表 · 查询时间展示（余额不足等可为 `--`）。 */
   amlQueryTimeDisplay?: string;
+  /** AML 出款自动查询 · 协作单号（详情审计日志）。 */
+  amlCollaborationNumber?: string;
+  /** AML 出款自动查询 · 发送方地址（详情审计日志）。 */
+  amlSenderAddress?: string;
   /** Manage · Webhook 事件 i18n key。 */
   webhookEventKey?: string;
   webhookEndpointVerified?: boolean;
@@ -318,7 +324,7 @@ export type PaymentEngineRecordRow = {
 
 export type RiskControlAmlEntityTag = {
   label: string;
-  colorfulStyle: TagColorfulStyle;
+  customStyle: TagCustomStyle;
 };
 
 export type RiskControlAmlRiskTraceObject = {
@@ -367,8 +373,11 @@ export type RiskControlAutoRuleDetailRecord = {
   screeningNodeKey?: string;
   riskControlActionKey?: string;
   exceptionHandlingKey?: string;
-  exceptionHandlerName?: string;
-  exceptionHandlerAvatarName?: string;
+  riskAlertRecipientKeys?: string[];
+  riskAlertInAppRecipientIds?: string[];
+  riskAlertEmailTeamMemberIds?: string[];
+  riskAlertOtherEmails?: string[];
+  exceptionHandlerMemberIds?: string[];
 };
 
 export type PaymentEngineSettlementRecordDetail = {

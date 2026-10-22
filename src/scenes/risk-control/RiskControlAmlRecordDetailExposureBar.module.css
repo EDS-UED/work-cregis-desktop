@@ -1,0 +1,194 @@
+.host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1-5);
+  width: 100%;
+}
+
+/* 收款方向 · 原绿基准（序号 1 = --status-success；2–10 为扩展色） */
+.host[data-direction='source'] {
+  --aml-exposure-tone-2: rgb(176 213 222);
+  --aml-exposure-tone-2: color(display-p3 0.6902 0.8353 0.8706);
+  --aml-exposure-tone-3: rgb(228 133 103);
+  --aml-exposure-tone-3: color(display-p3 0.8941 0.5216 0.4039);
+  --aml-exposure-tone-4: rgb(23 87 46);
+  --aml-exposure-tone-4: color(display-p3 0.0902 0.3412 0.1804);
+  --aml-exposure-tone-5: rgb(196 144 212);
+  --aml-exposure-tone-5: color(display-p3 0.7686 0.5647 0.8314);
+  --aml-exposure-tone-6: rgb(210 190 172);
+  --aml-exposure-tone-6: color(display-p3 0.8235 0.7451 0.6745);
+  --aml-exposure-tone-7: rgb(96 244 149);
+  --aml-exposure-tone-7: color(display-p3 0.3765 0.9569 0.5843);
+  --aml-exposure-tone-8: rgb(30 157 76);
+  --aml-exposure-tone-8: color(display-p3 0.1176 0.6157 0.298);
+  --aml-exposure-tone-9: rgb(212 215 220);
+  --aml-exposure-tone-9: color(display-p3 0.8314 0.8431 0.8627);
+  --aml-exposure-tone-10: rgb(204 101 106);
+  --aml-exposure-tone-10: color(display-p3 0.8 0.3961 0.4157);
+}
+
+:global(html[data-theme='dark']) .host[data-direction='source'] {
+  --aml-exposure-tone-2: rgb(41 62 67);
+  --aml-exposure-tone-2: color(display-p3 0.1608 0.2431 0.2627);
+  --aml-exposure-tone-3: rgb(154 84 61);
+  --aml-exposure-tone-3: color(display-p3 0.6039 0.3294 0.2392);
+  --aml-exposure-tone-4: rgb(42 102 63);
+  --aml-exposure-tone-4: color(display-p3 0.1647 0.4 0.2471);
+  --aml-exposure-tone-5: rgb(82 59 91);
+  --aml-exposure-tone-5: color(display-p3 0.3216 0.2314 0.3569);
+  --aml-exposure-tone-6: rgb(68 59 52);
+  --aml-exposure-tone-6: color(display-p3 0.2667 0.2314 0.2039);
+  --aml-exposure-tone-7: rgb(48 122 75);
+  --aml-exposure-tone-7: color(display-p3 0.1882 0.4784 0.2941);
+  --aml-exposure-tone-8: rgb(36 88 55);
+  --aml-exposure-tone-8: color(display-p3 0.1412 0.3451 0.2157);
+  --aml-exposure-tone-9: rgb(38 40 43);
+  --aml-exposure-tone-9: color(display-p3 0.149 0.1569 0.1686);
+  --aml-exposure-tone-10: rgb(140 60 64);
+  --aml-exposure-tone-10: color(display-p3 0.549 0.2353 0.251);
+}
+
+/* 出款方向 · 新橙基准（序号 1 = --status-warning；2–10 为扩展色） */
+.host[data-direction='destination'] {
+  --aml-exposure-tone-2: rgb(112 188 222);
+  --aml-exposure-tone-2: color(display-p3 0.4392 0.7373 0.8706);
+  --aml-exposure-tone-3: rgb(103 208 148);
+  --aml-exposure-tone-3: color(display-p3 0.4039 0.8157 0.5804);
+  --aml-exposure-tone-4: rgb(137 72 41);
+  --aml-exposure-tone-4: color(display-p3 0.5373 0.2824 0.1608);
+  --aml-exposure-tone-5: rgb(245 190 110);
+  --aml-exposure-tone-5: color(display-p3 0.9608 0.7451 0.4314);
+  --aml-exposure-tone-6: rgb(215 195 175);
+  --aml-exposure-tone-6: color(display-p3 0.8431 0.7647 0.6863);
+  --aml-exposure-tone-7: rgb(196 144 212);
+  --aml-exposure-tone-7: color(display-p3 0.7686 0.5647 0.8314);
+  --aml-exposure-tone-8: rgb(185 90 31);
+  --aml-exposure-tone-8: color(display-p3 0.7255 0.3529 0.1216);
+  --aml-exposure-tone-9: rgb(212 215 220);
+  --aml-exposure-tone-9: color(display-p3 0.8314 0.8431 0.8627);
+  --aml-exposure-tone-10: rgb(210 95 115);
+  --aml-exposure-tone-10: color(display-p3 0.8235 0.3725 0.451);
+}
+
+:global(html[data-theme='dark']) .host[data-direction='destination'] {
+  --aml-exposure-tone-2: rgb(85 129 142);
+  --aml-exposure-tone-2: color(display-p3 0.3333 0.5059 0.5569);
+  --aml-exposure-tone-3: rgb(50 110 70);
+  --aml-exposure-tone-3: color(display-p3 0.1961 0.4314 0.2745);
+  --aml-exposure-tone-4: rgb(75 45 30);
+  --aml-exposure-tone-4: color(display-p3 0.2941 0.1765 0.1176);
+  --aml-exposure-tone-5: rgb(135 95 40);
+  --aml-exposure-tone-5: color(display-p3 0.5294 0.3725 0.1569);
+  --aml-exposure-tone-6: rgb(68 59 52);
+  --aml-exposure-tone-6: color(display-p3 0.2667 0.2314 0.2039);
+  --aml-exposure-tone-7: rgb(82 59 91);
+  --aml-exposure-tone-7: color(display-p3 0.3216 0.2314 0.3569);
+  --aml-exposure-tone-8: rgb(115 65 30);
+  --aml-exposure-tone-8: color(display-p3 0.451 0.2549 0.1176);
+  --aml-exposure-tone-9: rgb(38 40 43);
+  --aml-exposure-tone-9: color(display-p3 0.149 0.1569 0.1686);
+  --aml-exposure-tone-10: rgb(140 55 70);
+  --aml-exposure-tone-10: color(display-p3 0.549 0.2157 0.2745);
+}
+
+.track {
+  display: flex;
+  width: 100%;
+  height: var(--scale-2-5);
+  gap: var(--spacing-05);
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  background: var(--material-card-subtle);
+  overflow: hidden;
+}
+
+.segment {
+  height: 100%;
+  min-width: 0;
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: 0;
+  border-radius: 0;
+}
+
+.segmentCapStart {
+  border-top-left-radius: var(--radius-full);
+  border-bottom-left-radius: var(--radius-full);
+}
+
+.segmentCapEnd {
+  border-top-right-radius: var(--radius-full);
+  border-bottom-right-radius: var(--radius-full);
+}
+
+.host[data-direction='source'] .segmentToneLead {
+  background: var(--status-success);
+}
+
+.host[data-direction='destination'] .segmentToneLead {
+  background: var(--status-warning);
+}
+
+.segmentToneFollow2 {
+  background: var(--aml-exposure-tone-2);
+}
+
+.segmentToneFollow3 {
+  background: var(--aml-exposure-tone-3);
+}
+
+.segmentToneFollow4 {
+  background: var(--aml-exposure-tone-4);
+}
+
+.segmentToneFollow5 {
+  background: var(--aml-exposure-tone-5);
+}
+
+.segmentToneFollow6 {
+  background: var(--aml-exposure-tone-6);
+}
+
+.segmentToneFollow7 {
+  background: var(--aml-exposure-tone-7);
+}
+
+.segmentToneFollow8 {
+  background: var(--aml-exposure-tone-8);
+}
+
+.segmentToneFollow9 {
+  background: var(--aml-exposure-tone-9);
+}
+
+.segmentToneFollow10 {
+  background: var(--aml-exposure-tone-10);
+}
+
+.segmentFiller {
+  background: transparent;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.legendText {
+  composes: typography-footnote from global;
+  color: var(--text-base-primary);
+}
+
+.legendSwatch {
+  width: var(--scale-2);
+  height: var(--scale-2);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}

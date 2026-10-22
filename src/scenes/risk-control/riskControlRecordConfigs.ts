@@ -21,8 +21,9 @@ const AUTOMATION_TYPE_COLUMN_MIN_WIDTH = '128px';
 const AUTOMATION_STATUS_COLUMN_MIN_WIDTH = '128px';
 const AUTOMATION_ACTIONS_COLUMN_MIN_WIDTH = '160px';
 
-const AUTO_RULE_NAME_ID_COLUMN_MIN_WIDTH = '248px';
-const AUTO_RULE_WAAS_PROJECT_COLUMN_MIN_WIDTH = '200px';
+/** 自动规则 · 首列固定；适用范围与服务商双 flex 均分余量。 */
+const AUTO_RULE_NAME_ID_COLUMN_MIN_WIDTH = '240px';
+const AUTO_RULE_WAAS_PROJECT_COLUMN_MIN_WIDTH = '160px';
 const AUTO_RULE_SERVICE_PROVIDER_COLUMN_MIN_WIDTH = '128px';
 const AUTO_RULE_STATUS_COLUMN_MIN_WIDTH = '112px';
 const AUTO_RULE_ACTIONS_COLUMN_MIN_WIDTH = '168px';
@@ -31,10 +32,13 @@ const ADDRESS_BOOK_CRYPTO_COLUMN_MIN_WIDTH = '168px';
 const ADDRESS_BOOK_ADDRESS_COLUMN_MIN_WIDTH = '320px';
 const ADDRESS_BOOK_ACTIONS_COLUMN_MIN_WIDTH = '160px';
 
-const AML_ADDRESS_REQUESTER_COLUMN_MIN_WIDTH = '360px';
-const AML_SERVICE_PROVIDER_COLUMN_MIN_WIDTH = '128px';
-const AML_QUERY_TIME_COLUMN_MIN_WIDTH = '180px';
-const AML_RISK_SCORE_COLUMN_MIN_WIDTH = '160px';
+/**
+ * 查询记录 · 首列固定宽；实体｜标签与查询时间双 flex 均分余量（避免单列撑出大段空白）。
+ */
+const AML_ADDRESS_REQUESTER_COLUMN_MIN_WIDTH = '306px';
+const AML_ENTITY_TAGS_COLUMN_MIN_WIDTH = '142px';
+const AML_QUERY_TIME_COLUMN_MIN_WIDTH = '176px';
+const AML_RISK_SCORE_COLUMN_MIN_WIDTH = '152px';
 
 const LOGS_TYPE_COLUMN_MIN_WIDTH = '128px';
 const LOGS_EVENT_COLUMN_MIN_WIDTH = '320px';
@@ -134,9 +138,10 @@ const WHITELIST_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
 const AUTO_RULES_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   {
     key: 'ruleNameId',
-    labelKey: 'Name',
-    secondaryLabelKey: 'Number',
+    labelKey: 'Rule Name',
+    secondaryLabelKey: 'ID',
     minWidth: AUTO_RULE_NAME_ID_COLUMN_MIN_WIDTH,
+    width: AUTO_RULE_NAME_ID_COLUMN_MIN_WIDTH,
     headerKind: 'combo',
     displayOrder: 1,
   },
@@ -144,21 +149,19 @@ const AUTO_RULES_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
     key: 'autoRuleWaasProject',
     labelKey: 'Applicable Scope',
     minWidth: AUTO_RULE_WAAS_PROJECT_COLUMN_MIN_WIDTH,
-    flexGrow: true,
     displayOrder: 2,
   },
   {
     key: 'autoRuleServiceProvider',
     labelKey: 'Service Provider',
     minWidth: AUTO_RULE_SERVICE_PROVIDER_COLUMN_MIN_WIDTH,
-    width: AUTO_RULE_SERVICE_PROVIDER_COLUMN_MIN_WIDTH,
-    flexGrow: false,
     displayOrder: 3,
   },
   {
     key: 'ruleEnabled',
     labelKey: 'Status',
     minWidth: AUTO_RULE_STATUS_COLUMN_MIN_WIDTH,
+    width: AUTO_RULE_STATUS_COLUMN_MIN_WIDTH,
     align: 'center',
     displayOrder: 4,
   },
@@ -174,28 +177,26 @@ const AUTO_RULES_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
 const AML_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   {
     key: 'amlAddressRequester',
-    labelKey: 'Address/Transaction Hash',
+    labelKey: 'Address',
     secondaryLabelKey: 'Requester',
     minWidth: AML_ADDRESS_REQUESTER_COLUMN_MIN_WIDTH,
+    width: AML_ADDRESS_REQUESTER_COLUMN_MIN_WIDTH,
     headerKind: 'combo',
-    flexGrow: true,
     displayOrder: 1,
   },
   {
     key: 'amlServiceProvider',
-    labelKey: 'Service Provider',
-    minWidth: AML_SERVICE_PROVIDER_COLUMN_MIN_WIDTH,
-    width: AML_SERVICE_PROVIDER_COLUMN_MIN_WIDTH,
-    flexGrow: false,
+    labelKey: 'Entity',
+    secondaryLabelKey: 'Tags',
+    headerKind: 'combo',
+    minWidth: AML_ENTITY_TAGS_COLUMN_MIN_WIDTH,
     displayOrder: 2,
   },
   {
     key: 'amlQueryTime',
     labelKey: 'Query Time',
     minWidth: AML_QUERY_TIME_COLUMN_MIN_WIDTH,
-    width: AML_QUERY_TIME_COLUMN_MIN_WIDTH,
     sortable: true,
-    flexGrow: false,
     displayOrder: 3,
   },
   {
@@ -279,12 +280,12 @@ export const RISK_CONTROL_RECORD_PAGE_CONFIG: Record<
   },
   'Auto Rules': {
     showExport: false,
-    toolbarPreset: 'filter-add',
+    toolbarPreset: 'filter-refresh-add',
     columns: AUTO_RULES_COLUMNS,
   },
   AML: {
     showExport: false,
-    toolbarPreset: 'filter-refresh',
+    toolbarPreset: 'filter-refresh-add',
     columnHeight: DATA_LIST_COLUMN_HEIGHT_XL,
     columns: AML_COLUMNS,
   },

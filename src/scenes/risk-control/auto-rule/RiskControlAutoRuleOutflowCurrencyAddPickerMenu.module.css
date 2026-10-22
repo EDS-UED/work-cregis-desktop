@@ -1,0 +1,91 @@
+.menu {
+  composes: menu from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.pickerRows {
+  composes: pickerRows from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.pickerAction {
+  composes: pickerAction from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.searchHeader {
+  composes: searchHeader from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.headerDivider {
+  composes: headerDivider from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.listScrollFadeBottom {
+  composes: listScrollFadeBottom from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.optionListScroll {
+  composes: optionListScroll from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.optionListScrollEmpty {
+  composes: optionListScrollEmpty from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.optionList {
+  composes: optionList from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.searchEmpty {
+  composes: searchEmpty from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.searchEmptyIcon {
+  composes: searchEmptyIcon from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.searchEmptyText {
+  composes: searchEmptyText from './RiskControlAutoRuleOutflowWalletPicker.module.css';
+}
+
+.selectAllIcon {
+  composes: selectAllIcon from './RiskControlAutoRuleOutflowCurrencyAddPicker.module.css';
+}
+
+.selectAllIconGlyph {
+  composes: selectAllIconGlyph from './RiskControlAutoRuleOutflowCurrencyAddPicker.module.css';
+}
+
+.optionRowWrap {
+  composes: optionRowWrap from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.networkFlotation {
+  composes: networkFlotation from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.cascadeRow {
+  composes: cascadeRow from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.networkSubmenu {
+  composes: networkSubmenu from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.cascadePanel {
+  composes: cascadePanel from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.cascadeListScroll {
+  composes: cascadeListScroll from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.listScrollFadeTop {
+  composes: listScrollFadeTop from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.cascadeList {
+  composes: cascadeList from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.cascadeAction {
+  composes: cascadeAction from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}

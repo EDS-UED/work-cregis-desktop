@@ -228,6 +228,24 @@ export const EDS_INSPECT_CATALOG: EdsInspectCatalogEntry[] = [
     ],
   },
   {
+    displayName: 'Combo Page Button',
+    priority: 78,
+    vueNames: ['ComboPageButton', 'EgComboPageButton', 'ComboActionPage'],
+    domClass: 'eds-combo-page-button',
+    props: [
+      { key: 'tone', label: '色调', defaultValue: 'decor' },
+      { key: 'direction', label: '方向', defaultValue: 'left' },
+      { key: 'pageChrome', label: 'Page chrome', defaultValue: false, format: formatBoolean },
+      { key: 'divider', label: '分割线', defaultValue: true, format: formatBoolean },
+      {
+        key: 'confirmDisabled',
+        label: '确定禁用',
+        defaultValue: false,
+        format: formatBoolean,
+      },
+    ],
+  },
+  {
     displayName: 'Link',
     priority: 70,
     vueNames: ['Link', 'EgLinkButton'],

@@ -1,0 +1,96 @@
+/**
+ * motion-page 创建/编辑配置表单壳（Webhook、AML 自动规则等）。
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: var(--box-page);
+}
+
+.pageEmbedded {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.pageShell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.formScroll {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.formScrollEmbedded {
+  composes: layoutChromeBodyScroll from './layoutChromePage.shared.module.css';
+  padding: var(--spacing-2) var(--spacing-6) var(--spacing-5);
+}
+
+/** EgLayout 创建/编辑：与列表 DataList 同 chrome overlay + inset 滚动。 */
+.configFormLayout {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.configFormScrollHost {
+  composes: layoutChromeScroll from './layoutChromePage.shared.module.css';
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.configFormScrollContent {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--spacing-2) var(--spacing-6) var(--spacing-5);
+}
+
+/** 不可滚时静态底栏容器（圆角）；按钮区由 EgComboPageButton 提供。 */
+.pageFooter {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  margin-top: auto;
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.pageFooterDivider {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.pageFooterActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-6) var(--spacing-5);
+}
+
+.pageFooterActionGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}

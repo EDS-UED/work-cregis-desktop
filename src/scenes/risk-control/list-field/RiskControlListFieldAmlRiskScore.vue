@@ -17,16 +17,18 @@ const props = defineProps<{
 
 const { ui } = useAppI18n();
 
+const isQueryFailed = computed(() => Boolean(props.row.amlQueryFailed));
 const isException = computed(() => Boolean(props.row.amlQueryException));
+
+const failedDisplayText = computed(() => ui('NA'));
 
 const riskLabelKey = computed(() => props.row.amlRiskLabelKey ?? 'Safe');
 const riskLabel = computed(() => ui(riskLabelKey.value));
-const riskVisual = computed(() =>
-  isException.value
-    ? resolveAmlRiskRatingVisual('aml-suspicious')
-    : resolveAmlRiskRatingVisual(props.row.amlRiskCustomStyle),
-);
-const riskScore = computed(() => (isException.value ? 'NA' : (props.row.amlRiskScore ?? '0.0')));
+const riskVisual = computed(() => {
+  if (isException.value) return resolveAmlRiskRatingVisual('aml-suspicious');
+  return resolveAmlRiskRatingVisual(props.row.amlRiskCustomStyle);
+});
+const riskScore = computed(() => props.row.amlRiskScore ?? '0.0');
 
 const riskToneClass = computed(() => {
   if (riskVisual.value.tone === 'danger') return styles.riskToneDanger;
@@ -40,7 +42,19 @@ const riskToneClass = computed(() => {
     class="desktopTokens list-field-general-structure"
     :class="[styles.host, alignEnd && styles.hostAlignEnd]"
   >
-    <span class="hash-like-combo" :class="styles.hashLikeCombo">
+    <span
+      v-if="isQueryFailed"
+      class="hash-like-combo"
+      :class="styles.hashLikeCombo"
+    >
+      <EgListFieldHashLikeLine
+        :text="failedDisplayText"
+        variant="primary"
+        tooltip-trigger="hover"
+        :copy-on-row-hover="false"
+      />
+    </span>
+    <span v-else class="hash-like-combo" :class="styles.hashLikeCombo">
       <div :class="[styles.titleRow, riskToneClass]">
         <span :class="styles.riskIcon">
           <EgIcon :name="riskVisual.iconName" size="sm" fit fill-tone="primary" />

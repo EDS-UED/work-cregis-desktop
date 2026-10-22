@@ -50,6 +50,7 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Create Project': 'Create Project',
   'Created Time': 'Created Time',
   Currency: 'Token',
+  'Greater than or equal to': 'Greater Than or Equal To',
   Custom: 'Customized',
   Danger: 'Dangerous',
   Dark: 'Dark',
@@ -200,6 +201,7 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   Transaction: 'Transaction Information',
   'Transaction Already Processed': 'Transaction Already Processed',
   'Transaction hash': 'TxID',
+  'Transaction Query': 'Transaction Query',
   'Transaction password': 'Transaction password',
   'Transaction status': 'Transaction Status',
   Transactions: 'Transactions',
@@ -286,11 +288,53 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
     'Once enabled, Cregis AML will automatically perform AML queries on the receiving addresses for withdrawal requests that trigger this rule. If you have remaining free queries, one free query will be used per address. If your free queries are exhausted, a fee of {fee} USD will be charged per query. Confirm to enable this rule?',
   'Auto rule disable outflow confirm':
     'After disabling the rule, Cregis AML will not automatically query for withdrawal requests that trigger this rule. Are you sure you want to disable it?',
+  'Auto rule create direction hint':
+    'Select the transaction direction for this AML screening rule.',
+  'Outflow Rule': 'Outflow Rule',
+  'Auto rule trigger condition': 'Trigger Condition',
+  'Create Outflow Rule': 'Create Outflow Rule',
+  'Create Inflow Rule': 'Create Inflow Rule',
+  'Edit Outflow Rule': 'Edit Outflow Rule',
+  'Edit Inflow Rule': 'Edit Inflow Rule',
+  'Auto rule name length hint': '2–30 Characters',
+  'Please enter a valid rule name': 'Please Enter a Valid Rule Name',
+  'Auto rule manual withdrawal title': 'Manual Transfer',
   'Withdrawal Type': 'Withdrawal Type',
   'API Payout': 'API Payout',
+  'Auto rule risk score threshold hint prefix':
+    'Cregis AML will take risk control action if the receiving address has a risk score greater than or equal to ',
+  'Auto rule risk score threshold hint suffix': '.',
+  'Auto rule risk score range hint min lead': 'Minimum risk score is ',
+  'Auto rule risk score range hint min tail': ' (very safe)',
+  'Auto rule risk score range hint max lead': '; maximum is ',
+  'Auto rule risk score range hint max tail': ' (very dangerous)',
+  'Auto rule risk control action hint':
+    'Select a risk control measure. If a dangerous receiving address is found, Cregis AML will apply it',
+  'Auto rule outflow trigger hint':
+    'Please select a WaaS project and/or wallet to be screened. Only 1 rule is allowed per wallet or per WaaS project.',
+  'Auto rule outflow filtering': 'Filter',
+  'Auto rule skip whitelist disable confirm':
+    'Upon unselecting, Cregis AML will query the receiving address even if the address is in your whitelist. Each query will cost one free query or be charged at the unit price.',
+  'Auto rule skip internal disable confirm':
+    'Upon unselecting, Cregis AML will query the receiving address even if the address is your internal team address. Each query will cost one free query or be charged at the unit price.',
+  'Auto rule select wallet before currency': 'Please select a wallet first',
+  'Auto rule select waas project before currency': 'Please select a WaaS project first',
+  'Auto rule service provider per query': ' / Query',
   'Skip addresses in whitelist': 'Skip Addresses in Whitelist',
   'Skip internal team addresses': 'Skip Internal Team Addresses',
   'Screening Node': 'Screening Node',
+  'Auto rule screening node notice':
+    'Please select the node to perform address query',
+  'Auto rule risk alert recipients hint':
+    'For manual withdrawals, Cregis AML sends an in-app notification to the withdrawal initiator when a dangerous address is found. You may also choose additional recipients',
+  'In-app notification': 'In-App Notification',
+  'Email notification': 'Email Notification',
+  'Auto rule add recipient': 'Add Recipient',
+  'Auto rule recipient field label': 'Recipients',
+  'Auto rule exception handler label': 'Handler',
+  'Auto rule email notify team members': 'Team Member Emails',
+  'Auto rule email notify other emails': 'Other Emails',
+  'Risk Alert Recipient': 'Risk Alert Recipient',
   'Before approval process': 'Before Approval Process',
   'Before signature, after approval (if required)':
     'Before Signature, After Approval (If Required)',
@@ -298,8 +342,10 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Reject the withdrawal request': 'Reject the Withdrawal Request',
   'Alarm the reviewer(s)/signer(s)': 'Alarm the Reviewer(s)/Signer(s)',
   'Screening Exception handling': 'Screening Exception Handling',
-  'Bypass the query, proceed and notify the operator':
-    'Bypass the Query, Proceed and Notify the Operator',
+  'Auto rule exception handling hint':
+    'Please select how Cregis AML should handle withdrawals when the screening cannot be completed successfully (usually due to insufficient team balance or third-party service timeout).',
+  'Skip the query': 'Skip the Query, Proceed and Notify the Operator',
+  'Notify designated personnel to handle': 'Notify Designated Personnel to Handle',
   'Withdrawal initiator': 'Withdrawal Initiator',
   'Screen inflow funds': 'Screen Inflow Funds',
   'Screen the receiving address before withdrawal':
@@ -309,10 +355,18 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'AML Failed': 'AML Failed',
   'AML Error': 'AML Error',
   'AML Querying': 'AML Querying',
-  'AML query exception summary': 'Query exception; no results available.',
+  'AML Query Fee': 'AML Query Fee',
+  'AML query exception summary': 'Results unavailable due to a query exception',
   'Results unavailable due to a query exception':
-    'Results Unavailable Due to a Query Exception',
-  'Risk Summary': 'Risk Summary',
+    'Results unavailable due to a query exception',
+  'AML notify dangerous address control':
+    'The receiving address {address} is flagged as dangerous, and Cregis AML has taken the risk control action specified in the triggered rule. If you need more help, please contact the support team.',
+  'AML notify auto query balance insufficient':
+    'Due to insufficient team balance, the AML query for the withdrawal to address {address} failed. If you need to query this address, you may conduct a manual query after top-up.',
+  'AML notify auto query service timeout':
+    'Due to third-party service timeout, the AML query for the withdrawal to address {address} failed. The query fee has been refunded to the team balance. If you need to query this address, please contact the support team.',
+  'Risk Summary': 'Risk Summary:',
+  'Risk Rating Criteria': 'Risk Rating Criteria:',
   'AML exception handling title': 'Handling',
   'AML exception handling lead': 'Choose one of the following actions.',
   'AML exception action retry': 'Retry Query',
@@ -322,5 +376,52 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'AML exception action pass desc': 'Skip AML and proceed.',
   'AML exception action reject': 'Reject',
   'AML exception action reject desc': 'Reject this withdrawal request.',
+  'AML query exception no result summary': 'Query exception. No results available.',
+  'AML query risk summary sentence':
+    'This address is exposed to {sourceCategories} risk on the inbound side ({sourcePercent} of inbound funds) and {destinationCategories} risk on the outbound side ({destinationPercent} of outbound funds).',
+  'AML query risk classification sentence':
+    '{ruleName}: When the receiving address risk score is greater than or equal to {threshold}, Cregis AML will apply risk control measures.',
+  'AML query result disclaimer':
+    'This result is generated based on third-party data at the time of screening. It does not constitute a guarantee of future fund risk status, nor does it replace the customer\'s own compliance obligations.',
+  'AML risk profile title': 'Risk Profile',
+  'AML risk composition title': 'Risk Composition',
+  'AML exposure bar caption': 'Share of funds associated with risky entities or addresses',
+  'AML exposure bar aria': 'Risk exposure bar chart',
+  'AML handling recommendations title': 'Recommended Actions',
+  'AML handling recommendations lead':
+    'Based on the risk profile and compliance requirements, you may take the following actions.',
+  'AML handling blacklist title': 'Add to Blacklist',
+  'AML handling blacklist desc':
+    'Add the target address to the blacklist to block subsequent outbound transfers.',
+  'AML handling manual review title': 'Manual Review',
+  'AML handling manual review desc': 'Manually review and confirm the risk rating.',
+  'AML handling report title': 'Request Report',
+  'AML handling report desc': 'Contact the support team for a PDF report.',
+  'AML counterparty risk title': 'Counterparty Risk',
+  'AML counterparty risk hint':
+    'Only risky counterparties are shown. Contact the support team for a full counterparty report.',
+  'AML record confirm blacklist': 'Add this address to the blacklist?',
+  'AML record confirm retry':
+    'Retrying will use one free query, or charge your team if no free queries remain. Confirm retry?',
+  'AML record confirm pass': 'Allow this withdrawal request?',
+  'AML record confirm reject': 'Reject this withdrawal request?',
+  'AML manual review dialog title': 'Confirm Risk Rating',
+  'AML manual review level label': 'Risk Rating',
+  'Inbound direction': 'Inbound',
+  'Outbound direction': 'Outbound',
+  'Exposure type': 'Exposure Type',
+  'Contribution ratio': 'Contribution (%)',
+  'Funds (USD)': 'Funds (USD)',
+  'Collaboration number': 'Collaboration No.',
+  'Receiver address': 'Receiver Address',
+  'Sender address': 'Sender Address',
+  'Transaction application amount': 'Requested Amount',
+  'Risk control measure': 'Risk Control Measure',
+  'Risk score threshold': 'Score Threshold',
+  Alerted: 'Alerted',
+  Rejected: 'Rejected',
+  NA: 'NA',
+  Direct: 'Direct',
+  Indirect: 'Indirect',
   'Auto query (receiving address)': 'Auto Query (Receiving Address)',
 };

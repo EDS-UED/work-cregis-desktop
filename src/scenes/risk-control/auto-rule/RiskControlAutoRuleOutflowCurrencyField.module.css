@@ -1,0 +1,110 @@
+.field {
+  composes: fieldStack from './riskControlAutoRuleEntryAddField.shared.module.css';
+}
+
+.entryList {
+  composes: entryList from './riskControlAutoRuleEntryAddField.shared.module.css';
+}
+
+.entryRow {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: var(--stroke-xs) solid var(--stroke-divider-page);
+  border-radius: var(--radius-sm);
+  transition: var(--motion-recipe-hover);
+}
+
+.entryBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-5);
+  min-width: 0;
+}
+
+.entryDeleteButton {
+  flex-shrink: 0;
+}
+
+.entryRow:hover {
+  border-color: var(--stroke-outline-deep);
+}
+
+.entryMeta {
+  display: flex;
+  flex: 0 0 144px;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  width: 144px;
+  max-width: 144px;
+  min-width: 0;
+  min-height: var(--avatar-sm);
+  overflow: hidden;
+}
+
+.entryCrypto {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-sm);
+  height: var(--avatar-sm);
+  line-height: 0;
+}
+
+.entrySymbol {
+  composes: typography-body-medium from global;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  align-self: center;
+  height: var(--avatar-sm);
+  line-height: 1;
+  color: var(--text-base-primary);
+}
+
+.entryNetworkTag {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  align-self: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.entryNetworkTag :global(.eds-tag) {
+  max-width: 100%;
+}
+
+.amountRow {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.amountLabel {
+  flex-shrink: 0;
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.amountInput {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.addRow {
+  composes: addRow from './riskControlAutoRuleEntryAddField.shared.module.css';
+}

@@ -1,5 +1,7 @@
 .host {
   align-items: flex-start;
+  box-sizing: border-box;
+  padding-inline-end: var(--spacing-3);
 }
 
 .hashLikeCombo {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { EgIcon, EgListFieldOverflowText } from '@eds/desktop-components';
+import { EgIcon } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { resolveAmlRiskRatingVisual } from './list-field/resolveAmlRiskRatingVisual';
 import styles from './RiskControlAmlRecordDetailRiskRatingValue.module.css';
@@ -16,6 +16,7 @@ const riskLabel = computed(() => ui(props.labelKey));
 const riskVisual = computed(() => resolveAmlRiskRatingVisual(props.customStyle));
 
 const riskToneClass = computed(() => {
+  if (props.labelKey.trim() === 'NA') return styles.riskToneNa;
   if (riskVisual.value.tone === 'danger') return styles.riskToneDanger;
   if (riskVisual.value.tone === 'warning') return styles.riskToneWarning;
   return styles.riskToneSuccess;
@@ -23,14 +24,12 @@ const riskToneClass = computed(() => {
 </script>
 
 <template>
-  <div :class="[styles.host, riskToneClass]">
-    <span :class="styles.riskIcon">
+  <div :class="styles.host">
+    <span :class="[styles.riskIcon, riskToneClass]">
       <EgIcon :name="riskVisual.iconName" size="sm" fit fill-tone="primary" />
     </span>
-    <EgListFieldOverflowText
-      :text="riskLabel"
-      variant="primary"
-      :class="styles.riskLabel"
-    />
+    <span :class="['typography-body-small-strong', styles.riskLabel, riskToneClass]">
+      {{ riskLabel }}
+    </span>
   </div>
 </template>

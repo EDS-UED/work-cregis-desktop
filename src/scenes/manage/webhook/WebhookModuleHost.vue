@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
-import { closeAllAnchoredTooltips, EgToolBar } from '@eds/desktop-components';
+import { closeAllAnchoredTooltips } from '@eds/desktop-components';
 import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
@@ -309,14 +309,6 @@ onBeforeUnmount(() => {
       :toolbar-action-handler="onToolbarAction"
       :row-click-handler="onWebhookRowClick"
     >
-      <template #module-stack-create-toolbar>
-        <EgToolBar
-          :title="ui(editDraft ? 'Edit Webhook' : 'Create Webhook')"
-          :show-back="true"
-          :show-operation="false"
-          @back="closeForm"
-        />
-      </template>
       <template #module-stack-create>
         <WebhookCreateEditPage
           embedded-in-page-stack

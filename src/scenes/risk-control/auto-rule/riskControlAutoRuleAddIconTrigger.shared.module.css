@@ -1,0 +1,27 @@
+/**
+ * EgFlotation #trigger：EgIconButton rectangular lg bordered（即插槽内容，不再外包 span）。
+ */
+.addIconTriggerHost:global(.eds-icon-button) {
+  cursor: pointer;
+}
+
+.addIconTriggerHost:global(.eds-icon-button):hover:not(:disabled):not(.isDisabled),
+.addIconTriggerHost.addIconTriggerExpanded:global(.eds-icon-button:not(:disabled):not(.isDisabled)) {
+  background-color: var(--event-hover);
+  border-color: transparent;
+}
+
+.addIconTriggerHost:global(.eds-icon-button):hover:not(:disabled):not(.isDisabled) .symbol,
+.addIconTriggerHost:global(.eds-icon-button):hover:not(:disabled):not(.isDisabled) .eds-icon,
+.addIconTriggerHost.addIconTriggerExpanded:global(.eds-icon-button:not(:disabled):not(.isDisabled) .symbol),
+.addIconTriggerHost.addIconTriggerExpanded:global(.eds-icon-button:not(:disabled):not(.isDisabled) .eds-icon) {
+  color: var(--stroke-base-secondary);
+}
+
+.addIconTriggerHost:global(.eds-icon-button):active:not(:disabled):not(.isDisabled) .eds-icon {
+  color: var(--stroke-base-secondary);
+}
+
+/** composes 锚点；与 `.addIconTriggerHost` 同挂 EgIconButton。 */
+.addIconTriggerExpanded {
+}

@@ -17,6 +17,12 @@ import ManageWebhookOverlayHost from '@/scenes/manage/webhook/ManageWebhookOverl
 import { manageWebhookOverlayRegistry } from '@/scenes/manage/webhook/manageWebhookOverlayContext';
 import ManageRoleOverlayHost from '@/scenes/manage/role/ManageRoleOverlayHost.vue';
 import { manageRoleOverlayRegistry } from '@/scenes/manage/role/manageRoleOverlayContext';
+import RiskControlAmlManualQueryOverlayHost from '@/scenes/risk-control/aml-manual-query/RiskControlAmlManualQueryOverlayHost.vue';
+import { riskControlAmlManualQueryOverlayRegistry } from '@/scenes/risk-control/aml-manual-query/riskControlAmlManualQueryOverlayContext';
+import RiskControlAutoRuleOverlayHost from '@/scenes/risk-control/auto-rule/RiskControlAutoRuleOverlayHost.vue';
+import { riskControlAutoRuleOverlayRegistry } from '@/scenes/risk-control/auto-rule/riskControlAutoRuleOverlayContext';
+import RiskControlAmlRecordDetailOverlayHost from '@/scenes/risk-control/RiskControlAmlRecordDetailOverlayHost.vue';
+import { riskControlAmlRecordDetailOverlayRegistry } from '@/scenes/risk-control/riskControlAmlRecordDetailOverlayContext';
 
 const approvalFlow = computed(() => approvalFlowRegistry.value);
 const signingFlow = computed(() => signingFlowRegistry.value);
@@ -28,6 +34,13 @@ const transactionRecordDetailFlow = computed(
 const paymentEngineDetailFlow = computed(() => paymentEngineDetailFlowRegistry.value);
 const manageWebhookOverlay = computed(() => manageWebhookOverlayRegistry.value);
 const manageRoleOverlay = computed(() => manageRoleOverlayRegistry.value);
+const riskControlAutoRuleOverlay = computed(() => riskControlAutoRuleOverlayRegistry.value);
+const riskControlAmlManualQueryOverlay = computed(
+  () => riskControlAmlManualQueryOverlayRegistry.value,
+);
+const riskControlAmlRecordDetailOverlay = computed(
+  () => riskControlAmlRecordDetailOverlayRegistry.value,
+);
 </script>
 
 <template>
@@ -47,6 +60,9 @@ const manageRoleOverlay = computed(() => manageRoleOverlayRegistry.value);
       <SigningBatchFlowHost v-if="signingBatchFlow" :flow="signingBatchFlow" />
       <ManageWebhookOverlayHost v-if="manageWebhookOverlay" />
       <ManageRoleOverlayHost v-if="manageRoleOverlay" />
+      <RiskControlAutoRuleOverlayHost v-if="riskControlAutoRuleOverlay" />
+      <RiskControlAmlManualQueryOverlayHost v-if="riskControlAmlManualQueryOverlay" />
+      <RiskControlAmlRecordDetailOverlayHost v-if="riskControlAmlRecordDetailOverlay" />
       <SigningBatchGlobalProgressHost />
     </div>
   </div>

@@ -1,0 +1,196 @@
+.host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  transition:
+    gap var(--motion-duration-enter) var(--motion-easing-enter)
+    var(--motion-delay-layout-deform-content-swap);
+}
+
+/** 滚动收起 footnote 列表（状态由 `useRiskControlAmlRecordDetailFieldCopyScroll` 滞回控制）。 */
+.host[data-field-copy-collapsed] {
+  gap: 0;
+  transition: gap var(--motion-duration-enter) var(--motion-easing-exit) 0s;
+}
+
+.fieldCopyCollapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  min-height: 0;
+  width: 100%;
+  transition: grid-template-rows var(--motion-duration-enter) var(--motion-easing-enter);
+}
+
+.host[data-field-copy-collapsed] .fieldCopyCollapse {
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-duration-enter) var(--motion-easing-exit);
+}
+
+.entityHeadlineGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.entityHeadlineBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.entityNameRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.entityNameMain {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  min-width: 0;
+}
+
+.entityName {
+  color: var(--text-base-primary);
+}
+
+.scoreMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+  margin-top: var(--spacing-1);
+}
+
+.scoreRow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.scoreLabel {
+  color: var(--text-base-primary);
+  font-weight: var(--eds-body-small-weight);
+}
+
+.metaDivider {
+  align-self: center;
+  flex-shrink: 0;
+  height: var(--scale-2-5);
+  min-height: var(--scale-2-5);
+  max-height: var(--scale-2-5);
+}
+
+.scoreValueDanger {
+  color: var(--status-danger);
+}
+
+.scoreValueWarning {
+  color: var(--status-warning);
+}
+
+.scoreValueSuccess {
+  color: var(--status-success);
+}
+
+.scoreValueNa {
+  color: var(--text-base-secondary);
+}
+
+.scoreDenominator {
+  color: var(--text-base-primary);
+}
+
+/** 圆点列表 rhythm 对齐 AML 手动查询 `noticeList`。 */
+.fieldCopyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding-inline-start: var(--spacing-5);
+  list-style: none;
+  overflow: hidden;
+  opacity: 1;
+  pointer-events: auto;
+  transition:
+    opacity var(--motion-duration-layout-deform-content) var(--motion-easing-enter)
+    var(--motion-delay-layout-deform-content-swap),
+    padding-inline-start var(--motion-duration-enter) var(--motion-easing-enter)
+    var(--motion-delay-layout-deform-content-swap);
+}
+
+.host[data-field-copy-collapsed] .fieldCopyList {
+  opacity: 0;
+  pointer-events: none;
+  padding-inline-start: 0;
+  transition:
+    opacity var(--motion-duration-layout-deform-content) var(--motion-easing-exit) 0s,
+    padding-inline-start var(--motion-duration-enter) var(--motion-easing-exit) 0s;
+}
+
+.fieldCopyItem {
+  display: list-item;
+  list-style-type: disc;
+  list-style-position: outside;
+  padding-inline-start: var(--spacing-05);
+}
+
+.fieldCopyItem::marker {
+  color: var(--text-base-tertiary);
+}
+
+.fieldBlock {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.fieldLabel {
+  color: var(--text-base-tertiary);
+}
+
+.fieldBody {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-base-tertiary);
+}
+
+.providerLogo {
+  flex-shrink: 0;
+  width: auto;
+  height: var(--scale-7);
+  object-fit: contain;
+}
+
+.providerFallback {
+  flex-shrink: 0;
+  color: var(--text-base-primary);
+}
+
+.disclaimer {
+  margin: 0;
+  color: var(--text-base-tertiary);
+  font-style: italic;
+}

@@ -2,13 +2,14 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import {
   EgButton,
-  EgDivider,
+  EgComboPageButton,
   EgFormSubmission,
   EgIcon,
   EgInput,
   EgTextarea,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import LayoutChromeConfigFormPageChrome from '@/scenes/project/LayoutChromeConfigFormPageChrome.vue';
 import ProjectCreateModeCard from '@/scenes/project/components/ProjectCreateModeCard.vue';
 import type { WebhookConfigRecord } from './webhookMockData';
 import { resolveWebhookEndpointVerifyMock } from './webhookEndpointVerifyMock';
@@ -232,6 +233,10 @@ const confirmLabel = computed(() =>
   ui(props.mode === 'create' ? 'Create' : 'Save'),
 );
 
+const toolbarTitle = computed(() =>
+  ui(props.mode === 'create' ? 'Create Webhook' : 'Edit Webhook'),
+);
+
 function onNameFocus() {
   nameFocused.value = true;
 }
@@ -322,17 +327,119 @@ function onSubmit() {
 </script>
 
 <template>
+  <LayoutChromeConfigFormPageChrome
+    v-if="props.embeddedInPageStack"
+    :title="toolbarTitle"
+    :confirm-label="confirmLabel"
+    :can-submit="canSubmit"
+    @back="emit('cancel')"
+    @cancel="emit('cancel')"
+    @confirm="onSubmit"
+  >
+    <div :class="styles.formStack">
+          <div :class="styles.fieldBlock">
+            <span :class="styles.fieldLabel">{{ ui('Webhook Name') }}</span>
+            <EgInput
+              v-model="name"
+              width-mode="full"
+              :placeholder="ui('Please Enter')"
+              @focus="onNameFocus"
+              @blur="onNameBlur"
+            />
+            <EgFormSubmission
+              :type="nameSubmissionType"
+              :show-link="false"
+              :text="nameSubmissionText"
+            />
+          </div>
+
+          <section :class="styles.fieldBlock">
+            <span :class="styles.fieldLabel">{{ ui('Event') }}</span>
+            <ProjectCreateModeCard
+              radio-name="webhook-event-type"
+              radio-value="dangerous-transaction"
+              :title="ui('Dangerous transaction')"
+              :description="ui('Dangerous transaction webhook description')"
+              :selected="eventSelected"
+              @select="onEventSelect"
+            />
+          </section>
+
+          <div :class="styles.fieldBlock">
+            <span :class="styles.fieldLabel">{{ ui('Endpoint URL') }}</span>
+            <EgTextarea
+              v-model="endpointUrl"
+              width-mode="full"
+              :placeholder="ui('Endpoint URL placeholder')"
+              :paste-label="ui('Paste')"
+              :clear-label="ui('Clear')"
+              @focus="onEndpointFocus"
+              @blur="onEndpointBlur"
+            />
+            <EgFormSubmission
+              :type="endpointSubmissionType"
+              :show-link="false"
+              :text="endpointHint"
+            />
+          </div>
+
+          <section :class="[styles.fieldBlock, styles.verifyFieldBlock]">
+            <span :class="styles.fieldLabel">{{ ui('Endpoint verification') }}</span>
+            <div :class="styles.verifyActionStack">
+              <div
+                :class="[
+                  styles.verifyButtonHost,
+                  verifyButtonSuccess && styles.verifyButtonHostSuccess,
+                ]"
+              >
+                <EgButton
+                  tone="subtle"
+                  variant="outline"
+                  size="lg"
+                  :disabled="verifyButtonDisabled"
+                  @click="onVerifyEndpoint"
+                >
+                  <template #icon>
+                    <EgIcon
+                      :name="verifyButtonIconName"
+                      fit
+                      size="md"
+                      :class="[
+                        verifyButtonIconName === 'eds-website' && styles.verifyButtonIconWebsite,
+                        verifyLoading && styles.verifyButtonIconLoading,
+                      ]"
+                    />
+                  </template>
+                  {{ verifyButtonLabel }}
+                </EgButton>
+              </div>
+              <EgFormSubmission
+                v-if="showVerifySubtitleHint"
+                type="notes"
+                :show-link="false"
+                :text="verifySubtitle"
+              />
+              <Transition name="verifyFeedback">
+                <EgFormSubmission
+                  v-if="verifyFeedbackSubmission"
+                  :class="styles.verifyFeedback"
+                  :type="verifyFeedbackSubmission.type"
+                  :show-link="false"
+                  :text="verifyFeedbackSubmission.text"
+                />
+              </Transition>
+            </div>
+          </section>
+    </div>
+  </LayoutChromeConfigFormPageChrome>
+
   <div
+    v-else
     class="desktopTokens"
-    :class="[styles.page, props.embeddedInPageStack && styles.pageEmbedded]"
+    :class="styles.page"
   >
     <div :class="styles.pageShell">
-      <div
-        :class="[
-          styles.formScroll,
-          props.embeddedInPageStack && styles.formScrollEmbedded,
-        ]"
-      >
+      <div :class="styles.formScroll">
         <div :class="styles.formStack">
           <div :class="styles.fieldBlock">
             <span :class="styles.fieldLabel">{{ ui('Webhook Name') }}</span>
@@ -430,29 +537,18 @@ function onSubmit() {
         </div>
       </div>
 
-      <footer :class="styles.pageFooter">
-        <EgDivider
-          :class="styles.pageFooterDivider"
-          type="module"
-          direction="horizontal"
+      <div :class="styles.pageFooter">
+        <EgComboPageButton
+          tone="decor"
+          direction="left"
+          divider
+          :confirm-disabled="!canSubmit"
+          :confirm-label="confirmLabel"
+          :cancel-label="ui('Cancel')"
+          @confirm="onSubmit"
+          @cancel="emit('cancel')"
         />
-        <div :class="styles.pageFooterActions">
-          <div :class="styles.pageFooterActionGroup">
-            <EgButton
-              tone="decor"
-              variant="solid"
-              size="md"
-              :disabled="!canSubmit"
-              @click="onSubmit"
-            >
-              {{ confirmLabel }}
-            </EgButton>
-            <EgButton tone="subtle" variant="text" size="md" @click="emit('cancel')">
-              {{ ui('Cancel') }}
-            </EgButton>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
   </div>
 </template>

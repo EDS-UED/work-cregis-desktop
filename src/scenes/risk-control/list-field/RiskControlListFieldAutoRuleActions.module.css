@@ -6,6 +6,6 @@
   width: 100%;
 }
 
-.deleteIcon {
-  color: var(--stroke-color-danger);
+.deleteButton {
+  flex-shrink: 0;
 }

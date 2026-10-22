@@ -121,6 +121,16 @@ body::after {
   transform: translateY(var(--spacing-2)) scale(0.98);
 }
 
+/* 顶栏 Toast：仅定位；进出场走 EDS `.is-active .motion-flotation`（负 Y 自上而下）。勿用 +translateY 覆盖。 */
+.app-preview > .autoRuleScopeToastHost {
+  position: absolute;
+  top: var(--spacing-6);
+  left: 50%;
+  z-index: 1100;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 /*
  * EgFlotation / AnchoredTooltip 默认 teleport 到 body，不在 .app-preview 内。
  * 与 shell 一致：浮层文本不可选、不可复制（§1.1 禁止复制）。

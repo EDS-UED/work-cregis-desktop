@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, provide, ref, watch } from 'vue';
+import { appShellMenuNavigationKey } from '@/app/appShellMenuNavigation';
 import {
   EgCregisModuleMenu,
   EgCregisNavBar,
@@ -279,6 +280,13 @@ function onNavClick(event: MouseEvent) {
   const englishLabel = resolveEnglishUiText(locale.value, label);
   if (englishLabel.trim()) activeNavLabel.value = englishLabel;
 }
+
+function selectModuleMenuItem(catalogLabel: string) {
+  onModuleMenuItemSelect(catalogLabel);
+  syncModuleMenuItemFocus(translateModuleMenu(catalogLabel));
+}
+
+provide(appShellMenuNavigationKey, { selectModuleMenuItem });
 
 function onModuleMenuItemSelect(label: string) {
   const branchDefault = resolveFirstSubitemForBranchLabel(

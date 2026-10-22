@@ -6,6 +6,8 @@ import {
   resolveVerifiedTxHashForRow,
 } from '@/scenes/shared/egDataListMockData';
 import type { DetailAmlSearchResultVariant } from '@/scenes/tasks/shared/detailAmlSearchResult';
+import { seedAutoRuleRowsIfNeeded } from './auto-rule/riskControlAutoRuleStore';
+import { resolveDemoAmlEntityTags } from './riskControlAmlQueryRecordDetailData';
 import { resolveRiskControlRecordMenuItem } from './riskControlMenuData';
 import {
   isRiskControlLogTriggeredAction,
@@ -303,6 +305,17 @@ function resolveAutoRuleScopeKey(rowIndex: number, direction: 'inflow' | 'outflo
   return rowIndex % 2 === 0 ? 'Manual Transfer' : 'API Payout';
 }
 
+function resolveAutoRuleScopeLabel(
+  rowIndex: number,
+  direction: 'inflow' | 'outflow',
+  scopeKey: string,
+): string {
+  if (direction === 'outflow' && scopeKey === 'Manual Transfer' && rowIndex === 6) {
+    return 'Mock Wallet 4';
+  }
+  return AUTO_RULE_WAAS_PROJECT_SHOWCASE[rowIndex % AUTO_RULE_WAAS_PROJECT_SHOWCASE.length];
+}
+
 function buildAutoRulesRow(rowIndex: number): PaymentEngineRecordRow {
   const ruleNumber = buildPolicyNumber(rowIndex);
   const direction = resolveAutoRuleDirection(rowIndex);
@@ -321,7 +334,7 @@ function buildAutoRulesRow(rowIndex: number): PaymentEngineRecordRow {
     ruleNumber,
     autoRuleDirection: direction,
     autoRuleScopeKey: scopeKey,
-    autoRuleWaasProject: AUTO_RULE_WAAS_PROJECT_SHOWCASE[rowIndex % AUTO_RULE_WAAS_PROJECT_SHOWCASE.length],
+    autoRuleWaasProject: resolveAutoRuleScopeLabel(rowIndex, direction, scopeKey),
     autoRuleServiceProvider: rowIndex % 4 === 0
       ? 'Elliptic'
       : AUTO_RULE_PROVIDER_SHOWCASE[rowIndex % AUTO_RULE_PROVIDER_SHOWCASE.length],
@@ -467,8 +480,10 @@ function buildAmlRecordId(rowIndex: number): string {
   return `AML-${String(rowIndex + 1).padStart(5, '0')}`;
 }
 
-/** 查询记录 · 第 1 行危险、第 2 行异常、其余安全（§7.8）。 */
-const AML_QUERY_EXCEPTION_ROW_INDEX = 1;
+/** 查询记录 · 第 1 行危险、第 2 行可疑 3.6、第 3 行异常（有分）、第 4 行查询失败（§7.8）。 */
+const AML_QUERY_SUSPICIOUS_ROW_INDEX = 1;
+const AML_QUERY_EXCEPTION_ROW_INDEX = 2;
+const AML_QUERY_FAILED_ROW_INDEX = 3;
 const AML_OUTFLOW_AUTO_RULE_NAMES = [
   'Outflow Guard Alpha',
   'API Payout AML Scan',
@@ -478,14 +493,21 @@ const AML_OUTFLOW_AUTO_RULE_NAMES = [
 function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
   const id = buildAmlRecordId(rowIndex);
   const preset = resolveCurrencyRowPreset(rowIndex);
+  const isFailed = rowIndex === AML_QUERY_FAILED_ROW_INDEX;
   const isException = rowIndex === AML_QUERY_EXCEPTION_ROW_INDEX;
+  const isSuspiciousShowcase = rowIndex === AML_QUERY_SUSPICIOUS_ROW_INDEX;
   const isDangerShowcase = rowIndex === 0;
-  const isOutflowAuto = !isException && !isDangerShowcase && rowIndex % 4 === 3;
-  const risk = isException
-    ? { labelKey: 'AML Exception', customStyle: 'aml-suspicious' as const, score: 'NA' }
-    : isDangerShowcase
-      ? AML_RISK_SHOWCASE[0]!
-      : AML_RISK_COMPLETED;
+  const isOutflowAuto = isDangerShowcase
+    || (!isFailed && !isException && !isSuspiciousShowcase && rowIndex % 4 === 3);
+  const risk = isFailed
+    ? { labelKey: 'NA', customStyle: 'aml-safe' as const, score: 'NA' }
+    : isException
+      ? { labelKey: 'AML Exception', customStyle: 'aml-suspicious' as const, score: '6.8' }
+      : isSuspiciousShowcase
+        ? { labelKey: 'Suspicious', customStyle: 'aml-suspicious' as const, score: '3.6' }
+        : isDangerShowcase
+          ? { labelKey: 'Danger', customStyle: 'aml-danger' as const, score: '10' }
+          : AML_RISK_COMPLETED;
   const outflowRuleName = AML_OUTFLOW_AUTO_RULE_NAMES[
     rowIndex % AML_OUTFLOW_AUTO_RULE_NAMES.length
   ]!;
@@ -514,7 +536,9 @@ function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
       : AML_TRIGGER_MODE_KEYS[rowIndex % AML_TRIGGER_MODE_KEYS.length],
     amlRequesterName: requesterName,
     amlRequesterAvatarName: (isOutflowAuto || isException) ? undefined : requesterName,
-    amlServiceProvider: rowIndex % 3 === 0 ? 'Elliptic' : resolveDemoAmlServiceProvider(rowIndex),
+    amlServiceProvider: rowIndex === 0 || rowIndex % 3 === 0
+      ? 'Elliptic'
+      : resolveDemoAmlServiceProvider(rowIndex),
     amlRiskLabelKey: risk.labelKey,
     amlRiskCustomStyle: risk.customStyle,
     amlRiskScore: risk.score,
@@ -523,13 +547,18 @@ function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
     amlCurrencySymbol: preset.symbol,
     amlCurrencyCryptoName: preset.cryptoName,
     amlCurrencyNetworkLabel: preset.networkLabel,
+    amlQueryFailed: isFailed,
     amlQueryException: isException,
     amlQueryExceptionKind: isException ? 'designated-handler' : undefined,
     amlOutflowAutoQuery: isOutflowAuto || isException,
     amlTriggeredRuleName: (isOutflowAuto || isException) ? (isException ? exceptionRuleName : outflowRuleName) : undefined,
     amlQueryTimeDisplay: undefined,
-    amlBelongingEntity: isException ? '--' : undefined,
-    amlEntityTags: isException ? [] : undefined,
+    amlBelongingEntity: isFailed ? '--' : (isDangerShowcase ? 'HuiOne' : undefined),
+    amlEntityTags: isFailed
+      ? []
+      : (isDangerShowcase
+        ? [{ label: 'Sanctions', customStyle: 'vermilion' as const }]
+        : resolveDemoAmlEntityTags(rowIndex)),
   };
 }
 
@@ -614,7 +643,7 @@ export function buildRiskControlRecordRows(
   }
 
   if (resolvedMenuItem === 'Auto Rules') {
-    return Array.from({ length: count }, (_, rowIndex) => buildAutoRulesRow(rowIndex));
+    return seedAutoRuleRowsIfNeeded(buildAutoRulesRow, count);
   }
 
   if (resolvedMenuItem === 'AML') {

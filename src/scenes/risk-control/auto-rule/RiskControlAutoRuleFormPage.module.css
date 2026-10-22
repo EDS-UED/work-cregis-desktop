@@ -1,0 +1,326 @@
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  width: 100%;
+  max-width: 560px;
+  margin-left: 28px;
+}
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1-5);
+  width: 100%;
+  min-width: 0;
+}
+
+.fieldBlockContent {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  margin-top: var(--spacing-1);
+  gap: var(--spacing-1-5);
+}
+
+.fieldBlockContentOptionCards {
+  gap: var(--spacing-2);
+}
+
+.fieldBlockContent.fieldBlockContentOptionCards {
+  gap: var(--spacing-2);
+}
+
+.optionCardList {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.outflowRuleGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  background: var(--material-card-subtle);
+  border: var(--stroke-xs) solid transparent;
+  box-sizing: border-box;
+}
+
+.outflowRuleGroupActive {
+  background: var(--event-focus-brand-subtle);
+  border-color: transparent;
+}
+
+.outflowRuleTypeBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1-5);
+  width: 100%;
+  min-width: 0;
+}
+
+/** 13px Body Small · weight 500 · 60% → `--text-base-secondary`。 */
+.outflowRuleTypeLabel {
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-strong-weight);
+  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-secondary);
+  margin-top: var(--spacing-1);
+  margin-left: var(--spacing-2);
+}
+
+.outflowRuleOptionStack :global(.eds-decide:focus),
+.outflowRuleOptionStack :global(.eds-decide:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.outflowRuleOptionStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-025);
+  width: 100%;
+  min-width: 0;
+}
+
+.outflowRuleOptionStack :global([class*='itemRow']:focus),
+.outflowRuleOptionStack :global([class*='itemRow']:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.outflowRuleOptionStack :global([class*='itemRow']:focus:not([class*='itemRowSelected'])),
+.outflowRuleOptionStack :global([class*='itemRow']:focus-visible:not([class*='itemRowSelected'])) {
+  background: transparent;
+}
+
+.outflowRuleOptionStack :global([class*='itemRowSelected']),
+.outflowRuleOptionStack :global([class*='itemRowSelected']:hover),
+.outflowRuleOptionStack :global([class*='itemRowSelected']:focus),
+.outflowRuleOptionStack :global([class*='itemRowSelected']:focus-visible),
+.outflowRuleOptionStack :global([class*='itemRowSelected']:focus:hover),
+.outflowRuleOptionStack :global([class*='itemRowSelected']:focus-visible:hover) {
+  background: transparent;
+}
+
+.outflowRuleGroup .outflowRuleOptionStack :global([class*='itemRow']:hover:not([class*='itemRowSelected'])) {
+  background-color: var(--event-hover);
+}
+
+.outflowRuleBody {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-5);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-sm);
+  background: var(--box-page);
+  box-sizing: border-box;
+}
+
+.cardBodyChecksSection {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1-5);
+  width: 100%;
+  min-width: 0;
+}
+
+.cardBodySectionTitle {
+  composes: typography-body-small from global;
+  font-weight: var(--eds-body-small-weight);
+  color: var(--text-base-primary);
+}
+
+.cardBodyChecks {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1-5);
+  width: 100%;
+  min-width: 0;
+}
+
+.cardBodyCheckRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.cardBodyCheckRow :global(.eds-decide:focus),
+.cardBodyCheckRow :global(.eds-decide:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.cardBodyCheckLabel {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.cardBodyField {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1);
+  width: 100%;
+  min-width: 0;
+}
+
+.emailNotifyBody {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-5);
+  width: 100%;
+  min-width: 0;
+}
+
+.otherEmailRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.otherEmailInput {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.otherEmailRemove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-base-tertiary);
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.serviceProviderFeeLine {
+  display: inline;
+}
+
+.serviceProviderFeeAmount {
+  composes: typography-footnote-strong from global;
+  color: var(--text-brand-primary);
+}
+
+.serviceProviderFeeSuffix {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.serviceProviderLogo {
+  display: block;
+  width: auto;
+  height: 22px;
+  max-width: 140px;
+  object-fit: contain;
+  object-position: right center;
+}
+
+.scopeFlotationHost {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.scopeFlotationHost :global(> span) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.scopeFlotationTrigger {
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.fieldLabelGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-05);
+  width: 100%;
+  min-width: 0;
+}
+
+.fieldLabel {
+  composes: typography-body-small-strong from global;
+  color: var(--text-base-primary);
+}
+
+.fieldHint {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+  margin: 0;
+}
+
+.fieldHintWarning {
+  composes: typography-footnote from global;
+  color: var(--status-warning);
+  margin: 0;
+}
+
+.riskScoreThresholdHintValue {
+  composes: typography-footnote-strong from global;
+  color: var(--text-base-primary);
+}
+
+.riskScoreRangeHintValueSuccess {
+  composes: typography-footnote-strong from global;
+  color: var(--status-success);
+}
+
+.riskScoreRangeHintValueDanger {
+  composes: typography-footnote-strong from global;
+  color: var(--status-danger);
+}
+
+.formFootnote {
+  composes: typography-footnote-strong from global;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+  color: var(--status-danger);
+}
+
+.formFootnoteIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--status-danger);
+}
+

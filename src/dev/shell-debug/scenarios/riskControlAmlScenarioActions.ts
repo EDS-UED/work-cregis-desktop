@@ -7,8 +7,8 @@ import { waitForPaymentEngineDetailFlow } from './waitForPaymentEngineDetailFlow
 export const RISK_CONTROL_AML_QUERY_RECORDS_PAGE_KEY = 'Risk Control:Query Records' as const;
 export const RISK_CONTROL_AUTO_RULES_PAGE_KEY = 'Risk Control:Auto Rules' as const;
 
-/** 指定处理人 · 查询异常（AML-00002，列表第 2 行）。 */
-export const AML_DESIGNATED_HANDLER_EXCEPTION_ROW_INDEX = 1;
+/** 指定处理人 · 查询异常（AML-00003，列表第 3 行）。 */
+export const AML_DESIGNATED_HANDLER_EXCEPTION_ROW_INDEX = 2;
 
 export function resetRiskControlAmlScenarioBaseline() {
   clearQaLoadingTimeout();

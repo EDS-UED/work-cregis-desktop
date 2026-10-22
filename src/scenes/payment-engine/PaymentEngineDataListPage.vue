@@ -111,6 +111,7 @@ import {
   WEBHOOK_PUSH_RECORD_FILTER_OPERATORS,
   buildWebhookPushRecordFilterFields,
 } from '@/scenes/manage/webhook/filter/webhookPushRecordFilterFields';
+import { isWebhookPushRecordRepushEligible } from '@/scenes/manage/webhook/webhookPushRecordRepush';
 import { resolveWaasStandardRecordRowCount } from '@/scenes/waas-project/waasStandardRecordData';
 import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import LayoutChromePageStack from '@/scenes/project/LayoutChromePageStack.vue';
@@ -141,9 +142,9 @@ import { useWaasSubAddressCurrencySelection } from '@/scenes/waas-project/useWaa
 import { buildWaasStandardRecordRows } from '@/scenes/waas-project/waasStandardRecordData';
 import type { PaymentEngineRecordSortTarget } from './paymentEngineRecordSort';
 import { isManageWebhookPushRecordsMenuItem } from '@/scenes/manage/manageMenuData';
-import { buildRiskControlAutoRuleCreatePlaceholderRow } from '@/scenes/risk-control/riskControlAutoRuleCreatePlaceholder';
-import { isRiskControlAutoRulesMenuItem } from '@/scenes/risk-control/riskControlMenuData';
 import { webhookFlowKey } from '@/scenes/manage/webhook/webhookFlowContext';
+import { riskControlAutoRulePageStackKey } from '@/scenes/risk-control/auto-rule/riskControlAutoRulePageStackContext';
+import { riskControlAmlManualQueryPageStackKey } from '@/scenes/risk-control/aml-manual-query/riskControlAmlManualQueryPageStackContext';
 import styles from './PaymentEngineDataListPage.module.css';
 
 const props = withDefaults(
@@ -170,6 +171,8 @@ const props = withDefaults(
 );
 
 const webhookFlow = inject(webhookFlowKey, null);
+const autoRulePageStack = inject(riskControlAutoRulePageStackKey, null);
+const amlManualQueryPageStack = inject(riskControlAmlManualQueryPageStackKey, null);
 
 const { ui } = useAppI18n();
 
@@ -419,6 +422,19 @@ const displayToolbarTitle = computed(() =>
   usesSubAddressCurrencyToolbar.value ? '' : ui(props.menuItem),
 );
 
+/** 推送记录批处理：仅展示可「重新推送」的失败行（与行内 Repush 一致）。 */
+const pushRecordBatchSelectActive = ref(false);
+
+const rowsForDataList = computed(() => {
+  if (
+    !isManageWebhookPushRecordsMenuItem(props.menuItem)
+    || !pushRecordBatchSelectActive.value
+  ) {
+    return filteredRows.value;
+  }
+  return filteredRows.value.filter(isWebhookPushRecordRepushEligible);
+});
+
 const {
   DATA_LIST_FIGMA_PAGINER,
   DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
@@ -454,7 +470,7 @@ const {
   showToolbarSection,
   totalRowCount,
 } = usePaymentEngineDataListPage({
-  rows: filteredRows,
+  rows: rowsForDataList,
   showExport: computed(() => pageConfig.value.showExport),
   showBatchSelect: computed(() => Boolean(pageConfig.value.showBatchSelect)),
   filterBadge: computed(() =>
@@ -463,7 +479,7 @@ const {
   toolbarPreset: computed(() => pageConfig.value.toolbarPreset),
 });
 
-function handleToolbarActionClick(key: string) {
+function handleToolbarActionClick(key: string, event: MouseEvent) {
   if (
     isToolbarLockedInBatchSelect.value
     && (key === 'batch' || key === 'filter')
@@ -471,14 +487,6 @@ function handleToolbarActionClick(key: string) {
     return;
   }
   if (props.toolbarActionHandler?.(key)) return;
-
-  if (key === 'addNew' && isRiskControlAutoRulesMenuItem(props.menuItem)) {
-    detailFlow.openDetailForRow(
-      buildRiskControlAutoRuleCreatePlaceholderRow(),
-      'Auto Rules',
-    );
-    return;
-  }
 
   onToolbarActionClick(key);
 }
@@ -562,6 +570,17 @@ const selectMode = computed({
   },
 });
 
+watch(
+  selectMode,
+  (active) => {
+    pushRecordBatchSelectActive.value = active;
+    if (active && isManageWebhookPushRecordsMenuItem(props.menuItem)) {
+      goFirstPage();
+    }
+  },
+  { flush: 'sync' },
+);
+
 const displayToolbarFunctionalButtons = computed(() =>
   withBatchSelectToolbarDisabled(
     unref(toolbarFunctionalButtons) ?? [],
@@ -600,8 +619,30 @@ const usesWebhookModulePageStack = computed(
   () => props.moduleLayoutPageStack && Boolean(webhookFlow),
 );
 
+const usesAutoRuleModulePageStack = computed(
+  () => props.moduleLayoutPageStack && Boolean(autoRulePageStack),
+);
+
+const usesAmlManualQueryModulePageStack = computed(
+  () => props.moduleLayoutPageStack && Boolean(amlManualQueryPageStack),
+);
+
+const usesModuleConfigFormPageStack = computed(
+  () =>
+    usesWebhookModulePageStack.value
+    || usesAutoRuleModulePageStack.value
+    || usesAmlManualQueryModulePageStack.value,
+);
+
+const moduleConfigFormOpen = computed(
+  () =>
+    Boolean(webhookFlow?.configFormOpen.value)
+    || Boolean(autoRulePageStack?.configFormOpen.value)
+    || Boolean(amlManualQueryPageStack?.configFormOpen.value),
+);
+
 const usesIntegratedLayoutPageStack = computed(
-  () => usesLayoutDetailPageStack.value || usesWebhookModulePageStack.value,
+  () => usesLayoutDetailPageStack.value || usesModuleConfigFormPageStack.value,
 );
 
 const hidesEgLayoutChrome = computed(() => usesIntegratedLayoutPageStack.value);
@@ -619,7 +660,7 @@ const layoutDetailOpen = computed(() => {
 });
 
 const integratedPageKey = computed(() => {
-  if (usesWebhookModulePageStack.value && webhookFlow?.configFormOpen.value) {
+  if (usesModuleConfigFormPageStack.value && moduleConfigFormOpen.value) {
     return 'create';
   }
   if (usesLayoutDetailPageStack.value && layoutDetailOpen.value) {
@@ -780,15 +821,21 @@ function onLayoutDetailPageSettled() {
 
 function onIntegratedLayoutPageSettled() {
   onLayoutDetailPageSettled();
-  if (usesWebhookModulePageStack.value && webhookFlow && !webhookFlow.configFormOpen.value) {
+  if (webhookFlow && !webhookFlow.configFormOpen.value) {
     webhookFlow.onConfigFormPageSettled();
+  }
+  if (autoRulePageStack && !autoRulePageStack.configFormOpen.value) {
+    autoRulePageStack.onConfigFormPageSettled();
+  }
+  if (amlManualQueryPageStack && !amlManualQueryPageStack.configFormOpen.value) {
+    amlManualQueryPageStack.onConfigFormPageSettled();
   }
 }
 
 watch(
-  () => webhookFlow?.configFormOpen.value,
+  () => moduleConfigFormOpen.value,
   (next, previous) => {
-    if (!usesWebhookModulePageStack.value || !webhookFlow) return;
+    if (!usesModuleConfigFormPageStack.value) return;
     if (next && !previous) {
       layoutDetailPageMotionRef.value?.setDirection('forward');
       return;
@@ -802,9 +849,17 @@ watch(
 watch(
   () => props.menuItem,
   () => {
-    if (!usesWebhookModulePageStack.value || !webhookFlow?.configFormOpen.value) return;
+    if (!usesModuleConfigFormPageStack.value || !moduleConfigFormOpen.value) return;
     layoutDetailPageMotionRef.value?.setDirection('none');
-    webhookFlow.closeConfigForm();
+    if (webhookFlow?.configFormOpen.value) {
+      webhookFlow.closeConfigForm();
+    }
+    if (autoRulePageStack?.configFormOpen.value) {
+      autoRulePageStack.closeConfigForm();
+    }
+    if (amlManualQueryPageStack?.configFormOpen.value) {
+      amlManualQueryPageStack.closeConfigForm();
+    }
   },
 );
 
@@ -930,6 +985,9 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
               :disabled="isToolbarLockedInBatchSelect"
             />
           </template>
+          <template v-if="$slots['toolbar-add-new']" #add-new="addNewSlotProps">
+            <slot name="toolbar-add-new" v-bind="addNewSlotProps" />
+          </template>
         </PaymentEngineRecordListToolbar>
       </template>
 
@@ -980,15 +1038,18 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
                 :operators="waasFilterOperators"
                 :disabled="isToolbarLockedInBatchSelect"
               />
-              <WaasToolbarFilter
-                v-else
-                v-model="waasFilterConditions"
-                v-model:logic-mode="waasFilterLogicMode"
-                :fields="waasFilterFields"
-                :operators="waasFilterOperators"
-                :disabled="isToolbarLockedInBatchSelect"
-              />
-            </template>
+            <WaasToolbarFilter
+              v-else
+              v-model="waasFilterConditions"
+              v-model:logic-mode="waasFilterLogicMode"
+              :fields="waasFilterFields"
+              :operators="waasFilterOperators"
+              :disabled="isToolbarLockedInBatchSelect"
+            />
+          </template>
+          <template v-if="$slots['toolbar-add-new']" #add-new="addNewSlotProps">
+            <slot name="toolbar-add-new" v-bind="addNewSlotProps" />
+          </template>
           </PaymentEngineRecordListToolbar>
         </template>
 
@@ -1016,12 +1077,16 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
           />
         </template>
 
-        <template v-if="usesWebhookModulePageStack" #create-toolbar>
+        <template v-if="usesModuleConfigFormPageStack" #create-toolbar>
           <slot name="module-stack-create-toolbar" />
         </template>
 
-        <template v-if="usesWebhookModulePageStack" #create>
+        <template v-if="usesModuleConfigFormPageStack" #create>
           <slot name="module-stack-create" />
+        </template>
+
+        <template v-if="usesModuleConfigFormPageStack" #create-footer>
+          <slot name="module-stack-create-footer" />
         </template>
 
         <template #list-paginer>

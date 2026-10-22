@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { EgListFieldOverflowText } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
+import styles from './RiskControlListFieldAutoRuleScope.module.css';
 
 const props = defineProps<{
   row: PaymentEngineRecordRow;
@@ -21,5 +22,7 @@ const scopeText = computed(() => {
 </script>
 
 <template>
-  <EgListFieldOverflowText :text="scopeText" variant="primary" />
+  <div :class="styles.host">
+    <EgListFieldOverflowText :text="scopeText" variant="primary" />
+  </div>
 </template>

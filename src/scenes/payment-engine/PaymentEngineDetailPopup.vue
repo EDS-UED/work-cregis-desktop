@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, toRef, watch, withDefaults } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  ref,
+  toRef,
+  watch,
+  withDefaults,
+} from 'vue';
 import { EgDetail, EgDetailPopup } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { formatGroupedAmountText } from '@/utils/formatGroupedDisplay';
@@ -40,19 +47,18 @@ import {
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 import {
   AML_QUERY_DETAIL_ADDRESS_ITEM_KEY,
-  AML_QUERY_RESULT_ENTITY_TAGS_ITEM_KEY,
-  AML_QUERY_RESULT_RISK_RATING_ITEM_KEY,
+  AML_QUERY_DETAIL_SENDER_ITEM_KEY,
   buildRiskControlAmlRecordDetailSections,
   resolveRiskControlAmlRecordDetailTabKinds,
   resolveRiskControlAmlRecordDetailTabLabels,
 } from '@/scenes/risk-control/buildRiskControlAmlRecordDetailSections';
 import { resolveRiskControlAmlQueryRecordDetail } from '@/scenes/risk-control/riskControlAmlQueryRecordDetailData';
-import RiskControlAmlRecordDetailEntityTags from '@/scenes/risk-control/RiskControlAmlRecordDetailEntityTags.vue';
-import RiskControlAmlRecordDetailRiskRatingValue from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskRatingValue.vue';
-import RiskControlAmlRecordDetailRiskScoreEyebrowPortal from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskScoreEyebrowPortal.vue';
+import RiskControlAmlRecordDetailHeadline from '@/scenes/risk-control/RiskControlAmlRecordDetailHeadline.vue';
+import RiskControlAmlRecordDetailQueryResultPanel from '@/scenes/risk-control/RiskControlAmlRecordDetailQueryResultPanel.vue';
 import RiskControlAmlRecordDetailRiskTracePanel from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskTracePanel.vue';
 import RiskControlAmlRecordDetailExceptionHandling from '@/scenes/risk-control/RiskControlAmlRecordDetailExceptionHandling.vue';
 import RiskControlAmlRecordDetailAddressValue from '@/scenes/risk-control/RiskControlAmlRecordDetailAddressValue.vue';
+import { useRiskControlAmlRecordDetailFlow } from '@/scenes/risk-control/useRiskControlAmlRecordDetailFlow';
 import { applyDetailCurrencyExpand } from '@/scenes/risk-control/applyDetailCurrencyExpand';
 import {
   AUTO_RULE_CURRENCIES_ITEM_KEY,
@@ -91,6 +97,7 @@ const emit = defineEmits<{
 const { ui, locale } = useAppI18n();
 
 const detailHostRef = ref<HTMLElement | null>(null);
+const amlRecordDetailFlow = useRiskControlAmlRecordDetailFlow();
 
 const { popupMounted, popupOpen, onPopupClosed } = usePopupShellLifecycle({
   open: toRef(props, 'open'),
@@ -115,6 +122,20 @@ const isRuleConfigurationRecordDetail = computed(
   () => isRuleConfigurationRecordMenuItem(props.menuItem),
 );
 const isAmlRecordDetail = computed(() => isRiskControlAmlMenuItem(props.menuItem));
+watch(
+  isAmlRecordDetail,
+  (active) => {
+    if (active) {
+      amlRecordDetailFlow.mountOverlayRegistry();
+      return;
+    }
+    amlRecordDetailFlow.unmountOverlayRegistry();
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => {
+  amlRecordDetailFlow.unmountOverlayRegistry();
+});
 const isAutoRuleRecordDetail = computed(() => isRiskControlAutoRulesMenuItem(props.menuItem));
 const isLogsRecordDetail = computed(() => isRiskControlLogsMenuItem(props.menuItem));
 
@@ -239,8 +260,9 @@ const settlementHeadlineParts = computed(() => {
 });
 
 const amlRecordDetail = computed(() => {
+  void locale.value;
   if (!props.detail || !isAmlRecordDetail.value) return null;
-  return resolveRiskControlAmlQueryRecordDetail(props.detail);
+  return resolveRiskControlAmlQueryRecordDetail(props.detail, ui);
 });
 
 const amlRiskTraceTabActive = computed(
@@ -250,7 +272,14 @@ const amlRiskTraceTabActive = computed(
 const amlExceptionHandlingVisible = computed(() => {
   if (!props.detail || !isAmlRecordDetail.value) return false;
   if (amlActiveTabKind.value !== 'queryResult') return false;
-  return props.detail.amlQueryExceptionKind === 'designated-handler';
+  return Boolean(props.detail.amlQueryException)
+    && props.detail.amlQueryExceptionKind === 'designated-handler';
+});
+
+const amlQueryResultPanelVisible = computed(() => {
+  if (!amlRecordDetail.value || !isAmlRecordDetail.value) return false;
+  if (amlActiveTabKind.value !== 'queryResult') return false;
+  return !amlRecordDetail.value.isQueryFailed && !amlRecordDetail.value.isQueryException;
 });
 
 const amlRiskTracePanelDetail = computed(() => {
@@ -264,10 +293,7 @@ const headline = computed(() => {
     return resolveRiskControlLogRecordHeadline(props.detail, ui);
   }
   if (isAmlRecordDetail.value) {
-    if (props.detail.amlQueryException) {
-      return '--';
-    }
-    return amlRecordDetail.value?.riskScore ?? props.detail.amlRiskScore ?? '0.0';
+    return '';
   }
   if (isAutoRuleRecordDetail.value || isRuleConfigurationRecordDetail.value) {
     return props.detail.ruleName?.trim() || props.detail.ruleNumber || props.detail.id;
@@ -529,7 +555,10 @@ function onDetailClose() {
         @close="onDetailClose"
         @item-value-link-click="onItemValueLinkClick"
       >
-        <template #headline-text>
+        <template v-if="isAmlRecordDetail && amlRecordDetail" #headline-main>
+          <RiskControlAmlRecordDetailHeadline :detail="amlRecordDetail" />
+        </template>
+        <template v-else #headline-text>
           {{ headlineParts.primary }}<span
             v-if="headlineParts.fiat"
             :class="detailChromeStyles.headlineFiat"
@@ -546,20 +575,17 @@ function onDetailClose() {
         </template>
         <template
           v-if="amlRecordDetail"
-          #[`item-value-${AML_QUERY_RESULT_RISK_RATING_ITEM_KEY}`]
+          #[`item-value-${AML_QUERY_DETAIL_SENDER_ITEM_KEY}`]
         >
-          <RiskControlAmlRecordDetailRiskRatingValue
-            :label-key="amlRecordDetail.riskLabelKey"
-            :custom-style="amlRecordDetail.riskCustomStyle"
+          <RiskControlAmlRecordDetailAddressValue
+            :address="amlRecordDetail.senderAddress"
+            :network-label="amlRecordDetail.networkLabel"
           />
         </template>
-        <template
-          v-if="amlRecordDetail"
-          #[`item-value-${AML_QUERY_RESULT_ENTITY_TAGS_ITEM_KEY}`]
-        >
-          <RiskControlAmlRecordDetailEntityTags :tags="amlRecordDetail.entityTags" />
+        <template v-if="amlQueryResultPanelVisible && amlRecordDetail" #append>
+          <RiskControlAmlRecordDetailQueryResultPanel :detail="amlRecordDetail" />
         </template>
-        <template v-if="amlExceptionHandlingVisible" #append>
+        <template v-else-if="amlExceptionHandlingVisible" #append>
           <RiskControlAmlRecordDetailExceptionHandling />
         </template>
         <template v-else-if="amlRiskTracePanelDetail" #append>
@@ -570,11 +596,6 @@ function onDetailClose() {
           />
         </template>
       </EgDetail>
-      <RiskControlAmlRecordDetailRiskScoreEyebrowPortal
-        v-if="amlRecordDetail"
-        :host-ref="detailHostRef"
-        :page-key="detailToolbarPageKey"
-      />
     </div>
   </EgDetailPopup>
 </template>
