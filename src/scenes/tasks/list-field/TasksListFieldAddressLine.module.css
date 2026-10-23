@@ -85,13 +85,13 @@
   color: inherit;
 }
 
-/** 副行：地址 hug；Tag 列 flex 收缩 + EgTag.truncate 内省略（对齐 EDS ListFieldAddressLine · metaRow / CryptoAddressTags §16）。 */
+/** 副行：地址可收缩省略；Tag hug 内容，避免 flex 把 custom Tag 裁成非 ellipsis 的竖条。 */
 .walletAliasHost .walletMetaRow .walletMetaAddressLine,
 .walletAliasHost .walletMetaRow .walletMetaAddressLine :global(.copyFlotationHost),
 .walletAliasHost .walletMetaRow .walletMetaAddressLine :global(.eds-hover-tooltip-trigger),
 .walletAliasHost .walletMetaRow .walletMetaAddressLine :global(.eds-hover-tooltip-trigger > span) {
-  flex: 0 0 auto;
-  width: max-content;
+  flex: 1 1 auto;
+  width: auto;
   max-width: 100%;
   min-width: 0;
 }
@@ -348,9 +348,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-1);
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
-  max-width: 100%;
+  max-width: max-content;
 }
 
 /**
@@ -359,31 +359,31 @@
  */
 .walletAliasHost .walletMetaRow .walletMetaTags > span {
   display: inline-flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
-  max-width: 100%;
+  max-width: max-content;
 }
 
 .walletAliasHost .walletMetaRow .walletMetaTags > span > span {
   display: inline-flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
-  max-width: 100%;
+  max-width: max-content;
 }
 
 .walletAliasHost .walletMetaRow .walletMetaTags > span > span > span {
   display: inline-flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
-  max-width: 100%;
+  max-width: max-content;
 }
 
 .walletAliasHost .walletMetaRow .walletMetaTags :global(.eds-tag.truncate) {
   display: inline-flex;
   box-sizing: border-box;
-  flex: 1 1 auto;
-  width: 100%;
-  max-width: 100%;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: max-content;
   min-width: 0;
 }
 

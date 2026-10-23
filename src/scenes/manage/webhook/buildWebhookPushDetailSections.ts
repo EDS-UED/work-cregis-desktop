@@ -16,15 +16,6 @@ function resolvePushStatusTag(
   translate: (key: string) => string,
 ): { label: string; status: TagStatus } {
   const key = resolveWebhookPushRecordStatusKey(row);
-  if (key === 'retrying') {
-    const attempt = row.webhookPushRetryAttempt ?? 1;
-    return {
-      label: translate('Retrying push progress label')
-        .replace('{current}', String(attempt))
-        .replace('{total}', '3'),
-      status: 'warning',
-    };
-  }
   return {
     label: translate(resolveWebhookPushRecordStatusLabelKey(key)),
     status: resolveWebhookPushRecordStatusTagStatus(key),
@@ -82,8 +73,7 @@ export function buildWebhookPushDetailSections(
     },
   ];
 
-  const showFailure =
-    row.webhookPushStatusKey === 'failed' || row.webhookPushStatusKey === 'retrying';
+  const showFailure = row.webhookPushStatusKey === 'failed';
 
   if (showFailure) {
     items.push(

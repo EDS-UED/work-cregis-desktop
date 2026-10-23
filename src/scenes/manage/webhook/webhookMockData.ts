@@ -1,4 +1,4 @@
-export type WebhookPushStatus = 'success' | 'failed' | 'retrying';
+export type WebhookPushStatus = 'success' | 'failed';
 
 export const WEBHOOK_MOCK_ROW_COUNT = 28;
 
@@ -23,7 +23,6 @@ export type WebhookPushRecord = {
   eventKey: 'Dangerous transaction';
   lastPushAt: string;
   pushStatus: WebhookPushStatus;
-  retryAttempt?: number;
   endpointUrl: string;
   pushAttemptCount: number;
   failureReasonKey?: string;
@@ -68,7 +67,7 @@ const CREATOR_POOL = [
   { name: 'Chris', email: 'chris@proton.me' },
 ] as const;
 
-const PUSH_STATUS_SHOWCASE: WebhookPushStatus[] = ['failed', 'retrying', 'success'];
+const PUSH_STATUS_SHOWCASE: WebhookPushStatus[] = ['failed', 'success'];
 
 function seededFraction(index: number, salt: number): number {
   const x = Math.sin((index + 1) * 9973 + salt * 7919) * 10000;
@@ -147,9 +146,8 @@ export function buildInitialWebhookPushRecords(): WebhookPushRecord[] {
       eventKey: 'Dangerous transaction',
       lastPushAt: padRecordTime(Math.max(1, day), 11 + (index % 12), minute % 60, index % 60),
       pushStatus,
-      retryAttempt: pushStatus === 'retrying' ? 2 : undefined,
       endpointUrl: `https://hooks.example.com/aml/${configIndex + 1}`,
-      pushAttemptCount: pushStatus === 'success' ? 1 : pushStatus === 'retrying' ? 2 : 4,
+      pushAttemptCount: pushStatus === 'success' ? 1 : 4,
       failureReasonKey:
         pushStatus === 'success'
           ? undefined

@@ -41,15 +41,4 @@ export function markPushRecordRetried(id: string) {
   row.lastPushAt = new Date().toISOString().replace('T', ' ').slice(0, 19);
   row.pushAttemptCount += 1;
   row.failureReasonKey = undefined;
-  row.retryAttempt = undefined;
-}
-
-/** Mock：自动重试进度走满后变为成功。 */
-export function completePushRecordAutoRetry(id: string) {
-  const row = webhookPushRecords.value.find((item) => item.id === id);
-  if (!row || row.pushStatus !== 'retrying') return;
-  row.pushStatus = 'success';
-  row.retryAttempt = undefined;
-  row.failureReasonKey = undefined;
-  row.lastPushAt = new Date().toISOString().replace('T', ' ').slice(0, 19);
 }

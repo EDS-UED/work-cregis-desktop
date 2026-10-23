@@ -1,11 +1,10 @@
 const EMOJI_PATTERN = /\p{Extended_Pictographic}/u;
 const CJK_PATTERN = /\p{Script=Han}/u;
 
-/** Webhook 名称：禁空白与 emoji，长度在 blur 后单独校验。 */
+/** 名称类输入（Webhook、AML 规则等）：允许空格；禁 emoji；长度在 blur 后单独校验。 */
 export function webhookNameHasInvalidCharacters(value: string): boolean {
   const trimmed = value.trim();
   if (!trimmed) return false;
-  if (/\s/.test(value)) return true;
   return EMOJI_PATTERN.test(trimmed);
 }
 

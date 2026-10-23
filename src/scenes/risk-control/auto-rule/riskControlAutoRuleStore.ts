@@ -49,6 +49,20 @@ function outflowScopeParts(raw: string): string[] {
     .filter(Boolean);
 }
 
+/** 收款规则：同一 WaaS 项目仅允许一条规则。 */
+export function autoRuleInflowScopeTaken(
+  scopeLabel: string,
+  excludeRuleId?: string,
+): boolean {
+  const normalized = scopeLabel.trim().toLowerCase();
+  if (!normalized) return false;
+  return (autoRuleRows.value ?? []).some((row) => {
+    if (row.autoRuleDirection !== 'inflow') return false;
+    if (excludeRuleId && row.id === excludeRuleId) return false;
+    return (row.autoRuleWaasProject ?? '').trim().toLowerCase() === normalized;
+  });
+}
+
 /** 出款规则：同一出款类型下 WaaS 项目 / 钱包 scope 仅允许一条规则。 */
 export function autoRuleOutflowScopeTaken(
   scopeLabel: string,

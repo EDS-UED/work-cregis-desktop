@@ -1,0 +1,13 @@
+.triggerHost {
+  display: inline-flex;
+}
+
+/** Popover 展开：decor solid 对齐 EgButton :active 字色。 */
+.triggerDecorSolidPressed :global(.eds-button:not(:disabled)) {
+  color: var(--text-face-secondary);
+}
+
+/** Popover 展开：danger solid 对齐 EgButton :active 字色。 */
+.triggerDangerSolidPressed :global(.eds-button:not(:disabled)) {
+  color: var(--text-same-white-secondary);
+}

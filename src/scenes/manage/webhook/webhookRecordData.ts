@@ -29,8 +29,7 @@ function configToRow(config: (typeof webhookConfigs.value)[number]): PaymentEngi
 
 function pushStatusSortWeight(status: string | undefined): number {
   if (status === 'failed') return 0;
-  if (status === 'retrying') return 1;
-  return 2;
+  return 1;
 }
 
 function pushToRow(record: (typeof webhookPushRecords.value)[number]): PaymentEngineRecordRow {
@@ -47,7 +46,6 @@ function pushToRow(record: (typeof webhookPushRecords.value)[number]): PaymentEn
     callbackUrl: record.endpointUrl,
     webhookEventKey: record.eventKey,
     webhookPushStatusKey: record.pushStatus,
-    webhookPushRetryAttempt: record.retryAttempt,
     webhookPushFailureReasonKey: record.failureReasonKey,
     webhookPushPayloadJson: record.payloadJson,
     webhookPushAttemptCount: record.pushAttemptCount,

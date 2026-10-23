@@ -256,7 +256,7 @@ export type PaymentEngineRecordRow = {
   /** AML · 风险评级 i18n key（Danger / Suspicious / Safe）。 */
   amlRiskLabelKey?: string;
   /** AML · 风险 Tag customStyle（aml-danger / aml-suspicious / aml-safe）。 */
-  amlRiskCustomStyle?: 'aml-danger' | 'aml-suspicious' | 'aml-safe';
+  amlRiskCustomStyle?: 'aml-danger' | 'aml-suspicious' | 'aml-safe' | 'aml-handled';
   /** AML · 风险评分展示值。 */
   amlRiskScore?: string;
   /** AML · WaaS 项目（筛选 / 触发规则详情）。 */
@@ -295,6 +295,9 @@ export type PaymentEngineRecordRow = {
   amlQueryFailed?: boolean;
   /** AML 查询异常 · 需指定处理人展示处置区。 */
   amlQueryExceptionKind?: 'balance' | 'timeout' | 'designated-handler';
+  /** AML 指定处理人异常 · 处置已完成（详情按钮禁用）。 */
+  amlExceptionHandlingResolved?: boolean;
+  amlExceptionHandlingOutcome?: 'retry' | 'pass' | 'reject';
   /** AML 出款自动查询（查询人为规则名）。 */
   amlOutflowAutoQuery?: boolean;
   /** AML 列表 · 查询时间展示（余额不足等可为 `--`）。 */
@@ -307,8 +310,7 @@ export type PaymentEngineRecordRow = {
   webhookEventKey?: string;
   webhookEndpointVerified?: boolean;
   webhookSecretKey?: string;
-  webhookPushStatusKey?: 'success' | 'failed' | 'retrying';
-  webhookPushRetryAttempt?: number;
+  webhookPushStatusKey?: 'success' | 'failed';
   webhookPushFailureReasonKey?: string;
   webhookPushPayloadJson?: string;
   webhookPushAttemptCount?: number;

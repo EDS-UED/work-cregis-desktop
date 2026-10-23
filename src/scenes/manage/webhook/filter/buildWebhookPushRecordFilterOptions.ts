@@ -14,7 +14,6 @@ const WEBHOOK_PUSH_STATUS_TAG_BY_KEY: Record<
   TagStatus
 > = {
   Failed: 'danger',
-  Retrying: 'warning',
   Success: 'success',
 };
 
@@ -43,13 +42,8 @@ export function resolveWebhookPushRecordEventFilterId(eventKey: string | undefin
 }
 
 export function resolveWebhookPushRecordStatusFilterId(
-  pushStatus: 'success' | 'failed' | 'retrying' | undefined,
+  pushStatus: 'success' | 'failed' | undefined,
 ): string {
-  const labelKey =
-    pushStatus === 'success'
-      ? 'Success'
-      : pushStatus === 'retrying'
-        ? 'Retrying'
-        : 'Failed';
+  const labelKey = pushStatus === 'success' ? 'Success' : 'Failed';
   return resolveDataListFilterOptionId(WEBHOOK_PUSH_RECORD_STATUS_NAMESPACE, labelKey);
 }

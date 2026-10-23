@@ -5,8 +5,12 @@ import type {
   TagCustomStyle,
   TagSize,
 } from '@eds/desktop-components';
-import { BLACKLIST_LABEL_KEY } from '../shared/hasBlacklistAddressTags';
-import { tasksDataListShowsAddressBlacklist } from '../tasksDataListPageData';
+import { BLACKLIST_LABEL_KEY, DANGER_LABEL_KEY } from '../shared/hasBlacklistAddressTags';
+import {
+  tasksDataListShowsAddressBlacklist,
+  tasksDataListShowsAmlRiskListStatusDemo,
+} from '../tasksDataListPageData';
+import { TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX } from './tasksListFieldStatusRowData';
 import {
   MAX_CURRENCY_SIDE_ADDRESSES,
   currencyAddressTagsEnabledKey,
@@ -323,6 +327,25 @@ export function currencyAddressBlacklistTagOverrides(
   return entries;
 }
 
+/** 接收方 AML「危险」演示 Tag（label = Danger / 危险）。 */
+export function currencyAddressDangerTagOverrides(
+  side: 'from' | 'to',
+  addressIndex: number,
+  count = 1,
+  enabled = true,
+): Record<string, unknown> {
+  const entries: Record<string, unknown> = {
+    ...currencyAddressRiskTagOverrides(side, addressIndex, count, enabled),
+  };
+
+  for (let tagIndex = 1; tagIndex <= count; tagIndex += 1) {
+    entries[currencyTagItemKey(side, addressIndex, 'system', 'Label', tagIndex)] =
+      DANGER_LABEL_KEY;
+  }
+
+  return entries;
+}
+
 export function currencyAddressCustomTagOverrides(
   side: 'from' | 'to',
   addressIndex: number,
@@ -381,6 +404,9 @@ function resolveCurrencyDemoRowsWithAddressTags(menuItem?: string): Set<number> 
   const rows = new Set(CURRENCY_DEMO_ROWS_WITH_ADDRESS_TAGS);
   if (tasksDataListShowsAddressBlacklist(menuItem)) {
     rows.add(CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX);
+  }
+  if (tasksDataListShowsAmlRiskListStatusDemo(menuItem)) {
+    rows.add(TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX);
   }
   return rows;
 }

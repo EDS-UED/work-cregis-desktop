@@ -145,6 +145,7 @@ import { isManageWebhookPushRecordsMenuItem } from '@/scenes/manage/manageMenuDa
 import { webhookFlowKey } from '@/scenes/manage/webhook/webhookFlowContext';
 import { riskControlAutoRulePageStackKey } from '@/scenes/risk-control/auto-rule/riskControlAutoRulePageStackContext';
 import { riskControlAmlManualQueryPageStackKey } from '@/scenes/risk-control/aml-manual-query/riskControlAmlManualQueryPageStackContext';
+import { riskControlBlacklistPageStackKey } from '@/scenes/risk-control/blacklist/riskControlBlacklistPageStackContext';
 import styles from './PaymentEngineDataListPage.module.css';
 
 const props = withDefaults(
@@ -173,6 +174,7 @@ const props = withDefaults(
 const webhookFlow = inject(webhookFlowKey, null);
 const autoRulePageStack = inject(riskControlAutoRulePageStackKey, null);
 const amlManualQueryPageStack = inject(riskControlAmlManualQueryPageStackKey, null);
+const blacklistPageStack = inject(riskControlBlacklistPageStackKey, null);
 
 const { ui } = useAppI18n();
 
@@ -627,18 +629,24 @@ const usesAmlManualQueryModulePageStack = computed(
   () => props.moduleLayoutPageStack && Boolean(amlManualQueryPageStack),
 );
 
+const usesBlacklistModulePageStack = computed(
+  () => props.moduleLayoutPageStack && Boolean(blacklistPageStack),
+);
+
 const usesModuleConfigFormPageStack = computed(
   () =>
     usesWebhookModulePageStack.value
     || usesAutoRuleModulePageStack.value
-    || usesAmlManualQueryModulePageStack.value,
+    || usesAmlManualQueryModulePageStack.value
+    || usesBlacklistModulePageStack.value,
 );
 
 const moduleConfigFormOpen = computed(
   () =>
     Boolean(webhookFlow?.configFormOpen.value)
     || Boolean(autoRulePageStack?.configFormOpen.value)
-    || Boolean(amlManualQueryPageStack?.configFormOpen.value),
+    || Boolean(amlManualQueryPageStack?.configFormOpen.value)
+    || Boolean(blacklistPageStack?.configFormOpen.value),
 );
 
 const usesIntegratedLayoutPageStack = computed(
@@ -830,6 +838,9 @@ function onIntegratedLayoutPageSettled() {
   if (amlManualQueryPageStack && !amlManualQueryPageStack.configFormOpen.value) {
     amlManualQueryPageStack.onConfigFormPageSettled();
   }
+  if (blacklistPageStack && !blacklistPageStack.configFormOpen.value) {
+    blacklistPageStack.onConfigFormPageSettled();
+  }
 }
 
 watch(
@@ -859,6 +870,9 @@ watch(
     }
     if (amlManualQueryPageStack?.configFormOpen.value) {
       amlManualQueryPageStack.closeConfigForm();
+    }
+    if (blacklistPageStack?.configFormOpen.value) {
+      blacklistPageStack.closeConfigForm();
     }
   },
 );

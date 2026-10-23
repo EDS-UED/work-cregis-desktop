@@ -242,6 +242,7 @@ body > [id^='eds-tooltip-v-'],
  * 与半透明 scrim 叠层会合成闪块；弹窗打开期间切实底，关闭后恢复 frostedPageChrome.css。
  */
 .app-preview:has(.app-popup-overlay-host .eds-popup)
+  .app-shell-container
   .eds-layout.eds-layout-chrome-overlay
   :is(.eds-tool-bar, .eds-paginer)
   .eds-frosted-page-chrome {
@@ -274,6 +275,25 @@ body .eds-popover.desktopTokens::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
+}
+
+/* 锚定 Popover 叠在 EgDetailPopup 之上；玻璃材质走 EDS 默认，勿覆盖 backdrop-filter / 底色。 */
+.app-preview > [id^='eds-tooltip-v-']:has(.eds-popover.desktopTokens),
+body > [id^='eds-tooltip-v-']:has(.eds-popover.desktopTokens) {
+  z-index: 1115;
+}
+
+/*
+ * Shell Debug 壳层 Popover（teleport body + desktopTokens）须高于 .shellDebugRoot(10000)。
+ * 仅用 :has(.shell-debug-*) 盖不住上条（:has 内 .eds-popover.desktopTokens 特异性更高），
+ * 故用「popover 内标记类」组合选择器。
+ */
+body > [id^='eds-tooltip-v-']:has(.eds-popover.desktopTokens .shell-debug-popover-content),
+body > [id^='eds-tooltip-v-']:has(.eds-popover.desktopTokens .shell-debug-model-popover-content),
+body > [id^='eds-tooltip-v-']:has(.eds-popover.desktopTokens .shell-debug-wnd-popover-content),
+body > [id^='eds-tooltip-v-']:has(.eds-popover.desktopTokens .shell-debug-dev-inspect-popover),
+body > [id^='eds-tooltip-v-']:has(.eds-popover.desktopTokens .shell-debug-dev-inspect-hint) {
+  z-index: 10050;
 }
 
 /*

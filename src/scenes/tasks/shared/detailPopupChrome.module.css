@@ -45,11 +45,16 @@
   line-height: var(--eds-body-small-line-height);
 }
 
-/** AML 查询记录 · headline-main 为 eyebrow + 顶端卡片并列根节点，撑满 headlineMain。 */
 .detailHost:has([data-aml-record-top-card]) :global([class*='headlineMain']) {
   align-self: stretch;
   width: 100%;
   gap: var(--spacing-3);
+}
+
+/** AML 详情：实体 TopCard + Tab 为公共头，随 Detail 滚动吸顶（EDS headlineSticky）。 */
+.detailHost:has([data-aml-record-top-card]) :global(.eds-detail header[class*='headlineSticky']) {
+  z-index: 2;
+  background: var(--box-page);
 }
 
 /** EgDetail headlineMain 内 eyebrow 插槽：对齐 EDS `.eyebrow` 排版，不额外包一层 group。 */
@@ -134,6 +139,80 @@
   gap: var(--spacing-5);
   width: 100%;
   padding: var(--spacing-4) var(--spacing-3) var(--spacing-5);
+  box-sizing: border-box;
+}
+
+/** AML 交易对手风险 Tab：Tab 与 EgDataList 顶距 0（勿用于风险画像 append）。 */
+.appendSectionTabFlushTop {
+  padding-top: var(--spacing-0);
+}
+
+/** 交易对手风险 Tab：append 撑满 Popup 剩余高度，列表区 flex 吃满、分页贴 Popup 底。 */
+.appendSection:global([data-aml-risk-trace-append]) {
+  flex: 1 1 auto;
+  gap: var(--spacing-0);
+  min-height: 0;
+  padding-inline: var(--spacing-0);
+  padding-bottom: var(--spacing-0);
+  background: var(--box-page);
+}
+
+.detailHost:has([data-aml-risk-trace-append]) :global(.eds-detail [class*='scrollPageHost']) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.detailHost:has([data-aml-risk-trace-append]) :global(.eds-detail [class*='motion-layout-content']) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.detailHost:has([data-aml-risk-trace-append]) :global(.eds-detail [class*='append']) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--box-page);
+}
+
+.detailHost:has([data-aml-risk-profile-empty]) :global(.eds-detail [class*='scrollPageHost']) {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailHost:has([data-aml-risk-profile-empty]) :global(.eds-detail [class*='motion-layout-content']) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.detailHost:has([data-aml-risk-profile-empty]) :global(.eds-detail [class*='append']) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--box-page);
+}
+
+.appendSection:global([data-aml-risk-profile-empty]) {
+  padding-bottom: var(--spacing-0);
+}
+
+/**
+ * AML 交易对手风险 Tab：列表区定高 + EgDataList 内滚（表头 sticky），分页在文档流中。
+ */
+.detailHost:has([data-aml-risk-trace-append]) [data-aml-risk-trace-list-shell] {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 

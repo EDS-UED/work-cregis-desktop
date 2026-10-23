@@ -1,0 +1,20 @@
+.formStack {
+  composes: formStack from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldBlock {
+  composes: fieldBlock from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldLabel {
+  composes: fieldLabel from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldHint {
+  composes: fieldHint from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.intro {
+  margin: 0;
+  color: var(--text-base-secondary);
+}

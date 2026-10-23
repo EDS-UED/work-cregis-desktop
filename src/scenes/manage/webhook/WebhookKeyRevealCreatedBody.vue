@@ -175,6 +175,9 @@ const secretToggleIcon = computed(() =>
           </span>
         </div>
       </div>
+      <p :class="styles.pushMechanismNote">
+        {{ ui('Webhook push mechanism note') }}
+      </p>
     </div>
   </div>
 </template>

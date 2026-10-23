@@ -1,5 +1,4 @@
 import { computed, ref, shallowRef, watch, type Ref } from 'vue';
-import { buildAddressMoreSummary } from './buildSigningDetailSections';
 import {
   checkSigningPending,
   getSigningDetail,
@@ -84,7 +83,7 @@ export function useSigningFlow(options: {
   const batchSelectedIds = ref<string[]>([]);
   const batchMinerFeeProfile = ref<MinerFeeProfile | null>(null);
   const remark = ref('');
-  const viewMoreText = ref('');
+  const viewMoreSide = ref<'sender' | 'receiver' | null>(null);
   const progressPhase = ref<SigningProgressPhase>('signing');
   const multiSignPhase = ref<MultiSignRoomPhase>('waiting');
   const multiSignJoinedCount = ref(1);
@@ -667,7 +666,7 @@ export function useSigningFlow(options: {
 
   function openViewMore(side: 'sender' | 'receiver') {
     if (!detail.value) return;
-    viewMoreText.value = buildAddressMoreSummary(detail.value, side);
+    viewMoreSide.value = side;
     viewMoreOpen.value = true;
   }
 
@@ -680,6 +679,7 @@ export function useSigningFlow(options: {
         detail.value = null;
         verifyOpen.value = false;
         viewMoreOpen.value = false;
+        viewMoreSide.value = null;
         clearProgressDemoTimers();
         pendingProgressSuccessFeedback.value = false;
         progressOpen.value = false;
@@ -698,7 +698,7 @@ export function useSigningFlow(options: {
     multiSignOpen,
     detail,
     remark,
-    viewMoreText,
+    viewMoreSide,
     batchMode,
     batchMinerFeeProfile,
     currentIndex,

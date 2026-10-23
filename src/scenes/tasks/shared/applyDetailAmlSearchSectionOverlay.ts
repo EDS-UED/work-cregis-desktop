@@ -6,7 +6,9 @@ import type {
 } from '@eds/desktop-components';
 import {
   addressEntryHasBlacklist,
+  addressEntryHasDangerRisk,
   tagMatchesBlacklistLabel,
+  tagMatchesDangerLabel,
 } from './hasBlacklistAddressTags';
 import {
   tagMatchesDetailAmlSearchResult,
@@ -42,6 +44,7 @@ function shouldStripTagForAmlPending(
   translate: (key: string) => string,
 ): boolean {
   if (tagMatchesBlacklistLabel(tag, translate)) return false;
+  if (tagMatchesDangerLabel(tag, translate)) return false;
   return tagMatchesDetailAmlSearchResult(tag, translate);
 }
 
@@ -139,9 +142,11 @@ function buildAmlSearchPendingEntry(
     delete next.valueAddressSideTagsBelow;
   }
 
-  const tagsForBlacklistCheck = next.valueAddressSideTags ?? entry.valueAddressSideTags;
+  const tagsForRiskCheck = next.valueAddressSideTags ?? entry.valueAddressSideTags;
+  const riskEntry = { addressTags: tagsForRiskCheck };
   if (
-    !addressEntryHasBlacklist({ addressTags: tagsForBlacklistCheck }, translate)
+    !addressEntryHasBlacklist(riskEntry, translate)
+    && !addressEntryHasDangerRisk(riskEntry, translate)
   ) {
     next.valueAddressSideFeedback = undefined;
   }

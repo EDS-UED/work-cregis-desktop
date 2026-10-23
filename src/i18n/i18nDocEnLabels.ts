@@ -182,6 +182,16 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Sub-Address Payout': 'Sub-Address Payout',
   'Submitted Request': 'Submitted Request',
   Success: 'Success',
+  'Task AML dangerous address confirm acknowledge':
+    'I Understand the Risk, Continue',
+  'Task AML dangerous address confirm message':
+    'Cregis AML has detected risk associated with the receiving address. To protect your assets, verify the address and transaction details before proceeding.',
+  'Task AML dangerous address confirm title': 'Dangerous Address Detected',
+  'Task detail receiver AML danger feedback':
+    'This address has been classified as dangerous by Cregis AML. Proceed with caution.',
+  'Task list status AML risk intercept': 'Risk Intercepted',
+  'Task list status AML risk querying': 'Risk Control Query In Progress',
+  'Task address details sample remark': 'Example: Payroll disbursement',
   'Task Record': 'Task Record',
   Tasks: 'Tasks',
   'Team Account Balance': 'Team Account Balance',
@@ -296,22 +306,23 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Create Inflow Rule': 'Create Inflow Rule',
   'Edit Outflow Rule': 'Edit Outflow Rule',
   'Edit Inflow Rule': 'Edit Inflow Rule',
+  'Disable and edit': 'Disable and Edit',
   'Auto rule name length hint': '2–30 Characters',
   'Please enter a valid rule name': 'Please Enter a Valid Rule Name',
   'Auto rule manual withdrawal title': 'Manual Transfer',
   'Withdrawal Type': 'Withdrawal Type',
   'API Payout': 'API Payout',
   'Auto rule risk score threshold hint prefix':
-    'Cregis AML will take risk control action if the receiving address has a risk score greater than or equal to ',
+    'Cregis AML will take risk control action if the receiving address has a risk score ≥ ',
   'Auto rule risk score threshold hint suffix': '.',
   'Auto rule risk score range hint min lead': 'Minimum risk score is ',
   'Auto rule risk score range hint min tail': ' (very safe)',
   'Auto rule risk score range hint max lead': '; maximum is ',
   'Auto rule risk score range hint max tail': ' (very dangerous)',
   'Auto rule risk control action hint':
-    'Select a risk control measure. If a dangerous receiving address is found, Cregis AML will apply it',
+    'Please select the risk control action for Cregis AML to take when the receiving address is labeled as Dangerous',
   'Auto rule outflow trigger hint':
-    'Please select a WaaS project and/or wallet to be screened. Only 1 rule is allowed per wallet or per WaaS project.',
+    'Please select a WaaS or a Wallet to be screened. Only 1 rule is allowed per Wallet or per WaaS',
   'Auto rule outflow filtering': 'Filter',
   'Auto rule skip whitelist disable confirm':
     'Upon unselecting, Cregis AML will query the receiving address even if the address is in your whitelist. Each query will cost one free query or be charged at the unit price.',
@@ -325,8 +336,18 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Screening Node': 'Screening Node',
   'Auto rule screening node notice':
     'Please select the node to perform address query',
+  'Auto rule screening node timing notice':
+    'Cregis AML runs screening before the approval process starts; if no approval is required, screening runs before signing.',
   'Auto rule risk alert recipients hint':
     'For manual withdrawals, Cregis AML sends an in-app notification to the withdrawal initiator when a dangerous address is found. You may also choose additional recipients',
+  'Auto rule risk alert recipients inflow hint':
+    'Set at least one in-app or email recipient to receive risk alerts',
+  'Auto rule form footnote inflow':
+    'Upon detecting a risky transaction, Cregis AML will disable its receiving address and stop auto collecting the funds from the receiving address to control the risk. Once an address is disabled, Cregis AML will not screen transactions to that address until it is manually enabled.',
+  'Auto rule inflow risk alert inapp hint':
+    'After identifying a dangerous transaction, Cregis AML will send an in-app risk alert to the designated team member.',
+  'Auto rule inflow risk alert email hint':
+    "Also send alert emails to the recipients' registered email address",
   'In-app notification': 'In-App Notification',
   'Email notification': 'Email Notification',
   'Auto rule add recipient': 'Add Recipient',
@@ -344,13 +365,14 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Screening Exception handling': 'Screening Exception Handling',
   'Auto rule exception handling hint':
     'Please select how Cregis AML should handle withdrawals when the screening cannot be completed successfully (usually due to insufficient team balance or third-party service timeout).',
-  'Skip the query': 'Skip the Query, Proceed and Notify the Operator',
+  'Skip the query': 'Bypass the query, proceed and notify the operator',
   'Notify designated personnel to handle': 'Notify Designated Personnel to Handle',
   'Withdrawal initiator': 'Withdrawal Initiator',
   'Screen inflow funds': 'Screen Inflow Funds',
   'Screen the receiving address before withdrawal':
     'Screen the Receiving Address Before Withdrawal',
   'AML Exception': 'Exception',
+  'AML Exception Handled': 'Processed',
   'AML Passed': 'AML Passed',
   'AML Failed': 'AML Failed',
   'AML Error': 'AML Error',
@@ -365,8 +387,38 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
     'Due to insufficient team balance, the AML query for the withdrawal to address {address} failed. If you need to query this address, you may conduct a manual query after top-up.',
   'AML notify auto query service timeout':
     'Due to third-party service timeout, the AML query for the withdrawal to address {address} failed. The query fee has been refunded to the team balance. If you need to query this address, please contact the support team.',
-  'Risk Summary': 'Risk Summary:',
-  'Risk Rating Criteria': 'Risk Rating Criteria:',
+  'AML notify auto query balance insufficient inflow':
+    'Due to insufficient account balance in your team {teamName}, the AML auto query for the incoming transaction {hash} failed. To query this transaction, please contact the support team.',
+  'AML notify auto query service timeout inflow':
+    'Due to a client or server error, the AML auto query for the incoming transaction {hash} in your team {teamName} failed. The query fee has been refunded to the team balance. To query this transaction, please contact the support team.',
+  'Cregis AML Risk Alert': 'Cregis AML Risk Alert',
+  'AML Auto Rule Disabled': 'AML Auto Rule Disabled',
+  'AML Auto Rule Enabled': 'AML Auto Rule Enabled',
+  'Cregis AML Query Failed': 'Cregis AML Query Failed',
+  'AML notify auto rule disabled body':
+    "AML auto rule {ruleName} has been disabled by {operator}. Cregis AML will no longer conduct automatic queries for transactions that meet this rule's conditions.",
+  'AML notify auto rule disabled team body':
+    "AML auto rule {ruleName} (rule ID: {ruleId}) in your team {teamName} has been disabled by {operator}. Cregis AML will no longer conduct automatic queries for transactions that meet this rule's conditions. Please go to Cregis client to learn more.",
+  'AML notify auto rule enabled body':
+    "AML auto rule {ruleName} (rule ID: {ruleId}) has been enabled by {operator}. Cregis AML will conduct automatic queries for transactions that meet this rule's conditions. Cregis will send a risk alert to the designated recipient(s) when a dangerous transaction is detected.",
+  'AML notify auto rule enabled team body':
+    "AML auto rule {ruleName} (rule ID: {ruleId}) has been enabled by {operator} in your team {teamName}. Cregis AML will conduct automatic queries for transactions that meet this rule's conditions. Cregis will send a risk alert to the designated recipient(s) when a dangerous transaction is detected. Please go to Cregis client to learn more.",
+  'AML notify inflow dangerous transaction team body':
+    'The incoming transaction {hash} of project {projectName} in your team {teamName} is flagged as dangerous by Cregis AML. The receiving address has been disabled and the funds in the address cannot be auto-collected. Please go to Cregis client to view risk control details and manage the address and funds.',
+  'AML client hint asset network mismatch':
+    "The queried asset and the network don't match. Please confirm and re-check.",
+  'AML client hint insufficient onchain data':
+    'Insufficient on-chain transactional data. No risk score available yet.',
+  'AML client hint third party server error': 'Third-party Server Error',
+  Label: 'Label',
+  'Entity of Sending Address': 'Entity of Sending Address',
+  'Entity of Target Address': 'Entity of Target Address',
+  'Manual Review Required': 'Manual Review Required',
+  'Query Initiator': 'Query Initiator',
+  'Risk Exposure': 'Risk Exposure',
+  'High-risk funds': 'High-risk funds',
+  'Risk Summary': 'Risk Summary',
+  'Risk Rating Criteria': 'Risk Classification',
   'AML exception handling title': 'Handling',
   'AML exception handling lead': 'Choose one of the following actions.',
   'AML exception action retry': 'Retry Query',
@@ -377,36 +429,64 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'AML exception action reject': 'Reject',
   'AML exception action reject desc': 'Reject this withdrawal request.',
   'AML query exception no result summary': 'Query exception. No results available.',
+  'AML query transaction risk summary sentence':
+    'The transaction funds are exposed to {riskCategories} risk(s), with a risk exposure of {totalPercent}.',
   'AML query risk summary sentence':
-    'This address is exposed to {sourceCategories} risk on the inbound side ({sourcePercent} of inbound funds) and {destinationCategories} risk on the outbound side ({destinationPercent} of outbound funds).',
+    'The wallet address is exposed to {sourceCategories} risk(s), with an inbound risk exposure of {sourcePercent} and an outbound risk exposure of {destinationPercent}.',
   'AML query risk classification sentence':
-    '{ruleName}: When the receiving address risk score is greater than or equal to {threshold}, Cregis AML will apply risk control measures.',
+    'Transactions with a score ≥ {threshold} will be identified as Dangerous.',
+  'AML query risk classification provider footnote':
+    'Follows the classification standards of the data provider. See Cregis Support for details.',
   'AML query result disclaimer':
     'This result is generated based on third-party data at the time of screening. It does not constitute a guarantee of future fund risk status, nor does it replace the customer\'s own compliance obligations.',
   'AML risk profile title': 'Risk Profile',
   'AML risk composition title': 'Risk Composition',
+  'AML risk category share title': 'Category Share',
   'AML exposure bar caption': 'Share of funds associated with risky entities or addresses',
   'AML exposure bar aria': 'Risk exposure bar chart',
   'AML handling recommendations title': 'Recommended Actions',
   'AML handling recommendations lead':
-    'Based on the risk profile and compliance requirements, you may take the following actions.',
+    'Based on the risk profile and compliance requirements, you may take the following actions to manage the risk',
+  'Service Provider': 'Data Provider',
+  'Data Provider': 'Data Provider',
   'AML handling blacklist title': 'Add to Blacklist',
   'AML handling blacklist desc':
-    'Add the target address to the blacklist to block subsequent outbound transfers.',
+    'Add target address to blacklist to prevent outgoing funds',
   'AML handling manual review title': 'Manual Review',
-  'AML handling manual review desc': 'Manually review and confirm the risk rating.',
-  'AML handling report title': 'Request Report',
+  'AML handling manual review desc': 'Review and justify the risk level',
+  'AML handling report title': 'Get a Report',
   'AML handling report desc': 'Contact the support team for a PDF report.',
   'AML counterparty risk title': 'Counterparty Risk',
   'AML counterparty risk hint':
-    'Only risky counterparties are shown. Contact the support team for a full counterparty report.',
-  'AML record confirm blacklist': 'Add this address to the blacklist?',
+    'This page displays only counterparties identified as Suspicious or Dangerous to highlight potential risk exposure. A full list of counterparties is available in the transaction report.',
+  'AML record confirm blacklist': 'Confirm adding the target address to blacklist?',
+  'AML record confirm blacklist outflow':
+    'Confirm adding the sending address to blacklist?',
+  'AML Query Records': 'AML Query Records',
+  'Risk control blacklist create intro':
+    'After an address is blacklisted, outbound transfers to it are blocked. Enter the address and network, then confirm.',
+  'Risk control blacklist create intro from aml':
+    'This page uses the same layout as in production and is shown here for illustration only.',
+  'Risk control blacklist auto fill address hint':
+    'Address and query network were filled in from the AML query record',
   'AML record confirm retry':
     'Retrying will use one free query, or charge your team if no free queries remain. Confirm retry?',
   'AML record confirm pass': 'Allow this withdrawal request?',
   'AML record confirm reject': 'Reject this withdrawal request?',
-  'AML manual review dialog title': 'Confirm Risk Rating',
-  'AML manual review level label': 'Risk Rating',
+  'AML manual review dialog title': 'Justify the risk level',
+  'AML manual review level label': 'Risk Level',
+  'AML manual review note label': 'Note (Optional)',
+  'AML manual review note placeholder':
+    'Enter review justification or additional notes',
+  'AML manual review note feedback':
+    'Review opinion and fund handling within 1,000 characters',
+  'AML manual review safe isolation hint':
+    'Changing the risk level to Safe means that Cregis AML will no longer isolate the funds, and the funds may be auto-collected and mixed with other funds.',
+  'AML manual review danger collection hint':
+    'Changing the risk level to Dangerous means that Cregis will skip the receiving address in auto-collection to prevent risk spreading',
+  'AML manual review safe waas unblock hint':
+    'If you confirm the funds are safe, go to WaaS to unblock the receiving address.',
+  'Optional, Max. 1000 characters': 'Optional, Max. 1000 Characters',
   'Inbound direction': 'Inbound',
   'Outbound direction': 'Outbound',
   'Exposure type': 'Exposure Type',
@@ -418,6 +498,18 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Transaction application amount': 'Requested Amount',
   'Risk control measure': 'Risk Control Measure',
   'Risk score threshold': 'Score Threshold',
+  'Query log': 'Query Log',
+  'AML audit log title': 'Audit Log',
+  'AML query log section title': 'Query Log',
+  'AML review log section title': 'Review Log',
+  'AML review risk level before': 'Risk Level Before Review',
+  'AML review risk level after': 'Risk Level After Review',
+  'Status before Review': 'Status before Review',
+  'Status After Review': 'Status After Review',
+  Note: 'Note',
+  'AML reviewer': 'Reviewer',
+  'AML review time': 'Review Time',
+  'AML review remark': 'Review Remark',
   Alerted: 'Alerted',
   Rejected: 'Rejected',
   NA: 'NA',

@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { computed, provide, ref, watch } from 'vue';
-import { appShellMenuNavigationKey } from '@/app/appShellMenuNavigation';
+import { computed, onBeforeUnmount, provide, ref, watch } from 'vue';
+import {
+  appShellMenuNavigationKey,
+  appShellMenuNavigationRegistry,
+  type AppShellMenuNavigation,
+} from '@/app/appShellMenuNavigation';
 import {
   EgCregisModuleMenu,
   EgCregisNavBar,
@@ -286,7 +290,17 @@ function selectModuleMenuItem(catalogLabel: string) {
   syncModuleMenuItemFocus(translateModuleMenu(catalogLabel));
 }
 
-provide(appShellMenuNavigationKey, { selectModuleMenuItem });
+const appShellMenuNavigation: AppShellMenuNavigation = {
+  selectModuleMenuItem,
+};
+provide(appShellMenuNavigationKey, appShellMenuNavigation);
+appShellMenuNavigationRegistry.value = appShellMenuNavigation;
+
+onBeforeUnmount(() => {
+  if (appShellMenuNavigationRegistry.value === appShellMenuNavigation) {
+    appShellMenuNavigationRegistry.value = null;
+  }
+});
 
 function onModuleMenuItemSelect(label: string) {
   const branchDefault = resolveFirstSubitemForBranchLabel(

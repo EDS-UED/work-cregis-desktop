@@ -28,7 +28,7 @@ import {
 import {
   webhookCreateFormQaNonce,
   webhookCreateFormQaPatch,
-} from './webhookCreateFormQa';
+} from '@/dev/shell-debug/scenarios/qa/webhookConfig/webhookCreateFormQa';
 import styles from './WebhookCreateEditPage.module.css';
 
 const props = withDefaults(
@@ -356,8 +356,7 @@ function onSubmit() {
           <section :class="styles.fieldBlock">
             <span :class="styles.fieldLabel">{{ ui('Event') }}</span>
             <ProjectCreateModeCard
-              radio-name="webhook-event-type"
-              radio-value="dangerous-transaction"
+              selection-control="checkbox"
               :title="ui('Dangerous transaction')"
               :description="ui('Dangerous transaction webhook description')"
               :selected="eventSelected"
@@ -460,8 +459,7 @@ function onSubmit() {
           <section :class="styles.fieldBlock">
             <span :class="styles.fieldLabel">{{ ui('Event') }}</span>
             <ProjectCreateModeCard
-              radio-name="webhook-event-type"
-              radio-value="dangerous-transaction"
+              selection-control="checkbox"
               :title="ui('Dangerous transaction')"
               :description="ui('Dangerous transaction webhook description')"
               :selected="eventSelected"

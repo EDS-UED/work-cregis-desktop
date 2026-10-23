@@ -4,6 +4,7 @@ import {
   CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX,
   CURRENCY_DEMO_ROW_WITH_TAGS_INDEX,
   currencyAddressBlacklistTagOverrides,
+  currencyAddressDangerTagOverrides,
   currencyAddressCustomTagOverrides,
   currencyTagShowKey,
 } from './listFieldCurrencyTagCustomize';
@@ -12,7 +13,11 @@ import {
   sideAddressPoolIndex,
 } from './listFieldCryptoSampleAddresses';
 import { resolveCurrencyRowPreset } from './tasksListFieldCurrencyRowData';
-import { tasksDataListShowsAddressBlacklist } from '../tasksDataListPageData';
+import {
+  tasksDataListShowsAddressBlacklist,
+  tasksDataListShowsAmlRiskListStatusDemo,
+} from '../tasksDataListPageData';
+import { TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX } from './tasksListFieldStatusRowData';
 
 function seededFraction(seed: number): number {
   const x = Math.sin(seed * 9973) * 10000;
@@ -82,7 +87,7 @@ export function applyCurrencyDemoRowOverrides(
     };
   }
 
-  /** 第 2 条（TON）：接收方单地址 + 黑名单 tag（仅待审批 / 待签名）。 */
+  /** 第 2 条（TON）：接收方单地址 + AML 危险 tag（仅待审批 / 待签名）。 */
   if (rowIndex === CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX) {
     if (!showBlacklist) return customize;
 
@@ -91,7 +96,21 @@ export function applyCurrencyDemoRowOverrides(
       [currencyAddressTagsEnabledKey('from', 1)]: false,
       [currencyAddressTagsEnabledKey('to', 1)]: true,
       [currencyTagShowKey('to', 1, 'custom')]: false,
-      ...currencyAddressBlacklistTagOverrides('to', 1, 1, true),
+      ...currencyAddressDangerTagOverrides('to', 1, 1, true),
+    };
+  }
+
+  /** 第 7 条（index 6）：已办 / 记录类「风险拦截」行，接收方危险 Tag。 */
+  if (
+    rowIndex === TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX
+    && tasksDataListShowsAmlRiskListStatusDemo(menuItem)
+  ) {
+    return {
+      ...customize,
+      [currencyAddressTagsEnabledKey('from', 1)]: false,
+      [currencyAddressTagsEnabledKey('to', 1)]: true,
+      [currencyTagShowKey('to', 1, 'custom')]: false,
+      ...currencyAddressDangerTagOverrides('to', 1, 1, true),
     };
   }
 

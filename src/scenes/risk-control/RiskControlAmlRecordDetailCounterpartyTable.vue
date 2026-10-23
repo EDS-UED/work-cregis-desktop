@@ -4,14 +4,28 @@ import {
   EgDataList,
   EgDataListCellOverflow,
   EgDataListColumn,
+  EgDivider,
   EgListFieldOverflowText,
   type DataListItem,
   type TagCustomStyle,
 } from '@eds/desktop-components';
 import { computed } from 'vue';
 import { useAppI18n } from '@/composables/useAppI18n';
+import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
+import listStyles from '@/scenes/payment-engine/PaymentEngineDataListPage.module.css';
 import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
 import type { RiskControlAmlCounterpartyRow } from './riskControlAmlRecordDetailTypes';
+import batchStyles from '@/scenes/tasks/signing/batch/batchSigning.shared.module.css';
+import {
+  AML_COUNTERPARTY_CONTRIBUTION_MIN_WIDTH,
+  AML_COUNTERPARTY_DATA_LIST_COLUMN_HEIGHT,
+  AML_COUNTERPARTY_DATA_LIST_HEADER_HEIGHT,
+  AML_COUNTERPARTY_DIRECTION_EXPOSURE_MIN_WIDTH,
+  AML_COUNTERPARTY_ENTITY_TAGS_MIN_WIDTH,
+  AML_COUNTERPARTY_FUNDS_MIN_WIDTH,
+  computeAmlCounterpartyDataListHeight,
+} from './riskControlAmlCounterpartyDataListLayout';
+import emptyListStyles from './RiskControlAmlRecordDetailDataListEmpty.module.css';
 import styles from './RiskControlAmlRecordDetailCounterpartyTable.module.css';
 
 const props = defineProps<{
@@ -20,6 +34,7 @@ const props = defineProps<{
 
 const { ui } = useAppI18n();
 
+const listHeightPx = computed(() => computeAmlCounterpartyDataListHeight(props.rows.length));
 const dataList = computed<DataListItem[]>(() =>
   props.rows.map((row) => ({
     id: row.id,
@@ -39,84 +54,94 @@ function rowFromData(data: DataListItem) {
 </script>
 
 <template>
-  <div :class="styles.host">
-    <EgDataList :data-list="dataList">
+  <div
+    :class="[
+      batchStyles.batchDetailDataList,
+      batchStyles.batchDetailDataListSized,
+      emptyListStyles.listWrap,
+      styles.host,
+      dataList.length === 0 && emptyListStyles.listWrapEmpty,
+    ]"
+    :style="{ height: `${listHeightPx}px` }"
+  >
+    <EgDataList
+      :data-list="dataList"
+      :empty-text="ui('No data')"
+      :header-height="AML_COUNTERPARTY_DATA_LIST_HEADER_HEIGHT"
+      :column-height="AML_COUNTERPARTY_DATA_LIST_COLUMN_HEIGHT"
+    >
       <EgDataListColumn
         prop="directionKey"
         :label="ui('Direction')"
-        min-width="120"
+        :min-width="AML_COUNTERPARTY_DIRECTION_EXPOSURE_MIN_WIDTH"
         align="left"
         :sortable="false"
       >
+        <template #header>
+          <div :class="pageStyles.comboHeader">
+            <span>{{ ui('Direction') }}</span>
+            <EgDivider type="navigator" direction="vertical" />
+            <span>{{ ui('Exposure type') }}</span>
+          </div>
+        </template>
         <template #default="{ data }">
-          <EgDataListCellOverflow :text="ui(String(rowFromData(data).directionKey))" />
+          <div :class="listStyles.cellStack">
+            <EgListFieldOverflowText
+              :text="ui(String(rowFromData(data).directionKey))"
+              variant="primary"
+            />
+            <EgDataListCellOverflow :text="String(rowFromData(data).exposureType)" />
+          </div>
         </template>
       </EgDataListColumn>
 
       <EgDataListColumn
         prop="entity"
-        :label="ui('Belonging Entity')"
-        min-width="140"
+        :label="ui('Entity')"
+        :min-width="AML_COUNTERPARTY_ENTITY_TAGS_MIN_WIDTH"
         align="left"
         :sortable="false"
       >
-        <template #default="{ data }">
-          <EgListFieldOverflowText
-            :text="String(rowFromData(data).entity)"
-            variant="primary"
-          />
+        <template #header>
+          <div :class="pageStyles.comboHeader">
+            <span>{{ ui('Entity') }}</span>
+            <EgDivider type="navigator" direction="vertical" />
+            <span>{{ ui('Label') }}</span>
+          </div>
         </template>
-      </EgDataListColumn>
-
-      <EgDataListColumn
-        prop="exposureType"
-        :label="ui('Exposure type')"
-        min-width="100"
-        align="left"
-        :sortable="false"
-      >
         <template #default="{ data }">
-          <EgDataListCellOverflow :text="String(rowFromData(data).exposureType)" />
-        </template>
-      </EgDataListColumn>
-
-      <EgDataListColumn
-        prop="riskTag"
-        :label="ui('Entity Tags')"
-        min-width="120"
-        align="left"
-        :sortable="false"
-      >
-        <template #default="{ data }">
-          <EgBusinessTag
-            family="custom"
-            :custom-style="rowFromData(data).riskTagCustomStyle as TagCustomStyle"
-            size="sm"
-          >
-            {{ rowFromData(data).riskTag }}
-          </EgBusinessTag>
+          <div :class="listStyles.cellStack">
+            <EgListFieldOverflowText
+              :text="String(rowFromData(data).entity)"
+              variant="primary"
+            />
+            <EgBusinessTag
+              family="custom"
+              :custom-style="rowFromData(data).riskTagCustomStyle as TagCustomStyle"
+              size="sm"
+            >
+              {{ rowFromData(data).riskTag }}
+            </EgBusinessTag>
+          </div>
         </template>
       </EgDataListColumn>
 
       <EgDataListColumn
         prop="amountUsd"
         :label="ui('Funds (USD)')"
-        min-width="120"
-        align="right"
+        :min-width="AML_COUNTERPARTY_FUNDS_MIN_WIDTH"
+        align="left"
         :sortable="false"
       >
         <template #default="{ data }">
-          <EgDataListCellOverflow
-            :text="String(rowFromData(data).amountUsd)"
-            align="right"
-          />
+          <EgDataListCellOverflow :text="String(rowFromData(data).amountUsd)" align="left" />
         </template>
       </EgDataListColumn>
 
       <EgDataListColumn
         prop="contribution"
         :label="ui('Contribution ratio')"
-        min-width="100"
+        :min-width="AML_COUNTERPARTY_CONTRIBUTION_MIN_WIDTH"
         align="right"
         :sortable="false"
       >

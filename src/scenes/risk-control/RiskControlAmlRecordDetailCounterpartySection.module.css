@@ -1,0 +1,13 @@
+.tableRegion {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.paginer {
+  flex-shrink: 0;
+  width: 100%;
+}

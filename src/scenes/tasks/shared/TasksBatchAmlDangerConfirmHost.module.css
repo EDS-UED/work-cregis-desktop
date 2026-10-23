@@ -1,0 +1,26 @@
+.host {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.autoTrigger {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  background: var(--material-hide);
+  opacity: 0;
+  /* 定位仅服务 EgAnchoredTooltip；交互与 active 视觉由底栏 BatchBarActionItem 承担。 */
+  pointer-events: none;
+  composes: motion-ease is-paint from global;
+}
+
+.autoTriggerActive {
+  pointer-events: none;
+  opacity: 0;
+}

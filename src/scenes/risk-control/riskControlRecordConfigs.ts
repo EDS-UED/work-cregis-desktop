@@ -187,7 +187,7 @@ const AML_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   {
     key: 'amlServiceProvider',
     labelKey: 'Entity',
-    secondaryLabelKey: 'Tags',
+    secondaryLabelKey: 'Label',
     headerKind: 'combo',
     minWidth: AML_ENTITY_TAGS_COLUMN_MIN_WIDTH,
     displayOrder: 2,

@@ -4,6 +4,10 @@
  * closeAll 额外保留 Shell Debug QA / Model / Wnd Popover。
  */
 import {
+  BATCH_AML_GATE_PREVIEW_ATTR,
+  resolveBatchAmlGateExceptAnchor,
+} from '@/scenes/tasks/shared/batchAmlDangerGateChrome';
+import {
   resolveShellDebugFloatExceptNode,
 } from '../shellDebugPopoverExcept';
 import { SHELL_DEBUG_FLOAT_CONTENT_MARKERS } from '../shellDebugUiScope';
@@ -42,8 +46,43 @@ function isShellDebugLauncherTooltipHost(host: HTMLElement | null | undefined): 
   return Boolean(host.querySelector(SHELL_DEBUG_FLOAT_CONTENT_MARKERS));
 }
 
+function hostContainsExceptNode(
+  host: HTMLElement | null,
+  exceptNode: HTMLElement | null | undefined,
+): boolean {
+  if (!host || !exceptNode) return false;
+  return host.contains(exceptNode);
+}
+
+/** BatchBarLabelPopover：float host 不含 trigger，prep 阶段须保留 click 会话。 */
+function shouldPreserveBatchLabelPopoverDuringAmlGate(
+  entry: AnchoredTooltipCloseEntry,
+  batchExcept: HTMLElement | null,
+): boolean {
+  if (!batchExcept?.isConnected || !batchExcept.closest('.eds-batch-bar-action-item')) {
+    return false;
+  }
+  const preview = document.querySelector('.app-preview');
+  if (!preview?.hasAttribute(BATCH_AML_GATE_PREVIEW_ATTR)) {
+    return false;
+  }
+  if (entry.dismissOnBarInteract) {
+    return false;
+  }
+  const host = entry.getHostElement?.() ?? null;
+  if (!host) {
+    return true;
+  }
+  if (host.querySelector('.eds-popover') && preview.contains(host)) {
+    return true;
+  }
+  return false;
+}
+
 export function closeAllAnchoredTooltips(options?: CloseAllAnchoredTooltipsOptions): void {
-  const exceptNode = options?.exceptAncestorsOf ?? resolveShellDebugFloatExceptNode() ?? null;
+  const explicitExcept = options?.exceptAncestorsOf ?? null;
+  const shellDebugExcept = resolveShellDebugFloatExceptNode();
+  const batchAmlExcept = resolveBatchAmlGateExceptAnchor();
 
   closeHandlers.forEach((entry) => {
     const host = entry.getHostElement?.() ?? null;
@@ -52,7 +91,12 @@ export function closeAllAnchoredTooltips(options?: CloseAllAnchoredTooltipsOptio
       return;
     }
 
-    if (exceptNode && host?.contains(exceptNode)) {
+    if (
+      hostContainsExceptNode(host, explicitExcept)
+      || hostContainsExceptNode(host, shellDebugExcept)
+      || hostContainsExceptNode(host, batchAmlExcept)
+      || shouldPreserveBatchLabelPopoverDuringAmlGate(entry, batchAmlExcept)
+    ) {
       return;
     }
 

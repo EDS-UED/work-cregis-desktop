@@ -1,32 +1,10 @@
 .host {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+  gap: var(--spacing-0);
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  transition:
-    gap var(--motion-duration-enter) var(--motion-easing-enter)
-    var(--motion-delay-layout-deform-content-swap);
-}
-
-/** 滚动收起 footnote 列表（状态由 `useRiskControlAmlRecordDetailFieldCopyScroll` 滞回控制）。 */
-.host[data-field-copy-collapsed] {
-  gap: 0;
-  transition: gap var(--motion-duration-enter) var(--motion-easing-exit) 0s;
-}
-
-.fieldCopyCollapse {
-  display: grid;
-  grid-template-rows: 1fr;
-  min-height: 0;
-  width: 100%;
-  transition: grid-template-rows var(--motion-duration-enter) var(--motion-easing-enter);
-}
-
-.host[data-field-copy-collapsed] .fieldCopyCollapse {
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--motion-duration-enter) var(--motion-easing-exit);
 }
 
 .entityHeadlineGroup {
@@ -79,6 +57,28 @@
   margin-top: var(--spacing-1);
 }
 
+.scoreMetaSubtext {
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+  color: var(--text-base-secondary);
+  overflow-wrap: anywhere;
+}
+
+/** 12px Footnote · weight 500 · 60% */
+.scoreMetaSubtextRuleName {
+  composes: typography-footnote-strong from global;
+  color: var(--text-base-secondary);
+}
+
+/** 分级阈值数字 · 12px Footnote · weight 500 · primary 100% */
+.scoreMetaSubtextThreshold {
+  composes: typography-footnote-strong from global;
+  color: var(--text-base-primary);
+  font-variant-numeric: tabular-nums;
+  padding-inline: var(--spacing-1);
+}
+
 .scoreRow {
   display: inline-flex;
   flex-wrap: wrap;
@@ -120,63 +120,6 @@
   color: var(--text-base-primary);
 }
 
-/** 圆点列表 rhythm 对齐 AML 手动查询 `noticeList`。 */
-.fieldCopyList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-  margin: 0;
-  padding-inline-start: var(--spacing-5);
-  list-style: none;
-  overflow: hidden;
-  opacity: 1;
-  pointer-events: auto;
-  transition:
-    opacity var(--motion-duration-layout-deform-content) var(--motion-easing-enter)
-    var(--motion-delay-layout-deform-content-swap),
-    padding-inline-start var(--motion-duration-enter) var(--motion-easing-enter)
-    var(--motion-delay-layout-deform-content-swap);
-}
-
-.host[data-field-copy-collapsed] .fieldCopyList {
-  opacity: 0;
-  pointer-events: none;
-  padding-inline-start: 0;
-  transition:
-    opacity var(--motion-duration-layout-deform-content) var(--motion-easing-exit) 0s,
-    padding-inline-start var(--motion-duration-enter) var(--motion-easing-exit) 0s;
-}
-
-.fieldCopyItem {
-  display: list-item;
-  list-style-type: disc;
-  list-style-position: outside;
-  padding-inline-start: var(--spacing-05);
-}
-
-.fieldCopyItem::marker {
-  color: var(--text-base-tertiary);
-}
-
-.fieldBlock {
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-}
-
-.fieldLabel {
-  color: var(--text-base-tertiary);
-}
-
-.fieldBody {
-  min-width: 0;
-  margin: 0;
-  color: var(--text-base-tertiary);
-}
-
 .providerLogo {
   flex-shrink: 0;
   width: auto;
@@ -187,10 +130,4 @@
 .providerFallback {
   flex-shrink: 0;
   color: var(--text-base-primary);
-}
-
-.disclaimer {
-  margin: 0;
-  color: var(--text-base-tertiary);
-  font-style: italic;
 }

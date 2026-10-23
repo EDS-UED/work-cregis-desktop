@@ -15,6 +15,7 @@ import {
 import { useAppI18n } from '@/composables/useAppI18n';
 import {
   AML_QUERY_FEE_DISPLAY,
+  AML_QUERY_NETWORK_MENU_MAX_HEIGHT,
   AML_QUERY_NETWORK_OPTIONS,
   AML_QUERY_PROVIDER_OPTIONS,
   AML_QUERY_TYPE_OPTIONS,
@@ -120,6 +121,7 @@ function onSubmit() {
                   placement="bottom"
                   align="start"
                   width-mode="adaptive"
+                  :max-height="AML_QUERY_NETWORK_MENU_MAX_HEIGHT"
                   :show-add="false"
                   :show-menu-divider="false"
                   close-on-scroll
@@ -139,6 +141,7 @@ function onSubmit() {
                       panel-radius="radius-md"
                       width-mode="adaptive"
                       height-mode="adaptive"
+                      :max-height="AML_QUERY_NETWORK_MENU_MAX_HEIGHT"
                       :show-add="false"
                       :show-divider="false"
                     >

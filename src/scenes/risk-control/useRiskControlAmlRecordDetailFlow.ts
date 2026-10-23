@@ -1,5 +1,11 @@
+import { closeAllAnchoredTooltips } from '@eds/desktop-components';
 import { ref } from 'vue';
 import { showAppEndFeedbackAfterOverlay } from '@/composables/appEndFeedback';
+import {
+  applyAmlExceptionHandlingOutcome,
+  applyAmlManualReviewOutcome,
+  type AmlManualReviewRiskLevel,
+} from './riskControlAmlQueryRecordStore';
 import { registerRiskControlAmlRecordDetailOverlay } from './riskControlAmlRecordDetailOverlayContext';
 
 const MOCK_TRADE_PASSWORD = '111111';
@@ -12,54 +18,41 @@ export type AmlRecordDetailPendingAction =
   | 'manual-review';
 
 export function useRiskControlAmlRecordDetailFlow() {
-  const confirmDialogOpen = ref(false);
-  const confirmMessageKey = ref('AML record confirm blacklist');
-  const manualReviewDialogOpen = ref(false);
   const verifyOpen = ref(false);
   const pendingAction = ref<AmlRecordDetailPendingAction | null>(null);
   const queryFailedBanner = ref(false);
+  const activeRecordId = ref<string | null>(null);
+  const pendingManualReviewLevel = ref<AmlManualReviewRiskLevel | null>(null);
 
-  function openConfirm(action: AmlRecordDetailPendingAction, messageKey: string) {
+  function setActiveRecordId(recordId: string | null) {
+    activeRecordId.value = recordId;
+  }
+
+  function commitAction(action: AmlRecordDetailPendingAction) {
+    closeAllAnchoredTooltips();
     pendingAction.value = action;
-    confirmMessageKey.value = messageKey;
-    confirmDialogOpen.value = true;
-  }
-
-  function requestBlacklist() {
-    openConfirm('blacklist', 'AML record confirm blacklist');
-  }
-
-  function requestRetry() {
-    openConfirm('retry', 'AML record confirm retry');
-  }
-
-  function requestPass() {
-    openConfirm('pass', 'AML record confirm pass');
-  }
-
-  function requestReject() {
-    openConfirm('reject', 'AML record confirm reject');
-  }
-
-  function openManualReview() {
-    manualReviewDialogOpen.value = true;
-  }
-
-  function onConfirmDialogConfirm() {
-    confirmDialogOpen.value = false;
-    if (pendingAction.value === 'manual-review') return;
     verifyOpen.value = true;
   }
 
-  function onConfirmDialogCancel() {
-    confirmDialogOpen.value = false;
-    pendingAction.value = null;
+  function confirmBlacklist() {
+    commitAction('blacklist');
   }
 
-  function onManualReviewSubmit() {
-    manualReviewDialogOpen.value = false;
-    pendingAction.value = 'manual-review';
-    verifyOpen.value = true;
+  function confirmRetry() {
+    commitAction('retry');
+  }
+
+  function confirmPass() {
+    commitAction('pass');
+  }
+
+  function confirmReject() {
+    commitAction('reject');
+  }
+
+  function onManualReviewSubmit(level: AmlManualReviewRiskLevel) {
+    pendingManualReviewLevel.value = level;
+    commitAction('manual-review');
   }
 
   function submitTradePassword(code: string): boolean {
@@ -71,6 +64,18 @@ export function useRiskControlAmlRecordDetailFlow() {
     const action = pendingAction.value;
     pendingAction.value = null;
     if (!accepted || !action) return;
+
+    const recordId = activeRecordId.value;
+    if (
+      recordId
+      && (action === 'retry' || action === 'pass' || action === 'reject')
+    ) {
+      applyAmlExceptionHandlingOutcome(recordId, action);
+    }
+    if (recordId && action === 'manual-review' && pendingManualReviewLevel.value) {
+      applyAmlManualReviewOutcome(recordId, pendingManualReviewLevel.value);
+    }
+    pendingManualReviewLevel.value = null;
 
     if (action === 'retry') {
       queryFailedBanner.value = false;
@@ -97,18 +102,12 @@ export function useRiskControlAmlRecordDetailFlow() {
   }
 
   const overlaySurface = {
-    confirmDialogOpen,
-    confirmMessageKey,
-    manualReviewDialogOpen,
     verifyOpen,
     queryFailedBanner,
-    requestBlacklist,
-    requestRetry,
-    requestPass,
-    requestReject,
-    openManualReview,
-    onConfirmDialogConfirm,
-    onConfirmDialogCancel,
+    confirmBlacklist,
+    confirmRetry,
+    confirmPass,
+    confirmReject,
     onManualReviewSubmit,
     submitTradePassword,
     onVerifyClosed,
@@ -119,5 +118,6 @@ export function useRiskControlAmlRecordDetailFlow() {
     mountOverlayRegistry,
     unmountOverlayRegistry,
     queryFailedBanner,
+    setActiveRecordId,
   };
 }

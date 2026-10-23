@@ -1,30 +1,101 @@
-.body {
+/** 对齐 EDS RemarkPopoverPanel.root（gap spacing-4）。 */
+.panelRoot {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-4);
   width: 100%;
-  padding: var(--spacing-2) var(--spacing-1) var(--spacing-0);
   box-sizing: border-box;
+}
+
+.confirm {
+  width: 100%;
 }
 
 .fieldBlock {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1-5);
   width: 100%;
+  min-width: 0;
 }
 
+.fieldBlockLevel {
+  gap: var(--spacing-1);
+}
+
+.fieldBlockRemark {
+  gap: var(--spacing-1);
+}
+
+/** 对齐矿工费 Combo 字段 label（Body Small · weight 400）。 */
 .fieldLabel {
+  margin: 0;
   color: var(--text-base-primary);
+  font-weight: var(--eds-body-small-weight);
 }
 
-.levelRow {
+/**
+ * 对齐 AML 自动规则 · 出款类型（outflowRuleGroup + grouped ProjectCreateModeCard）。
+ * 勿 composes 跨目录引用（Vite postcss fileResolve 须绝对路径）。
+ */
+.levelRuleGroup {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  background: var(--material-card-subtle);
+  border: var(--stroke-xs) solid transparent;
+  box-sizing: border-box;
 }
 
-.remarkCount {
-  align-self: flex-end;
-  color: var(--text-base-secondary);
+.levelRuleGroupDangerActive {
+  background: var(--event-focus-brand-subtle);
+  border-color: transparent;
+}
+
+.levelRuleGroupSafeActive {
+  background: var(--status-success-weaken);
+  border-color: transparent;
+}
+
+.levelRuleOptionStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-025);
+  width: 100%;
+  min-width: 0;
+}
+
+.levelRuleOptionStack :global(.eds-decide:focus),
+.levelRuleOptionStack :global(.eds-decide:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.levelRuleOptionStack :global([class*='itemRow']:focus),
+.levelRuleOptionStack :global([class*='itemRow']:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.levelRuleOptionStack :global([class*='itemRow']:focus:not([class*='itemRowSelected'])),
+.levelRuleOptionStack :global([class*='itemRow']:focus-visible:not([class*='itemRowSelected'])) {
+  background: transparent;
+}
+
+.levelRuleOptionStack :global([class*='itemRowSelected']),
+.levelRuleOptionStack :global([class*='itemRowSelected']:hover),
+.levelRuleOptionStack :global([class*='itemRowSelected']:focus),
+.levelRuleOptionStack :global([class*='itemRowSelected']:focus-visible),
+.levelRuleOptionStack :global([class*='itemRowSelected']:focus:hover),
+.levelRuleOptionStack :global([class*='itemRowSelected']:focus-visible:hover) {
+  background: transparent;
+}
+
+.levelRuleGroup .levelRuleOptionStack :global([class*='itemRow']:hover:not([class*='itemRowSelected'])) {
+  background-color: var(--event-hover);
 }

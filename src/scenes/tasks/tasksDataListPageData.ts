@@ -284,6 +284,16 @@ export function tasksDataListShowsAddressBlacklist(menuItem: string | undefined)
   return menuItem === 'Approval' || menuItem === 'Signing';
 }
 
+/** 已办 / 记录类列表：第 6、7 条 AML 风控状态与「风险拦截」行危险 Tag。 */
+export function tasksDataListShowsAmlRiskListStatusDemo(menuItem: string | undefined): boolean {
+  return (
+    menuItem === 'Approved'
+    || menuItem === 'Signed'
+    || menuItem === 'All Records'
+    || menuItem === 'Sent Request'
+  );
+}
+
 /** 我发起的 · 待审批行操作列主按钮文案。 */
 export const SENT_REQUEST_WITHDRAW_ACTION_LABEL = 'Withdraw Application';
 

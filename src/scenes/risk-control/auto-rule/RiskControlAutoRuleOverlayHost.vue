@@ -70,12 +70,16 @@ function onVerifyClosed(accepted: boolean) {
       v-model:open="noPermissionDialogOpen"
       title-key="Warm reminder"
       message-key="Auto rule no create permission"
+      :confirm-disabled="true"
     />
 
     <RiskControlAutoRuleAlertDialog
       v-model:open="editBlockedDialogOpen"
       title-key="Warm reminder"
       message-key="Auto rule edit requires disabled"
+      confirm-label-key="Disable and edit"
+      confirm-tone="danger"
+      @confirm="surface?.confirmEditBlockedDisable()"
     />
 
     <TradePasswordVerifyPopup

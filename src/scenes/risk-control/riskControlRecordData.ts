@@ -8,50 +8,13 @@ import {
 import type { DetailAmlSearchResultVariant } from '@/scenes/tasks/shared/detailAmlSearchResult';
 import { seedAutoRuleRowsIfNeeded } from './auto-rule/riskControlAutoRuleStore';
 import { resolveDemoAmlEntityTags } from './riskControlAmlQueryRecordDetailData';
+import { resolveRiskControlDemoPolicyName } from './riskControlDemoPolicyNames';
 import { resolveRiskControlRecordMenuItem } from './riskControlMenuData';
 import {
   isRiskControlLogTriggeredAction,
   RISK_CONTROL_LOG_TRIGGER_MEMBER,
   RISK_CONTROL_LOG_TRIGGER_STRATEGY_NAME,
 } from './riskControlLogMemberDemo';
-
-const POLICY_NAME_SHOWCASE = [
-  'Real World Assets Protocols',
-  'Telegram Bot',
-  '元宇宙',
-  '物联网',
-  'Wd_Test_003',
-  'Binance Wallet IDO',
-  'Oracles',
-  'Cat-Themed',
-] as const;
-
-const POLICY_NAME_POOL = [
-  'Treasury Sweep',
-  'Client Deposit',
-  'Night Batch',
-  'Weekend Guard',
-  'EMEA Sweep',
-  'Asia Pacific',
-  'Retail Flow',
-  'Institutional',
-] as const;
-
-/** showcase + pool 之后按序取用，保证整表策略名不重复。 */
-const POLICY_NAME_TAIL = [
-  'Liquidity Router',
-  'Cross-Border',
-  'Stablecoin Guard',
-  'Hot Wallet Bridge',
-  'Cold Storage Exit',
-  'Payroll Run',
-  'Vendor Payout',
-  'Merchant Settlement',
-  'Gas Top-Up',
-  'Compliance Hold',
-  'Multi-Sig Release',
-  'Sandbox Test',
-] as const;
 
 /** 策略类型 · 前 5 行 API 转出，其后全部为人工转出。 */
 const POLICY_TYPE_SHOWCASE_ROW_COUNT = 5;
@@ -247,20 +210,6 @@ function seededFraction(rowIndex: number, salt: number): number {
   return x - Math.floor(x);
 }
 
-function resolveDemoPolicyName(rowIndex: number): string {
-  if (rowIndex < POLICY_NAME_SHOWCASE.length) {
-    return POLICY_NAME_SHOWCASE[rowIndex]!;
-  }
-
-  const poolIndex = rowIndex - POLICY_NAME_SHOWCASE.length;
-  if (poolIndex < POLICY_NAME_POOL.length) {
-    return POLICY_NAME_POOL[poolIndex]!;
-  }
-
-  const tailIndex = poolIndex - POLICY_NAME_POOL.length;
-  return POLICY_NAME_TAIL[tailIndex] ?? POLICY_NAME_TAIL[POLICY_NAME_TAIL.length - 1]!;
-}
-
 function buildPolicyNumber(rowIndex: number): string {
   return `PO1440143724412${String(928 + rowIndex).padStart(3, '0')}`;
 }
@@ -284,7 +233,7 @@ function buildPolicySettingsRow(rowIndex: number): PaymentEngineRecordRow {
     orderAmount: '0',
     orderSymbol: 'USDT',
     receivedSymbol: 'USDT',
-    ruleName: resolveDemoPolicyName(rowIndex),
+    ruleName: resolveRiskControlDemoPolicyName(rowIndex),
     ruleNumber,
     policyWeight: POLICY_WEIGHT_SHOWCASE[rowIndex % POLICY_WEIGHT_SHOWCASE.length],
     policyTypeKey: resolveDemoPolicyTypeKey(rowIndex),
@@ -330,7 +279,7 @@ function buildAutoRulesRow(rowIndex: number): PaymentEngineRecordRow {
     orderAmount: '0',
     orderSymbol: 'USDT',
     receivedSymbol: 'USDT',
-    ruleName: resolveDemoPolicyName(rowIndex),
+    ruleName: resolveRiskControlDemoPolicyName(rowIndex),
     ruleNumber,
     autoRuleDirection: direction,
     autoRuleScopeKey: scopeKey,
@@ -356,7 +305,7 @@ function buildAutomationRow(rowIndex: number): PaymentEngineRecordRow {
     orderAmount: '0',
     orderSymbol: 'USDT',
     receivedSymbol: 'USDT',
-    ruleName: resolveDemoPolicyName(rowIndex),
+    ruleName: resolveRiskControlDemoPolicyName(rowIndex),
     ruleNumber,
     automationTypeKey: AUTOMATION_TYPE_SHOWCASE[rowIndex % AUTOMATION_TYPE_SHOWCASE.length],
     ruleEnabled: rowIndex < AUTOMATION_ENABLED_SHOWCASE.length
@@ -399,7 +348,7 @@ function resolveDemoLogStrategyName(rowIndex: number): string {
   if (rowIndex === LOG_STRATEGY_NAME_OVERFLOW_DEMO_ROW_INDEX) {
     return LOG_STRATEGY_NAME_OVERFLOW_DEMO;
   }
-  return resolveDemoPolicyName(rowIndex);
+  return resolveRiskControlDemoPolicyName(rowIndex);
 }
 
 function resolveDemoLogWebhookStartIndex(): number {
@@ -551,7 +500,7 @@ function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
     amlQueryException: isException,
     amlQueryExceptionKind: isException ? 'designated-handler' : undefined,
     amlOutflowAutoQuery: isOutflowAuto || isException,
-    amlTriggeredRuleName: (isOutflowAuto || isException) ? (isException ? exceptionRuleName : outflowRuleName) : undefined,
+    amlTriggeredRuleName: resolveRiskControlDemoPolicyName(rowIndex),
     amlQueryTimeDisplay: undefined,
     amlBelongingEntity: isFailed ? '--' : (isDangerShowcase ? 'HuiOne' : undefined),
     amlEntityTags: isFailed

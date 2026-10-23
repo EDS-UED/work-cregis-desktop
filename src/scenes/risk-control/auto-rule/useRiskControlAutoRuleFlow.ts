@@ -5,6 +5,7 @@ import { showAppEndFeedbackAfterOverlay } from '@/composables/appEndFeedback';
 import { useAppI18n } from '@/composables/useAppI18n';
 import {
   autoRuleNameExists,
+  autoRuleInflowScopeTaken,
   autoRuleOutflowScopeTaken,
   buildNewAutoRuleRowFromDraft,
   deleteAutoRuleRow,
@@ -14,6 +15,10 @@ import {
 
 type RiskControlAutoRuleVerifyIntent = 'form-submit' | 'delete';
 import type { RiskControlAutoRuleOutflowCurrencyEntry } from './riskControlAutoRuleOutflowCurrencyOptions';
+import {
+  INFLOW_TRIGGER_TYPE_OPTIONS,
+  isInflowTriggerTypeKey,
+} from './riskControlAutoRuleInflowTriggerOptions';
 import {
   joinManualOutflowWalletLabels,
   outflowWalletIdsFromScopeText,
@@ -79,7 +84,7 @@ function defaultDraft(direction: 'inflow' | 'outflow'): RiskControlAutoRuleFormD
     direction,
     ruleName: '',
     withdrawalTypeKey: '',
-    scopeTarget: direction === 'outflow' ? '' : 'Doris Stodio',
+    scopeTarget: '',
     scopeWalletIds: [],
     currencyEntries: [],
     skipWhitelist: true,
@@ -94,14 +99,20 @@ function defaultDraft(direction: 'inflow' | 'outflow'): RiskControlAutoRuleFormD
     riskAlertEmailTeamMemberIds: [],
     riskAlertOtherEmails: [],
     serviceProvider: '',
-    waasProject: 'Doris Stodio',
+    waasProject: '',
   };
 }
 
 function draftFromRow(row: PaymentEngineRecordRow): RiskControlAutoRuleFormDraft {
   const direction = row.autoRuleDirection ?? 'inflow';
-  const withdrawalTypeKey = row.autoRuleScopeKey ?? 'Manual Transfer';
-  const scopeText = row.autoRuleWaasProject?.trim() ?? 'Doris Stodio';
+  const scopeKeyFromRow = row.autoRuleScopeKey ?? 'Manual Transfer';
+  const withdrawalTypeKey =
+    direction === 'inflow'
+      ? (isInflowTriggerTypeKey(scopeKeyFromRow)
+          ? scopeKeyFromRow
+          : INFLOW_TRIGGER_TYPE_OPTIONS[0]?.titleKey ?? '')
+      : scopeKeyFromRow;
+  const scopeText = row.autoRuleWaasProject?.trim() ?? '';
   const isManualOutflow =
     direction === 'outflow' && withdrawalTypeKey === WITHDRAWAL_TYPE_MANUAL;
   return {
@@ -120,6 +131,7 @@ export function useRiskControlAutoRuleFlow() {
 
   const noPermissionDialogOpen = ref(false);
   const editBlockedDialogOpen = ref(false);
+  const pendingEditBlockedRow = ref<PaymentEngineRecordRow | null>(null);
   const formOpen = ref(false);
   const verifyOpen = ref(false);
 
@@ -162,6 +174,7 @@ export function useRiskControlAutoRuleFlow() {
   function startEdit(row: PaymentEngineRecordRow) {
     closeAllAnchoredTooltips();
     if (row.ruleEnabled) {
+      pendingEditBlockedRow.value = row;
       editBlockedDialogOpen.value = true;
       return;
     }
@@ -218,6 +231,25 @@ export function useRiskControlAutoRuleFlow() {
     statusToggleDialogOpen.value = false;
     pendingStatusToggle.value = null;
   }
+
+  function confirmEditBlockedDisable() {
+    const row = pendingEditBlockedRow.value;
+    editBlockedDialogOpen.value = false;
+    pendingEditBlockedRow.value = null;
+    if (!row) return;
+    updateAutoRuleRowEnabled(row.id, false);
+    startEdit({ ...row, ruleEnabled: false });
+  }
+
+  function cancelEditBlocked() {
+    editBlockedDialogOpen.value = false;
+    pendingEditBlockedRow.value = null;
+  }
+
+  watch(editBlockedDialogOpen, (open) => {
+    if (open) return;
+    pendingEditBlockedRow.value = null;
+  });
 
   function submitTradePassword(code: string): boolean {
     return code.trim() === MOCK_TRADE_PASSWORD;
@@ -301,6 +333,8 @@ export function useRiskControlAutoRuleFlow() {
   const overlaySurface = {
     noPermissionDialogOpen,
     editBlockedDialogOpen,
+    confirmEditBlockedDisable,
+    cancelEditBlocked,
     formOpen,
     verifyOpen,
     formMode,
@@ -315,7 +349,16 @@ export function useRiskControlAutoRuleFlow() {
     submitTradePassword,
     onVerifyClosed,
     autoRuleNameExists,
-    autoRuleOutflowScopeTaken,
+    autoRuleScopeTaken(
+      scopeLabel: string,
+      withdrawalTypeKey: string,
+      excludeRuleId?: string,
+    ) {
+      if (formDraft.value.direction === 'inflow') {
+        return autoRuleInflowScopeTaken(scopeLabel, excludeRuleId);
+      }
+      return autoRuleOutflowScopeTaken(scopeLabel, withdrawalTypeKey, excludeRuleId);
+    },
     skipDisableDialogOpen,
     skipDisableMessageKey,
     requestSkipDisableConfirm,

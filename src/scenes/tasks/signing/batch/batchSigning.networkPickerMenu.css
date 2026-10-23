@@ -104,7 +104,10 @@ html[data-theme='dark'] .networkPickerRoot.desktopTokens.effect-flotation-box {
   box-sizing: border-box;
 }
 
-/** AML 方向卡图标底：40×40=`--avatar-2xl`；圆角 `--radius-sm`；内图标 `--icon-sm`。 */
+/**
+ * AML 方向卡图标底：40×40=`--avatar-2xl`、大圆角（对齐 AML 查询结果 / 处置建议 actionCardIconShell）。
+ * 内图标 `--icon-sm` 槽 + fit。
+ */
 .networkPickerAutoRuleDirectionIcon {
   display: flex;
   flex-shrink: 0;
@@ -114,9 +117,8 @@ html[data-theme='dark'] .networkPickerRoot.desktopTokens.effect-flotation-box {
   height: var(--avatar-2xl);
   overflow: hidden;
   box-sizing: border-box;
-  border: var(--stroke-xs) solid var(--stroke-outline-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--material-same-white-quaternary);
+  border-radius: var(--radius-full);
+  box-shadow: var(--eds-shadow-subtle);
 }
 
 /*
@@ -134,11 +136,13 @@ html[data-theme='dark'] .networkPickerRoot.desktopTokens.effect-flotation-box {
 }
 
 .networkPickerAutoRuleDirectionIconInflow {
-  color: var(--stroke-color-success);
+  background: var(--material-brand-primary);
+  color: var(--text-same-white-primary);
 }
 
 .networkPickerAutoRuleDirectionIconOutflow {
-  color: var(--stroke-color-danger);
+  background: var(--material-match-primary);
+  color: var(--text-same-white-primary);
 }
 
 

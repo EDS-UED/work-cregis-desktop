@@ -33,6 +33,7 @@
 
 .riskLabel {
   min-width: 0;
+  color: inherit;
 }
 
 .riskToneNa {
@@ -49,4 +50,13 @@
 
 .riskToneDanger {
   color: var(--status-danger);
+}
+
+.riskToneWarning .riskIcon :global(.eds-i-f),
+.riskToneWarning .riskIcon :global(.eds-i-f path),
+.riskToneDanger .riskIcon :global(.eds-i-f),
+.riskToneDanger .riskIcon :global(.eds-i-f path),
+.riskToneSuccess .riskIcon :global(.eds-i-f),
+.riskToneSuccess .riskIcon :global(.eds-i-f path) {
+  fill: currentColor;
 }

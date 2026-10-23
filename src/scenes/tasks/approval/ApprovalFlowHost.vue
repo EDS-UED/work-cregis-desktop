@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import AddressViewMoreReminderPopup from '../shared/AddressViewMoreReminderPopup.vue';
+import { computed, ref } from 'vue';
+import TaskAddressDetailsPopup from '../shared/TaskAddressDetailsPopup.vue';
 import TradePasswordVerifyPopup from '../shared/TradePasswordVerifyPopup.vue';
 import ApprovalDetailPopup from './ApprovalDetailPopup.vue';
 import type { useApprovalFlow } from './useApprovalFlow';
@@ -36,8 +36,13 @@ const detailPopupMounted = computed(
 );
 
 /** 上层 Popup 打开时暂挂下层 shell（走 EgPopup 出场动效，见 usePopupShellLifecycle.suspended）。 */
+const addressRiskAlertOpen = ref(false);
+
 const detailShellSuspended = computed(
-  () => props.flow.verifyOpen.value || props.flow.viewMoreOpen.value,
+  () =>
+    props.flow.verifyOpen.value
+    || props.flow.viewMoreOpen.value
+    || addressRiskAlertOpen.value,
 );
 
 function onVerifyClosed(accepted: boolean) {
@@ -62,12 +67,14 @@ function onVerifyClosed(accepted: boolean) {
     @pass-confirm="flow.onDetailPassConfirm()"
     @reject-confirm="flow.onDetailRejectConfirm()"
     @view-more="flow.openViewMore"
+    @address-risk-alert-open-change="addressRiskAlertOpen = $event"
   />
 
-  <AddressViewMoreReminderPopup
+  <TaskAddressDetailsPopup
     v-model:open="viewMoreOpen"
     :shell-suspended="verifyOpen"
-    :text="flow.viewMoreText.value"
+    :side="flow.viewMoreSide.value"
+    :detail="flow.detail.value"
   />
 
   <TradePasswordVerifyPopup

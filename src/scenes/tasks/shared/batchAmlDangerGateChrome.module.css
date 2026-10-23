@@ -1,0 +1,30 @@
+/**
+ * BatchBarLabelPopover 在 await onBatchLabelBeforeOpen 时会把触发钮标为 loading；
+ * AML 二次确认阶段应展示 active（event-focus），不应出现 eds-load。
+ */
+.app-preview[data-tasks-batch-aml-gate-open] :global(.eds-batch-bar-glass) {
+  position: relative;
+}
+
+.app-preview[data-tasks-batch-aml-gate-open]
+  :global(.eds-batch-bar-action-item.batchAmlDangerAnchorPressed[aria-busy='true']) {
+  background-color: var(--event-focus);
+  color: var(--text-base-secondary);
+  cursor: default;
+}
+
+.app-preview[data-tasks-batch-aml-gate-open]
+  :global(
+    .eds-batch-bar-action-item.batchAmlDangerAnchorPressed[aria-busy='true']
+      [class*='actionTextLabel']
+  ) {
+  visibility: visible;
+}
+
+.app-preview[data-tasks-batch-aml-gate-open]
+  :global(
+    .eds-batch-bar-action-item.batchAmlDangerAnchorPressed[aria-busy='true']
+      [class*='actionLoadingSpin']
+  ) {
+  display: none;
+}

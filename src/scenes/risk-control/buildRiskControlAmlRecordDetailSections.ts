@@ -13,16 +13,15 @@ export const AML_QUERY_DETAIL_COLLABORATION_ITEM_KEY = 'aml-query-detail-collabo
 export const AML_QUERY_DETAIL_SENDER_ITEM_KEY = 'aml-query-detail-sender';
 export const AML_QUERY_DETAIL_AMOUNT_ITEM_KEY = 'aml-query-detail-amount';
 export const AML_QUERY_DETAIL_CONTROL_MEASURE_ITEM_KEY = 'aml-query-detail-control-measure';
+export const AML_QUERY_DETAIL_SERVICE_PROVIDER_ITEM_KEY = 'aml-query-detail-service-provider';
 
 export type RiskControlAmlRecordDetailTabKind =
   | 'queryResult'
-  | 'triggerRules'
   | 'riskTrace'
   | 'queryDetail';
 
 export const RISK_CONTROL_AML_RECORD_DETAIL_TAB_KINDS: readonly RiskControlAmlRecordDetailTabKind[] = [
   'queryResult',
-  'triggerRules',
   'riskTrace',
   'queryDetail',
 ];
@@ -41,58 +40,100 @@ export function resolveRiskControlAmlRecordDetailTabLabels(
   row?: PaymentEngineRecordRow,
 ): string[] {
   return resolveRiskControlAmlRecordDetailTabKinds(row).map((kind) => {
-    if (kind === 'queryResult') return translate('Query Results');
-    if (kind === 'triggerRules') return translate('Trigger Rules');
-    if (kind === 'riskTrace') return translate('Risk Traceability');
-    return translate('Query Details');
+    if (kind === 'queryResult') return translate('AML risk profile title');
+    if (kind === 'riskTrace') return translate('AML counterparty risk title');
+    return translate('AML audit log title');
   });
 }
 
-function buildTriggerRulesTabItems(
+function buildReviewLogTabItems(
   row: PaymentEngineRecordRow,
   translate: (key: string) => string,
 ): DetailItemData[] {
   const detail = resolveRiskControlAmlQueryRecordDetail(row, translate);
+  const review = detail.reviewLog;
 
   return [
     {
       ...createDetailApplyItemRow('text', {
-        key: 'aml-trigger-waas-project',
-        title: translate('WaaS Project'),
-        value: detail.waasProject,
+        key: 'aml-review-risk-before',
+        title: translate('Status before Review'),
+        value: translate(review.riskLevelBeforeKey),
       }),
-      titleIcon: 'eds-floder-favorite',
+      titleIcon: 'eds-aml-warning',
     },
     {
       ...createDetailApplyItemRow('text', {
-        key: 'aml-trigger-rule-name',
-        title: translate('Rule Name'),
-        value: detail.ruleName,
+        key: 'aml-review-risk-after',
+        title: translate('Status After Review'),
+        value: translate(review.riskLevelAfterKey),
       }),
-      titleIcon: 'eds-enterprise-name',
+      titleIcon: 'eds-aml-warning',
     },
-    createDetailApplyItemRow('brand-number', {
-      key: 'aml-trigger-rule-number',
-      title: translate('Rule Number'),
-      value: detail.ruleNumber,
+    {
+      ...createDetailApplyItemRow('initiated-by', {
+        key: 'aml-review-reviewer',
+        title: translate('AML reviewer'),
+        value: review.reviewerName,
+        valueSymbolAvatarName: review.reviewerAvatarName,
+      }),
+      titleIcon: 'eds-user-pointer',
+    },
+    createDetailApplyItemRow('time', {
+      key: 'aml-review-time',
+      title: translate('AML review time'),
+      value: review.reviewedAt,
     }),
     {
       ...createDetailApplyItemRow('text', {
-        key: 'aml-trigger-service-provider',
-        title: translate('Service Provider'),
-        value: detail.serviceProvider,
+        key: 'aml-review-remark',
+        title: translate('Note'),
+        value: review.remark,
       }),
-      titleIcon: 'eds-circle-pentagram',
-    },
-    {
-      ...createDetailApplyItemRow('text', {
-        key: 'aml-trigger-risk-threshold',
-        title: translate('Risk score threshold'),
-        value: String(detail.riskThreshold),
-      }),
-      titleIcon: 'eds-aml-search',
+      titleIcon: 'eds-text-note',
     },
   ];
+}
+
+function buildAmlQueryServiceProviderItem(
+  detail: ReturnType<typeof resolveRiskControlAmlQueryRecordDetail>,
+  translate: (key: string) => string,
+): DetailItemData {
+  return {
+    ...createDetailApplyItemRow('text', {
+      key: AML_QUERY_DETAIL_SERVICE_PROVIDER_ITEM_KEY,
+      title: translate('Service Provider'),
+      value: detail.serviceProvider,
+    }),
+    titleIcon: 'eds-circle-pentagram',
+  };
+}
+
+function buildAmlQueryAddressApplyItem(
+  variant: 'receiver' | 'sender',
+  options: {
+    key: string;
+    title: string;
+    value: string;
+    networkLabel: string;
+  },
+): DetailItemData {
+  const networkTag = options.networkLabel.trim();
+  return {
+    ...createDetailApplyItemRow(variant, {
+      key: options.key,
+      title: options.title,
+      value: options.value,
+      tag: networkTag,
+    }),
+    ...(networkTag
+      ? {
+          tagBeforeValue: false,
+          tagFamily: 'system' as const,
+          tagSystemType: 'stroke-subtle' as const,
+        }
+      : {}),
+  };
 }
 
 function resolveControlMeasureLabel(
@@ -113,7 +154,7 @@ function buildAmlQueryRequesterItem(
     return {
       ...createDetailApplyItemRow('text', {
         key: AML_QUERY_DETAIL_REQUESTER_ITEM_KEY,
-        title: translate('Requester'),
+        title: translate('Query Initiator'),
         value: detail.requesterName,
       }),
       titleIcon: 'eds-arrow-launch-circle',
@@ -121,7 +162,7 @@ function buildAmlQueryRequesterItem(
   }
   return createDetailApplyItemRow('initiated-by', {
     key: AML_QUERY_DETAIL_REQUESTER_ITEM_KEY,
-    title: translate('Requester'),
+    title: translate('Query Initiator'),
     value: detail.requesterName,
     valueSymbolAvatarName: detail.requesterAvatarName,
     valueSecondary: detail.requesterEmailMasked,
@@ -138,22 +179,23 @@ function buildQueryDetailTabItems(
   if (isOutflowAuto) {
     return [
       buildAmlQueryRequesterItem(detail, translate, true),
+      buildAmlQueryServiceProviderItem(detail, translate),
       createDetailApplyItemRow('brand-number', {
         key: AML_QUERY_DETAIL_COLLABORATION_ITEM_KEY,
         title: translate('Collaboration number'),
         value: detail.collaborationNumber,
       }),
-      createDetailApplyItemRow('receiver', {
+      buildAmlQueryAddressApplyItem('receiver', {
         key: AML_QUERY_DETAIL_ADDRESS_ITEM_KEY,
         title: translate('Receiver address'),
         value: detail.targetValue,
-        tag: '',
+        networkLabel: detail.networkLabel,
       }),
-      createDetailApplyItemRow('sender', {
+      buildAmlQueryAddressApplyItem('sender', {
         key: AML_QUERY_DETAIL_SENDER_ITEM_KEY,
         title: translate('Sender address'),
         value: detail.senderAddress,
-        tag: '',
+        networkLabel: detail.networkLabel,
       }),
       {
         ...createDetailApplyItemRow('amount', {
@@ -192,11 +234,11 @@ function buildQueryDetailTabItems(
   }
 
   return [
-    createDetailApplyItemRow('receiver', {
+    buildAmlQueryAddressApplyItem('receiver', {
       key: AML_QUERY_DETAIL_ADDRESS_ITEM_KEY,
       title: translate('Address'),
       value: detail.targetValue,
-      tag: '',
+      networkLabel: detail.networkLabel,
     }),
     {
       ...createDetailApplyItemRow('text', {
@@ -211,6 +253,7 @@ function buildQueryDetailTabItems(
       valueSymbolKind: 'crypto',
     },
     buildAmlQueryRequesterItem(detail, translate, false),
+    buildAmlQueryServiceProviderItem(detail, translate),
     {
       ...createDetailApplyItemRow('text', {
         key: 'aml-query-detail-object',
@@ -250,15 +293,17 @@ export function buildRiskControlAmlRecordDetailSections(
     return [];
   }
 
-  if (tabKind === 'triggerRules') {
-    return [{
-      key: 'aml-trigger-rules',
-      items: buildTriggerRulesTabItems(row, translate),
-    }];
-  }
-
-  return [{
-    key: 'aml-query-details',
-    items: buildQueryDetailTabItems(row, translate),
-  }];
+  return [
+    {
+      key: 'aml-query-log',
+      title: translate('AML query log section title'),
+      showDivider: true,
+      items: buildQueryDetailTabItems(row, translate),
+    },
+    {
+      key: 'aml-review-log',
+      title: translate('AML review log section title'),
+      items: buildReviewLogTabItems(row, translate),
+    },
+  ];
 }

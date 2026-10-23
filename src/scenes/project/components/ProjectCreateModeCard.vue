@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue';
-import { EgRadio } from '@eds/desktop-components';
+import { EgCheckbox, EgRadio } from '@eds/desktop-components';
 import styles from './ProjectCreateModeCard.module.css';
 
 const slots = useSlots();
@@ -34,6 +34,8 @@ const props = withDefaults(
      */
     expandStyle?: 'legacy' | 'embeddedPanel';
     showRadio?: boolean;
+    /** radio（默认）或 checkbox 选择控件。 */
+    selectionControl?: 'radio' | 'checkbox';
     /** 未选中行：fill = 浅底；outline = 描边无底（选中/ hover 仍走默认）。 */
     idleSurface?: 'fill' | 'outline';
   }>(),
@@ -49,9 +51,24 @@ const props = withDefaults(
     groupedHighlightSelectedRow: false,
     expandStyle: 'legacy',
     showRadio: true,
+    selectionControl: 'radio',
     idleSurface: 'fill',
   },
 );
+
+const showSelectionControl = computed(
+  () => props.showRadio && props.selectionControl === 'radio',
+);
+
+const showCheckboxControl = computed(
+  () => props.selectionControl === 'checkbox',
+);
+
+const rowRole = computed(() => {
+  if (showCheckboxControl.value) return 'checkbox';
+  if (showSelectionControl.value) return 'radio';
+  return 'button';
+});
 
 const hasDefaultSlot = computed(() => Boolean(slots.default));
 
@@ -131,15 +148,22 @@ function onRowActivate(event: MouseEvent | KeyboardEvent) {
       <div :class="styles.optionExpanded">
         <div
           :class="itemRowClass"
-          :role="showRadio ? 'radio' : 'button'"
+          :role="rowRole"
           tabindex="0"
-          :aria-checked="showRadio ? selected : undefined"
+          :aria-checked="rowRole !== 'button' ? selected : undefined"
           @click="onRowActivate"
           @keydown.enter.prevent="onRowActivate"
           @keydown.space.prevent="onRowActivate"
         >
+          <EgCheckbox
+            v-if="showCheckboxControl"
+            :class="styles.radio"
+            :model-value="selected"
+            tabindex="-1"
+            aria-hidden="true"
+          />
           <EgRadio
-            v-if="showRadio"
+            v-else-if="showSelectionControl"
             :class="styles.radio"
             :model-value="selected"
             :name="radioName"
@@ -169,15 +193,22 @@ function onRowActivate(event: MouseEvent | KeyboardEvent) {
     <template v-else>
       <div
         :class="itemRowClass"
-        :role="showRadio ? 'radio' : 'button'"
+        :role="rowRole"
         tabindex="0"
-        :aria-checked="showRadio ? selected : undefined"
+        :aria-checked="rowRole !== 'button' ? selected : undefined"
         @click="onRowActivate"
         @keydown.enter.prevent="onRowActivate"
         @keydown.space.prevent="onRowActivate"
       >
+        <EgCheckbox
+          v-if="showCheckboxControl"
+          :class="styles.radio"
+          :model-value="selected"
+          tabindex="-1"
+          aria-hidden="true"
+        />
         <EgRadio
-          v-if="showRadio"
+          v-else-if="showSelectionControl"
           :class="styles.radio"
           :model-value="selected"
           :name="radioName"

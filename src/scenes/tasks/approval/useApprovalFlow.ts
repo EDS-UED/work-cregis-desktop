@@ -1,8 +1,5 @@
 import { computed, ref, shallowRef, watch, type Ref } from 'vue';
 import {
-  buildAddressMoreSummary,
-} from './buildApprovalDetailSections';
-import {
   approvalIdFromRowIndex,
   checkApprovalPending,
   getApprovalDetail,
@@ -41,8 +38,6 @@ export function useApprovalFlow(options: {
   const batchMode = ref(false);
   const batchSelectedIds = ref<string[]>([]);
   const remark = ref('');
-  const viewMoreText = ref('');
-
   const detail = shallowRef<ApprovalDetail | null>(null);
 
   watch(
@@ -230,9 +225,11 @@ export function useApprovalFlow(options: {
     batchMode.value ? batchSelectedIds.value.length : 1,
   );
 
+  const viewMoreSide = ref<'sender' | 'receiver' | null>(null);
+
   function openViewMore(side: 'sender' | 'receiver') {
     if (!detail.value) return;
-    viewMoreText.value = buildAddressMoreSummary(detail.value, side);
+    viewMoreSide.value = side;
     viewMoreOpen.value = true;
   }
 
@@ -245,6 +242,7 @@ export function useApprovalFlow(options: {
         detail.value = null;
         verifyOpen.value = false;
         viewMoreOpen.value = false;
+        viewMoreSide.value = null;
       }
     },
   );
@@ -274,7 +272,7 @@ export function useApprovalFlow(options: {
     viewMoreOpen,
     detail,
     remark,
-    viewMoreText,
+    viewMoreSide,
     batchMode,
     currentIndex,
     totalCount,

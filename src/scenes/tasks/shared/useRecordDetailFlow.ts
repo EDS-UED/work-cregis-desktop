@@ -7,11 +7,12 @@ import {
   parseRowIndexFromApprovalId,
 } from '../approval/approvalStore';
 import { buildDetailProgressFields } from './buildDetailProgressFields';
-import { buildAddressMoreSummary } from '../approval/buildApprovalDetailSections';
 import type { ApprovalDetail } from '../approval/types';
 import {
   buildApprovedModuleDetailStatusRowValues,
+  buildApprovedModuleStatusRowValues,
   buildStatusRowValues,
+  isTaskAmlRiskDemoRowIndex,
 } from '../list-field/tasksListFieldStatusRowData';
 import {
   isSentRequestDataListMenu,
@@ -22,7 +23,6 @@ import {
   parseRowIndexFromSigningId,
   signingIdFromRowIndex,
 } from '../signing/signingStore';
-import { buildAddressMoreSummary as buildSigningAddressMoreSummary } from '../signing/buildSigningDetailSections';
 import type { SigningDetail } from '../signing/types';
 import type { TasksListFieldStatusKind } from '../list-field/tasksListFieldStatusRowData';
 
@@ -62,7 +62,7 @@ export function useRecordDetailFlow(options: {
   const currentId = ref<string | null>(null);
   const recordIds = ref<string[]>([]);
   const viewMoreOpen = ref(false);
-  const viewMoreText = ref('');
+  const viewMoreSide = ref<'sender' | 'receiver' | null>(null);
 
   const detailKind = computed(() => resolveDetailKind(options.menuItem.value));
   const isEnabled = computed(() =>
@@ -91,15 +91,28 @@ export function useRecordDetailFlow(options: {
     () => currentIndex.value >= totalCount.value || totalCount.value === 0,
   );
 
-  const listStatus = computed(() => {
+  /** 与列表 Status 列一致（含 AML 演示行）。 */
+  const listColumnStatus = computed(() => {
     if (options.menuItem.value === 'Approved') {
-      return buildApprovedModuleDetailStatusRowValues(currentRowIndex.value);
+      return buildApprovedModuleStatusRowValues(currentRowIndex.value);
     }
     return buildStatusRowValues(currentRowIndex.value, options.menuItem.value);
   });
 
-  const statusTagLabel = computed(() => listStatus.value.label);
-  const statusTagStatus = computed(() => listStatus.value.status as TasksListFieldStatusKind);
+  /** 已审批详情进度条演示态；其余菜单与列表列相同。 */
+  const progressListStatus = computed(() => {
+    if (isTaskAmlRiskDemoRowIndex(currentRowIndex.value)) {
+      return { status: 'warning' as const, label: 'Pending Approval' };
+    }
+    if (options.menuItem.value === 'Approved') {
+      return buildApprovedModuleDetailStatusRowValues(currentRowIndex.value);
+    }
+    return listColumnStatus.value;
+  });
+
+  const statusTagLabel = computed(() => listColumnStatus.value.label);
+  const statusTagStatus = computed(() => listColumnStatus.value.status as TasksListFieldStatusKind);
+  const progressListStatusLabel = computed(() => progressListStatus.value.label);
   const activeRecordMenuItem = computed(
     () => detailMenuItem.value ?? options.menuItem.value,
   );
@@ -183,15 +196,9 @@ export function useRecordDetailFlow(options: {
   }
 
   function openViewMore(side: 'sender' | 'receiver') {
-    if (detailKind.value === 'signing' && signingDetail.value) {
-      viewMoreText.value = buildSigningAddressMoreSummary(signingDetail.value, side);
-      viewMoreOpen.value = true;
-      return;
-    }
-    if (approvalDetail.value) {
-      viewMoreText.value = buildAddressMoreSummary(approvalDetail.value, side);
-      viewMoreOpen.value = true;
-    }
+    if (!signingDetail.value && !approvalDetail.value) return;
+    viewMoreSide.value = side;
+    viewMoreOpen.value = true;
   }
 
   function onWithdrawRequest() {
@@ -213,9 +220,10 @@ export function useRecordDetailFlow(options: {
     nextDisabled,
     statusTagLabel,
     statusTagStatus,
+    progressListStatusLabel,
     showWithdrawAction,
     viewMoreOpen,
-    viewMoreText,
+    viewMoreSide,
     openDetailForRow,
     onDetailPopupClosed,
     navigateRelative,

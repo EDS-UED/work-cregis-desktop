@@ -6,7 +6,9 @@ import {
 import { localizeCurrencyAddressTags } from '../list-field/listFieldCurrencyTagCustomize';
 import {
   addressEntryHasBlacklist,
+  addressEntryHasDangerRisk,
   RECEIVER_BLACKLIST_FEEDBACK_UI_KEY,
+  RECEIVER_DANGER_FEEDBACK_UI_KEY,
 } from './hasBlacklistAddressTags';
 
 export type DetailAddressSideKey = 'sender' | 'receiver';
@@ -63,6 +65,15 @@ function buildAddressValueEntries(
           valueAddressSideFeedback: {
             type: 'danger' as const,
             text: translate(RECEIVER_BLACKLIST_FEEDBACK_UI_KEY),
+            showLink: false,
+          },
+        }
+      : {}),
+    ...(variantId === 'receiver' && addressEntryHasDangerRisk(entry, translate)
+      ? {
+          valueAddressSideFeedback: {
+            type: 'danger' as const,
+            text: translate(RECEIVER_DANGER_FEEDBACK_UI_KEY),
             showLink: false,
           },
         }

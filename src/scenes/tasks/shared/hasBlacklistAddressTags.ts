@@ -8,6 +8,9 @@ const ADDRESS_RISK_LABEL_KEYS = [BLACKLIST_LABEL_KEY, DANGER_LABEL_KEY] as const
 export const RECEIVER_BLACKLIST_FEEDBACK_UI_KEY =
   'This address has been blacklisted. Transactions to this address are prohibited. We recommend rejecting this application.';
 
+export const RECEIVER_DANGER_FEEDBACK_UI_KEY =
+  'Task detail receiver AML danger feedback';
+
 function normalizeTagList(
   tags?: CryptoAddressSideTags['system'] | CryptoAddressSideTags['custom'],
 ) {
@@ -43,6 +46,15 @@ export function tagMatchesAddressRiskLabel(
 
   const label = String(tag.label ?? '').trim();
   return ADDRESS_RISK_LABEL_KEYS.some((key) => labelMatchesKey(label, key, translate));
+}
+
+/** 协作详情接收方「危险」演示 Tag（与 AML 查询结果 Danger 同形，但须常驻展示）。 */
+export function tagMatchesDangerLabel(
+  tag: { label?: string; customStyle?: string },
+  translate?: (key: string) => string,
+): boolean {
+  const label = String(tag.label ?? '').trim();
+  return labelMatchesKey(label, DANGER_LABEL_KEY, translate);
 }
 
 export function hasBlacklistAddressTags(
@@ -95,6 +107,18 @@ export function addressEntryHasBlacklist(
   return (
     hasBlacklistAddressTags(entry.addressTags, translate) ||
     entryStringTagsIncludeBlacklist(entry.tags ?? [], translate)
+  );
+}
+
+/** 接收方 AML「危险」Tag（非黑名单）；用于详情 FormSubmission 反馈。 */
+export function addressEntryHasDangerRisk(
+  entry: AddressEntryWithTags,
+  translate?: (key: string) => string,
+): boolean {
+  if (addressEntryHasBlacklist(entry, translate)) return false;
+  return (
+    hasAddressRiskTags(entry.addressTags, translate) ||
+    entryStringTagsIncludeAddressRisk(entry.tags ?? [], translate)
   );
 }
 

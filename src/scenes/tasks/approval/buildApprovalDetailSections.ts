@@ -32,6 +32,7 @@ const DETAIL_ITEM_TITLES = {
   receiver: DATA_LIST_FIGMA_COLUMNS.combo.secondaryLabel ?? 'Receiver',
   strategy: 'Triggered Policy',
   thirdParty: 'Third-party Reference',
+  collaborationNumber: 'Collaboration number',
   memo: 'Memo',
 } as const;
 
@@ -122,6 +123,11 @@ export function buildApprovalDetailSections(
       key: 'third-party',
       title: translate(DETAIL_ITEM_TITLES.thirdParty),
       value: detail.thirdPartyRef,
+    }),
+    createDetailApplyItemRow('brand-number', {
+      key: 'collaboration-number',
+      title: translate(DETAIL_ITEM_TITLES.collaborationNumber),
+      value: detail.collaborationNumber,
     }),
     createDetailApplyItemRow('memo', {
       key: 'memo',

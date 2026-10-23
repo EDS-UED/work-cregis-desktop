@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import AddressViewMoreReminderPopup from '../shared/AddressViewMoreReminderPopup.vue';
+import { computed, ref } from 'vue';
+import TaskAddressDetailsPopup from '../shared/TaskAddressDetailsPopup.vue';
 import TradePasswordVerifyPopup from '../shared/TradePasswordVerifyPopup.vue';
 import MultiSignWaitingPopup from './MultiSignWaitingPopup.vue';
 import SigningDetailPopup from './SigningDetailPopup.vue';
@@ -50,12 +50,15 @@ const detailPopupMounted = computed(
   () => props.flow.detailOpen.value || props.flow.detail.value != null,
 );
 
+const addressRiskAlertOpen = ref(false);
+
 const detailShellSuspended = computed(
   () =>
     props.flow.verifyOpen.value
     || props.flow.progressOpen.value
     || props.flow.multiSignOpen.value
-    || props.flow.viewMoreOpen.value,
+    || props.flow.viewMoreOpen.value
+    || addressRiskAlertOpen.value,
 );
 
 function onVerifyClosed(accepted: boolean) {
@@ -88,12 +91,14 @@ function onMultiSignPopupClosed() {
     @pass-confirm="flow.onDetailPassConfirm($event)"
     @reject-confirm="flow.onDetailRejectConfirm()"
     @view-more="flow.openViewMore"
+    @address-risk-alert-open-change="addressRiskAlertOpen = $event"
   />
 
-  <AddressViewMoreReminderPopup
+  <TaskAddressDetailsPopup
     v-model:open="viewMoreOpen"
     :shell-suspended="verifyOpen || progressOpen || multiSignOpen"
-    :text="flow.viewMoreText.value"
+    :side="flow.viewMoreSide.value"
+    :detail="flow.detail.value"
   />
 
   <TradePasswordVerifyPopup

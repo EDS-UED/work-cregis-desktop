@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+.hostEmbedded {
+  width: 100%;
+  min-width: 0;
+}
+
 .sectionBody {
   display: flex;
   flex-direction: column;
@@ -45,7 +50,7 @@
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--spacing-6);
   min-width: min(100%, calc(var(--scale-30) + var(--scale-10)));
   max-width: 100%;
@@ -63,37 +68,59 @@
 
 .actionCardHead {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: var(--spacing-2);
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
   width: 100%;
   min-width: 0;
 }
 
-.actionCardIconShell {
-  display: inline-flex;
-  flex: 0 0 var(--avatar-xl);
-  align-items: center;
-  justify-content: center;
-  width: var(--avatar-xl);
-  height: var(--avatar-xl);
-  line-height: 0;
-  color: var(--text-base-secondary);
+.actionCardAction {
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: var(--spacing-2);
 }
 
-.actionCardIconShell :global(.eds-icon) {
-  display: block;
-  width: 100%;
-  height: 100%;
+/** 与查询结果处置建议卡一致：40×40 + 16px 图标。 */
+.actionCardIconShell {
+  margin-top: var(--spacing-2);
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-2xl);
+  height: var(--avatar-2xl);
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  background: var(--material-same-white-tertiary);
+  box-shadow: var(--eds-shadow-subtle);
+  color: var(--text-base-primary);
+}
+
+.actionCardIconGlyph {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-md);
+  height: var(--icon-md);
+  color: inherit;
+}
+
+.actionCardIconShellReject {
+  color: var(--stroke-color-danger);
 }
 
 .actionCardCopy {
   display: flex;
-  flex: 1 1 0%;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--spacing-05);
+  width: 100%;
   min-width: 0;
+  text-align: center;
 }
 
 .actionTitle {
@@ -102,6 +129,7 @@
   width: 100%;
   max-width: 100%;
   color: var(--text-base-primary);
+  text-align: center;
 }
 
 .actionDesc {
@@ -111,11 +139,5 @@
   max-width: 100%;
   font-weight: var(--eds-footnote-weight);
   color: var(--text-base-secondary);
-}
-
-.actionCardFooter {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
+  text-align: center;
 }

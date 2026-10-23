@@ -1,0 +1,27 @@
+.section {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  width: 100%;
+  padding-inline: var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.listShell {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/** NA 空态：无表头；空态块靠上（勿沿用 listWrapEmpty 整区垂直居中）。 */
+.listShell :global(.eds-data-list thead) {
+  display: none;
+}
+
+.listShell :global(.eds-data-list .empty) {
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: var(--spacing-8);
+  box-sizing: border-box;
+}

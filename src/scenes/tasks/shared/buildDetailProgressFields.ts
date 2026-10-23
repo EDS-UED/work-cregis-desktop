@@ -1,6 +1,12 @@
 import type { ApprovalProgressMember } from '../approval/types';
 import { buildTransferTypeRowValues } from '../list-field/tasksListFieldBusinessTypeRowData';
-import { buildStatusRowValues, buildApprovedModuleDetailStatusRowValues, SYSTEM_SIGNATURE_REJECT_ROW_INDEX, WITHDRAWN_DEMO_ROW_INDEX } from '../list-field/tasksListFieldStatusRowData';
+import {
+  buildStatusRowValues,
+  buildApprovedModuleDetailStatusRowValues,
+  isTaskAmlRiskDemoRowIndex,
+  SYSTEM_SIGNATURE_REJECT_ROW_INDEX,
+  WITHDRAWN_DEMO_ROW_INDEX,
+} from '../list-field/tasksListFieldStatusRowData';
 import {
   attachSigningMeta,
   resolvePassedSignersForRow,
@@ -18,6 +24,11 @@ export type DetailProgressScenario =
   | 'approval-workflow'
   | 'signing-workflow'
   | 'record';
+
+/** 协作详情「协作单号」mock（与 AML 出款自动查询 COL 编号同形）。 */
+export function buildTaskCollaborationNumber(rowIndex: number): string {
+  return `COL-${String(rowIndex + 1).padStart(8, '0')}`;
+}
 
 type ProgressMemberSeed = ApprovalProgressMember;
 
@@ -174,10 +185,22 @@ function resolveSignatureRejectSigners(
 function resolveInitiatorContext(rowIndex: number) {
   const transferType = buildTransferTypeRowValues(rowIndex);
   const isWaasPayout =
-    rowIndex === WITHDRAWN_DEMO_ROW_INDEX
-    || isWaasPayoutTransferType(transferType.value);
+    !isTaskAmlRiskDemoRowIndex(rowIndex)
+    && (rowIndex === WITHDRAWN_DEMO_ROW_INDEX
+      || isWaasPayoutTransferType(transferType.value));
   const waasProjectName = resolveWaasProjectNameForRow(rowIndex);
   return { isWaasPayout, waasProjectName };
+}
+
+/** AML 演示行（风控查询中 / 风险拦截）：审批进度与待审批第 3 条一致（APAC 通过 + 财务待审，无签名步）。 */
+function resolveAmlDemoApprovalNodes(
+  rowIndex: number,
+  initiator: ProgressMemberSeed,
+  emily: ProgressMemberSeed,
+  frank: ProgressMemberSeed,
+) {
+  if (!isTaskAmlRiskDemoRowIndex(rowIndex)) return null;
+  return [buildApacNode(initiator, emily, frank), buildFinanceNodePending(emily)];
 }
 
 function buildApprovalWorkflowFields(rowIndex: number, initiatorNote: string) {
@@ -187,6 +210,7 @@ function buildApprovalWorkflowFields(rowIndex: number, initiatorNote: string) {
   return attachSigningMeta(rowIndex, {
     strategy: 'High Value Guard · #POL-0192',
     thirdPartyRef: `TP-20271223-${String(rowIndex + 1).padStart(3, '0')}`,
+    collaborationNumber: buildTaskCollaborationNumber(rowIndex),
     memo: 'Monthly vendor settlement',
     initiatorKind: isWaasPayout ? ('waas' as const) : ('member' as const),
     initiatorMember: initiator,
@@ -195,7 +219,9 @@ function buildApprovalWorkflowFields(rowIndex: number, initiatorNote: string) {
       : `${initiator.name} ${initiator.emailMasked} · MacBook · DEV-019 · IP 198.51.100.8`,
     initiatorNote,
     initiatorAtDisplay,
-    approvalNodes: [buildApacNode(initiator, emily, frank), buildFinanceNodePending(emily)],
+    approvalNodes:
+      resolveAmlDemoApprovalNodes(rowIndex, initiator, emily, frank)
+      ?? [buildApacNode(initiator, emily, frank), buildFinanceNodePending(emily)],
     signatureAtDisplay: undefined,
     signers: resolvePendingSignersForRow(rowIndex, signerSeeds),
   });
@@ -208,6 +234,7 @@ function buildSigningWorkflowFields(rowIndex: number, initiatorNote: string) {
   return attachSigningMeta(rowIndex, {
     strategy: 'High Value Guard · #POL-0192',
     thirdPartyRef: `TP-20271223-${String(rowIndex + 1).padStart(3, '0')}`,
+    collaborationNumber: buildTaskCollaborationNumber(rowIndex),
     memo: 'Monthly vendor settlement',
     initiatorKind: isWaasPayout ? ('waas' as const) : ('member' as const),
     initiatorMember: initiator,
@@ -216,7 +243,38 @@ function buildSigningWorkflowFields(rowIndex: number, initiatorNote: string) {
       : `${initiator.name} ${initiator.emailMasked} · MacBook · DEV-019 · IP 198.51.100.8`,
     initiatorNote,
     initiatorAtDisplay,
-    approvalNodes: [buildApacNode(initiator, emily, frank), buildFinanceNodePassed(emily)],
+    approvalNodes:
+      resolveAmlDemoApprovalNodes(rowIndex, initiator, emily, frank)
+      ?? [buildApacNode(initiator, emily, frank), buildFinanceNodePassed(emily)],
+    signatureAtDisplay: undefined,
+    signers: resolvePendingSignersForRow(rowIndex, signerSeeds),
+  });
+}
+
+function buildAmlDemoPendingApprovalProgressFields(
+  rowIndex: number,
+  initiatorNote: string,
+  base: {
+    strategy: string;
+    thirdPartyRef: string;
+    collaborationNumber: string;
+    memo: string;
+    initiatorKind: 'waas' | 'member';
+    initiatorMember: ProgressMemberSeed;
+    initiatorDisplay: string;
+    initiatorNote: string;
+    initiatorAtDisplay: string;
+  },
+  signerSeeds: SignerSeeds,
+  initiator: ProgressMemberSeed,
+  emily: ProgressMemberSeed,
+  frank: ProgressMemberSeed,
+) {
+  return attachSigningMeta(rowIndex, {
+    ...base,
+    approvalNodes:
+      resolveAmlDemoApprovalNodes(rowIndex, initiator, emily, frank)
+      ?? [buildApacNode(initiator, emily, frank), buildFinanceNodePending(emily)],
     signatureAtDisplay: undefined,
     signers: resolvePendingSignersForRow(rowIndex, signerSeeds),
   });
@@ -270,6 +328,7 @@ function buildRecordFields(
   const base = {
     strategy: 'High Value Guard · #POL-0192',
     thirdPartyRef: `TP-20271223-${String(rowIndex + 1).padStart(3, '0')}`,
+    collaborationNumber: buildTaskCollaborationNumber(rowIndex),
     memo: 'Monthly vendor settlement',
     initiatorKind: isWaasPayout ? ('waas' as const) : ('member' as const),
     initiatorMember: initiator,
@@ -279,6 +338,18 @@ function buildRecordFields(
     initiatorNote,
     initiatorAtDisplay,
   };
+
+  if (isTaskAmlRiskDemoRowIndex(rowIndex)) {
+    return buildAmlDemoPendingApprovalProgressFields(
+      rowIndex,
+      initiatorNote,
+      base,
+      signerSeeds,
+      initiator,
+      emily,
+      frank,
+    );
+  }
 
   if (menuItem === 'Signed') {
     if (listStatus.label === 'Signature Reject') {

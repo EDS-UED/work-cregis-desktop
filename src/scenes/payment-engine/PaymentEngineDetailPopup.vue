@@ -2,6 +2,7 @@
 import {
   computed,
   onBeforeUnmount,
+  provide,
   ref,
   toRef,
   watch,
@@ -46,18 +47,17 @@ import {
 } from './paymentEngineRecordStatusCustomize';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 import {
-  AML_QUERY_DETAIL_ADDRESS_ITEM_KEY,
-  AML_QUERY_DETAIL_SENDER_ITEM_KEY,
   buildRiskControlAmlRecordDetailSections,
   resolveRiskControlAmlRecordDetailTabKinds,
   resolveRiskControlAmlRecordDetailTabLabels,
 } from '@/scenes/risk-control/buildRiskControlAmlRecordDetailSections';
 import { resolveRiskControlAmlQueryRecordDetail } from '@/scenes/risk-control/riskControlAmlQueryRecordDetailData';
 import RiskControlAmlRecordDetailHeadline from '@/scenes/risk-control/RiskControlAmlRecordDetailHeadline.vue';
-import RiskControlAmlRecordDetailQueryResultPanel from '@/scenes/risk-control/RiskControlAmlRecordDetailQueryResultPanel.vue';
+import RiskControlAmlRecordDetailRiskProfileTabAppend from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskProfileTabAppend.vue';
 import RiskControlAmlRecordDetailRiskTracePanel from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskTracePanel.vue';
-import RiskControlAmlRecordDetailExceptionHandling from '@/scenes/risk-control/RiskControlAmlRecordDetailExceptionHandling.vue';
-import RiskControlAmlRecordDetailAddressValue from '@/scenes/risk-control/RiskControlAmlRecordDetailAddressValue.vue';
+import { riskControlAmlRecordDetailOverlayRegistry } from '@/scenes/risk-control/riskControlAmlRecordDetailOverlayContext';
+import { riskControlAmlDetailHostKey } from '@/scenes/risk-control/riskControlAmlDetailHostKey';
+import { riskControlAmlRecordDetailActionsKey } from '@/scenes/risk-control/riskControlAmlRecordDetailActionsKey';
 import { useRiskControlAmlRecordDetailFlow } from '@/scenes/risk-control/useRiskControlAmlRecordDetailFlow';
 import { applyDetailCurrencyExpand } from '@/scenes/risk-control/applyDetailCurrencyExpand';
 import {
@@ -97,13 +97,26 @@ const emit = defineEmits<{
 const { ui, locale } = useAppI18n();
 
 const detailHostRef = ref<HTMLElement | null>(null);
+provide(riskControlAmlDetailHostKey, detailHostRef);
 const amlRecordDetailFlow = useRiskControlAmlRecordDetailFlow();
+
+/** AML 处置链打开交易密码时暂挂详情 shell，与 OverlayHost 内 Verify 互斥（§7.1）。 */
+const amlDetailShellSuspended = computed(
+  () => riskControlAmlRecordDetailOverlayRegistry.value?.verifyOpen.value ?? false,
+);
 
 const { popupMounted, popupOpen, onPopupClosed } = usePopupShellLifecycle({
   open: toRef(props, 'open'),
+  suspended: amlDetailShellSuspended,
   onClosed: () => {
     emit('update:open', false);
     emit('popup-closed');
+  },
+});
+
+provide(riskControlAmlRecordDetailActionsKey, {
+  closeDetail: () => {
+    popupOpen.value = false;
   },
 });
 
@@ -130,6 +143,13 @@ watch(
       return;
     }
     amlRecordDetailFlow.unmountOverlayRegistry();
+  },
+  { immediate: true },
+);
+watch(
+  () => (isAmlRecordDetail.value ? props.detail?.id : null),
+  (recordId) => {
+    amlRecordDetailFlow.setActiveRecordId(recordId ?? null);
   },
   { immediate: true },
 );
@@ -280,6 +300,11 @@ const amlQueryResultPanelVisible = computed(() => {
   if (!amlRecordDetail.value || !isAmlRecordDetail.value) return false;
   if (amlActiveTabKind.value !== 'queryResult') return false;
   return !amlRecordDetail.value.isQueryFailed && !amlRecordDetail.value.isQueryException;
+});
+
+const amlRiskProfileTabAppendVisible = computed(() => {
+  if (!amlRecordDetail.value || !isAmlRecordDetail.value) return false;
+  return amlActiveTabKind.value === 'queryResult';
 });
 
 const amlRiskTracePanelDetail = computed(() => {
@@ -564,33 +589,17 @@ function onDetailClose() {
             :class="detailChromeStyles.headlineFiat"
           >{{ headlineParts.fiat }}</span>
         </template>
-        <template
-          v-if="amlRecordDetail"
-          #[`item-value-${AML_QUERY_DETAIL_ADDRESS_ITEM_KEY}`]
-        >
-          <RiskControlAmlRecordDetailAddressValue
-            :address="amlRecordDetail.targetValue"
-            :network-label="amlRecordDetail.networkLabel"
+        <template v-if="amlRiskProfileTabAppendVisible && amlRecordDetail" #append>
+          <RiskControlAmlRecordDetailRiskProfileTabAppend
+            :detail="amlRecordDetail"
+            :show-success-panel="amlQueryResultPanelVisible"
+            :show-exception-handling="amlExceptionHandlingVisible"
           />
-        </template>
-        <template
-          v-if="amlRecordDetail"
-          #[`item-value-${AML_QUERY_DETAIL_SENDER_ITEM_KEY}`]
-        >
-          <RiskControlAmlRecordDetailAddressValue
-            :address="amlRecordDetail.senderAddress"
-            :network-label="amlRecordDetail.networkLabel"
-          />
-        </template>
-        <template v-if="amlQueryResultPanelVisible && amlRecordDetail" #append>
-          <RiskControlAmlRecordDetailQueryResultPanel :detail="amlRecordDetail" />
-        </template>
-        <template v-else-if="amlExceptionHandlingVisible" #append>
-          <RiskControlAmlRecordDetailExceptionHandling />
         </template>
         <template v-else-if="amlRiskTracePanelDetail" #append>
           <RiskControlAmlRecordDetailRiskTracePanel
             v-if="amlRiskTracePanelDetail"
+            :key="props.detail?.id ?? 'aml-risk-trace'"
             :source-trace="amlRiskTracePanelDetail.sourceTrace"
             :destination-trace="amlRiskTracePanelDetail.destinationTrace"
           />

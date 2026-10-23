@@ -6,19 +6,21 @@ import type {
   RiskControlAmlRiskTraceSection,
 } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { resolveCurrencyRowPreset } from '@/scenes/shared/egDataListMockData';
+import { resolveRiskControlDemoPolicyName } from './riskControlDemoPolicyNames';
+import { resolveAmlQueryNetworkCryptoName } from './riskControlAmlQueryOptions';
 import type {
   RiskControlAmlCategoryShare,
   RiskControlAmlControlMeasureKey,
   RiskControlAmlCounterpartyRow,
   RiskControlAmlExposureDirection,
+  RiskControlAmlReviewLog,
 } from './riskControlAmlRecordDetailTypes';
-
 export type RiskControlAmlQueryRecordDetail = {
   riskScore: string;
   riskScoreMax: number;
   riskScoreNumerator: string;
   riskLabelKey: string;
-  riskCustomStyle: 'aml-danger' | 'aml-suspicious' | 'aml-safe';
+  riskCustomStyle: 'aml-danger' | 'aml-suspicious' | 'aml-safe' | 'aml-handled';
   riskThreshold: number;
   serviceProvider: string;
   belongingEntity: string;
@@ -52,6 +54,8 @@ export type RiskControlAmlQueryRecordDetail = {
   counterpartyRows: RiskControlAmlCounterpartyRow[];
   sourceTrace: RiskControlAmlRiskTraceSection;
   destinationTrace: RiskControlAmlRiskTraceSection;
+  reviewLog: RiskControlAmlReviewLog;
+  exceptionHandlingResolved: boolean;
 };
 
 /** 实体标签 mock · 每行仅 1 个 Tag；文案与 customStyle 按 rowIndex 确定性选取。 */
@@ -89,7 +93,6 @@ const AML_RISK_SCORE_MAX = 10;
 const AML_DEFAULT_RISK_THRESHOLD = 2;
 
 const AML_TRACE_OBJECT_DETAIL = {
-  entityType: 'Suspicious',
   riskScore: '7.5',
   riskRating: 'HIGH_RISK',
   amountUsd: '0.0815367049150474',
@@ -127,6 +130,23 @@ export function resolveDemoAmlEntityTags(rowIndex: number): RiskControlAmlEntity
   }];
 }
 
+/** 交易对手风险 Tab 列表：按行序取 Tag；Binance 等交易所实体固定 Exchange。 */
+export function resolveAmlRiskTraceEntityTag(
+  entityLabel: string,
+  objectIndex: number,
+): RiskControlAmlEntityTag {
+  const normalized = entityLabel.trim().toLowerCase();
+  if (normalized.includes('binance')) {
+    return { label: 'Exchange', customStyle: 'cobalt' };
+  }
+  const labelOffset = objectIndex % AML_ENTITY_TAG_LABEL_POOL.length;
+  const styleOffset = objectIndex % AML_ENTITY_TAG_STYLE_POOL.length;
+  return {
+    label: AML_ENTITY_TAG_LABEL_POOL[labelOffset]!,
+    customStyle: AML_ENTITY_TAG_STYLE_POOL[styleOffset]!,
+  };
+}
+
 function resolveRowIndex(row: PaymentEngineRecordRow): number {
   const match = /^AML-(\d+)$/.exec(row.id.trim());
   if (!match) return 0;
@@ -145,6 +165,7 @@ function buildTraceSection(
     objects: objects.map((entry, index) => ({
       id: `${direction}-${rowIndex}-${index}`,
       ...entry,
+      entityType: index % 2 === 0 ? 'Direct' : 'Indirect',
     })),
   };
 }
@@ -156,8 +177,7 @@ function resolveDemoBelongingEntity(rowIndex: number): string {
 }
 
 function resolveDemoRuleName(rowIndex: number): string {
-  const names = ['KYA Auto Rule', 'Treasury Guard', 'Deposit Monitor', 'Withdraw Scan'];
-  return names[rowIndex % names.length] ?? names[0]!;
+  return resolveRiskControlDemoPolicyName(rowIndex);
 }
 
 function resolveDemoWaasProject(rowIndex: number): string {
@@ -193,7 +213,18 @@ function resolveIsDanger(
   isException: boolean,
 ): boolean {
   if (isFailed || isException) return false;
-  if (row.amlRiskLabelKey === 'Danger') return true;
+  if (row.amlRiskCustomStyle === 'aml-danger' || row.amlRiskLabelKey === 'Danger') {
+    return true;
+  }
+  if (
+    row.amlRiskCustomStyle === 'aml-suspicious'
+    || row.amlRiskCustomStyle === 'aml-safe'
+    || row.amlRiskCustomStyle === 'aml-handled'
+    || row.amlRiskLabelKey === 'Suspicious'
+    || row.amlRiskLabelKey === 'Safe'
+  ) {
+    return false;
+  }
   const numeric = Number.parseFloat(riskScore);
   if (!Number.isFinite(numeric)) return false;
   return numeric >= AML_DEFAULT_RISK_THRESHOLD;
@@ -202,6 +233,7 @@ function resolveIsDanger(
 function buildRiskSummaryText(
   isFailed: boolean,
   isException: boolean,
+  queryObjectKey: string,
   sourceCategories: string,
   destinationCategories: string,
   sourcePercent: string,
@@ -211,23 +243,29 @@ function buildRiskSummaryText(
   if (isFailed || isException) {
     return translate('AML query exception no result summary');
   }
+  if (queryObjectKey === 'Transaction Hash') {
+    const riskCategories = [sourceCategories, destinationCategories]
+      .filter(Boolean)
+      .join('、');
+    const totalPercent = sourcePercent;
+    const template = translate('AML query transaction risk summary sentence');
+    return template
+      .replace('{riskCategories}', riskCategories)
+      .replace('{totalPercent}', totalPercent);
+  }
   const template = translate('AML query risk summary sentence');
   return template
     .replace('{sourceCategories}', sourceCategories)
-    .replace('{destinationCategories}', destinationCategories)
     .replace('{sourcePercent}', sourcePercent)
     .replace('{destinationPercent}', destinationPercent);
 }
 
 function buildRiskClassificationText(
-  ruleName: string,
   threshold: number,
   translate: (key: string) => string,
 ): string {
   const template = translate('AML query risk classification sentence');
-  return template
-    .replace('{ruleName}', ruleName)
-    .replace('{threshold}', String(threshold));
+  return template.replace('{threshold}', String(threshold));
 }
 
 type DemoExposureSegmentDef = {
@@ -237,34 +275,58 @@ type DemoExposureSegmentDef = {
   customStyle: TagCustomStyle;
 };
 
+/** 首行 mock · 收款 8 段合计 76% / 出款 5 段合计 46%。 */
 const ROW_ZERO_SOURCE_EXPOSURE_DEFS: readonly DemoExposureSegmentDef[] = [
-  { idSuffix: 'sanctions', labelKey: 'Sanctions', percent: 18, customStyle: 'vermilion' },
-  { idSuffix: 'mixer', labelKey: 'Mixer', percent: 14, customStyle: 'orange' },
-  { idSuffix: 'exchange', labelKey: 'Exchange', percent: 12, customStyle: 'amber' },
-  { idSuffix: 'gambling', labelKey: 'Gambling', percent: 10, customStyle: 'lime' },
-  { idSuffix: 'darknet', labelKey: 'Darknet Market', percent: 9, customStyle: 'teal' },
-  { idSuffix: 'scam', labelKey: 'Scam', percent: 7, customStyle: 'cobalt' },
+  { idSuffix: 'sanctions', labelKey: 'Sanctions', percent: 15, customStyle: 'vermilion' },
+  { idSuffix: 'mixer', labelKey: 'Mixer', percent: 12, customStyle: 'orange' },
+  { idSuffix: 'exchange', labelKey: 'Exchange', percent: 10, customStyle: 'amber' },
+  { idSuffix: 'gambling', labelKey: 'Gambling', percent: 8, customStyle: 'lime' },
+  { idSuffix: 'darknet', labelKey: 'Darknet Market', percent: 14, customStyle: 'teal' },
+  { idSuffix: 'scam', labelKey: 'Scam', percent: 7, customStyle: 'clear-sky' },
+  { idSuffix: 'p2p', labelKey: 'P2P', percent: 6, customStyle: 'cobalt' },
+  { idSuffix: 'blacklist', labelKey: 'Blacklist', percent: 4, customStyle: 'rose' },
 ];
 
 const ROW_ZERO_DESTINATION_EXPOSURE_DEFS: readonly DemoExposureSegmentDef[] = [
-  { idSuffix: 'mixer', labelKey: 'Mixer', percent: 14, customStyle: 'orange' },
-  { idSuffix: 'exchange', labelKey: 'Exchange', percent: 12, customStyle: 'amber' },
-  { idSuffix: 'gambling', labelKey: 'Gambling', percent: 11, customStyle: 'lime' },
-  { idSuffix: 'sanctions', labelKey: 'Sanctions', percent: 11, customStyle: 'vermilion' },
+  { idSuffix: 'mixer', labelKey: 'Mixer', percent: 11, customStyle: 'orange' },
+  { idSuffix: 'exchange', labelKey: 'Exchange', percent: 10, customStyle: 'amber' },
+  { idSuffix: 'gambling', labelKey: 'Gambling', percent: 9, customStyle: 'lime' },
+  { idSuffix: 'sanctions', labelKey: 'Sanctions', percent: 9, customStyle: 'vermilion' },
+  { idSuffix: 'darknet', labelKey: 'Darknet Market', percent: 7, customStyle: 'teal' },
 ];
+
+function exposureDefsForDirection(
+  direction: 'source' | 'destination',
+): readonly DemoExposureSegmentDef[] {
+  return direction === 'source'
+    ? ROW_ZERO_SOURCE_EXPOSURE_DEFS
+    : ROW_ZERO_DESTINATION_EXPOSURE_DEFS;
+}
+
+function buildExposureSegmentsFromDefs(
+  direction: 'source' | 'destination',
+  defs: readonly DemoExposureSegmentDef[],
+  targetHighRiskPercent: number,
+): RiskControlAmlExposureDirection['segments'] {
+  const baselineTotal = sumSegmentPercents(defs);
+  if (baselineTotal <= 0) return [];
+
+  return defs.map((entry) => ({
+    id: `${direction}-${entry.idSuffix}`,
+    labelKey: entry.labelKey,
+    percent: Number(((entry.percent / baselineTotal) * targetHighRiskPercent).toFixed(1)),
+    customStyle: entry.customStyle,
+  }));
+}
 
 function buildRowZeroExposureSegments(
   direction: 'source' | 'destination',
 ): RiskControlAmlExposureDirection['segments'] {
-  const defs = direction === 'source'
-    ? ROW_ZERO_SOURCE_EXPOSURE_DEFS
-    : ROW_ZERO_DESTINATION_EXPOSURE_DEFS;
-  return defs.map((entry) => ({
-    id: `${direction}-${entry.idSuffix}`,
-    labelKey: entry.labelKey,
-    percent: entry.percent,
-    customStyle: entry.customStyle,
-  }));
+  return buildExposureSegmentsFromDefs(
+    direction,
+    exposureDefsForDirection(direction),
+    sumSegmentPercents(exposureDefsForDirection(direction)),
+  );
 }
 
 function buildRowZeroCategoryShares(
@@ -292,33 +354,14 @@ function buildDemoExposure(
   rowIndex: number,
   highRiskPercent: number,
 ): RiskControlAmlExposureDirection {
-  if (rowIndex === 0) {
-    const segments = buildRowZeroExposureSegments(direction);
-    return {
-      direction,
-      highRiskPercent: sumSegmentPercents(segments),
-      segments,
-    };
-  }
-
-  const segments = [
-    {
-      id: `${direction}-mixer`,
-      labelKey: 'Mixer',
-      percent: Math.min(highRiskPercent, 45),
-      customStyle: 'orange' as TagCustomStyle,
-    },
-    {
-      id: `${direction}-exchange`,
-      labelKey: 'Exchange',
-      percent: Math.max(0, highRiskPercent - 45),
-      customStyle: 'amber' as TagCustomStyle,
-    },
-  ].filter((entry) => entry.percent > 0);
+  const defs = exposureDefsForDirection(direction);
+  const segments = rowIndex === 0
+    ? buildRowZeroExposureSegments(direction)
+    : buildExposureSegmentsFromDefs(direction, defs, highRiskPercent);
 
   return {
     direction,
-    highRiskPercent,
+    highRiskPercent: rowIndex === 0 ? sumSegmentPercents(segments) : highRiskPercent,
     segments,
   };
 }
@@ -327,23 +370,17 @@ function buildDemoCategoryShares(
   direction: 'source' | 'destination',
   rowIndex: number,
 ): RiskControlAmlCategoryShare[] {
+  const defs = exposureDefsForDirection(direction);
   if (rowIndex === 0) {
     return buildRowZeroCategoryShares(direction);
   }
-  return [
-    {
-      id: `${direction}-mixer-share`,
-      labelKey: 'Mixer',
-      percent: 62.5,
-      customStyle: 'orange',
-    },
-    {
-      id: `${direction}-gambling-share`,
-      labelKey: 'Gambling',
-      percent: 37.5,
-      customStyle: 'amber',
-    },
-  ];
+  const targetTotal = direction === 'source' ? 62.5 : 37.5;
+  return buildExposureSegmentsFromDefs(direction, defs, targetTotal).map((entry) => ({
+    id: `${entry.id}-share`,
+    labelKey: entry.labelKey,
+    percent: entry.percent,
+    customStyle: entry.customStyle,
+  }));
 }
 
 function buildDemoCounterpartyRows(rowIndex: number): RiskControlAmlCounterpartyRow[] {
@@ -372,6 +409,67 @@ function buildDemoCounterpartyRows(rowIndex: number): RiskControlAmlCounterparty
   ];
 }
 
+function buildDemoReviewLog(
+  rowIndex: number,
+  isFailed: boolean,
+  isException: boolean,
+  riskLabelKey: string,
+  queryTimeDisplay: string,
+): RiskControlAmlReviewLog {
+  const reviewerNames = ['Mia Zhang', 'Alex Chen', 'Jordan Lee'];
+  const reviewerName = reviewerNames[rowIndex % reviewerNames.length] ?? reviewerNames[0]!;
+  const reviewedAt = resolveDemoReviewedAt(rowIndex, queryTimeDisplay);
+
+  let riskLevelAfterKey = 'Safe';
+  if (isFailed || riskLabelKey === 'NA') {
+    riskLevelAfterKey = 'NA';
+  } else if (riskLabelKey === 'AML Exception' || isException) {
+    riskLevelAfterKey = 'Danger';
+  } else if (riskLabelKey === 'Danger') {
+    riskLevelAfterKey = 'Danger';
+  } else if (riskLabelKey === 'Suspicious') {
+    riskLevelAfterKey = 'Suspicious';
+  }
+
+  let riskLevelBeforeKey = 'Safe';
+  if (riskLevelAfterKey === 'NA') {
+    riskLevelBeforeKey = 'Suspicious';
+  } else if (riskLevelAfterKey === 'Danger') {
+    riskLevelBeforeKey = 'Suspicious';
+  } else if (riskLevelAfterKey === 'Suspicious') {
+    riskLevelBeforeKey = 'Safe';
+  }
+
+  const remark = isFailed
+    ? '查询未返回有效风险评分，已记录复核结论并通知发起人重新发起查询。'
+    : isException
+      ? '第三方筛查超时，已依据历史敞口与人工规则上调风险等级。'
+      : '已核对链上归因与敞口占比，确认维持当前风险等级及处置建议。';
+
+  return {
+    riskLevelBeforeKey,
+    riskLevelAfterKey,
+    reviewerName,
+    reviewerAvatarName: reviewerName,
+    reviewedAt,
+    remark,
+  };
+}
+
+function resolveDemoReviewedAt(rowIndex: number, queryTimeDisplay: string): string {
+  const trimmed = queryTimeDisplay.trim();
+  const match = /^(\d{4}-\d{2}-\d{2})\s+(\d{2}):(\d{2})/.exec(trimmed);
+  if (match) {
+    const [, datePart, hourPart, minutePart] = match;
+    const hour = Number.parseInt(hourPart ?? '0', 10);
+    const minute = Number.parseInt(minutePart ?? '0', 10);
+    const reviewMinute = (minute + 18 + rowIndex) % 60;
+    const reviewHour = hour + Math.floor((minute + 18 + rowIndex) / 60);
+    return `${datePart} ${String(reviewHour).padStart(2, '0')}:${String(reviewMinute).padStart(2, '0')}:30`;
+  }
+  return `2024-08-${String(12 + (rowIndex % 10)).padStart(2, '0')} 16:45:30`;
+}
+
 function resolveControlMeasureKey(
   row: PaymentEngineRecordRow,
   isDanger: boolean,
@@ -393,11 +491,13 @@ export function resolveRiskControlAmlQueryRecordDetail(
   const preset = resolveCurrencyRowPreset(rowIndex);
   const isFailed = Boolean(row.amlQueryFailed);
   const isException = Boolean(row.amlQueryException);
+  const exceptionHandlingResolved = Boolean(row.amlExceptionHandlingResolved);
+  const isUnresolvedException = isException && !exceptionHandlingResolved;
   const rawScore = isFailed
     ? 'NA'
     : (row.amlRiskScore?.trim() || '6.8');
   const riskScoreNumerator = parseRiskNumerator(rawScore, isFailed);
-  const isDanger = resolveIsDanger(row, rawScore, isFailed, isException);
+  const isDanger = resolveIsDanger(row, rawScore, isFailed, isUnresolvedException);
   const targetValue = row.amlTargetValue?.trim() || row.id;
   const requesterName = row.amlRequesterName?.trim() || row.id;
   const ruleName = row.amlTriggeredRuleName?.trim() || resolveDemoRuleName(rowIndex);
@@ -420,14 +520,14 @@ export function resolveRiskControlAmlQueryRecordDetail(
     riskScoreNumerator,
     riskLabelKey: isFailed
       ? 'NA'
-      : isException
+      : isUnresolvedException
         ? 'AML Exception'
         : isDanger
           ? 'Danger'
           : (row.amlRiskLabelKey ?? 'Safe'),
     riskCustomStyle: isFailed
       ? 'aml-safe'
-      : isException
+      : isUnresolvedException
         ? 'aml-suspicious'
         : isDanger
           ? 'aml-danger'
@@ -453,7 +553,9 @@ export function resolveRiskControlAmlQueryRecordDetail(
     transactionAmount: row.orderAmount?.trim() || '125000.50',
     transactionSymbol: row.orderSymbol?.trim() || preset.symbol || 'USDT',
     networkLabel: row.amlNetworkLabel?.trim() || preset.networkLabel || 'Bitcoin',
-    networkCryptoName: row.amlCurrencyCryptoName?.trim() || preset.cryptoName || 'bitcoin',
+    networkCryptoName: resolveAmlQueryNetworkCryptoName(
+      row.amlNetworkLabel?.trim() || preset.networkLabel || 'Bitcoin',
+    ),
     requesterName,
     requesterAvatarName: row.amlRequesterAvatarName?.trim() || requesterName,
     requesterEmailMasked:
@@ -467,6 +569,7 @@ export function resolveRiskControlAmlQueryRecordDetail(
     riskSummaryText: buildRiskSummaryText(
       isFailed,
       isException,
+      row.amlQueryObjectKey ?? (rowIndex % 2 === 0 ? 'Address' : 'Transaction Hash'),
       sourceCategories,
       destinationCategories,
       sourcePercent,
@@ -474,7 +577,6 @@ export function resolveRiskControlAmlQueryRecordDetail(
       translate,
     ),
     riskClassificationText: buildRiskClassificationText(
-      ruleName,
       AML_DEFAULT_RISK_THRESHOLD,
       translate,
     ),
@@ -490,6 +592,20 @@ export function resolveRiskControlAmlQueryRecordDetail(
       rawScore,
       AML_DESTINATION_TRACE_OBJECTS,
       rowIndex,
+    ),
+    exceptionHandlingResolved,
+    reviewLog: buildDemoReviewLog(
+      rowIndex,
+      isFailed,
+      isException,
+      isFailed
+        ? 'NA'
+        : isUnresolvedException
+          ? 'AML Exception'
+          : isDanger
+            ? 'Danger'
+            : (row.amlRiskLabelKey ?? 'Safe'),
+      row.amlQueryTimeDisplay?.trim() || row.createdAt,
     ),
   };
 }

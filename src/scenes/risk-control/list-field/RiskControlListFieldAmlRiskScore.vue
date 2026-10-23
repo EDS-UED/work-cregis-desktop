@@ -7,6 +7,7 @@ import {
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
+import { AML_EXCEPTION_HANDLED_RISK_LABEL_KEY } from '../riskControlAmlQueryRecordStore';
 import { resolveAmlRiskRatingVisual } from './resolveAmlRiskRatingVisual';
 import styles from './RiskControlListFieldAmlRiskScore.module.css';
 
@@ -18,14 +19,19 @@ const props = defineProps<{
 const { ui } = useAppI18n();
 
 const isQueryFailed = computed(() => Boolean(props.row.amlQueryFailed));
-const isException = computed(() => Boolean(props.row.amlQueryException));
+const isUnresolvedException = computed(
+  () => Boolean(props.row.amlQueryException) && !props.row.amlExceptionHandlingResolved,
+);
 
 const failedDisplayText = computed(() => ui('NA'));
 
 const riskLabelKey = computed(() => props.row.amlRiskLabelKey ?? 'Safe');
+const isExceptionHandledRating = computed(
+  () => riskLabelKey.value === AML_EXCEPTION_HANDLED_RISK_LABEL_KEY,
+);
 const riskLabel = computed(() => ui(riskLabelKey.value));
 const riskVisual = computed(() => {
-  if (isException.value) return resolveAmlRiskRatingVisual('aml-suspicious');
+  if (isUnresolvedException.value) return resolveAmlRiskRatingVisual('aml-suspicious');
   return resolveAmlRiskRatingVisual(props.row.amlRiskCustomStyle);
 });
 const riskScore = computed(() => props.row.amlRiskScore ?? '0.0');
@@ -66,6 +72,7 @@ const riskToneClass = computed(() => {
         />
       </div>
       <EgListFieldHashLikeLine
+        v-if="!isExceptionHandledRating"
         :class="styles.scoreLine"
         :text="riskScore"
         variant="secondary"

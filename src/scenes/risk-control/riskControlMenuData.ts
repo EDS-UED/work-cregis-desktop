@@ -71,6 +71,10 @@ export function isRiskControlAddressBookMenuItem(menuItem: string): boolean {
   return resolvedMenuItem === 'Whitelist' || resolvedMenuItem === 'Blacklist';
 }
 
+export function isRiskControlBlacklistMenuItem(menuItem: string): boolean {
+  return resolveRiskControlRecordMenuItem(menuItem) === 'Blacklist';
+}
+
 /** 风控列表 · 整行点击是否打开详情（与 Action 列按钮可见性对齐）。 */
 export function shouldOpenRiskControlDetailOnRowClick(
   menuItem: string,

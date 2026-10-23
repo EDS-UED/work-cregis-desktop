@@ -55,6 +55,7 @@ export type SigningDetail = {
   receivers: SigningAddressEntry[];
   strategy: string;
   thirdPartyRef: string;
+  collaborationNumber: string;
   memo: string;
   initiatorKind: 'member' | 'waas';
   initiatorDisplay: string;

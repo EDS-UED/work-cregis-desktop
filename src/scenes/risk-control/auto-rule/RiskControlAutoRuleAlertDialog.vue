@@ -5,19 +5,31 @@ import {
   EgDialog,
   EgDialogPopup,
   EgDivider,
+  type ButtonTone,
 } from '@eds/desktop-components';
 import comboActionStyles from '@eds/desktop-components/molecules/combo/ComboAction.module.css';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { usePopupShellLifecycle } from '@/scenes/tasks/shared/usePopupShellLifecycle';
 
-const props = defineProps<{
-  open: boolean;
-  titleKey: string;
-  messageKey: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    open: boolean;
+    titleKey: string;
+    messageKey: string;
+    confirmLabelKey?: string;
+    confirmTone?: ButtonTone;
+    confirmDisabled?: boolean;
+  }>(),
+  {
+    confirmLabelKey: 'Confirm',
+    confirmTone: 'decor',
+    confirmDisabled: false,
+  },
+);
 
 const emit = defineEmits<{
   'update:open': [value: boolean];
+  confirm: [];
 }>();
 
 const { ui } = useAppI18n();
@@ -29,7 +41,13 @@ const { popupMounted, popupOpen, onPopupClosed } = usePopupShellLifecycle({
   },
 });
 
+function onCancel() {
+  popupOpen.value = false;
+}
+
 function onConfirm() {
+  if (props.confirmDisabled) return;
+  emit('confirm');
   popupOpen.value = false;
 }
 </script>
@@ -42,14 +60,46 @@ function onConfirm() {
     alert-vertical-align="offset-top"
     @close="onPopupClosed"
   >
-    <EgDialog type="standard" :title="ui(titleKey)" @close="onConfirm">
-      <p class="typography-body-medium">{{ ui(messageKey) }}</p>
-      <template #footer>
-        <EgDivider />
-        <div :class="comboActionStyles.root">
-          <EgButton variant="solid" size="md" tone="decor" @click="onConfirm">
-            {{ ui('Confirm') }}
-          </EgButton>
+    <EgDialog
+      type="standard"
+      :title="ui(titleKey)"
+      :secondary-text="ui(messageKey)"
+      :show-secondary-text="true"
+    >
+      <template #actions>
+        <div :class="comboActionStyles.flotationRoot">
+          <EgDivider
+            :class="[
+              comboActionStyles.divider,
+              comboActionStyles.dividerAnimated,
+              comboActionStyles.dividerAnimatedHidden,
+            ]"
+            type="module"
+            direction="horizontal"
+            hide
+          />
+          <div
+            :class="[
+              comboActionStyles.flotationBar,
+              comboActionStyles.flotationBarEnd,
+              comboActionStyles.flotationBarInset5,
+            ]"
+          >
+            <div :class="comboActionStyles.flotationActions">
+              <EgButton tone="subtle" variant="text" size="md" @click="onCancel">
+                {{ ui('Cancel') }}
+              </EgButton>
+              <EgButton
+                :tone="confirmTone"
+                variant="solid"
+                size="md"
+                :disabled="confirmDisabled"
+                @click="onConfirm"
+              >
+                {{ ui(confirmLabelKey) }}
+              </EgButton>
+            </div>
+          </div>
         </div>
       </template>
     </EgDialog>

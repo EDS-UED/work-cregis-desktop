@@ -39,6 +39,12 @@ import SentRequestSenderListCell from './list-field/sentRequest/SentRequestSende
 import SentRequestStatusListCell from './list-field/sentRequest/SentRequestStatusListCell.vue';
 import DataListHeaderSortTrigger from './DataListHeaderSortTrigger.vue';
 import pageStyles from './TasksDataListPage.module.css';
+import '@/scenes/tasks/shared/batchAmlDangerGateChrome.module.css';
+import {
+  clearBatchAmlAnchorPressed,
+  setBatchAmlGatePreviewOpen,
+  syncBatchAmlAnchorPressed,
+} from './shared/batchAmlDangerGateChrome';
 import {
   DATA_LIST_FIGMA_HEADER_HEIGHT,
   DATA_LIST_FIGMA_PAGE_SIZE_OPTIONS,
@@ -144,12 +150,30 @@ import {
   TASKS_DATA_LIST_FILTER_OPERATORS,
 } from './filter/tasksDataListFilterFields';
 import TasksToolbarFilter from './filter/TasksToolbarFilter.vue';
+import TasksBatchAmlDangerConfirmHost from './shared/TasksBatchAmlDangerConfirmHost.vue';
+import {
+  queryBatchBarPopoverMountTarget,
+  resolveBatchPassSignActionButton,
+  resolveBatchPassSignAnchorForMenu,
+} from './shared/resolveBatchAmlDangerActionAnchor';
+import {
+  isBatchAmlDangerGateCancelled,
+  useTasksBatchAmlDangerGate,
+} from './shared/useTasksBatchAmlDangerGate';
 
 const props = defineProps<{
   toolbarTitle?: string;
 }>();
 
 const { ui, locale } = useAppI18n();
+
+const {
+  dangerConfirmActivateToken,
+  dangerConfirmHostVisible,
+  requestDangerAcknowledgementForRows,
+  onDangerConfirmAcknowledged,
+  onDangerConfirmDismissed,
+} = useTasksBatchAmlDangerGate(ui);
 
 /** 模块菜单英文 key（兼容 ToolBar / 菜单展示文案反向解析）。 */
 const menuItem = computed((): TasksDataListMenuItemLabel | string => {
@@ -301,6 +325,60 @@ const tasksFilterFields = computed((): EgFilterField[] => {
 });
 
 const isSigningMenu = computed(() => menuItem.value === 'Signing');
+
+const batchAmlDangerActionAnchor = ref<HTMLElement | null>(null);
+const batchAmlConfirmTeleportTarget = ref<HTMLElement | string>('.app-preview');
+
+function syncBatchAmlDangerActionAnchorFromDom() {
+  batchAmlDangerActionAnchor.value = resolveBatchPassSignAnchorForMenu(
+    isSigningMenu.value,
+    ui('Pass'),
+    ui('Sign'),
+  );
+}
+
+function onBatchBarPointerDownCapture(event: PointerEvent) {
+  if (!customize.selectMode) return;
+  if (!isApprovalMenu.value && !isSigningMenu.value) return;
+
+  const anchor = resolveBatchPassSignActionButton(
+    event.target,
+    ui('Pass'),
+    ui('Sign'),
+  );
+  if (anchor) {
+    batchAmlDangerActionAnchor.value = anchor;
+  }
+}
+
+function resolveBatchAmlDangerActionAnchorEl(): HTMLElement | null {
+  if (batchAmlDangerActionAnchor.value?.isConnected) {
+    return batchAmlDangerActionAnchor.value;
+  }
+  return resolveBatchPassSignAnchorForMenu(
+    isSigningMenu.value,
+    ui('Pass'),
+    ui('Sign'),
+  );
+}
+
+watch(dangerConfirmHostVisible, (open) => {
+  setBatchAmlGatePreviewOpen(open);
+  const anchor = resolveBatchAmlDangerActionAnchorEl();
+  if (open) {
+    batchAmlConfirmTeleportTarget.value =
+      queryBatchBarPopoverMountTarget() ?? '.app-preview';
+    syncBatchAmlAnchorPressed(true, anchor);
+    return;
+  }
+  clearBatchAmlAnchorPressed(anchor);
+});
+
+onBeforeUnmount(() => {
+  setBatchAmlGatePreviewOpen(false);
+  clearBatchAmlAnchorPressed(resolveBatchAmlDangerActionAnchorEl());
+});
+
 const isSentRequestMenu = computed(
   () =>
     isSentRequestDataListMenu(menuItem.value, locale.value)
@@ -492,6 +570,17 @@ async function handleBatchLabelBeforeOpen(
     if (rows.length > APPROVAL_BATCH_MAX) {
       throw new Error(`You can select up to ${APPROVAL_BATCH_MAX} items at a time.`);
     }
+    if (key === 'pass') {
+      syncBatchAmlDangerActionAnchorFromDom();
+      try {
+        await requestDangerAcknowledgementForRows(rows, menuItem.value);
+      } catch (error) {
+        if (isBatchAmlDangerGateCancelled(error)) {
+          throw new Error('batch-before-open-blocked');
+        }
+        throw error;
+      }
+    }
     await approvalFlow.prepareBatchRemarkOpen(key, rows);
     return;
   }
@@ -518,6 +607,12 @@ async function handleBatchAction(
     if (key === 'reject') {
       signingBatchFlow.confirmBatchRejectRemark();
     } else if (key === 'pass') {
+      syncBatchAmlDangerActionAnchorFromDom();
+      try {
+        await requestDangerAcknowledgementForRows(rows, menuItem.value);
+      } catch {
+        return { preserveSelection: true };
+      }
       signingBatchFlow.openBatchSignConfirm(rows);
     }
     return { preserveSelection: true };
@@ -1144,7 +1239,11 @@ const displayBatchActions = computed(() => {
         </EgToolBar>
       </template>
 
-      <div ref="listRegionRef" :class="pageStyles.listRegion">
+      <div
+        ref="listRegionRef"
+        :class="pageStyles.listRegion"
+        @pointerdown.capture="onBatchBarPointerDownCapture"
+      >
         <div
           v-if="listInteractionBlockActive"
           :class="pageStyles.listInteractionBlocker"
@@ -1664,6 +1763,17 @@ const displayBatchActions = computed(() => {
           <EgToast :type="listToastType" :text="listToastText" />
         </div>
       </div>
+    </Teleport>
+
+    <Teleport :to="batchAmlConfirmTeleportTarget">
+      <TasksBatchAmlDangerConfirmHost
+        v-if="(isApprovalMenu || isSigningMenu) && dangerConfirmHostVisible"
+        :key="`batch-aml-danger-${dangerConfirmActivateToken}`"
+        :activate-token="dangerConfirmActivateToken"
+        :anchor-el="batchAmlDangerActionAnchor"
+        @confirm="onDangerConfirmAcknowledged(ui)"
+        @dismiss="onDangerConfirmDismissed(ui)"
+      />
     </Teleport>
   </div>
 </template>

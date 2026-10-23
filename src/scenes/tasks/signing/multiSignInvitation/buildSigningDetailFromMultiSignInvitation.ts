@@ -47,6 +47,7 @@ export function buildSigningDetailFromMultiSignInvitation(
     ],
     strategy: 'Multi-sign',
     thirdPartyRef: '',
+    collaborationNumber: '',
     memo: '',
     initiatorKind: 'member',
     initiatorDisplay: `${invitation.inviterName} · ${invitation.inviterEmailMasked}`,

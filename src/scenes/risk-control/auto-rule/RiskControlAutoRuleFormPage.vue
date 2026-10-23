@@ -25,6 +25,10 @@ import RiskControlAutoRuleOutflowCurrencyField from './RiskControlAutoRuleOutflo
 import RiskControlAutoRuleOutflowWalletPicker from './RiskControlAutoRuleOutflowWalletPicker.vue';
 import RiskControlAutoRuleRecipientPicker from './RiskControlAutoRuleRecipientPicker.vue';
 import {
+  INFLOW_TRIGGER_TYPE_OPTIONS,
+  isInflowTriggerTypeKey,
+} from './riskControlAutoRuleInflowTriggerOptions';
+import {
   OUTFLOW_WAAS_PROJECT_OPTIONS,
   outflowWalletLabelForId,
 } from './riskControlAutoRuleOutflowScopeOptions';
@@ -76,10 +80,53 @@ watch(
   },
 );
 
+watch(
+  () => localDraft.value.direction,
+  (direction, previousDirection) => {
+    if (direction !== 'inflow') return;
+    if (localDraft.value.withdrawalTypeKey) return;
+    if (INFLOW_TRIGGER_TYPE_OPTIONS.length !== 1) return;
+    if (previousDirection === 'inflow') return;
+    patchDraft({ withdrawalTypeKey: INFLOW_TRIGGER_TYPE_OPTIONS[0].titleKey });
+  },
+  { immediate: true },
+);
+
 const isOutflow = computed(() => localDraft.value.direction === 'outflow');
 
-const outflowRuleGroupActive = computed(
+const riskAlertRecipientsHintKey = computed(() =>
+  isOutflow.value
+    ? 'Auto rule risk alert recipients hint'
+    : 'Auto rule risk alert recipients inflow hint',
+);
+
+const autoRuleFormFootnoteKey = computed(() =>
+  isOutflow.value ? 'AML query caution coverage limit' : 'Auto rule form footnote inflow',
+);
+
+function riskAlertRecipientsValid(draft: RiskControlAutoRuleFormDraft): boolean {
+  if (draft.riskAlertRecipientKeys.length === 0) return false;
+  if (
+    draft.riskAlertRecipientKeys.includes(RISK_ALERT_IN_APP)
+    && draft.riskAlertInAppRecipientIds.length === 0
+  ) {
+    return false;
+  }
+  if (
+    draft.riskAlertRecipientKeys.includes(RISK_ALERT_EMAIL)
+    && draft.riskAlertEmailTeamMemberIds.length === 0
+  ) {
+    return false;
+  }
+  return true;
+}
+
+const triggerRuleGroupActive = computed(
   () => Boolean(localDraft.value.withdrawalTypeKey),
+);
+
+const isInflowTriggerSelected = computed(
+  () => !isOutflow.value && isInflowTriggerTypeKey(localDraft.value.withdrawalTypeKey),
 );
 
 const isManualOutflowSelected = computed(
@@ -91,6 +138,9 @@ const isApiOutflowSelected = computed(
 );
 
 const outflowCurrencyScopeSelected = computed(() => {
+  if (!isOutflow.value) {
+    return Boolean(localDraft.value.scopeTarget.trim());
+  }
   if (isManualOutflowSelected.value) {
     return localDraft.value.scopeWalletIds.length > 0;
   }
@@ -100,11 +150,12 @@ const outflowCurrencyScopeSelected = computed(() => {
   return false;
 });
 
-const outflowCurrencyScopeToastKey = computed(() =>
-  isManualOutflowSelected.value
-    ? 'Auto rule select wallet before currency'
-    : 'Auto rule select waas project before currency',
-);
+const triggerCurrencyScopeToastKey = computed(() => {
+  if (!isOutflow.value || isApiOutflowSelected.value) {
+    return 'Auto rule select waas project before currency';
+  }
+  return 'Auto rule select wallet before currency';
+});
 
 const scopeWaasTriggerLabel = computed(() => {
   const trimmed = localDraft.value.scopeTarget.trim();
@@ -194,20 +245,15 @@ const canSubmit = computed(() => {
     ) {
       return false;
     }
-    if (localDraft.value.riskAlertRecipientKeys.length === 0) return false;
-    if (
-      localDraft.value.riskAlertRecipientKeys.includes(RISK_ALERT_IN_APP)
-      && localDraft.value.riskAlertInAppRecipientIds.length === 0
-    ) {
-      return false;
-    }
-    if (
-      localDraft.value.riskAlertRecipientKeys.includes(RISK_ALERT_EMAIL)
-      && localDraft.value.riskAlertEmailTeamMemberIds.length === 0
-    ) {
+  } else {
+    if (!isInflowTriggerTypeKey(localDraft.value.withdrawalTypeKey)) return false;
+    const scope = localDraft.value.scopeTarget.trim();
+    if (!scope) return false;
+    if (props.scopeTaken(scope, '', props.excludeRuleId)) {
       return false;
     }
   }
+  if (!riskAlertRecipientsValid(localDraft.value)) return false;
   return true;
 });
 
@@ -222,6 +268,12 @@ function selectOutflowScope(
 ) {
   if (isScopeOptionDisabled(label, withdrawalTypeKey)) return;
   patchDraft({ scopeTarget: label });
+  close();
+}
+
+function selectInflowScope(label: string, close: () => void) {
+  if (isScopeOptionDisabled(label, '')) return;
+  patchDraft({ scopeTarget: label, waasProject: label });
   close();
 }
 
@@ -245,37 +297,26 @@ function toggleDraftSingleChoice(
 function toggleRiskAlertRecipientKey(key: string) {
   const current = localDraft.value.riskAlertRecipientKeys;
   if (current.includes(key)) {
+    const nextKeys = current.filter((entry) => entry !== key);
     if (key === RISK_ALERT_IN_APP) {
-      patchDraft({ riskAlertRecipientKeys: [], riskAlertInAppRecipientIds: [] });
+      patchDraft({
+        riskAlertRecipientKeys: nextKeys,
+        riskAlertInAppRecipientIds: [],
+      });
       return;
     }
     if (key === RISK_ALERT_EMAIL) {
       patchDraft({
-        riskAlertRecipientKeys: [],
+        riskAlertRecipientKeys: nextKeys,
         riskAlertEmailTeamMemberIds: [],
         riskAlertOtherEmails: [],
       });
       return;
     }
-    patchDraft({ riskAlertRecipientKeys: [] });
+    patchDraft({ riskAlertRecipientKeys: nextKeys });
     return;
   }
-  if (key === RISK_ALERT_IN_APP) {
-    patchDraft({
-      riskAlertRecipientKeys: [RISK_ALERT_IN_APP],
-      riskAlertEmailTeamMemberIds: [],
-      riskAlertOtherEmails: [],
-    });
-    return;
-  }
-  if (key === RISK_ALERT_EMAIL) {
-    patchDraft({
-      riskAlertRecipientKeys: [RISK_ALERT_EMAIL],
-      riskAlertInAppRecipientIds: [],
-    });
-    return;
-  }
-  patchDraft({ riskAlertRecipientKeys: [key] });
+  patchDraft({ riskAlertRecipientKeys: [...current, key] });
 }
 
 function onExceptionHandlingSelect(key: string) {
@@ -310,6 +351,24 @@ function onWithdrawalTypeSelect(key: string) {
     withdrawalTypeKey: key,
     scopeTarget: '',
     scopeWalletIds: [],
+    currencyEntries: [],
+  });
+}
+
+function onInflowTriggerTypeSelect(key: string) {
+  if (localDraft.value.withdrawalTypeKey === key) {
+    patchDraft({
+      withdrawalTypeKey: '',
+      scopeTarget: '',
+      waasProject: '',
+      currencyEntries: [],
+    });
+    return;
+  }
+  patchDraft({
+    withdrawalTypeKey: key,
+    scopeTarget: '',
+    waasProject: '',
     currencyEntries: [],
   });
 }
@@ -372,10 +431,7 @@ defineExpose({
             />
           </div>
 
-          <section
-            v-if="isOutflow"
-            :class="[styles.fieldBlock, styles.fieldBlockHasHint]"
-          >
+          <section :class="[styles.fieldBlock, styles.fieldBlockHasHint]">
             <div :class="styles.fieldLabelGroup">
               <span :class="styles.fieldLabel">{{ ui('Auto rule trigger condition') }}</span>
               <p :class="styles.fieldHint">
@@ -386,9 +442,10 @@ defineExpose({
             <div
               :class="[
                 styles.outflowRuleGroup,
-                outflowRuleGroupActive && styles.outflowRuleGroupActive,
+                triggerRuleGroupActive && styles.outflowRuleGroupActive,
               ]"
             >
+              <div v-if="isOutflow">
               <div :class="styles.outflowRuleTypeBlock">
                 <span :class="styles.outflowRuleTypeLabel">{{ ui('Withdrawal Type') }}</span>
                 <div
@@ -439,7 +496,7 @@ defineExpose({
                   <RiskControlAutoRuleOutflowCurrencyField
                     :model-value="localDraft.currencyEntries"
                     :scope-selected="outflowCurrencyScopeSelected"
-                    :scope-required-toast-key="outflowCurrencyScopeToastKey"
+                    :scope-required-toast-key="triggerCurrencyScopeToastKey"
                     @update:model-value="patchDraft({ currencyEntries: $event })"
                   />
                 </div>
@@ -502,7 +559,7 @@ defineExpose({
                   <RiskControlAutoRuleOutflowCurrencyField
                     :model-value="localDraft.currencyEntries"
                     :scope-selected="outflowCurrencyScopeSelected"
-                    :scope-required-toast-key="outflowCurrencyScopeToastKey"
+                    :scope-required-toast-key="triggerCurrencyScopeToastKey"
                     @update:model-value="patchDraft({ currencyEntries: $event })"
                   />
                 </div>
@@ -512,19 +569,97 @@ defineExpose({
                   @skip-update="onSkipCheckboxUpdate"
                 />
               </div>
+              </div>
+              <div v-else>
+                <div :class="styles.outflowRuleTypeBlock">
+                  <span :class="styles.outflowRuleTypeLabel">{{ ui('Deposit Method') }}</span>
+                  <div
+                    role="radiogroup"
+                    :aria-label="ui('Deposit Method')"
+                    :class="styles.outflowRuleOptionStack"
+                  >
+                    <ProjectCreateModeCard
+                      v-for="option in INFLOW_TRIGGER_TYPE_OPTIONS"
+                      :key="option.id"
+                      radio-name="auto-rule-inflow-trigger-type"
+                      :radio-value="option.id"
+                      surface="grouped"
+                      grouped-row-spacing="compact"
+                      grouped-row-rounded
+                      grouped-highlight-selected-row
+                      :title="ui(option.titleKey)"
+                      :selected="localDraft.withdrawalTypeKey === option.titleKey"
+                      @select="onInflowTriggerTypeSelect(option.titleKey)"
+                    />
+                  </div>
+                </div>
+                <div v-if="isInflowTriggerSelected" :class="styles.outflowRuleBody">
+                <div :class="styles.cardBodyField">
+                  <span :class="styles.cardBodySectionTitle">{{ ui('WaaS Project') }}</span>
+                  <EgFlotation
+                    :class="styles.scopeFlotationHost"
+                    placement="bottom"
+                    align="start"
+                    width-mode="trigger"
+                    :show-add="false"
+                    :show-menu-divider="false"
+                    close-on-scroll
+                  >
+                    <template #trigger="{ expanded }">
+                      <EgFlotationTrigger
+                        :class="styles.scopeFlotationTrigger"
+                        trigger-style="subtle"
+                        size="md"
+                        width-mode="adaptive"
+                        :label="scopeWaasTriggerLabel || ui('Please Select')"
+                        :expanded="expanded"
+                      />
+                    </template>
+                    <template #content="{ menuWidth, menuWidthMode, close }">
+                      <EgFlotationMenu
+                        panel-radius="radius-md"
+                        :width-mode="menuWidthMode"
+                        :width="menuWidth"
+                        height-mode="adaptive"
+                        :max-height="SCOPE_PICKER_MENU_MAX_HEIGHT"
+                        :scrollable="true"
+                        :list-scroll="true"
+                        :show-add="false"
+                        :show-divider="false"
+                      >
+                        <EgFlotationMenuItem
+                          v-for="option in OUTFLOW_WAAS_PROJECT_OPTIONS"
+                          :key="option.id"
+                          box-type="text"
+                          :label="option.label"
+                          :show-tag="false"
+                          :disabled="isScopeOptionDisabled(option.label, '')"
+                          :focused="localDraft.scopeTarget === option.label"
+                          @click="selectInflowScope(option.label, close)"
+                        />
+                      </EgFlotationMenu>
+                    </template>
+                  </EgFlotation>
+                </div>
+                <div :class="styles.cardBodyField">
+                  <span :class="styles.cardBodySectionTitle">{{ ui('Currency') }}</span>
+                  <RiskControlAutoRuleOutflowCurrencyField
+                    :model-value="localDraft.currencyEntries"
+                    :scope-selected="outflowCurrencyScopeSelected"
+                    :scope-required-toast-key="triggerCurrencyScopeToastKey"
+                    @update:model-value="patchDraft({ currencyEntries: $event })"
+                  />
+                </div>
+                <RiskControlAutoRuleSkipCheckRows
+                  :skip-whitelist="localDraft.skipWhitelist"
+                  :skip-internal="localDraft.skipInternal"
+                  @skip-update="onSkipCheckboxUpdate"
+                />
+                </div>
+              </div>
             </div>
             </div>
           </section>
-
-          <div v-if="!isOutflow" :class="styles.fieldBlock">
-            <span :class="styles.fieldLabel">{{ ui('WaaS Project') }}</span>
-            <EgInput
-              :model-value="localDraft.waasProject"
-              width-mode="full"
-              :placeholder="ui('Please Enter')"
-              @update:model-value="(value) => patchDraft({ waasProject: value })"
-            />
-          </div>
 
           <section :class="styles.fieldBlock">
             <span :class="styles.fieldLabel">{{ ui('Service Provider') }}</span>
@@ -554,6 +689,18 @@ defineExpose({
                 />
               </template>
             </ProjectCreateModeCard>
+          </section>
+
+          <section
+            v-if="isOutflow"
+            :class="[styles.fieldBlock, styles.fieldBlockHasHint]"
+          >
+            <div :class="styles.fieldLabelGroup">
+              <span :class="styles.fieldLabel">{{ ui('Screening Node') }}</span>
+              <p :class="styles.fieldHintWarning">
+                {{ ui('Auto rule screening node timing notice') }}
+              </p>
+            </div>
           </section>
 
           <div :class="[styles.fieldBlock, styles.fieldBlockHasHint]">
@@ -672,25 +819,23 @@ defineExpose({
             </div>
           </section>
 
-          <section
-            v-if="isOutflow"
-            :class="[styles.fieldBlock, styles.fieldBlockHasHint]"
-          >
+          <section :class="[styles.fieldBlock, styles.fieldBlockHasHint]">
             <div :class="styles.fieldLabelGroup">
               <span :class="styles.fieldLabel">{{ ui('Risk Alert Recipient') }}</span>
-              <p :class="styles.fieldHint">
-                {{ ui('Auto rule risk alert recipients hint') }}
+              <p v-if="isOutflow" :class="styles.fieldHint">
+                {{ ui(riskAlertRecipientsHintKey) }}
               </p>
             </div>
             <div
               :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]"
             >
               <ProjectCreateModeCard
-                radio-name="auto-rule-risk-alert-recipient"
-                radio-value="in-app"
+                selection-control="checkbox"
                 expand-style="embeddedPanel"
                 :title="ui('In-app notification')"
-                :description="''"
+                :description="
+                  isOutflow ? '' : ui('Auto rule inflow risk alert inapp hint')
+                "
                 :selected="localDraft.riskAlertRecipientKeys.includes(RISK_ALERT_IN_APP)"
                 @select="toggleRiskAlertRecipientKey(RISK_ALERT_IN_APP)"
               >
@@ -702,11 +847,12 @@ defineExpose({
                 />
               </ProjectCreateModeCard>
               <ProjectCreateModeCard
-                radio-name="auto-rule-risk-alert-recipient"
-                radio-value="email"
+                selection-control="checkbox"
                 expand-style="embeddedPanel"
                 :title="ui('Email notification')"
-                :description="''"
+                :description="
+                  isOutflow ? '' : ui('Auto rule inflow risk alert email hint')
+                "
                 :selected="localDraft.riskAlertRecipientKeys.includes(RISK_ALERT_EMAIL)"
                 @select="toggleRiskAlertRecipientKey(RISK_ALERT_EMAIL)"
               >
@@ -724,7 +870,7 @@ defineExpose({
       <span :class="styles.formFootnoteIcon" aria-hidden="true">
         <EgIcon name="eds-aml-warning-fill" size="sm" fit fill-tone="primary" />
       </span>
-      {{ ui('AML query caution coverage limit') }}
+      {{ ui(autoRuleFormFootnoteKey) }}
     </p>
 
   </div>

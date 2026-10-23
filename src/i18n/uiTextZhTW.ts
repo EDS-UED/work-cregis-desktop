@@ -139,6 +139,10 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   'Signing Threshold': '簽名門限',
   'Triggered Policy': '觸發策略',
   'Third-party Reference': '三方業務編號',
+  'Collaboration number': '協作單號',
+  'Task list status AML risk querying': '風控查詢中',
+  'Task list status AML risk intercept': '風險攔截',
+  'Task address details sample remark': '示例：薪資發放',
   'Expiration Time': '超時時間',
   'Address Details': '地址詳情',
   'Expand {count}': '展開',
@@ -273,7 +277,22 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   // List field
   'Single-Sign': '單簽',
   'Multi-Sign': '多簽',
-  'Manual Transfer': '人工轉出',
+  'Manual Transfer': '人工轉賬',
+  Inflow: '收款',
+  Outflow: '出款',
+  Direction: '方向',
+  'Screening Exception handling': '掃描異常處置方式',
+  'Skip the query': '跳過查詢，進入下一步並提示操作者',
+  'Auto rule enable outflow confirm':
+    '啟用後，Cregis AML將自動對觸發該規則的出款申請進行收款地址風險查詢。您有免費的AML查詢次數，每次查詢將自動扣除1次免費次數；如果您的免費次數已用完，每次查詢將自動扣費 {fee} USD。是否確認啟用？',
+  'Auto rule disable outflow confirm':
+    '禁用後，Cregis AML將不再對觸發該規則的出款申請進行自動查詢，是否確認禁用？',
+  'AML notify auto query balance insufficient':
+    '由於團隊賬戶餘額不足，發送到地址【{address}】的AML自動查詢失敗。如需查詢該地址，可在充值後手動查詢。',
+  'AML notify auto query service timeout':
+    '由於三方服務超時，發送到地址【{address}】的AML自動查詢失敗，本次查詢費用已退還至團隊賬戶餘額。如需查詢該地址，請聯繫支持團隊。',
+  'AML query exception summary': '查詢異常，無法查看',
+  'Auto query (receiving address)': '自動查詢（收款地址）',
   'Sub-Address Transfer': '子地址發送',
   'Wallet｜Payout': '錢包｜提幣',
   'Sub-Address｜Payout': '子地址｜提幣',
@@ -356,4 +375,73 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   'Got it': '知道了',
   Previous: '上一項',
   Next: '下一項',
+  // Risk Control · AML
+  'Query Records': '查詢記錄',
+  Entity: '實體',
+  Label: '標籤',
+  'Entity of Sending Address': '出款地址所屬實體',
+  'Entity of Target Address': '目標地址所屬實體',
+  'Manual Review Required': '需人工審核',
+  'Service Provider': '數據供應商',
+  'Data Provider': '數據供應商',
+  'Risk Summary': '風險概要',
+  'Risk Rating Criteria': '風險分級標準',
+  'AML query transaction risk summary sentence':
+    '該交易資金涉及{riskCategories}風險，風險資金合計佔比為{totalPercent}。',
+  'AML query risk summary sentence':
+    '該地址資金來源涉及{sourceCategories}風險，來源方向風險資金佔比為{sourcePercent}，轉出方向風險資金佔比為{destinationPercent}。',
+  'AML query risk classification sentence': '交易風險評分≥{threshold}時判定為危險。',
+  'AML query risk classification provider footnote':
+    '使用風控服務供應商的風險分級標準，參見幫助文檔',
+  'AML query result disclaimer':
+    '本查詢結果基於篩查時可獲得的第三方數據生成，不構成對未來資金風險狀態的保證，也不能代替客戶自身應履行的合規義務。',
+  'AML risk profile title': '風險画像',
+  'AML risk composition title': '風險構成',
+  'AML handling recommendations title': '處理建議',
+  'AML handling recommendations lead':
+    '基於風險画像及合規要求，您可採取以下措施管理風險',
+  'AML handling blacklist title': '加入黑名單',
+  'AML handling blacklist desc': '將目標地址加入黑名單，以阻止後續向外轉出',
+  'AML handling manual review title': '人工審核',
+  'AML handling manual review desc': '人工審核並確認風險等級',
+  'AML handling report title': '獲取報告',
+  'AML handling report desc': '如需獲取PDF報告，請聯繫支持團隊',
+  'AML counterparty risk title': '交易對手風險',
+  'AML counterparty risk hint':
+    '本頁面僅顯示存在風險的交易對手。如需獲得全部交易對手的資訊，請聯繫支持團隊獲取查詢報告。',
+  'AML manual review dialog title': '確認風險等級',
+  'AML manual review note label': '備註（選填）',
+  'AML manual review note placeholder': '輸入審核確認資訊或其他備註資訊',
+  'Query Initiator': '查詢人',
+  'Status before Review': '審核前風險等級',
+  'Status After Review': '審核後風險等級',
+  Note: '審核備註',
+  'Auto rule form footnote inflow':
+    '為防止風險外溢，接收高風險資金的地址將被Cregis禁用。這意味著該地址資金不會被自動歸集，Cregis AML也不會再對該地址進行篩查，但該地址仍然可以接收資金。如需繼續對該地址進行歸集，您可以手動解禁。',
+  'Auto rule inflow risk alert inapp hint':
+    '識別高風險交易後，Cregis AML將向指定團隊成員發送應用內通知',
+  'Auto rule inflow risk alert email hint': '同時向接收人註冊郵箱發送郵件提示',
+  'Cregis AML Risk Alert': 'Cregis AML 風險警報',
+  'AML Auto Rule Disabled': 'AML自動規則禁用',
+  'AML Auto Rule Enabled': 'AML自動規則啟用',
+  'Cregis AML Query Failed': 'Cregis AML查詢失敗',
+  'AML notify auto query balance insufficient inflow':
+    '由於您的團隊【{teamName}】賬戶餘額不足，收款交易【{hash}】AML自動查詢失敗。如需查詢該筆交易，請聯繫支持團隊。',
+  'AML notify auto query service timeout inflow':
+    '由於客戶端或服務器錯誤，您的團隊【{teamName}】的收款交易【{hash}】AML自動查詢失敗，本次查詢費用已退還至團隊賬戶餘額。如需查詢該筆交易，請聯繫支持團隊。',
+  'AML client hint asset network mismatch':
+    '所查詢資產與網絡不匹配，請確認後重查',
+  'AML client hint insufficient onchain data':
+    '鏈上交易信息不足，暫無風險評分',
+  'AML client hint third party server error': '三方服務器錯誤',
+  'AML notify auto rule disabled body':
+    'AML自動規則【{ruleName}】已被【{operator}】禁用，Cregis AML將不再對符合該規則條件的交易進行自動篩查。',
+  'AML notify auto rule disabled team body':
+    '您的團隊【{teamName}】中，AML自動規則【{ruleName}】（編號【{ruleId}】）已被【{operator}】禁用，Cregis AML將不再對符合該規則條件的交易進行自動篩查。如需了解更多信息，請前往Cregis客戶端。',
+  'AML notify auto rule enabled body':
+    'AML自動規則【{ruleName}】（編號【{ruleId}】）已被【{operator}】啟用，Cregis AML將對符合該規則條件的交易進行AML自動查詢。如發現危險交易，Cregis將向指定接收人發送風險警報。',
+  'AML notify auto rule enabled team body':
+    '您的團隊【{teamName}】中，AML自動規則【{ruleName}】（編號【{ruleId}】）已被【{operator}】啟用，Cregis AML將對符合該規則條件的交易進行AML自動查詢。如發現危險交易，Cregis將向指定接收人發送風險警報。如需了解更多信息，請前往Cregis客戶端。',
+  'AML notify inflow dangerous transaction team body':
+    '您的團隊【{teamName}】中，項目【{projectName}】的收款交易【{hash}】被Cregis AML標記為危險交易。該交易收款地址已被標記，地址中的資金無法自動歸集。請前往Cregis客戶端查看風控詳情並處理該資金和地址。',
 };

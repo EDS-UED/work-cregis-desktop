@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, toRef, watch } from 'vue';
-import { EgButton, EgDetail, EgDetailPopup, type TagStatus } from '@eds/desktop-components';
+import {
+  EgButton,
+  EgConfirmPopover,
+  EgDetail,
+  EgDetailPopup,
+  type TagStatus,
+} from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import {
   formatGroupedAmountText,
@@ -13,12 +19,17 @@ import {
 } from '../shared/detailAddressExpand';
 import { findDetailItemByKey } from '../shared/findDetailItemByKey';
 import { buildDetailApprovalProgressSteps } from '../shared/buildDetailApprovalProgressSteps';
+import { resolveDetailProgressStepBuildOptions } from '../shared/resolveDetailProgressStepBuildOptions';
 import DetailApprovalProgressAppend from '../shared/DetailApprovalProgressAppend.vue';
 import { resolveDetailHeadlineStatus } from '../shared/resolveDetailHeadlineStatus';
 import { usePopupShellLifecycle } from '../shared/usePopupShellLifecycle';
 import { useDetailToolbarPageMotion } from '../shared/useDetailToolbarPageMotion';
 import { buildSigningDetailSections } from './buildSigningDetailSections';
-import { addressEntriesIncludeAddressRisk } from '../shared/hasBlacklistAddressTags';
+import {
+  resolveDetailTaskAmlInterceptFromReceivers,
+  resolveDetailTaskAmlPassInterceptKind,
+} from '../shared/detailTaskAmlIntercept';
+import SigningAddressRiskAlertPopup from './SigningAddressRiskAlertPopup.vue';
 import {
   resolveDetailMinerFeePopoverContext,
   resolveMinerFeeProfileFromDetail,
@@ -49,6 +60,7 @@ const props = withDefaults(
     readOnly?: boolean;
     listStatusLabel?: string;
     listStatusKind?: TagStatus;
+    progressListStatusLabel?: string;
     onRemarkBeforeOpen?: () => void | Promise<void>;
   }>(),
   {
@@ -61,6 +73,7 @@ const emit = defineEmits<{
   'update:open': [value: boolean];
   'popup-closed': [];
   'shell-opened': [];
+  'address-risk-alert-open-change': [open: boolean];
   prev: [];
   next: [];
   passConfirm: [selection: MinerFeeSelection | null];
@@ -95,9 +108,54 @@ const signingThresholdDisplay = computed(() =>
 );
 const isMultiSign = computed(() => isMultiSignSigningDetail(props.detail));
 const showDetailToolbar = computed(() => !props.readOnly);
-const signingBlockedByBlacklist = computed(() =>
-  props.detail ? addressEntriesIncludeAddressRisk(props.detail.receivers, ui) : false,
+const amlIntercept = computed(() =>
+  props.detail
+    ? resolveDetailTaskAmlInterceptFromReceivers(props.detail.receivers, ui)
+    : resolveDetailTaskAmlInterceptFromReceivers([], ui),
 );
+
+const addressRiskAlertOpen = ref(false);
+const riskAcknowledgedDetailId = ref<string | null>(null);
+let pendingPassAfterRiskAck: (() => void) | null = null;
+
+const TASK_AML_DANGER_CONFIRM_WIDTH = 365;
+
+const passInterceptKind = computed(() =>
+  resolveDetailTaskAmlPassInterceptKind(
+    amlIntercept.value,
+    props.detail?.id === riskAcknowledgedDetailId.value,
+  ),
+);
+
+function needsSignRiskAck(): boolean {
+  return passInterceptKind.value === 'blacklist-dialog';
+}
+
+function runPassWithRiskGate(run: () => void) {
+  if (!needsSignRiskAck()) {
+    run();
+    return;
+  }
+  pendingPassAfterRiskAck = run;
+  addressRiskAlertOpen.value = true;
+}
+
+function onAddressRiskAlertContinue() {
+  riskAcknowledgedDetailId.value = props.detail?.id ?? null;
+  const run = pendingPassAfterRiskAck;
+  pendingPassAfterRiskAck = null;
+  run?.();
+}
+
+function onAddressRiskAlertReject() {
+  pendingPassAfterRiskAck = null;
+  void onRejectClick();
+}
+
+function onDangerConfirmPass(run: () => void) {
+  riskAcknowledgedDetailId.value = props.detail?.id ?? null;
+  run();
+}
 
 const detailHostRef = ref<HTMLElement | null>(null);
 const expandedAddressKeys = ref(new Set<string>());
@@ -114,9 +172,16 @@ const {
   ui,
 });
 
+watch(addressRiskAlertOpen, (open) => {
+  emit('address-risk-alert-open-change', open);
+});
+
 watch(
   () => props.detail?.id,
   () => {
+    riskAcknowledgedDetailId.value = null;
+    pendingPassAfterRiskAck = null;
+    addressRiskAlertOpen.value = false;
     expandedAddressKeys.value = new Set();
   },
 );
@@ -139,11 +204,15 @@ const progressSteps = computed(() => {
     ? `${ui('Signing threshold')}: ${signingThresholdDisplay.value}`
     : undefined;
 
-  return buildDetailApprovalProgressSteps(props.detail, {
-    thresholdSubtitle,
-    viewMode: props.readOnly ? 'record' : 'workflow',
-    listStatusLabel: props.readOnly ? props.listStatusLabel : undefined,
-  });
+  return buildDetailApprovalProgressSteps(
+    props.detail,
+    resolveDetailProgressStepBuildOptions({
+      readOnly: props.readOnly,
+      listStatusLabel: props.listStatusLabel,
+      progressListStatusLabel: props.progressListStatusLabel,
+      thresholdSubtitle,
+    }),
+  );
 });
 
 const headlineStatus = computed(() => {
@@ -176,14 +245,19 @@ const detailMinerFeePopover = computed(() =>
   props.detail ? resolveDetailMinerFeePopoverContext(props.detail) : null,
 );
 
-async function onMultiSignPassClick() {
-  if (signingBlockedByBlacklist.value) return;
+async function executeMultiSignPass() {
   try {
     await props.onRemarkBeforeOpen?.();
     emit('passConfirm', null);
   } catch {
     // prepareDetailRemarkOpen rejected (processed / disabled).
   }
+}
+
+function onMultiSignPassClick() {
+  runPassWithRiskGate(() => {
+    void executeMultiSignPass();
+  });
 }
 
 async function onRejectClick() {
@@ -195,14 +269,25 @@ async function onRejectClick() {
   }
 }
 
-async function onPassClick() {
-  if (signingBlockedByBlacklist.value) return;
+async function executePassClick() {
   try {
     await props.onRemarkBeforeOpen?.();
     emit('passConfirm', null);
   } catch {
     // prepareDetailRemarkOpen rejected (processed / disabled).
   }
+}
+
+function onPassClick() {
+  runPassWithRiskGate(() => {
+    void executePassClick();
+  });
+}
+
+function onMinerFeeSignTriggerClick(openMinerFeePanel: () => void) {
+  runPassWithRiskGate(() => {
+    openMinerFeePanel();
+  });
 }
 
 async function onMultiSignRejectClick() {
@@ -275,12 +360,42 @@ function onDetailClose() {
               {{ ui('Reject') }}
             </EgButton>
 
+            <EgConfirmPopover
+              v-if="isMultiSign && passInterceptKind === 'danger-popover'"
+              :title="ui('Task AML dangerous address confirm title')"
+              :message="ui('Task AML dangerous address confirm message')"
+              :confirm-label="ui('Task AML dangerous address confirm acknowledge')"
+              :close-label="ui('Close')"
+              placement="top"
+              height-mode="adaptive"
+              :width="TASK_AML_DANGER_CONFIRM_WIDTH"
+              boundary-selector=".eds-popup"
+              @confirm="onDangerConfirmPass(() => void executeMultiSignPass())"
+            >
+              <template #trigger="{ onClick, active }">
+                <span
+                  :class="[
+                    remarkTriggerStyles.remarkTrigger,
+                    active && remarkTriggerStyles.remarkTriggerPassPressed,
+                  ]"
+                >
+                  <EgButton
+                    tone="decor"
+                    variant="solid"
+                    size="md"
+                    :aria-expanded="active"
+                    @click.stop="onClick"
+                  >
+                    {{ ui('Sign') }}
+                  </EgButton>
+                </span>
+              </template>
+            </EgConfirmPopover>
             <EgButton
-              v-if="isMultiSign"
+              v-else-if="isMultiSign"
               tone="decor"
               variant="solid"
               size="md"
-              :disabled="signingBlockedByBlacklist"
               @click="onMultiSignPassClick"
             >
               {{ ui('Sign') }}
@@ -299,7 +414,71 @@ function onDetailClose() {
               :on-before-open="onRemarkBeforeOpen"
               @confirm="emit('passConfirm', $event)"
             >
-              <template #trigger="{ active, onClick }">
+              <template #trigger="{ active, onClick: openMinerFeePanel }">
+                <EgConfirmPopover
+                  v-if="passInterceptKind === 'danger-popover'"
+                  :title="ui('Task AML dangerous address confirm title')"
+                  :message="ui('Task AML dangerous address confirm message')"
+                  :confirm-label="ui('Task AML dangerous address confirm acknowledge')"
+                  :close-label="ui('Close')"
+                  placement="top"
+                  height-mode="adaptive"
+                  :width="TASK_AML_DANGER_CONFIRM_WIDTH"
+                  boundary-selector=".eds-popup"
+                  @confirm="onDangerConfirmPass(() => openMinerFeePanel())"
+                >
+                  <template #trigger="{ onClick: openDangerConfirm, active: dangerActive }">
+                    <span
+                      :class="[
+                        remarkTriggerStyles.remarkTrigger,
+                        (active || dangerActive) && remarkTriggerStyles.remarkTriggerPassPressed,
+                      ]"
+                    >
+                      <EgButton
+                        tone="decor"
+                        variant="solid"
+                        size="md"
+                        :aria-expanded="active || dangerActive"
+                        @click.stop="openDangerConfirm"
+                      >
+                        {{ ui('Sign') }}
+                      </EgButton>
+                    </span>
+                  </template>
+                </EgConfirmPopover>
+                <span
+                  v-else
+                  :class="[
+                    remarkTriggerStyles.remarkTrigger,
+                    active && remarkTriggerStyles.remarkTriggerPassPressed,
+                  ]"
+                >
+                  <EgButton
+                    tone="decor"
+                    variant="solid"
+                    size="md"
+                    :aria-expanded="active"
+                    @click.stop="onMinerFeeSignTriggerClick(openMinerFeePanel)"
+                  >
+                    {{ ui('Sign') }}
+                  </EgButton>
+                </span>
+              </template>
+            </ApprovalRemarkPopover>
+
+            <EgConfirmPopover
+              v-else-if="passInterceptKind === 'danger-popover'"
+              :title="ui('Task AML dangerous address confirm title')"
+              :message="ui('Task AML dangerous address confirm message')"
+              :confirm-label="ui('Task AML dangerous address confirm acknowledge')"
+              :close-label="ui('Close')"
+              placement="top"
+              height-mode="adaptive"
+              :width="TASK_AML_DANGER_CONFIRM_WIDTH"
+              boundary-selector=".eds-popup"
+              @confirm="onDangerConfirmPass(() => void executePassClick())"
+            >
+              <template #trigger="{ onClick, active }">
                 <span
                   :class="[
                     remarkTriggerStyles.remarkTrigger,
@@ -310,7 +489,6 @@ function onDetailClose() {
                     tone="decor"
                     variant="solid"
                     size="md"
-                    :disabled="signingBlockedByBlacklist"
                     :aria-expanded="active"
                     @click.stop="onClick"
                   >
@@ -318,14 +496,12 @@ function onDetailClose() {
                   </EgButton>
                 </span>
               </template>
-            </ApprovalRemarkPopover>
-
+            </EgConfirmPopover>
             <EgButton
               v-else
               tone="decor"
               variant="solid"
               size="md"
-              :disabled="signingBlockedByBlacklist"
               @click="onPassClick"
             >
               {{ ui('Sign') }}
@@ -363,6 +539,13 @@ function onDetailClose() {
       :keep-mounted="amlToastKeepMounted"
       :motion-active="amlToastMotionActive"
       :text="amlToastText"
+    />
+    <SigningAddressRiskAlertPopup
+      v-model:open="addressRiskAlertOpen"
+      :title-key="amlIntercept.alertTitleKey"
+      :message-key="amlIntercept.alertMessageKey"
+      @continue="onAddressRiskAlertContinue"
+      @reject="onAddressRiskAlertReject"
     />
     </div>
   </EgDetailPopup>

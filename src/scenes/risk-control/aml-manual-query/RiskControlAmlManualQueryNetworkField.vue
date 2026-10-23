@@ -10,6 +10,7 @@ import {
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import {
+  AML_QUERY_NETWORK_MENU_MAX_HEIGHT,
   AML_QUERY_NETWORK_OPTIONS,
   resolveAmlQueryNetworkCryptoName,
 } from '@/scenes/risk-control/riskControlAmlQueryOptions';
@@ -42,6 +43,7 @@ function selectNetwork(nextNetwork: string, close: () => void) {
     placement="bottom"
     align="start"
     width-mode="trigger"
+    :max-height="AML_QUERY_NETWORK_MENU_MAX_HEIGHT"
     :show-add="false"
     :show-menu-divider="false"
     :close-on-scroll="false"
@@ -71,6 +73,7 @@ function selectNetwork(nextNetwork: string, close: () => void) {
         :width-mode="menuWidthMode"
         :width="menuWidth"
         height-mode="adaptive"
+        :max-height="AML_QUERY_NETWORK_MENU_MAX_HEIGHT"
         :show-add="false"
         :show-divider="false"
       >

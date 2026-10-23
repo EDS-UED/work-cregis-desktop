@@ -32,3 +32,12 @@ export type RiskControlAmlCounterpartyRow = {
 };
 
 export type RiskControlAmlControlMeasureKey = 'none' | 'rejected' | 'alerted';
+
+export type RiskControlAmlReviewLog = {
+  riskLevelBeforeKey: string;
+  riskLevelAfterKey: string;
+  reviewerName: string;
+  reviewerAvatarName: string;
+  reviewedAt: string;
+  remark: string;
+};

@@ -28,7 +28,9 @@ const APPROVED_STATUS_REJECT: TasksListFieldStatusRow = {
 const APPROVED_REJECT_DEMO_ROW_INDEX = 1;
 
 /** 已审批列表：仅审批通过 / 审批驳回。 */
-function buildApprovedModuleStatusRowValues(rowIndex: number): TasksListFieldStatusRow {
+export function buildApprovedModuleStatusRowValues(rowIndex: number): TasksListFieldStatusRow {
+  const amlDemo = resolveAmlRiskListStatusDemo(rowIndex);
+  if (amlDemo) return amlDemo;
   if (rowIndex === APPROVED_REJECT_DEMO_ROW_INDEX) {
     return APPROVED_STATUS_REJECT;
   }
@@ -90,7 +92,52 @@ const SIGNED_REJECT_DEMO_ROW_INDEX = 1;
 /** All Records / Sent Request / 已签名：固定第 8 行（index 7）演示系统签名驳回。 */
 export const SYSTEM_SIGNATURE_REJECT_ROW_INDEX = 7;
 
+/** 第 6 条（index 5）：列表 Status「风控查询中」（ready / 进行中）。 */
+export const TASK_AML_RISK_QUERY_DEMO_ROW_INDEX = 5;
+
+/** 第 7 条（index 6）：列表 Status「风险拦截」+ 接收方危险 Tag。 */
+export const TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX = 6;
+
+export const TASK_AML_RISK_QUERY_STATUS_LABEL = 'Task list status AML risk querying';
+export const TASK_AML_RISK_INTERCEPT_STATUS_LABEL = 'Task list status AML risk intercept';
+
+const TASK_AML_RISK_QUERY_STATUS: TasksListFieldStatusRow = {
+  status: 'ready',
+  label: TASK_AML_RISK_QUERY_STATUS_LABEL,
+};
+
+const TASK_AML_RISK_INTERCEPT_STATUS: TasksListFieldStatusRow = {
+  status: 'danger',
+  label: TASK_AML_RISK_INTERCEPT_STATUS_LABEL,
+};
+
+export function isTaskAmlRiskListStatusLabel(label: string): boolean {
+  return (
+    label === TASK_AML_RISK_QUERY_STATUS_LABEL
+    || label === TASK_AML_RISK_INTERCEPT_STATUS_LABEL
+  );
+}
+
+export function isTaskAmlRiskDemoRowIndex(rowIndex: number): boolean {
+  return (
+    rowIndex === TASK_AML_RISK_QUERY_DEMO_ROW_INDEX
+    || rowIndex === TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX
+  );
+}
+
+function resolveAmlRiskListStatusDemo(rowIndex: number): TasksListFieldStatusRow | null {
+  if (rowIndex === TASK_AML_RISK_QUERY_DEMO_ROW_INDEX) {
+    return TASK_AML_RISK_QUERY_STATUS;
+  }
+  if (rowIndex === TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX) {
+    return TASK_AML_RISK_INTERCEPT_STATUS;
+  }
+  return null;
+}
+
 function buildApprovedStatusRowValues(rowIndex: number): TasksListFieldStatusRow {
+  const amlDemo = resolveAmlRiskListStatusDemo(rowIndex);
+  if (amlDemo) return amlDemo;
   if (rowIndex === SYSTEM_SIGNATURE_REJECT_ROW_INDEX) {
     return SIGNED_STATUS_REJECT;
   }
@@ -102,6 +149,8 @@ function usesApprovedStatusData(menuItem?: string): boolean {
 }
 
 function buildSignedStatusRowValues(rowIndex: number): TasksListFieldStatusRow {
+  const amlDemo = resolveAmlRiskListStatusDemo(rowIndex);
+  if (amlDemo) return amlDemo;
   if (
     rowIndex === SIGNED_REJECT_DEMO_ROW_INDEX
     || rowIndex === SYSTEM_SIGNATURE_REJECT_ROW_INDEX

@@ -2,6 +2,26 @@
  * append 内正文与 EgDetail `.sections` / Apply_Item 行左缘对齐：
  * appendSection 已有 spacing-3 水平 padding，正文再 inset spacing-3（同 sectionTitle）。
  */
+
+/** 仅 AML 查询结果 append：块间距 spacing-6（勿改 detailPopupChrome.appendSection 全局值）。 */
+.queryResultAppendSection {
+  gap: var(--spacing-6);
+}
+
+.queryResultEmbeddedStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  width: 100%;
+}
+
+/** 查询失败 · 风险画像空态：贴 Tab 下缘展示，勿纵向撑满居中。 */
+.queryResultAppendEmptyFill {
+  flex: 0 0 auto;
+  gap: var(--spacing-0);
+  padding-bottom: var(--spacing-0);
+}
+
 .sectionBody {
   display: flex;
   flex-direction: column;
@@ -9,15 +29,6 @@
   width: 100%;
   padding-inline: var(--spacing-3);
   box-sizing: border-box;
-}
-
-.riskProfileCardRow {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: var(--spacing-3);
-  width: 100%;
 }
 
 .subsection {
@@ -29,15 +40,12 @@
 }
 
 .shallowSubsectionCard {
-  composes: subsection;
-  composes: motion-ease is-paint from global;
-  flex: 1 1 0;
-  min-width: min(100%, calc(var(--scale-30) + var(--scale-10)));
-  max-width: 100%;
+  composes: subsection motion-ease is-paint from global;
+  width: 100%;
   padding: var(--spacing-4) var(--spacing-5);
-  border: var(--stroke-xs) solid transparent;
   border-radius: var(--radius-md);
   background: var(--material-card-shallow);
+  box-sizing: border-box;
   transition: var(--motion-recipe-hover);
 }
 
@@ -45,52 +53,137 @@
   background-color: var(--event-hover);
 }
 
+.compositionStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  width: 100%;
+}
+
+.compositionSummaryBlock {
+  width: 100%;
+  min-width: 0;
+  padding-top: var(--spacing-5);
+  border-top: var(--stroke-sm) solid var(--stroke-divider-page);
+  box-sizing: border-box;
+}
+
+.compositionSummaryText {
+  margin: 0;
+  color: var(--text-base-secondary);
+  overflow-wrap: anywhere;
+}
+
+.compositionSummaryLabel {
+  color: var(--text-base-secondary);
+}
+
+.queryResultDisclaimer {
+  margin: 0;
+  padding-inline: var(--spacing-3);
+  color: var(--text-base-tertiary);
+  font-style: italic;
+  box-sizing: border-box;
+}
+
 .subsectionTitle {
   composes: typography-body-small-strong from global;
   color: var(--text-base-secondary);
 }
 
+/** 风险构成方向圆底：`--scale-5`；glyph 勿在 EgIcon 根上定宽，避免挤瘪圆底。 */
+.directionSectionIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--scale-5);
+  height: var(--scale-5);
+  min-width: var(--scale-5);
+  min-height: var(--scale-5);
+  border-radius: var(--radius-full);
+  color: var(--text-same-white-primary);
+  box-sizing: border-box;
+}
+
+.directionSectionIconSource {
+  background-color: var(--material-brand-primary);
+}
+
+.directionSectionIconDestination {
+  background-color: var(--material-match-primary);
+}
+
+/*
+ * 8px 槽 + fit：与 networkPickerAutoRuleDirectionIconGlyph 一致；
+ * EgIcon 根勿直接挂在 20px 圆底上（fit 会按 20px 算 SVG / stroke）。
+ */
+.directionSectionIconGlyph {
+  display: block;
+  flex-shrink: 0;
+  width: var(--scale-2);
+  height: var(--scale-2);
+  --eds-icon-stroke-screen: var(--stroke-lg);
+}
+
+.directionSectionIconGlyph > :global(*) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.directionLabelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  min-width: 0;
+  max-width: 100%;
+}
+
 .directionLabel {
-  composes: typography-body-medium from global;
   font-weight: var(--eds-body-medium-weight);
   color: var(--text-base-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.directionLabelPercent {
+  composes: typography-body-small-strong from global;
+  font-variant-numeric: tabular-nums;
 }
 
 .directionBlock {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
+  gap: var(--spacing-2-5);
 }
 
-.categoryList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-}
-
-.categoryRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-2);
+.handlingTitleRow {
+  width: 100%;
+  align-items: stretch;
 }
 
 .handlingIntro {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: var(--spacing-05);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-0) var(--spacing-3) var(--spacing-3);
+  box-sizing: border-box;
 }
 
 .handlingSectionTitle {
   margin: 0;
   padding: 0;
+  color: var(--text-base-primary);
 }
 
 .handlingLead {
   composes: typography-footnote from global;
   font-weight: var(--eds-footnote-weight);
   margin: 0;
+  padding: 0;
   color: var(--text-base-secondary);
 }
 
@@ -108,7 +201,7 @@
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--spacing-6);
   min-width: min(100%, calc(var(--scale-30) + var(--scale-10)));
   max-width: 100%;
@@ -126,37 +219,59 @@
 
 .actionCardHead {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: var(--spacing-2);
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-3);
   width: 100%;
   min-width: 0;
 }
 
-.actionCardIconShell {
-  display: inline-flex;
-  flex: 0 0 var(--avatar-xl);
-  align-items: center;
-  justify-content: center;
-  width: var(--avatar-xl);
-  height: var(--avatar-xl);
-  line-height: 0;
-  color: var(--text-base-secondary);
+.actionCardAction {
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: var(--spacing-2);
 }
 
-.actionCardIconShell :global(.eds-icon) {
-  display: block;
-  width: 100%;
-  height: 100%;
+/** AML 查询结果 · 处置建议图标底（40×40 圆底 + 16px 图标）。 */
+.actionCardIconShell {
+  margin-top: var(--spacing-2);
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-2xl);
+  height: var(--avatar-2xl);
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  background: var(--material-same-white-tertiary);
+  box-shadow: var(--eds-shadow-subtle);
+  color: var(--text-base-primary);
+}
+
+.actionCardIconGlyph {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-md);
+  height: var(--icon-md);
+  color: inherit;
+}
+
+.actionCardIconShellBlacklist {
+  color: var(--stroke-color-danger);
 }
 
 .actionCardCopy {
   display: flex;
-  flex: 1 1 0%;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--spacing-05);
+  width: 100%;
   min-width: 0;
+  text-align: center;
 }
 
 .actionTitle {
@@ -165,6 +280,7 @@
   width: 100%;
   max-width: 100%;
   color: var(--text-base-primary);
+  text-align: center;
 }
 
 .actionDesc {
@@ -174,11 +290,7 @@
   max-width: 100%;
   font-weight: var(--eds-footnote-weight);
   color: var(--text-base-secondary);
-}
-
-.hint {
-  margin: 0;
-  color: var(--text-base-secondary);
+  text-align: center;
 }
 
 .tableWrap {

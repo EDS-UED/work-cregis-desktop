@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import AddressViewMoreReminderPopup from './AddressViewMoreReminderPopup.vue';
+import TaskAddressDetailsPopup from './TaskAddressDetailsPopup.vue';
 import ApprovalDetailPopup from '../approval/ApprovalDetailPopup.vue';
 import SigningDetailPopup from '../signing/SigningDetailPopup.vue';
 import type { RecordDetailFlowInstance } from './recordDetailFlowContext';
@@ -44,6 +44,7 @@ const prevDisabled = computed(() => props.flow.prevDisabled.value);
 const nextDisabled = computed(() => props.flow.nextDisabled.value);
 const listStatusLabel = computed(() => props.flow.statusTagLabel.value);
 const listStatusKind = computed(() => props.flow.statusTagStatus.value);
+const progressListStatusLabel = computed(() => props.flow.progressListStatusLabel.value);
 const showWithdrawAction = computed(() => props.flow.showWithdrawAction.value);
 const recordMenuItem = computed(
   () =>
@@ -51,7 +52,10 @@ const recordMenuItem = computed(
     ?? props.flow.menuItem.value
     ?? recordDetailMenuItemRegistry.value,
 );
-const viewMoreText = computed(() => props.flow.viewMoreText.value);
+const viewMoreSide = computed(() => props.flow.viewMoreSide.value);
+const addressDetailsDetail = computed(
+  () => props.flow.signingDetail.value ?? props.flow.approvalDetail.value,
+);
 </script>
 
 <template>
@@ -66,6 +70,7 @@ const viewMoreText = computed(() => props.flow.viewMoreText.value);
     :next-disabled="nextDisabled"
     :list-status-label="listStatusLabel"
     :list-status-kind="listStatusKind"
+    :progress-list-status-label="progressListStatusLabel"
     :record-menu-item="recordMenuItem"
     :show-withdraw-action="showWithdrawAction"
     @popup-closed="flow.onDetailPopupClosed()"
@@ -86,15 +91,17 @@ const viewMoreText = computed(() => props.flow.viewMoreText.value);
     :next-disabled="nextDisabled"
     :list-status-label="listStatusLabel"
     :list-status-kind="listStatusKind"
+    :progress-list-status-label="progressListStatusLabel"
     @popup-closed="flow.onDetailPopupClosed()"
     @prev="flow.navigateRelative(-1)"
     @next="flow.navigateRelative(1)"
     @view-more="flow.openViewMore"
   />
 
-  <AddressViewMoreReminderPopup
+  <TaskAddressDetailsPopup
     v-model:open="viewMoreOpen"
     :shell-suspended="detailOpen"
-    :text="viewMoreText"
+    :side="viewMoreSide"
+    :detail="addressDetailsDetail"
   />
 </template>

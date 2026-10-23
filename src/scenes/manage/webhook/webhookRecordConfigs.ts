@@ -1,7 +1,4 @@
-import {
-  PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
-  type PaymentEngineRecordPageConfig,
-} from '@/scenes/payment-engine/paymentEngineRecordConfigs';
+import type { PaymentEngineRecordPageConfig } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { DATA_LIST_COLUMN_HEIGHT_XL } from '@/scenes/payment-engine/usePaymentEngineDataListPage';
 import { PAYMENT_ENGINE_RECORD_ROW_COUNT } from '@/scenes/payment-engine/paymentEngineOrderRecordData';
 import {
@@ -10,12 +7,12 @@ import {
 } from '../manageMenuData';
 import { dataListTimeColumnLabelKey } from '@/scenes/shared/dataListTimeLabelKeys';
 
-const WEBHOOK_NAME_ID_MIN = '232px';
-const WEBHOOK_EVENT_MIN = '144px';
-/** 创建人 | 创建时间 UTC+08:00 · 仅时间排序，对齐回调 Amount|Creation Time 列宽。 */
-const WEBHOOK_CREATOR_TIME_MIN = PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH;
-const WEBHOOK_STATUS_MIN = '96px';
-const WEBHOOK_ACTIONS_MIN = '152px';
+const WEBHOOK_NAME_ID_MIN = '200px';
+const WEBHOOK_EVENT_MIN = '120px';
+/** 创建人 | 创建时间 UTC+08:00 · 仅时间排序（略收窄，为状态列留宽）。 */
+const WEBHOOK_CREATOR_TIME_MIN = '248px';
+const WEBHOOK_STATUS_MIN = '112px';
+const WEBHOOK_ACTIONS_MIN = '136px';
 
 const PUSH_NAME_EVENT_MIN = '288px';
 const PUSH_TIME_MIN = '200px';

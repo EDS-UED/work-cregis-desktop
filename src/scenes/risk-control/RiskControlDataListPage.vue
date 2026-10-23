@@ -12,6 +12,11 @@ import RiskControlAmlManualQueryPageShell from './aml-manual-query/RiskControlAm
 import { riskControlAmlManualQueryPageStackKey } from './aml-manual-query/riskControlAmlManualQueryPageStackContext';
 import { registerRiskControlAmlManualQueryOverlay } from './aml-manual-query/riskControlAmlManualQueryOverlayContext';
 import { useRiskControlAmlManualQueryFlow } from './aml-manual-query/useRiskControlAmlManualQueryFlow';
+import RiskControlBlacklistCreateFormPage from './blacklist/RiskControlBlacklistCreateFormPage.vue';
+import RiskControlBlacklistCreatePageShell from './blacklist/RiskControlBlacklistCreatePageShell.vue';
+import { consumeRiskControlBlacklistCreateIntent } from './blacklist/riskControlBlacklistCreateIntent';
+import { riskControlBlacklistPageStackKey } from './blacklist/riskControlBlacklistPageStackContext';
+import { useRiskControlBlacklistCreateFlow } from './blacklist/useRiskControlBlacklistCreateFlow';
 import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import ProjectCreateModeCard from '@/scenes/project/components/ProjectCreateModeCard.vue';
@@ -29,10 +34,15 @@ import { riskControlAutoRulePageStackKey } from './auto-rule/riskControlAutoRule
 import { useRiskControlAutoRuleFlow } from './auto-rule/useRiskControlAutoRuleFlow';
 import { riskControlAutoRuleRowsRef } from './auto-rule/riskControlAutoRuleStore';
 import { buildRiskControlRecordRows } from './riskControlRecordData';
+import {
+  mergeAmlQueryRecordPatch,
+  riskControlAmlQueryRecordPatchesRef,
+} from './riskControlAmlQueryRecordStore';
 import { resolveRiskControlRecordConfig } from './riskControlRecordConfigs';
 import {
   isRiskControlAmlMenuItem,
   isRiskControlAutoRulesMenuItem,
+  isRiskControlBlacklistMenuItem,
   shouldOpenRiskControlDetailOnRowClick,
 } from './riskControlMenuData';
 
@@ -59,6 +69,25 @@ const amlManualQueryCanSubmit = computed(
 
 const amlManualQueryContentRevision = computed(
   () => amlManualQueryFormRef.value?.contentRevision ?? '',
+);
+
+const blacklistCreateFlow = useRiskControlBlacklistCreateFlow();
+const blacklistCreateFormRef = ref<InstanceType<typeof RiskControlBlacklistCreateFormPage> | null>(
+  null,
+);
+
+provide(riskControlBlacklistPageStackKey, {
+  configFormOpen: blacklistCreateFlow.formOpen,
+  closeConfigForm: blacklistCreateFlow.closeForm,
+  onConfigFormPageSettled: blacklistCreateFlow.onConfigFormPageSettled,
+});
+
+const blacklistCreateCanSubmit = computed(
+  () => blacklistCreateFormRef.value?.canSubmit ?? false,
+);
+
+const blacklistCreateContentRevision = computed(
+  () => blacklistCreateFormRef.value?.contentRevision ?? '',
 );
 
 const autoRuleFlow = useRiskControlAutoRuleFlow();
@@ -88,8 +117,20 @@ watch(
     if (!isRiskControlAmlMenuItem(props.menuItem) && amlManualQueryFlow.formOpen.value) {
       amlManualQueryFlow.closeForm();
     }
+    if (!isRiskControlBlacklistMenuItem(props.menuItem) && blacklistCreateFlow.formOpen.value) {
+      blacklistCreateFlow.closeForm();
+    }
   },
 );
+
+function tryOpenBlacklistCreateFromIntent() {
+  if (!isRiskControlBlacklistMenuItem(props.menuItem)) return;
+  const preset = consumeRiskControlBlacklistCreateIntent();
+  if (!preset) return;
+  blacklistCreateFlow.openForm(preset);
+}
+
+watch(() => props.menuItem, tryOpenBlacklistCreateFromIntent, { immediate: true });
 
 const autoRuleFormPageRef = ref<InstanceType<typeof RiskControlAutoRuleFormPage> | null>(null);
 
@@ -138,6 +179,10 @@ function onToolbarAction(key: string): boolean {
     amlManualQueryFlow.openForm();
     return true;
   }
+  if (key === 'addNew' && isRiskControlBlacklistMenuItem(props.menuItem)) {
+    blacklistCreateFlow.openForm();
+    return true;
+  }
   return false;
 }
 
@@ -174,7 +219,10 @@ function canOpenDetailOnRowClick(row: PaymentEngineRecordRow, menuItem: string):
 
 function buildRows(menuItem: string, count: number) {
   void riskControlAutoRuleRowsRef.value;
-  return buildRiskControlRecordRows(menuItem, count);
+  void riskControlAmlQueryRecordPatchesRef.value;
+  const rows = buildRiskControlRecordRows(menuItem, count);
+  if (!isRiskControlAmlMenuItem(menuItem)) return rows;
+  return rows.map(mergeAmlQueryRecordPatch);
 }
 </script>
 
@@ -182,7 +230,9 @@ function buildRows(menuItem: string, count: number) {
   <PaymentEngineDataListPage
     :menu-item="menuItem"
     :module-layout-page-stack="
-      isRiskControlAutoRulesMenuItem(menuItem) || isRiskControlAmlMenuItem(menuItem)
+      isRiskControlAutoRulesMenuItem(menuItem)
+        || isRiskControlAmlMenuItem(menuItem)
+        || isRiskControlBlacklistMenuItem(menuItem)
     "
     :resolve-config="resolveRiskControlRecordConfig"
     :build-rows="buildRows"
@@ -220,6 +270,25 @@ function buildRows(menuItem: string, count: number) {
       </EgIconProButton>
     </template>
 
+    <template v-if="isRiskControlBlacklistMenuItem(menuItem)" #module-stack-create>
+      <RiskControlBlacklistCreatePageShell
+        :title="ui('Add Blacklist')"
+        :confirm-label="ui('Confirm')"
+        :can-submit="blacklistCreateCanSubmit"
+        :content-revision="blacklistCreateContentRevision"
+        @back="blacklistCreateFlow.closeForm()"
+        @cancel="blacklistCreateFlow.closeForm()"
+        @confirm="blacklistCreateFormRef?.submitForm()"
+      >
+        <RiskControlBlacklistCreateFormPage
+          ref="blacklistCreateFormRef"
+          :draft="blacklistCreateFlow.draft.value"
+          @update:draft="(value) => { blacklistCreateFlow.draft.value = value }"
+          @submit="blacklistCreateFlow.requestSubmit()"
+        />
+      </RiskControlBlacklistCreatePageShell>
+    </template>
+
     <template v-if="isRiskControlAutoRulesMenuItem(menuItem)" #module-stack-create>
       <RiskControlAutoRuleCreatePageShell
         :title="ui(autoRuleFormToolbarTitleKey)"
@@ -236,7 +305,7 @@ function buildRows(menuItem: string, count: number) {
           :draft="autoRuleSurface.formDraft.value"
           :exclude-rule-id="autoRuleSurface.editingRow.value?.id"
           :name-exists="autoRuleSurface.autoRuleNameExists"
-          :scope-taken="autoRuleSurface.autoRuleOutflowScopeTaken"
+          :scope-taken="autoRuleSurface.autoRuleScopeTaken"
           :request-skip-disable-confirm="autoRuleSurface.requestSkipDisableConfirm"
           @update:draft="(value) => { autoRuleSurface.formDraft.value = value }"
           @submit="autoRuleSurface.requestSubmit()"

@@ -1,0 +1,28 @@
+.host {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.listWrap {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.listWrap :global(.eds-data-list) {
+  width: 100%;
+  min-width: 0;
+}
+
+/** EgDataList 行 is-paint squircle 圆角；嵌入详情平表应直角贴齐底部分页。 */
+.listWrap :global(.eds-data-list tbody tr.motion-ease.is-paint) {
+  border-radius: 0;
+}
+
+/** 空态：保留表头，正文区走 EgDataList `.empty`（图标 + 文案）。 */
+.listWrapEmpty :global(.eds-data-list .empty) {
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}

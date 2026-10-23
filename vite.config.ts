@@ -110,13 +110,53 @@ function watchEdsDesktopPackages(): Plugin {
 
 const shellDebugEnabled = process.env.VITE_SHELL_DEBUG !== 'false';
 
+const SHIM_ANCHORED_POPOVER = resolve(
+  __dirname,
+  'src/dev/shell-debug/shim/AnchoredPopover.vue',
+);
+const SHIM_ANCHORED_TOOLTIP_MANAGER = resolve(
+  __dirname,
+  'src/dev/shell-debug/shim/anchoredTooltipManager.ts',
+);
+const EDS_ANCHORED_POPOVER = resolve(
+  EDS_COMPONENTS_SRC_DIR,
+  'molecules/popovers/AnchoredPopover.vue',
+);
+const EDS_ANCHORED_TOOLTIP_MANAGER = resolve(
+  EDS_COMPONENTS_SRC_DIR,
+  'molecules/tooltip/anchoredTooltipManager.ts',
+);
+
+/** @fs 直链 EDS 源码时仍走业务 shim（resolve.alias 字符串匹配不足以覆盖）。 */
+function aliasEdsAnchoredShims(): Plugin {
+  return {
+    name: 'alias-eds-anchored-shims',
+    enforce: 'pre',
+    resolveId(source) {
+      if (
+        source === EDS_ANCHORED_POPOVER
+        || source.endsWith('/molecules/popovers/AnchoredPopover.vue')
+      ) {
+        return SHIM_ANCHORED_POPOVER;
+      }
+      if (
+        source === EDS_ANCHORED_TOOLTIP_MANAGER
+        || source.endsWith('/molecules/tooltip/anchoredTooltipManager.ts')
+      ) {
+        return SHIM_ANCHORED_TOOLTIP_MANAGER;
+      }
+      return undefined;
+    },
+  };
+}
+
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
   define: {
     /** Shell Debug Inspect 依赖 DOM 上的 __vueParentComponent；4173 dev 自带，4174 须开 prod devtools。 */
     __VUE_PROD_DEVTOOLS__: shellDebugEnabled,
   },
-  plugins: [vue(), watchEdsDesktopPackages()],
+  plugins: [vue(), aliasEdsAnchoredShims(), watchEdsDesktopPackages()],
   resolve: {
     alias: [
       {
@@ -130,6 +170,10 @@ export default defineConfig({
       {
         find: `${EDS_COMPONENTS_SRC_DIR}/molecules/tooltip/anchoredTooltipManager.ts`,
         replacement: resolve(__dirname, 'src/dev/shell-debug/shim/anchoredTooltipManager.ts'),
+      },
+      {
+        find: `${EDS_COMPONENTS_SRC_DIR}/molecules/popovers/AnchoredPopover.vue`,
+        replacement: resolve(__dirname, 'src/dev/shell-debug/shim/AnchoredPopover.vue'),
       },
       {
         find: '@eds/desktop-animations',

@@ -85,7 +85,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
 
   // Risk Control menu
   'Policy Settings': '策略',
-  'Strategy Name': '策略名称',
+  'Strategy Name': '名称',
   'Strategy Type': '策略类型',
   'Strategy Status': '策略状态',
   Weight: '权重',
@@ -103,7 +103,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
     '利用筛选栏的「类型」条件，轻松分类查看你想找的日志。',
   Event: '事件',
   Operator: '操作人',
-  'Strategy Number': '策略编号',
+  'Strategy Number': '编号',
   'Log Filter Event Create': '创建',
   'Log Filter Event Edit': '编辑',
   'Log Filter Event Enable Disable': '启用/禁用',
@@ -195,8 +195,14 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Auto rule outflow trigger hint':
     '请选择WaaS项目和/或钱包作为筛查目标。每个WaaS项目或钱包只能设置1条规则。',
   'Auto rule screening node notice': '请选择执行收款地址风险查询的节点',
+  'Auto rule screening node timing notice':
+    'Cregis AML将在审批流程开始前执行筛查；如交易无需审批，将在签名前执行。',
   'Auto rule risk alert recipients hint':
     '对于人工出款，Cregis AML将在发现危险地址后向出款发起人发送应用内通知。此外，您可以选择其他接收人。',
+  'Auto rule risk alert recipients inflow hint':
+    '请设置至少一个应用内通知或邮件接收人以接收风险警报',
+  'Auto rule form footnote inflow':
+    '为防止风险外溢，接收高风险资金的地址将被Cregis禁用。这意味着该地址资金不会被自动归集，Cregis AML也不会再对该地址进行筛查，但该地址仍然可以接收资金。如需继续对该地址进行归集，您可以手动解禁。',
   'In-app notification': '应用内通知',
   'Email notification': '邮件通知',
   'Auto rule add recipient': '新增接收人',
@@ -222,7 +228,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Risk control action': '风险控制措施',
   'Reject the withdrawal request': '驳回该出款申请',
   'Alarm the reviewer(s)/signer(s)': '向审批人/签名人告警',
-  'Screening Exception handling': '异常处理方式',
+  'Screening Exception handling': '扫描异常处置方式',
   'Auto rule exception handling hint':
     '如果无法完成扫描（通常由于余额不足或三方服务商响应超时），请选择处置方式',
   'Skip the query': '跳过查询，进入下一步并提示操作者',
@@ -231,6 +237,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Screen inflow funds': '入账资金筛查',
   'Screen the receiving address before withdrawal': '出款前筛查接收地址',
   'AML Exception': '异常',
+  'AML Exception Handled': '已处理',
   'AML Passed': 'AML通过',
   'AML Failed': 'AML不通过',
   'AML Error': 'AML异常',
@@ -242,8 +249,38 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
     '由于团队账户余额不足，发送到地址【{address}】的AML自动查询失败。如需查询该地址，可在充值后手动查询。',
   'AML notify auto query service timeout':
     '由于三方服务超时，发送到地址【{address}】的AML自动查询失败，本次查询费用已退还至团队账户余额。如需查询该地址，请联系支持团队。',
+  'AML notify auto query balance insufficient inflow':
+    '由于您的团队【{teamName}】账户余额不足，收款交易【{hash}】AML自动查询失败。如需查询该笔交易，请联系支持团队。',
+  'AML notify auto query service timeout inflow':
+    '由于客户端或服务器错误，您的团队【{teamName}】的收款交易【{hash}】AML自动查询失败，本次查询费用已退还至团队账户余额。如需查询该笔交易，请联系支持团队。',
+  'Cregis AML Risk Alert': 'Cregis AML 风险警报',
+  'AML Auto Rule Disabled': 'AML自动规则禁用',
+  'AML Auto Rule Enabled': 'AML自动规则启用',
+  'Cregis AML Query Failed': 'Cregis AML查询失败',
+  'AML notify auto rule disabled body':
+    'AML自动规则【{ruleName}】已被【{operator}】禁用，Cregis AML将不再对符合该规则条件的交易进行自动筛查。',
+  'AML notify auto rule disabled team body':
+    '您的团队【{teamName}】中，AML自动规则【{ruleName}】（编号【{ruleId}】）已被【{operator}】禁用，Cregis AML将不再对符合该规则条件的交易进行自动筛查。如需了解更多信息，请前往Cregis客户端。',
+  'AML notify auto rule enabled body':
+    'AML自动规则【{ruleName}】（编号【{ruleId}】）已被【{operator}】启用，Cregis AML将对符合该规则条件的交易进行AML自动查询。如发现危险交易，Cregis将向指定接收人发送风险警报。',
+  'AML notify auto rule enabled team body':
+    '您的团队【{teamName}】中，AML自动规则【{ruleName}】（编号【{ruleId}】）已被【{operator}】启用，Cregis AML将对符合该规则条件的交易进行AML自动查询。如发现危险交易，Cregis将向指定接收人发送风险警报。如需了解更多信息，请前往Cregis客户端。',
+  'AML notify inflow dangerous transaction team body':
+    '您的团队【{teamName}】中，项目【{projectName}】的收款交易【{hash}】被Cregis AML标记为危险交易。该交易收款地址已被标记，地址中的资金无法自动归集。请前往Cregis客户端查看风控详情并处理该资金和地址。',
+  'AML client hint asset network mismatch':
+    '所查询资产与网络不匹配，请确认后重查',
+  'AML client hint insufficient onchain data':
+    '链上交易信息不足，暂无风险评分',
+  'AML client hint third party server error': '三方服务器错误',
   'Results unavailable due to a query exception': '查询异常，无法查看',
-  'Risk Summary': '风险概要:',
+  Label: '标签',
+  'Entity of Sending Address': '出款地址所属实体',
+  'Entity of Target Address': '目标地址所属实体',
+  'Manual Review Required': '需人工审核',
+  'Query Initiator': '查询人',
+  'Risk Exposure': '风险敞口',
+  'High-risk funds': '高风险资金',
+  'Risk Summary': '风险概要',
   'AML exception handling title': '处理方式',
   'AML exception handling lead': '您可从以下操作中选择1个处理方式',
   'AML exception action retry': '重新查询',
@@ -254,34 +291,58 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'AML exception action reject': '驳回',
   'AML exception action reject desc': '驳回该出款申请',
   'AML query exception no result summary': '查询异常，暂无结果',
+  'AML query transaction risk summary sentence':
+    '该交易资金涉及{riskCategories}风险，风险资金合计占比为{totalPercent}。',
   'AML query risk summary sentence':
-    '该地址资金来源涉及{sourceCategories}风险，来源方向风险资金占比为{sourcePercent}，转出方向涉及{destinationCategories}风险，风险资金占比为{destinationPercent}。',
+    '该地址资金来源涉及{sourceCategories}风险，来源方向风险资金占比为{sourcePercent}，转出方向风险资金占比为{destinationPercent}。',
   'AML query risk classification sentence':
     '{ruleName}：当收款地址风险评分大于等于{threshold}时，Cregis AML将执行风险控制措施',
+  'AML query risk classification provider footnote':
+    '使用风控服务供应商的风险分级标准，参见帮助文档',
   'AML query result disclaimer':
     '本查询结果基于筛查时可获得的第三方数据生成，不构成对未来资金风险状态的保证，也不能代替客户自身应履行的合规义务。',
   'AML risk profile title': '风险画像',
   'AML risk composition title': '风险构成',
+  'AML risk category share title': '类别占比',
   'AML exposure bar caption': '与风险实体或地址关联的资金占比',
   'AML exposure bar aria': '风险敞口条形图',
   'AML handling recommendations title': '处理建议',
   'AML handling recommendations lead': '基于风险画像及合规要求，您可采取以下措施管理风险',
   'AML handling blacklist title': '加入黑名单',
-  'AML handling blacklist desc': '将目标地址加入黑名单，以阻止后续资金转出',
+  'AML handling blacklist desc':
+    '将目标地址加入黑名单，以阻止后续向外转出',
   'AML handling manual review title': '人工审核',
-  'AML handling manual review desc': '人工审核并确认风险分级',
+  'AML handling manual review desc': '人工审核并确认风险等级',
   'AML handling report title': '获取报告',
   'AML handling report desc': '如需获取PDF报告，请联系支持团队',
   'AML counterparty risk title': '交易对手风险',
   'AML counterparty risk hint':
-    '仅显示有风险的交易对手。如需获得全部交易对手的信息，请联系支持团队获取查询报告。',
-  'AML record confirm blacklist': '是否将该地址加入黑名单？',
+    '本页面仅显示存在风险的交易对手。如需获得全部交易对手的信息，请联系支持团队获取查询报告。',
+  'AML record confirm blacklist': '确认将该地址加入黑名单？',
+  'AML record confirm blacklist outflow': '确认将该交易的出款地址加入黑名单？',
+  'AML Query Records': 'AML查询记录',
+  'Risk control blacklist create intro':
+    '将地址加入黑名单后，将禁止向该地址发起出款。请填写地址与网络后确认提交。',
+  'Risk control blacklist create intro from aml':
+    '本页面保持线上界面，仅作说明使用。',
+  'Risk control blacklist auto fill address hint': '地址与查询网络已由 AML 查询记录自动填入',
   'AML record confirm retry':
     '重新查询将扣除1次免费次数，若免费次数为0，将从团队账户中扣除查询费用。是否确认重查？',
   'AML record confirm pass': '确认放行该出款申请？',
   'AML record confirm reject': '确认驳回该出款申请？',
   'AML manual review dialog title': '确认风险等级',
   'AML manual review level label': '风险等级',
+  'AML manual review note label': '备注',
+  'AML manual review note placeholder': '请输入',
+  'AML manual review note feedback':
+    '1,000字符以内的审核意见、资金后续处理等信息',
+  'AML manual review safe isolation hint':
+    '风险等级修改为安全后，Cregis AML将不再隔离该资金，资金可能被自动归集并与其他资金混合',
+  'AML manual review danger collection hint':
+    '风险等级修改为危险后，Cregis将在自动归集时跳过收款地址，以防风险扩散',
+  'AML manual review safe waas unblock hint':
+    '如您确认资金安全，请前往WaaS解禁收款地址。',
+  'Optional, Max. 1000 characters': '选填，最多 1,000 字符',
   'Inbound direction': '收款方向',
   'Outbound direction': '出款方向',
   Source: '来源',
@@ -317,6 +378,18 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Created API': '创建了 API',
   'Updated API': '升级了 API',
   'API Name': 'API 名称',
+  'Query log': '查询日志',
+  'AML audit log title': '审计日志',
+  'AML query log section title': '查询日志',
+  'AML review log section title': '审核日志',
+  'AML review risk level before': '审核前风险等级',
+  'AML review risk level after': '审核后风险等级',
+  'Status before Review': '审核前风险等级',
+  'Status After Review': '审核后风险等级',
+  Note: '审核备注',
+  'AML reviewer': '审核人',
+  'AML review time': '审核时间',
+  'AML review remark': '审核备注',
   'Query Results': '查询结果',
   'Risk Traceability': '风险溯源',
   'Query Details': '查询详情',
@@ -342,7 +415,19 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'AML query records manual hint prefix': '了解更多AML查询规则，请查看',
   'Transaction Hash': '交易哈希',
   HIGH_RISK: 'HIGH_RISK',
-  'Risk Rating Criteria': '风险分级标准:',
+  'Risk Rating Criteria': '风险分级标准',
+  'Inflow AML Rules': '收款AML规则',
+  Reminder: '温馨提示',
+  'Auto rule inflow skip internal hint':
+    '跳过团队内部地址向该钱包中地址的转账',
+  'Auto rule inflow skip internal disable footnote':
+    '反选后，Cregis AML将筛查团队内部地址向该钱包中地址的转账，包括自动归集。每次筛查都将单独收费。',
+  'Auto rule inflow scope required': '必须选择至少1个WaaS项目或1个钱包',
+  'Auto rule inflow risk score dangerous hint':
+    '当风险评分大于等于【】时，将交易标记为危险',
+  'Auto rule inflow risk alert inapp hint':
+    '识别高风险交易后，Cregis AML将向指定团队成员发送应用内通知',
+  'Auto rule inflow risk alert email hint': '同时向接收人注册邮箱发送邮件提示',
   'Risk Alert Recipient': '风险警报接收人',
   'Expand All ({count})': '展开全部 ({count})',
   'Auto rule collection amount threshold': '收款金额 ≥ {amount} {symbol}',
@@ -442,6 +527,8 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Webhook secret created title': 'Webhook 已创建',
   'Webhook HMAC secret intro':
     'Cregis 使用 HMAC-SHA256 对每个 Webhook 请求进行签名。您可以使用下方的密钥验证收到的 Webhook 请求的真实性和完整性。',
+  'Webhook push mechanism note':
+    '推送机制说明：推送失败时，系统会自动重试3次。您也可以前往「推送记录」手动重推。',
   'Webhook push retry mechanism note': '推送失败将按策略自动重试；可在推送记录中手动重推。',
   'Push record detail': '推送详情',
   'Webhook endpoint URL label': '端点URL',
@@ -453,9 +540,6 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Request payload': '请求体',
   Repush: '重新推送',
   'Retry Push': '重推',
-  'Retrying push attempt label': '重试中（第 {current} 次）',
-  'Retrying push progress label': '重试中 {current}/{total}',
-  Retrying: '重试中',
   'Dangerous transaction': '危险交易',
   'Dangerous transaction webhook description':
     '在Cregis自动交易扫描发现危险交易时接收Webhook推送',
@@ -494,7 +578,8 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'deleted Webhook': '删除了 Webhook',
   'Address/Transaction Hash': '地址/交易哈希',
   Requester: '查询人',
-  'Service Provider': '服务商',
+  'Service Provider': '数据供应商',
+  'Data Provider': '数据供应商',
   'Auto rule service provider per query': ' / 查询',
   'Query Time': '查询时间',
   Time: '时间',
@@ -812,7 +897,6 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   // Default menu placeholders
   Title: '标题',
   'Title 2': '标题 2',
-  Label: '标签',
 
   // Data list toolbar & paginer
   Loading: '稍作等待',
@@ -843,6 +927,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   All: '全部',
   Active: '启用',
   Disable: '禁用',
+  'Disable and edit': '禁用并编辑',
   Inactive: '停用',
   Automatic: '自动',
   Income: '收入',
@@ -1094,6 +1179,15 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   Blacklist: '黑名单',
   'This address has been blacklisted. Transactions to this address are prohibited. We recommend rejecting this application.':
     '请注意，该地址已被列入黑名单,禁止向该地址发送交易，建议驳回申请。',
+  'Task detail receiver AML danger feedback':
+    '请注意，该地址被Cregis AML判定为危险地址，请谨慎交易',
+  'Task list status AML risk querying': '风控查询中',
+  'Task list status AML risk intercept': '风险拦截',
+  'Task address details sample remark': '示例：薪资发放',
+  'Task AML dangerous address confirm title': '检测到危险地址',
+  'Task AML dangerous address confirm message':
+    'Cregis AML检测到收款地址存在风险。为保障您的资产安全，请核实相关地址和交易信息，谨慎交易。',
+  'Task AML dangerous address confirm acknowledge': '我已知晓风险，继续操作',
   Danger: '危险',
   Safe: '安全',
   Suspicious: '可疑',

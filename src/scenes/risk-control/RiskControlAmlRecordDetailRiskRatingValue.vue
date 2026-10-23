@@ -8,15 +8,20 @@ import styles from './RiskControlAmlRecordDetailRiskRatingValue.module.css';
 const props = defineProps<{
   labelKey: string;
   customStyle: string | undefined;
+  queryFailed?: boolean;
+  queryException?: boolean;
 }>();
 
 const { ui } = useAppI18n();
 
 const riskLabel = computed(() => ui(props.labelKey));
-const riskVisual = computed(() => resolveAmlRiskRatingVisual(props.customStyle));
+const riskVisual = computed(() => {
+  if (props.queryException) return resolveAmlRiskRatingVisual('aml-suspicious');
+  return resolveAmlRiskRatingVisual(props.customStyle);
+});
 
 const riskToneClass = computed(() => {
-  if (props.labelKey.trim() === 'NA') return styles.riskToneNa;
+  if (props.queryFailed) return styles.riskToneNa;
   if (riskVisual.value.tone === 'danger') return styles.riskToneDanger;
   if (riskVisual.value.tone === 'warning') return styles.riskToneWarning;
   return styles.riskToneSuccess;
@@ -24,11 +29,16 @@ const riskToneClass = computed(() => {
 </script>
 
 <template>
-  <div :class="styles.host">
-    <span :class="[styles.riskIcon, riskToneClass]">
+  <div v-if="queryFailed" :class="[styles.host, styles.riskToneNa]">
+    <span :class="['typography-body-small-strong', styles.riskLabel]">
+      {{ riskLabel }}
+    </span>
+  </div>
+  <div v-else :class="[styles.host, riskToneClass]">
+    <span :class="styles.riskIcon">
       <EgIcon :name="riskVisual.iconName" size="sm" fit fill-tone="primary" />
     </span>
-    <span :class="['typography-body-small-strong', styles.riskLabel, riskToneClass]">
+    <span :class="['typography-body-small-strong', styles.riskLabel]">
       {{ riskLabel }}
     </span>
   </div>

@@ -1,5 +1,8 @@
 import type { TagStatus } from '@eds/desktop-components';
-import type { TasksListFieldStatusRow } from '../list-field/tasksListFieldStatusRowData';
+import {
+  isTaskAmlRiskListStatusLabel,
+  type TasksListFieldStatusRow,
+} from '../list-field/tasksListFieldStatusRowData';
 import type { DetailApprovalProgressStep } from './detailApprovalProgress.types';
 
 export type DetailHeadlineStatus = {
@@ -52,6 +55,13 @@ export function resolveDetailHeadlineStatus(
   translate: (key: string) => string,
   listStatus?: TasksListFieldStatusRow,
 ): DetailHeadlineStatus | null {
+  if (listStatus && isTaskAmlRiskListStatusLabel(listStatus.label)) {
+    return {
+      label: translate(listStatus.label),
+      status: listStatus.status,
+    };
+  }
+
   if (isProgressInFlight(steps)) {
     return null;
   }

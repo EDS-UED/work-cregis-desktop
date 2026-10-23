@@ -13,6 +13,7 @@ import {
 } from '../shared/detailAddressExpand';
 import { findDetailItemByKey } from '../shared/findDetailItemByKey';
 import { buildDetailApprovalProgressSteps } from '../shared/buildDetailApprovalProgressSteps';
+import { resolveDetailProgressStepBuildOptions } from '../shared/resolveDetailProgressStepBuildOptions';
 import DetailApprovalProgressAppend from '../shared/DetailApprovalProgressAppend.vue';
 import { resolveDetailHeadlineStatus } from '../shared/resolveDetailHeadlineStatus';
 import { usePopupShellLifecycle } from '../shared/usePopupShellLifecycle';
@@ -30,6 +31,11 @@ import { applyDetailAmlSearchSectionOverlay } from '../shared/applyDetailAmlSear
 import DetailAmlSearchToastHost from '../shared/DetailAmlSearchToastHost.vue';
 import remarkTriggerStyles from '../shared/remarkPopoverTrigger.module.css';
 import { sentRequestDetailShowsWithdrawToolbar } from '../tasksDataListPageData';
+import {
+  resolveDetailTaskAmlInterceptFromReceivers,
+  resolveDetailTaskAmlPassInterceptKind,
+} from '../shared/detailTaskAmlIntercept';
+import SigningAddressRiskAlertPopup from '../signing/SigningAddressRiskAlertPopup.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -43,6 +49,8 @@ const props = withDefaults(
   readOnly?: boolean;
   listStatusLabel?: string;
   listStatusKind?: TagStatus;
+  /** 已审批详情进度演示；缺省与 listStatusLabel 相同。 */
+  progressListStatusLabel?: string;
   recordMenuItem?: string;
   showWithdrawAction?: boolean;
   onRemarkBeforeOpen?: () => void | Promise<void>;
@@ -58,6 +66,7 @@ const emit = defineEmits<{
   'update:open': [value: boolean];
   'popup-closed': [];
   'shell-opened': [];
+  'address-risk-alert-open-change': [open: boolean];
   prev: [];
   next: [];
   passConfirm: [];
@@ -92,6 +101,51 @@ const signingThresholdDisplay = computed(() =>
   formatGroupedThresholdString(props.detail?.signingThreshold ?? ''),
 );
 
+const TASK_AML_DANGER_CONFIRM_WIDTH = 365;
+
+const amlIntercept = computed(() =>
+  props.detail
+    ? resolveDetailTaskAmlInterceptFromReceivers(props.detail.receivers, ui)
+    : resolveDetailTaskAmlInterceptFromReceivers([], ui),
+);
+
+const addressRiskAlertOpen = ref(false);
+const riskAcknowledgedDetailId = ref<string | null>(null);
+let pendingPassAfterRiskAck: (() => void) | null = null;
+
+const passInterceptKind = computed(() =>
+  resolveDetailTaskAmlPassInterceptKind(
+    amlIntercept.value,
+    props.detail?.id === riskAcknowledgedDetailId.value,
+  ),
+);
+
+function runPassWithRiskGate(run: () => void) {
+  if (passInterceptKind.value !== 'blacklist-dialog') {
+    run();
+    return;
+  }
+  pendingPassAfterRiskAck = run;
+  addressRiskAlertOpen.value = true;
+}
+
+function onAddressRiskAlertContinue() {
+  riskAcknowledgedDetailId.value = props.detail?.id ?? null;
+  const run = pendingPassAfterRiskAck;
+  pendingPassAfterRiskAck = null;
+  run?.();
+}
+
+function onAddressRiskAlertReject() {
+  pendingPassAfterRiskAck = null;
+  void onRejectClick();
+}
+
+function onDangerConfirmPass(run: () => void) {
+  riskAcknowledgedDetailId.value = props.detail?.id ?? null;
+  run();
+}
+
 const detailHostRef = ref<HTMLElement | null>(null);
 const expandedAddressKeys = ref(new Set<string>());
 
@@ -107,9 +161,16 @@ const {
   ui,
 });
 
+watch(addressRiskAlertOpen, (open) => {
+  emit('address-risk-alert-open-change', open);
+});
+
 watch(
   () => props.detail?.id,
   () => {
+    riskAcknowledgedDetailId.value = null;
+    pendingPassAfterRiskAck = null;
+    addressRiskAlertOpen.value = false;
     expandedAddressKeys.value = new Set();
   },
 );
@@ -132,12 +193,15 @@ const progressSteps = computed(() => {
     ? `${ui('Signing threshold')}: ${signingThresholdDisplay.value}`
     : undefined;
 
-  return buildDetailApprovalProgressSteps(props.detail, {
-    thresholdSubtitle,
-    viewMode: props.readOnly ? 'record' : 'workflow',
-    listStatusLabel: props.readOnly ? props.listStatusLabel : undefined,
-    applyFirstApprovalNodePendingDemo: !props.readOnly,
-  });
+  return buildDetailApprovalProgressSteps(
+    props.detail,
+    resolveDetailProgressStepBuildOptions({
+      readOnly: props.readOnly,
+      listStatusLabel: props.listStatusLabel,
+      progressListStatusLabel: props.progressListStatusLabel,
+      thresholdSubtitle,
+    }),
+  );
 });
 
 const headlineStatus = computed(() => {
@@ -192,13 +256,19 @@ async function onRejectClick() {
   }
 }
 
-async function onPassClick() {
+async function executePassClick() {
   try {
     await props.onRemarkBeforeOpen?.();
     emit('passConfirm');
   } catch {
     // prepareDetailRemarkOpen rejected (processed / disabled).
   }
+}
+
+function onPassClick() {
+  runPassWithRiskGate(() => {
+    void executePassClick();
+  });
 }
 
 function onWithdrawConfirm() {
@@ -285,7 +355,39 @@ function onDetailClose() {
                 {{ ui('Reject') }}
               </EgButton>
 
+              <EgConfirmPopover
+                v-if="passInterceptKind === 'danger-popover'"
+                :title="ui('Task AML dangerous address confirm title')"
+                :message="ui('Task AML dangerous address confirm message')"
+                :confirm-label="ui('Task AML dangerous address confirm acknowledge')"
+                :close-label="ui('Close')"
+                placement="top"
+                height-mode="adaptive"
+                :width="TASK_AML_DANGER_CONFIRM_WIDTH"
+                boundary-selector=".eds-popup"
+                @confirm="onDangerConfirmPass(() => void executePassClick())"
+              >
+                <template #trigger="{ onClick, active }">
+                  <span
+                    :class="[
+                      remarkTriggerStyles.remarkTrigger,
+                      active && remarkTriggerStyles.remarkTriggerPassPressed,
+                    ]"
+                  >
+                    <EgButton
+                      tone="decor"
+                      variant="solid"
+                      size="md"
+                      :aria-expanded="active"
+                      @click.stop="onClick"
+                    >
+                      {{ ui('Pass') }}
+                    </EgButton>
+                  </span>
+                </template>
+              </EgConfirmPopover>
               <EgButton
+                v-else
                 tone="decor"
                 variant="solid"
                 size="md"
@@ -326,6 +428,13 @@ function onDetailClose() {
       :keep-mounted="amlToastKeepMounted"
       :motion-active="amlToastMotionActive"
       :text="amlToastText"
+    />
+    <SigningAddressRiskAlertPopup
+      v-model:open="addressRiskAlertOpen"
+      :title-key="amlIntercept.alertTitleKey"
+      :message-key="amlIntercept.alertMessageKey"
+      @continue="onAddressRiskAlertContinue"
+      @reject="onAddressRiskAlertReject"
     />
     </div>
   </EgDetailPopup>

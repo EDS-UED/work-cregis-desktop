@@ -1,0 +1,55 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.listRegion {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.addressCell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  width: 100%;
+  min-width: 0;
+}
+
+.addressCell :global(.eds-list-field-overflow-text) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.addressCell :global(.eds-crypto-address-tags) {
+  flex: 0 0 auto;
+}
+
+.cellAlignEnd {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+}
+
+.cellAlignEnd :global(.eds-list-field-overflow-text),
+.cellAlignEnd :global(.eds-text-overflow-tooltip-host) {
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+  text-align: right;
+}
