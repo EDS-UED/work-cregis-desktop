@@ -4,7 +4,7 @@
  * 长时 onBeforeOpen（如批选 AML 二次确认）会触发 prepDeferredLoading → EgTooltip disabled；
  * 须在清 loading 后 nextTick 再 openPanel，否则 openNow 因 disabled 直接 return。
  */
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
 import {
   EgTooltip,
   type TooltipAlign,
@@ -16,6 +16,11 @@ import type {
   PopoverHeightMode,
   PopoverWidthMode,
 } from '@eds/desktop-components/molecules/popovers/Popover.vue';
+import {
+  batchAmlGateAnchoredPrepSuspendRevision,
+  isBatchAmlGateSuspendingAnchoredPopoverPrepLoading,
+  registerAnchoredPopoverPrepDeferredLoadingClear,
+} from '@/scenes/tasks/shared/batchAmlDangerGateChrome';
 
 /** 准备开层超过该时长仍未完成时，才展示 Loading（网络/系统慢响应）。 */
 const PREP_LOADING_DELAY_MS = 500;
@@ -65,8 +70,41 @@ const anchorRef = ref<{ toggle: () => void; close: () => void; openPanel: () => 
 const expanded = ref(false);
 const prepBusy = ref(false);
 const prepDeferredLoading = ref(false);
+const prepLoadingTimerRef = ref<ReturnType<typeof setTimeout> | undefined>();
 
-const showLoading = computed(() => props.loading || prepDeferredLoading.value);
+function clearPrepDeferredLoadingState() {
+  if (prepLoadingTimerRef.value !== undefined) {
+    clearTimeout(prepLoadingTimerRef.value);
+    prepLoadingTimerRef.value = undefined;
+  }
+  prepDeferredLoading.value = false;
+}
+
+const unregisterPrepClear = registerAnchoredPopoverPrepDeferredLoadingClear(
+  clearPrepDeferredLoadingState,
+);
+onBeforeUnmount(() => {
+  unregisterPrepClear();
+});
+
+const showLoading = computed(() => {
+  batchAmlGateAnchoredPrepSuspendRevision.value;
+  if (isBatchAmlGateSuspendingAnchoredPopoverPrepLoading()) {
+    return props.loading;
+  }
+  return props.loading || prepDeferredLoading.value;
+});
+
+/** AML gate 期间 beforeOpen 未结束：底栏触发器须保持 BatchBar actionTextActive（点按态）。 */
+const showTriggerActive = computed(() => {
+  batchAmlGateAnchoredPrepSuspendRevision.value;
+  if (expanded.value) {
+    return true;
+  }
+  return (
+    prepBusy.value && isBatchAmlGateSuspendingAnchoredPopoverPrepLoading()
+  );
+});
 
 function closePopover() {
   anchorRef.value?.close();
@@ -88,10 +126,13 @@ async function onTriggerClick() {
   }
 
   prepBusy.value = true;
-  let prepLoadingTimer: ReturnType<typeof setTimeout> | undefined;
 
   try {
-    prepLoadingTimer = setTimeout(() => {
+    prepLoadingTimerRef.value = setTimeout(() => {
+      prepLoadingTimerRef.value = undefined;
+      if (isBatchAmlGateSuspendingAnchoredPopoverPrepLoading()) {
+        return;
+      }
       prepDeferredLoading.value = true;
     }, PREP_LOADING_DELAY_MS);
 
@@ -99,10 +140,7 @@ async function onTriggerClick() {
   } catch {
     return;
   } finally {
-    if (prepLoadingTimer !== undefined) {
-      clearTimeout(prepLoadingTimer);
-    }
-    prepDeferredLoading.value = false;
+    clearPrepDeferredLoadingState();
     prepBusy.value = false;
   }
 
@@ -143,7 +181,7 @@ defineExpose({
   >
     <slot
       name="trigger"
-      :active="expanded"
+      :active="showTriggerActive"
       :loading="showLoading"
       :on-click="onTriggerClick"
     />

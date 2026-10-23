@@ -167,14 +167,6 @@ const props = defineProps<{
 
 const { ui, locale } = useAppI18n();
 
-const {
-  dangerConfirmActivateToken,
-  dangerConfirmHostVisible,
-  requestDangerAcknowledgementForRows,
-  onDangerConfirmAcknowledged,
-  onDangerConfirmDismissed,
-} = useTasksBatchAmlDangerGate(ui);
-
 /** 模块菜单英文 key（兼容 ToolBar / 菜单展示文案反向解析）。 */
 const menuItem = computed((): TasksDataListMenuItemLabel | string => {
   const resolved = resolveTasksDataListMenuItem(props.toolbarTitle, locale.value);
@@ -361,6 +353,14 @@ function resolveBatchAmlDangerActionAnchorEl(): HTMLElement | null {
     ui('Sign'),
   );
 }
+
+const {
+  dangerConfirmActivateToken,
+  dangerConfirmHostVisible,
+  requestDangerAcknowledgementForRows,
+  onDangerConfirmAcknowledged,
+  onDangerConfirmDismissed,
+} = useTasksBatchAmlDangerGate(ui, resolveBatchAmlDangerActionAnchorEl);
 
 watch(dangerConfirmHostVisible, (open) => {
   setBatchAmlGatePreviewOpen(open);
@@ -573,7 +573,11 @@ async function handleBatchLabelBeforeOpen(
     if (key === 'pass') {
       syncBatchAmlDangerActionAnchorFromDom();
       try {
-        await requestDangerAcknowledgementForRows(rows, menuItem.value);
+        await requestDangerAcknowledgementForRows(
+          rows,
+          menuItem.value,
+          'label-popover-before-open',
+        );
       } catch (error) {
         if (isBatchAmlDangerGateCancelled(error)) {
           throw new Error('batch-before-open-blocked');
@@ -608,8 +612,14 @@ async function handleBatchAction(
       signingBatchFlow.confirmBatchRejectRemark();
     } else if (key === 'pass') {
       syncBatchAmlDangerActionAnchorFromDom();
+      const prepAnchor = resolveBatchAmlDangerActionAnchorEl();
       try {
-        await requestDangerAcknowledgementForRows(rows, menuItem.value);
+        await requestDangerAcknowledgementForRows(
+          rows,
+          menuItem.value,
+          'direct-batch-action',
+          prepAnchor,
+        );
       } catch {
         return { preserveSelection: true };
       }

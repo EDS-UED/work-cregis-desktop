@@ -19,8 +19,11 @@ if (!hostSource.includes('data-eds-trigger-metrics')) {
   fail('TasksBatchAmlDangerConfirmHost 须在定位触发器上标记 data-eds-trigger-metrics');
 }
 
-if (!read('src/scenes/tasks/shared/batchAmlDangerGateChrome.module.css').includes('--event-focus')) {
-  fail('batchAmlDangerGateChrome 须在 AML 等待时展示 BatchBar event-focus 底');
+if (
+  !read('src/scenes/tasks/shared/batchAmlDangerGateChrome.module.css').includes(':global(.app-preview[data-tasks-batch-aml-gate-open])')
+  || !read('src/dev/shell-debug/shim/AnchoredPopover.vue').includes('showTriggerActive')
+) {
+  fail('AML gate 须 global preview 选择器 + AnchoredPopover showTriggerActive 点按态');
 }
 
 if (!hostSource.includes('registerPopoverTrigger(onClick)')) {
@@ -43,6 +46,13 @@ if (!read('src/scenes/tasks/shared/useTasksBatchAmlDangerGate.ts').includes('syn
   fail('useTasksBatchAmlDangerGate 须在 gate 开启时同步 batch AML chrome');
 }
 
+if (
+  !read('src/scenes/tasks/shared/batchAmlDangerGateTiming.ts').includes('waitForBatchAmlGateAfterPrepLoading')
+  || !read('src/scenes/tasks/shared/batchAmlDangerGateTiming.ts').includes('BATCH_AML_GATE_LOADING_VISIBLE_MS')
+) {
+  fail('batchAmlDangerGateTiming 须在 prep 转圈结束后再开 AML');
+}
+
 if (!read('src/scenes/tasks/shared/TasksBatchAmlDangerConfirmHost.vue').includes('pendingOpenWhenTriggerReady')) {
   fail('TasksBatchAmlDangerConfirmHost 须在 trigger register 后再 open AML popover');
 }
@@ -57,6 +67,20 @@ if (!read('src/scenes/tasks/shared/batchAmlDangerGateChrome.module.css').include
 
 if (!read('src/scenes/tasks/shared/batchAmlDangerGateChrome.ts').includes('setBatchAmlGateExceptAnchor')) {
   fail('batchAmlDangerGateChrome 须登记 closeAll except 锚点以保留批处理 Popover 会话');
+}
+
+if (
+  !read('src/scenes/tasks/shared/batchAmlDangerGateChrome.ts').includes(
+    'batchAmlGateAnchoredPrepSuspendRevision',
+  )
+  || !read('src/scenes/tasks/shared/batchAmlDangerGateChrome.ts').includes(
+    'clearAllAnchoredPopoverPrepDeferredLoading',
+  )
+  || !read('src/dev/shell-debug/shim/AnchoredPopover.vue').includes(
+    'registerAnchoredPopoverPrepDeferredLoadingClear',
+  )
+) {
+  fail('AML gate 须 reactive 暂停并强制清除 AnchoredPopover prepDeferredLoading');
 }
 
 if (!read('src/dev/shell-debug/shim/anchoredTooltipManager.ts').includes('resolveBatchAmlGateExceptAnchor')) {
