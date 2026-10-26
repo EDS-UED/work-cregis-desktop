@@ -71,15 +71,9 @@
   color: var(--text-base-secondary);
 }
 
-/** 分级阈值 · 对齐 TransactionRecords walletHeaderTooltipCode + eds-code-text */
+/** 分级阈值数字 · footnote strong · primary 100% · 左右 spacing-05 */
 .scoreMetaSubtextThreshold {
-  display: inline-block;
-  vertical-align: baseline;
-  box-sizing: border-box;
-  margin-inline: var(--spacing-1);
-  padding: var(--spacing-025) var(--spacing-1);
-  border-radius: var(--radius-xs);
-  background: var(--material-card-moderate);
+  margin-inline: var(--spacing-05);
   color: var(--text-base-primary);
   font-size: var(--eds-footnote-size);
   font-weight: var(--eds-footnote-strong-weight);

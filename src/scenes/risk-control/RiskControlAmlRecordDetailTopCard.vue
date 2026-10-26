@@ -158,7 +158,7 @@ const showRiskClassificationLine = computed(() => riskClassificationSegments.val
             {{ riskClassificationSegments.rulePrefix }}
           </span>
           <span>{{ riskClassificationSegments.beforeThreshold }}</span>
-          <span :class="['eds-code-text', styles.scoreMetaSubtextThreshold]">
+          <span :class="styles.scoreMetaSubtextThreshold">
             {{ riskClassificationSegments.threshold }}
           </span>
           <span>{{ riskClassificationSegments.afterThreshold }}</span>
