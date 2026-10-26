@@ -4,6 +4,11 @@ export type AppLocale = 'zh-CN' | 'zh-TW' | 'en';
 
 /** 账户设置 Preference 持久化；Shell Debug 切换不写 storage。 */
 const LOCALE_USER_PREF_KEY = 'cregis-locale-user-pref-v2';
+
+export function isPagesPreviewBuild(): boolean {
+  return import.meta.env.VITE_PAGES_PREVIEW === 'true';
+}
+
 /** @deprecated Shell Debug / 旧版 Preference 写入；启动时清除，默认简体。 */
 const DEPRECATED_LOCALE_KEYS = ['cregis-locale-pref', 'cregis-locale-user-pref'] as const;
 

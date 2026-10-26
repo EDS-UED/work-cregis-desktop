@@ -10,6 +10,7 @@ const env = {
   ...process.env,
   VITE_BASE_PATH: basePath,
   VITE_SHELL_DEBUG: process.env.VITE_SHELL_DEBUG ?? 'true',
+  VITE_PAGES_PREVIEW: process.env.VITE_PAGES_PREVIEW ?? 'true',
 };
 
 function run(command, args) {
