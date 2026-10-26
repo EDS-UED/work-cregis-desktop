@@ -22,6 +22,10 @@
   composes: fieldBlockContentOptionCards from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
 }
 
+.fieldBlockContent.fieldBlockContentOptionCards {
+  margin-top: 0;
+}
+
 .embeddedPanelBody {
   display: flex;
   flex-direction: column;

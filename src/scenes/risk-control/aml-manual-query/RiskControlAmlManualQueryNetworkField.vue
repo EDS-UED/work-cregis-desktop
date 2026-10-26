@@ -83,7 +83,7 @@ function selectNetwork(nextNetwork: string, close: () => void) {
           box-type="image-text"
           :label="option"
           :symbol-icon="resolveAmlQueryNetworkCryptoName(option)"
-          :selected="network === option"
+          :focused="network === option"
           @click="selectNetwork(option, close)"
         />
       </EgFlotationMenu>

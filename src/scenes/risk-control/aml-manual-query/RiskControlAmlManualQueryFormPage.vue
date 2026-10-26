@@ -191,7 +191,7 @@ defineExpose({
                     :key="option.id"
                     box-type="text"
                     :label="ui(option.labelKey)"
-                    :selected="directionId === option.id"
+                    :focused="directionId === option.id"
                     @click="selectDirection(option.id, close)"
                   />
                 </EgFlotationMenu>

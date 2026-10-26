@@ -108,7 +108,7 @@ function onSubmit() {
                         :key="option.id"
                         box-type="text"
                         :label="ui(option.labelKey)"
-                        :selected="queryTypeId === option.id"
+                        :focused="queryTypeId === option.id"
                         @click="selectType(option.id)"
                       />
                     </EgFlotationMenu>
@@ -150,7 +150,7 @@ function onSubmit() {
                         :key="option"
                         box-type="text"
                         :label="option"
-                        :selected="network === option"
+                        :focused="network === option"
                         @click="selectNetwork(option)"
                       />
                     </EgFlotationMenu>
@@ -190,7 +190,7 @@ function onSubmit() {
                         :key="option.id"
                         box-type="text"
                         :label="option.label"
-                        :selected="providerId === option.id"
+                        :focused="providerId === option.id"
                         @click="selectProvider(option.id)"
                       />
                     </EgFlotationMenu>
