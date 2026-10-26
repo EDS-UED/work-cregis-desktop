@@ -10,10 +10,7 @@ import {
   tasksDataListShowsAddressBlacklist,
   tasksDataListShowsAmlRiskListStatusDemo,
 } from '../tasksDataListPageData';
-import {
-  TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX,
-  TASK_AML_RISK_QUERY_DEMO_ROW_INDEX,
-} from './tasksListFieldStatusRowData';
+import { TASK_AML_RISK_QUERY_DEMO_ROW_INDEX } from './tasksListFieldStatusRowData';
 import {
   MAX_CURRENCY_SIDE_ADDRESSES,
   currencyAddressTagsEnabledKey,
@@ -427,7 +424,6 @@ function resolveCurrencyDemoRowsWithAddressTags(menuItem?: string): Set<number> 
   }
   if (tasksDataListShowsAmlRiskListStatusDemo(menuItem)) {
     rows.add(TASK_AML_RISK_QUERY_DEMO_ROW_INDEX);
-    rows.add(TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX);
   }
   return rows;
 }

@@ -329,6 +329,11 @@ rowIndex=2：`titleTextSlot`+OverflowText，Tag 紧跟。
 
 仅 `dev/shell-debug/**`。Inspect R1–R5：`inspectNamingRules.ts`；改后 `verify-shell-debug-inspect-*.mjs`。
 
+**Shell Debug QA 场景 `label`（`scenarios/qa/**/pack.ts`）**：
+- **一级场景**：`模块（简述）` 全角括号、无 `·`（如 `查询记录（列表基线）`、`自动规则（出款详情）`）。
+- **二级/三级路径**：`模块 · 路径（细节）` — 模块与路径段用半角间隔 `·`；**仅最末段**用全角括号包裹变体/细节（如 `查询记录 · 重新查询（放行/驳回后变更状态）`、`查询记录 · 异常已处置（放行）`、`自动规则 · 编辑（启用中拦截）`）。**禁**连续嵌套全角括号（如 `查询记录（异常已处置（放行））`）。
+- 非 QA 的 scenario pack（详情演示等）可沿用既有 `·` 命名，除非用户要求统一。
+
 ### 7.6 DataList 批选
 
 业务只控 selectMode/选中；**禁**改 EDS 动画/DOM。勾选列常驻；300ms `SELECT_COLUMN_ANIM_MS`；settle 320ms；`data-eds-data-list-layout-animating`。禁 v-if 卸列。退出→`setSelectMode(false)`。

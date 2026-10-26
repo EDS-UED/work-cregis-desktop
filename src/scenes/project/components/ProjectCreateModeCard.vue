@@ -22,7 +22,7 @@ const props = withDefaults(
     titleDescriptionLayout?: 'stack' | 'inline';
     /** grouped = 多项共用一个外容器，行背景透明。 */
     surface?: 'standalone' | 'grouped';
-    /** grouped 行内边距：compact = 上下 spacing-1、左右 spacing-2、gap spacing-2。 */
+    /** grouped 行内边距：compact 单行上下 spacing-1；有副文案时 spacing-1-5；左右 spacing-2。 */
     groupedRowSpacing?: 'default' | 'compact';
     /** grouped compact 行圆角 radius-sm。 */
     groupedRowRounded?: boolean;
@@ -38,6 +38,9 @@ const props = withDefaults(
     selectionControl?: 'radio' | 'checkbox';
     /** 未选中行：fill = 浅底；outline = 描边无底（选中/ hover 仍走默认）。 */
     idleSurface?: 'fill' | 'outline';
+    /** optionList = 配置表单选项行（material-hide + 紧凑 padding）。 */
+    rowVariant?: 'card' | 'optionList';
+    disabled?: boolean;
   }>(),
   {
     contentLayout: 'row',
@@ -53,6 +56,8 @@ const props = withDefaults(
     showRadio: true,
     selectionControl: 'radio',
     idleSurface: 'fill',
+    rowVariant: 'card',
+    disabled: false,
   },
 );
 
@@ -72,6 +77,10 @@ const rowRole = computed(() => {
 
 const hasDefaultSlot = computed(() => Boolean(slots.default));
 
+const hasSecondaryLine = computed(
+  () => Boolean(props.description?.trim()) || Boolean(slots.description),
+);
+
 const useEmbeddedPanel = computed(
   () =>
     props.expandStyle === 'embeddedPanel'
@@ -88,6 +97,8 @@ const useLegacyBody = computed(
 
 const itemRowClass = computed(() => [
   styles.itemRow,
+  props.rowVariant === 'optionList' && styles.itemRowOptionList,
+  props.disabled && styles.itemRowDisabled,
   props.idleSurface === 'outline' && styles.itemRowOutline,
   props.contentLayout === 'stack'
     && props.stackPreset === 'default'
@@ -110,8 +121,15 @@ const optionClass = computed(() => [
     && props.groupedRowRounded
     && styles.optionGroupedCompactRounded,
   props.surface === 'grouped'
+    && props.groupedRowSpacing === 'compact'
+    && hasSecondaryLine.value
+    && styles.optionGroupedCompactMultiLine,
+  props.surface === 'grouped'
     && props.groupedHighlightSelectedRow
     && styles.optionGroupedHighlightSelectedRow,
+  props.contentLayout === 'stack'
+    && props.stackPreset === 'aml-direction'
+    && styles.optionAmlDirectionHost,
 ]);
 
 const itemValueStackClass = computed(() => [
@@ -134,6 +152,7 @@ const emit = defineEmits<{
 }>();
 
 function onRowActivate(event: MouseEvent | KeyboardEvent) {
+  if (props.disabled) return;
   const wasSelected = props.selected;
   emit('select');
   if (wasSelected && event.currentTarget instanceof HTMLElement) {
@@ -149,7 +168,8 @@ function onRowActivate(event: MouseEvent | KeyboardEvent) {
         <div
           :class="itemRowClass"
           :role="rowRole"
-          tabindex="0"
+          :tabindex="disabled ? -1 : 0"
+          :aria-disabled="disabled || undefined"
           :aria-checked="rowRole !== 'button' ? selected : undefined"
           @click="onRowActivate"
           @keydown.enter.prevent="onRowActivate"
@@ -159,6 +179,7 @@ function onRowActivate(event: MouseEvent | KeyboardEvent) {
             v-if="showCheckboxControl"
             :class="styles.radio"
             :model-value="selected"
+            :disabled="disabled"
             tabindex="-1"
             aria-hidden="true"
           />
@@ -194,7 +215,8 @@ function onRowActivate(event: MouseEvent | KeyboardEvent) {
       <div
         :class="itemRowClass"
         :role="rowRole"
-        tabindex="0"
+        :tabindex="disabled ? -1 : 0"
+        :aria-disabled="disabled || undefined"
         :aria-checked="rowRole !== 'button' ? selected : undefined"
         @click="onRowActivate"
         @keydown.enter.prevent="onRowActivate"
@@ -204,6 +226,7 @@ function onRowActivate(event: MouseEvent | KeyboardEvent) {
           v-if="showCheckboxControl"
           :class="styles.radio"
           :model-value="selected"
+          :disabled="disabled"
           tabindex="-1"
           aria-hidden="true"
         />

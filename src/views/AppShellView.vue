@@ -21,7 +21,10 @@ import {
   type CregisModuleMenuBusinessTitle,
 } from '@/presets/module-menu/businessModuleTitles';
 import { resolveFirstSubitemForBranchLabel } from '@/presets/module-menu/resolveModuleMenuBranchDefaultItem';
-import { syncModuleMenuItemFocus } from '@/presets/module-menu/syncModuleMenuItemFocus';
+import {
+  syncModuleMenuBranchSubitemFocus,
+  syncModuleMenuItemFocus,
+} from '@/presets/module-menu/syncModuleMenuItemFocus';
 import { resolveEnglishUiText } from '@/i18n/translateUiText';
 import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
 import {
@@ -62,6 +65,7 @@ import {
   isRiskControlDataListMenuItem,
   isRiskControlModuleMenuItem,
 } from '@/scenes/risk-control/riskControlMenuData';
+import { useRiskControlModuleMenuGroups } from '@/scenes/risk-control/useRiskControlModuleMenuGroups';
 import ManageModuleShell from '@/scenes/manage/ManageModuleShell.vue';
 import {
   DEFAULT_MANAGE_MENU_ITEM,
@@ -152,6 +156,7 @@ const showRiskControlDataList = computed(
 const tasksModuleMenuGroups = useTasksModuleMenuGroups();
 const waasModuleMenuGroups = useWaasModuleMenuGroups();
 const manageModuleMenuGroups = useManageModuleMenuGroups();
+const riskControlModuleMenuGroups = useRiskControlModuleMenuGroups();
 const {
   titleFlotationItems: paymentEngineTitleFlotationItems,
   titleFlotationSelectedIndex: paymentEngineTitleFlotationSelectedIndex,
@@ -165,7 +170,7 @@ function resolveShellModuleMenuGroups(): ModuleMenuPresetGroup[] | undefined {
   if (title === 'Tasks') return tasksModuleMenuGroups.value;
   if (isWaasModuleTitle(title)) return waasModuleMenuGroups.value;
   if (title === 'Manage') return manageModuleMenuGroups.value;
-  if (title === 'Risk Control') return getCregisModuleMenuGroups('Risk Control');
+  if (title === 'Risk Control') return riskControlModuleMenuGroups.value;
   if (isPaymentEngineModuleTitle(title)) {
     return getCregisModuleMenuGroups('Payment Engine');
   }
@@ -308,7 +313,7 @@ function onModuleMenuItemSelect(label: string) {
     label,
   );
   if (branchDefault) {
-    syncModuleMenuItemFocus(translateModuleMenu(branchDefault));
+    syncModuleMenuBranchSubitemFocus(label, branchDefault, translateModuleMenu);
     onModuleMenuItemSelect(branchDefault);
     return;
   }

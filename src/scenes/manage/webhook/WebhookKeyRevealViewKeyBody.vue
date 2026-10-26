@@ -77,5 +77,3 @@ const displaySecret = computed(() => props.record?.secretKey ?? '');
         </span>
       </div>
     </div>
-  </div>
-</template>

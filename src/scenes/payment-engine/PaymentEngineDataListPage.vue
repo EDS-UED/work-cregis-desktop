@@ -143,6 +143,7 @@ import { buildWaasStandardRecordRows } from '@/scenes/waas-project/waasStandardR
 import type { PaymentEngineRecordSortTarget } from './paymentEngineRecordSort';
 import { isManageWebhookPushRecordsMenuItem } from '@/scenes/manage/manageMenuData';
 import { webhookFlowKey } from '@/scenes/manage/webhook/webhookFlowContext';
+import { teamApiFlowKey } from '@/scenes/manage/team-api/teamApiFlowContext';
 import { riskControlAutoRulePageStackKey } from '@/scenes/risk-control/auto-rule/riskControlAutoRulePageStackContext';
 import { riskControlAmlManualQueryPageStackKey } from '@/scenes/risk-control/aml-manual-query/riskControlAmlManualQueryPageStackContext';
 import { riskControlBlacklistPageStackKey } from '@/scenes/risk-control/blacklist/riskControlBlacklistPageStackContext';
@@ -172,6 +173,7 @@ const props = withDefaults(
 );
 
 const webhookFlow = inject(webhookFlowKey, null);
+const teamApiFlow = inject(teamApiFlowKey, null);
 const autoRulePageStack = inject(riskControlAutoRulePageStackKey, null);
 const amlManualQueryPageStack = inject(riskControlAmlManualQueryPageStackKey, null);
 const blacklistPageStack = inject(riskControlBlacklistPageStackKey, null);
@@ -633,12 +635,17 @@ const usesBlacklistModulePageStack = computed(
   () => props.moduleLayoutPageStack && Boolean(blacklistPageStack),
 );
 
+const usesTeamApiModulePageStack = computed(
+  () => props.moduleLayoutPageStack && Boolean(teamApiFlow),
+);
+
 const usesModuleConfigFormPageStack = computed(
   () =>
     usesWebhookModulePageStack.value
     || usesAutoRuleModulePageStack.value
     || usesAmlManualQueryModulePageStack.value
-    || usesBlacklistModulePageStack.value,
+    || usesBlacklistModulePageStack.value
+    || usesTeamApiModulePageStack.value,
 );
 
 const moduleConfigFormOpen = computed(
@@ -646,7 +653,8 @@ const moduleConfigFormOpen = computed(
     Boolean(webhookFlow?.configFormOpen.value)
     || Boolean(autoRulePageStack?.configFormOpen.value)
     || Boolean(amlManualQueryPageStack?.configFormOpen.value)
-    || Boolean(blacklistPageStack?.configFormOpen.value),
+    || Boolean(blacklistPageStack?.configFormOpen.value)
+    || Boolean(teamApiFlow?.configFormOpen.value),
 );
 
 const usesIntegratedLayoutPageStack = computed(
@@ -841,6 +849,9 @@ function onIntegratedLayoutPageSettled() {
   if (blacklistPageStack && !blacklistPageStack.configFormOpen.value) {
     blacklistPageStack.onConfigFormPageSettled();
   }
+  if (teamApiFlow && !teamApiFlow.configFormOpen.value) {
+    teamApiFlow.onConfigFormPageSettled();
+  }
 }
 
 watch(
@@ -873,6 +884,9 @@ watch(
     }
     if (blacklistPageStack?.configFormOpen.value) {
       blacklistPageStack.closeConfigForm();
+    }
+    if (teamApiFlow?.configFormOpen.value) {
+      teamApiFlow.closeConfigForm();
     }
   },
 );

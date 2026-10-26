@@ -362,44 +362,48 @@ function buildRows(menuItem: string, count: number) {
                 role="group"
                 :aria-label="ui('Auto rule create direction hint')"
               >
-                <ProjectCreateModeCard
-                  content-layout="stack"
-                  stack-preset="aml-direction"
-                  description-typography="footnote-primary"
-                  :show-radio="false"
-                  :title="ui('Inflow')"
-                  :description="ui('Screen inflow funds')"
-                  @select="onAutoRuleDirectionSelect('inflow')"
-                >
-                  <template #media>
-                    <div
-                      class="networkPickerAutoRuleDirectionIcon networkPickerAutoRuleDirectionIconInflow"
-                    >
-                      <div class="networkPickerAutoRuleDirectionIconGlyph">
-                        <EgIcon name="eds-arrow-entry" fit />
+                <div class="networkPickerAutoRuleDirectionCardCell">
+                  <ProjectCreateModeCard
+                    content-layout="stack"
+                    stack-preset="aml-direction"
+                    description-typography="footnote-primary"
+                    :show-radio="false"
+                    :title="ui('Inflow')"
+                    :description="ui('Screen inflow funds')"
+                    @select="onAutoRuleDirectionSelect('inflow')"
+                  >
+                    <template #media>
+                      <div
+                        class="networkPickerAutoRuleDirectionIcon networkPickerAutoRuleDirectionIconInflow"
+                      >
+                        <div class="networkPickerAutoRuleDirectionIconGlyph">
+                          <EgIcon name="eds-arrow-entry" fit />
+                        </div>
                       </div>
-                    </div>
-                  </template>
-                </ProjectCreateModeCard>
-                <ProjectCreateModeCard
-                  content-layout="stack"
-                  stack-preset="aml-direction"
-                  description-typography="footnote-primary"
-                  :show-radio="false"
-                  :title="ui('Outflow')"
-                  :description="ui('Screen the receiving address before withdrawal')"
-                  @select="onAutoRuleDirectionSelect('outflow')"
-                >
-                  <template #media>
-                    <div
-                      class="networkPickerAutoRuleDirectionIcon networkPickerAutoRuleDirectionIconOutflow"
-                    >
-                      <div class="networkPickerAutoRuleDirectionIconGlyph">
-                        <EgIcon name="eds-arrow-outflow" fit />
+                    </template>
+                  </ProjectCreateModeCard>
+                </div>
+                <div class="networkPickerAutoRuleDirectionCardCell">
+                  <ProjectCreateModeCard
+                    content-layout="stack"
+                    stack-preset="aml-direction"
+                    description-typography="footnote-primary"
+                    :show-radio="false"
+                    :title="ui('Outflow')"
+                    :description="ui('Screen the receiving address before withdrawal')"
+                    @select="onAutoRuleDirectionSelect('outflow')"
+                  >
+                    <template #media>
+                      <div
+                        class="networkPickerAutoRuleDirectionIcon networkPickerAutoRuleDirectionIconOutflow"
+                      >
+                        <div class="networkPickerAutoRuleDirectionIconGlyph">
+                          <EgIcon name="eds-arrow-outflow" fit />
+                        </div>
                       </div>
-                    </div>
-                  </template>
-                </ProjectCreateModeCard>
+                    </template>
+                  </ProjectCreateModeCard>
+                </div>
               </div>
             </div>
           </template>

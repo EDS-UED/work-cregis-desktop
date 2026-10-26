@@ -1,5 +1,6 @@
 import {
   DEFAULT_FILTER_OPERATORS,
+  FILTER_INPUT_PLACEHOLDER,
   FILTER_SELECT_PLACEHOLDER,
   FILTER_TIME_RANGE_PLACEHOLDER,
   type EgFilterField,
@@ -20,6 +21,7 @@ import {
 } from './queryRecordsRecordFilterFieldLabelKeys';
 
 const QUERY_RECORDS_FILTER_FIELD_IDS: readonly QueryRecordsFilterFieldId[] = [
+  'amlCollaborationNumber',
   'amlCurrency',
   'amlWaasProject',
   'amlQueryResult',
@@ -41,6 +43,12 @@ function buildFieldCatalog(
   rowCount: number,
 ): Record<QueryRecordsFilterFieldId, EgFilterField> {
   return {
+    amlCollaborationNumber: {
+      id: 'amlCollaborationNumber',
+      label: filterLabel(translate, 'amlCollaborationNumber'),
+      kind: 'input',
+      placeholder: FILTER_INPUT_PLACEHOLDER,
+    },
     amlCurrency: {
       id: 'amlCurrency',
       label: filterLabel(translate, 'amlCurrency'),

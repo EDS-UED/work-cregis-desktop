@@ -66,6 +66,7 @@ import RiskControlListFieldAddressBookActions from '@/scenes/risk-control/list-f
 import RiskControlListFieldLogEvent from '@/scenes/risk-control/list-field/RiskControlListFieldLogEvent.vue';
 import RiskControlListFieldLogActions from '@/scenes/risk-control/list-field/RiskControlListFieldLogActions.vue';
 import {
+  isManageApiManageMenuItem,
   isManageRoleMenuItem,
   isManageWebhookConfigMenuItem,
   isManageWebhookPushRecordsMenuItem,
@@ -81,6 +82,11 @@ import WebhookListFieldCreatorTime from '@/scenes/manage/webhook/list-field/Webh
 import WebhookListFieldPushActions from '@/scenes/manage/webhook/list-field/WebhookListFieldPushActions.vue';
 import WebhookListFieldPushStatus from '@/scenes/manage/webhook/list-field/WebhookListFieldPushStatus.vue';
 import WebhookListFieldStatus from '@/scenes/manage/webhook/list-field/WebhookListFieldStatus.vue';
+import TeamApiListFieldActions from '@/scenes/manage/team-api/list-field/TeamApiListFieldActions.vue';
+import TeamApiListFieldCreatorTime from '@/scenes/manage/team-api/list-field/TeamApiListFieldCreatorTime.vue';
+import TeamApiListFieldNameKey from '@/scenes/manage/team-api/list-field/TeamApiListFieldNameKey.vue';
+import TeamApiListFieldPermissions from '@/scenes/manage/team-api/list-field/TeamApiListFieldPermissions.vue';
+import TeamApiListFieldStatus from '@/scenes/manage/team-api/list-field/TeamApiListFieldStatus.vue';
 import RiskControlListFieldAmlAddressRequester from '@/scenes/risk-control/list-field/RiskControlListFieldAmlAddressRequester.vue';
 import RiskControlListFieldAmlEntityAndTags from '@/scenes/risk-control/list-field/RiskControlListFieldAmlEntityAndTags.vue';
 import RiskControlListFieldAmlRiskScore from '@/scenes/risk-control/list-field/RiskControlListFieldAmlRiskScore.vue';
@@ -258,6 +264,8 @@ function columnProp(column: PaymentEngineRecordColumnConfig): string {
   if (column.key === 'processingMeta') return 'createdAt';
   if (column.key === 'roleName') return 'ruleName';
   if (column.key === 'roleCreatorTime') return 'logOperatorName';
+  if (column.key === 'teamApiNameKey') return 'ruleName';
+  if (column.key === 'teamApiCreatorTime') return 'logOperatorName';
   if (column.key === 'roleActions') return 'actions';
   if (column.key === 'processingAmount') return 'orderAmount';
   if (column.key === 'taskCurrencyId') return 'orderAmount';
@@ -344,6 +352,7 @@ function isActionColumn(column: PaymentEngineRecordColumnConfig): boolean {
     || column.key === 'webhookConfigActions'
     || column.key === 'webhookPushActions'
     || column.key === 'roleActions'
+    || column.key === 'teamApiActions'
   );
 }
 
@@ -534,6 +543,14 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 :row="recordRow(data)"
               />
 
+              <TeamApiListFieldActions
+                v-else-if="
+                  column.key === 'teamApiActions'
+                    && isManageApiManageMenuItem(menuItem)
+                "
+                :row="recordRow(data)"
+              />
+
               <WebhookListFieldConfigActions
                 v-else-if="
                   column.key === 'webhookConfigActions'
@@ -553,6 +570,42 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               <template v-else-if="!isActionColumn(column)">
               <template
                 v-if="
+                  column.key === 'teamApiNameKey'
+                    && isManageApiManageMenuItem(menuItem)
+                "
+              >
+                <TeamApiListFieldNameKey :row="recordRow(data)" />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'teamApiPermissions'
+                    && isManageApiManageMenuItem(menuItem)
+                "
+              >
+                <TeamApiListFieldPermissions :row="recordRow(data)" />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'teamApiCreatorTime'
+                    && isManageApiManageMenuItem(menuItem)
+                "
+              >
+                <TeamApiListFieldCreatorTime :row="recordRow(data)" />
+              </template>
+
+              <template
+                v-else-if="
+                  column.key === 'teamApiEnabled'
+                    && isManageApiManageMenuItem(menuItem)
+                "
+              >
+                <TeamApiListFieldStatus :row="recordRow(data)" />
+              </template>
+
+              <template
+                v-else-if="
                   column.key === 'webhookNameId'
                     && isManageWebhookConfigMenuItem(menuItem)
                 "

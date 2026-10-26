@@ -1,0 +1,35 @@
+.formStack {
+  composes: formStack from '../webhook/WebhookCreateEditPage.module.css';
+}
+
+.fieldBlock {
+  composes: fieldBlock from '../webhook/WebhookCreateEditPage.module.css';
+}
+
+.fieldLabel {
+  composes: fieldLabel from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldLabelGroup {
+  composes: fieldLabelGroup from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldHint {
+  composes: fieldHint from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldBlockContent {
+  composes: fieldBlockContent from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldBlockContentOptionCards {
+  composes: fieldBlockContentOptionCards from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.optionCardGroup {
+  composes: optionCardGroup from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldBlockContent.fieldBlockContentOptionCards {
+  margin-top: 0;
+}

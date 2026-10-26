@@ -420,6 +420,8 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
     '為防止風險外溢，接收高風險資金的地址將被Cregis禁用。這意味著該地址資金不會被自動歸集，Cregis AML也不會再對該地址進行篩查，但該地址仍然可以接收資金。如需繼續對該地址進行歸集，您可以手動解禁。',
   'Auto rule inflow risk alert inapp hint':
     '識別高風險交易後，Cregis AML將向指定團隊成員發送應用內通知',
+  'Auto rule outflow risk alert inapp hint':
+    '發現危險地址後向出款發起人發送應用內通知，還可指定其他接收人',
   'Auto rule inflow risk alert email hint': '同時向接收人註冊郵箱發送郵件提示',
   'Cregis AML Risk Alert': 'Cregis AML 風險警報',
   'AML Auto Rule Disabled': 'AML自動規則禁用',

@@ -22,8 +22,34 @@
   composes: fieldBlockContentOptionCards from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
 }
 
+.optionCardGroup {
+  composes: optionCardGroup from '../auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
 .fieldBlockContent.fieldBlockContentOptionCards {
   margin-top: 0;
+}
+
+/** 查询费用 / 温馨提示：保持 AML 页本地排版，不 composes 自动规则 fieldBlock。 */
+.feeSection,
+.reminderSection {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1-5);
+  width: 100%;
+  min-width: 0;
+}
+
+.feeSectionContent,
+.reminderSectionContent {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  margin-top: var(--spacing-1);
+  gap: var(--spacing-1-5);
 }
 
 .embeddedPanelBody {

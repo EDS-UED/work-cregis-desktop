@@ -4,6 +4,12 @@
   background: var(--stroke-divider-module);
 }
 
+/** 仅创建成功：composeBody 由插槽 `.body` padding 自管；查看 Key 等仍用 DS 默认 composeBody。 */
+.dialogHostCreateSuccess:global(.eds-dialog) :global([class*='composeBody']) {
+  padding: 0;
+  min-height: 0;
+}
+
 .dialogHost:global(.eds-dialog) :global([class*='composeBar']) {
   color: var(--status-warning);
 }

@@ -82,6 +82,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   Role: '角色',
   'Team Security': '团队安全',
   'API Manage': '团队API',
+  'Auto-generated API name': '自动生成名称',
 
   // Risk Control menu
   'Policy Settings': '策略',
@@ -428,6 +429,8 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
     '当风险评分大于等于【】时，将交易标记为危险',
   'Auto rule inflow risk alert inapp hint':
     '识别高风险交易后，Cregis AML将向指定团队成员发送应用内通知',
+  'Auto rule outflow risk alert inapp hint':
+    '发现危险地址后向出款发起人发送应用内通知，还可指定其他接收人',
   'Auto rule inflow risk alert email hint': '同时向接收人注册邮箱发送邮件提示',
   'Risk Alert Recipient': '风险警报接收人',
   'Expand All ({count})': '展开全部 ({count})',
@@ -448,6 +451,31 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Role Name': '角色名称',
   'Role Created Time': '创建时间',
   'Role Created Time UTC+08:00': '创建时间 UTC+08:00',
+  'API Created Time': '创建时间',
+  'API Created Time UTC+08:00': '创建时间 UTC+08:00',
+  'Enable API Key': '启用 API Key',
+  'Disable API Key': '禁用 API Key',
+  'Delete API Key': '删除 API Key',
+  'Team API enable confirm message':
+    '启用后，该 API 密钥将重新获得访问 Cregis API 的权限。您确定要启用它？',
+  'Team API disable confirm message':
+    '禁用后，使用此 API 密钥访问 Cregis API 的请求将被拒绝。您确定要禁用它？',
+  'Team API delete confirm message': '您确定要删除此 API 密钥？',
+  'Create Team API': '创建团队 API',
+  'Edit Team API': '编辑团队 API',
+  'Please enter the correct API name.': '请输入正确的 API 名称。',
+  Permission: '权限',
+  'Team API wallet permission description':
+    '允许访问钱包相关查询 API，用于获取资产、地址和交易数据。',
+  'Team API permission tasks label': 'Tasks',
+  'Team API permission billing label': 'Billing',
+  'Team API permission team account label': 'Team Account',
+  'Coming Soon': '即将推出',
+  'Team API IP whitelist access hint': 'Cregis API 仅允许白名单 IP 访问',
+  'Team API IP whitelist invalid message': '请输入有效的 IP 白名单。',
+  'Supports IPv4/IPv6 addresses': '支持 IPv4/IPv6 地址',
+  'Base URL': 'Base URL',
+  'Secret Key': 'Secret Key',
   'Edit Permissions': '编辑权限',
   Collaboration: '协作',
   'Transaction Records': '交易记录',

@@ -22,16 +22,43 @@
   align-items: stretch;
   width: 100%;
   min-width: 0;
-  margin-top: var(--spacing-1);
   gap: var(--spacing-1-5);
 }
 
 .fieldBlockContentOptionCards {
-  gap: var(--spacing-2);
+  gap: 0;
 }
 
 .fieldBlockContent.fieldBlockContentOptionCards {
-  gap: var(--spacing-2);
+  gap: 0;
+}
+
+.optionCardGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-025);
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  border: var(--stroke-xs) solid var(--stroke-divider-page);
+  box-sizing: border-box;
+}
+
+/** 带 embedded 配置项选中时：绿底在 group 壳上，不在 optionExpanded。 */
+.optionCardGroup:has(:global([class*='optionExpanded'])) {
+  background: var(--event-focus-brand-subtle);
+  border-color: transparent;
+}
+
+.optionCardGroup :global([class*='optionExpanded']) {
+  background-color: transparent;
+}
+
+/** embedded 展开区与下一选项间距；组内最后一项不加底外边距。 */
+.optionCardGroup > :global(*:not(:last-child)) :global([class*='bodyPanel']) {
+  margin-bottom: var(--spacing-2);
 }
 
 .optionCardList {
@@ -43,95 +70,22 @@
   min-width: 0;
 }
 
-.outflowRuleGroup {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--spacing-2);
-  width: 100%;
-  min-width: 0;
-  padding: var(--spacing-1);
-  border-radius: var(--radius-sm);
-  background: var(--material-card-subtle);
-  border: var(--stroke-xs) solid transparent;
-  box-sizing: border-box;
-}
-
-.outflowRuleGroupActive {
-  background: var(--event-focus-brand-subtle);
-  border-color: transparent;
-}
-
-.outflowRuleTypeBlock {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--spacing-1-5);
-  width: 100%;
-  min-width: 0;
-}
-
-/** 13px Body Small · weight 500 · 60% → `--text-base-secondary`。 */
+/** 组内标题：与 option 行同属 `optionCardGroup` 边框内。 */
 .outflowRuleTypeLabel {
   font-size: var(--eds-body-small-size);
   font-weight: var(--eds-body-small-strong-weight);
   line-height: var(--eds-body-small-line-height);
   color: var(--text-base-secondary);
-  margin-top: var(--spacing-1);
-  margin-left: var(--spacing-2);
+  margin: var(--spacing-1) var(--spacing-2);
 }
 
-.outflowRuleOptionStack :global(.eds-decide:focus),
-.outflowRuleOptionStack :global(.eds-decide:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
-
-.outflowRuleOptionStack {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--spacing-025);
-  width: 100%;
-  min-width: 0;
-}
-
-.outflowRuleOptionStack :global([class*='itemRow']:focus),
-.outflowRuleOptionStack :global([class*='itemRow']:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
-
-.outflowRuleOptionStack :global([class*='itemRow']:focus:not([class*='itemRowSelected'])),
-.outflowRuleOptionStack :global([class*='itemRow']:focus-visible:not([class*='itemRowSelected'])) {
-  background: transparent;
-}
-
-.outflowRuleOptionStack :global([class*='itemRowSelected']),
-.outflowRuleOptionStack :global([class*='itemRowSelected']:hover),
-.outflowRuleOptionStack :global([class*='itemRowSelected']:focus),
-.outflowRuleOptionStack :global([class*='itemRowSelected']:focus-visible),
-.outflowRuleOptionStack :global([class*='itemRowSelected']:focus:hover),
-.outflowRuleOptionStack :global([class*='itemRowSelected']:focus-visible:hover) {
-  background: transparent;
-}
-
-.outflowRuleGroup .outflowRuleOptionStack :global([class*='itemRow']:hover:not([class*='itemRowSelected'])) {
-  background-color: var(--event-hover);
-}
-
-.outflowRuleBody {
+.embeddedPanelBody {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: var(--spacing-5);
   width: 100%;
   min-width: 0;
-  margin-top: var(--spacing-2-5);
-  padding: var(--spacing-3);
-  border-radius: var(--radius-sm);
-  background: var(--box-page);
-  box-sizing: border-box;
 }
 
 .cardBodyChecksSection {
@@ -269,6 +223,15 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: var(--spacing-05);
+  width: 100%;
+  min-width: 0;
+}
+
+.fieldLabelRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   gap: var(--spacing-05);
   width: 100%;
   min-width: 0;

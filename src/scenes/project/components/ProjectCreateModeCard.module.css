@@ -11,10 +11,10 @@
 }
 
 .optionGrouped:not(.optionGroupedHighlightSelectedRow) .itemRowSelected,
-.optionGrouped:not(.optionGroupedHighlightSelectedRow) .itemRowSelected:hover,
 .optionGrouped:not(.optionGroupedHighlightSelectedRow) .itemRowSelected:focus,
 .optionGrouped:not(.optionGroupedHighlightSelectedRow) .itemRowSelected:focus-visible {
   background: transparent;
+  transition: none;
 }
 
 .optionGrouped .optionExpanded {
@@ -31,6 +31,11 @@
   padding: var(--spacing-1) var(--spacing-2);
 }
 
+.optionGroupedCompactMultiLine .itemRow,
+.optionGroupedCompactMultiLine .itemRowExpandedHeader {
+  padding: var(--spacing-1-5) var(--spacing-2);
+}
+
 .optionGroupedCompact .optionExpanded {
   padding: var(--spacing-0);
 }
@@ -41,6 +46,17 @@
 
 .optionGroupedCompactRounded .itemRowExpandedHeader {
   border-radius: var(--radius-sm);
+}
+
+.optionGrouped .itemRow:not(.itemRowDisabled) {
+  transition: var(--motion-recipe-hover);
+}
+
+.optionGrouped .itemRow:hover:not(.itemRowDisabled),
+.optionGrouped .itemRowSelected:hover:not(.itemRowDisabled),
+.optionGrouped .itemRow:focus-visible:hover:not(.itemRowDisabled) {
+  background-color: var(--event-hover);
+  transition: var(--motion-recipe-hover);
 }
 
 .itemRow {
@@ -55,6 +71,56 @@
   border: var(--stroke-xs) solid transparent;
   box-sizing: border-box;
   composes: motion-ease is-paint from global;
+}
+
+.itemRowOptionList {
+  padding: var(--spacing-3);
+  background: var(--material-card-subtle);
+}
+
+.itemRowOptionList:hover:not(.itemRowSelected):not(.itemRowExpandedHeader):not(.itemRowDisabled) {
+  background-color: var(--event-hover);
+}
+
+.itemRowOptionList:focus-visible:not(.itemRowDisabled) {
+  background-color: var(--event-focus-brand-subtle);
+  transition: none;
+}
+
+.itemRowOptionList.itemRowSelected,
+.itemRowOptionList.itemRowSelected:hover,
+.itemRowOptionList.itemRowSelected:focus,
+.itemRowOptionList.itemRowSelected:focus-visible {
+  background-color: var(--event-focus-brand-subtle);
+}
+
+.itemRowOptionList.itemRowExpandedHeader {
+  padding: var(--spacing-3);
+}
+
+.itemRowDisabled {
+  cursor: default;
+}
+
+.itemRowDisabled,
+.itemRowDisabled:hover,
+.itemRowDisabled:focus,
+.itemRowDisabled:focus-visible {
+  background: var(--material-hide);
+}
+
+.itemRowOptionList.itemRowDisabled,
+.itemRowOptionList.itemRowDisabled:hover,
+.itemRowOptionList.itemRowDisabled:focus,
+.itemRowOptionList.itemRowDisabled:focus-visible {
+  background: var(--material-card-subtle);
+}
+
+.itemRowDisabled .modeTitle,
+.itemRowDisabled .modeDescription,
+.itemRowDisabled .modeDescriptionBodySmall,
+.itemRowDisabled .modeDescriptionFootnotePrimary {
+  color: var(--text-base-tertiary);
 }
 
 .itemRowOutline:not(.itemRowSelected):not(.itemRowExpandedHeader) {
@@ -101,11 +167,23 @@
   pointer-events: auto;
 }
 
+/** AML 方向 Tooltip：与并列卡同高（flex stretch，勿用 1fr / height 100% 压扁内容）。 */
+.optionAmlDirectionHost {
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
 /** AML 自动规则 · 方向 Tooltip 卡片（纵向：图标上、主副文案下，内容居中）。 */
 .itemRowAmlDirection {
+  flex: 1 1 auto;
+  align-self: stretch;
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-3);
+  width: 100%;
+  box-sizing: border-box;
   padding-block: var(--spacing-5);
   padding-inline: var(--spacing-4);
 }

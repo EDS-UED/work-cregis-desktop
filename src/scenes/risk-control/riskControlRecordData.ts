@@ -6,6 +6,7 @@ import {
   resolveVerifiedTxHashForRow,
 } from '@/scenes/shared/egDataListMockData';
 import type { DetailAmlSearchResultVariant } from '@/scenes/tasks/shared/detailAmlSearchResult';
+import { buildTaskCollaborationNumber } from '@/scenes/tasks/shared/buildDetailProgressFields';
 import { seedAutoRuleRowsIfNeeded } from './auto-rule/riskControlAutoRuleStore';
 import { resolveDemoAmlEntityTags } from './riskControlAmlQueryRecordDetailData';
 import { resolveRiskControlDemoPolicyName } from './riskControlDemoPolicyNames';
@@ -492,6 +493,8 @@ function buildAmlRow(rowIndex: number): PaymentEngineRecordRow {
     amlRiskCustomStyle: risk.customStyle,
     amlRiskScore: risk.score,
     amlWaasProject: AML_WAAS_PROJECT_SHOWCASE[rowIndex % AML_WAAS_PROJECT_SHOWCASE.length],
+    amlCollaborationNumber:
+      isOutflowAuto || isException ? buildTaskCollaborationNumber(rowIndex) : undefined,
     amlQueryObjectKey: AML_QUERY_OBJECT_KEYS[rowIndex % AML_QUERY_OBJECT_KEYS.length],
     amlCurrencySymbol: preset.symbol,
     amlCurrencyCryptoName: preset.cryptoName,

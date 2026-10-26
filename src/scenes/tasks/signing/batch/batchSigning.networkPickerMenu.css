@@ -79,29 +79,12 @@ html[data-theme='dark'] .networkPickerRoot.desktopTokens.effect-flotation-box {
   padding: var(--spacing-3) var(--spacing-3);
 }
 
-.networkPickerListAutoRuleDirection > * {
+.networkPickerAutoRuleDirectionCardCell {
+  display: flex;
   flex: 1 1 0;
-  min-width: 0;
+  flex-direction: column;
   align-self: stretch;
-}
-
-.networkPickerListAutoRuleDirection .option {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.networkPickerListAutoRuleDirection .option > div {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-height: 100%;
-}
-
-.networkPickerListAutoRuleDirection .itemRowAmlDirection {
-  flex: 1 1 auto;
-  height: 100%;
-  box-sizing: border-box;
+  min-width: 0;
 }
 
 /**

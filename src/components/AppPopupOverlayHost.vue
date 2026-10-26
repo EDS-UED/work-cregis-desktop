@@ -17,6 +17,8 @@ import ManageWebhookOverlayHost from '@/scenes/manage/webhook/ManageWebhookOverl
 import { manageWebhookOverlayRegistry } from '@/scenes/manage/webhook/manageWebhookOverlayContext';
 import ManageRoleOverlayHost from '@/scenes/manage/role/ManageRoleOverlayHost.vue';
 import { manageRoleOverlayRegistry } from '@/scenes/manage/role/manageRoleOverlayContext';
+import ManageTeamApiOverlayHost from '@/scenes/manage/team-api/ManageTeamApiOverlayHost.vue';
+import { manageTeamApiOverlayRegistry } from '@/scenes/manage/team-api/manageTeamApiOverlayContext';
 import RiskControlAmlManualQueryOverlayHost from '@/scenes/risk-control/aml-manual-query/RiskControlAmlManualQueryOverlayHost.vue';
 import { riskControlAmlManualQueryOverlayRegistry } from '@/scenes/risk-control/aml-manual-query/riskControlAmlManualQueryOverlayContext';
 import RiskControlAutoRuleOverlayHost from '@/scenes/risk-control/auto-rule/RiskControlAutoRuleOverlayHost.vue';
@@ -34,6 +36,7 @@ const transactionRecordDetailFlow = computed(
 const paymentEngineDetailFlow = computed(() => paymentEngineDetailFlowRegistry.value);
 const manageWebhookOverlay = computed(() => manageWebhookOverlayRegistry.value);
 const manageRoleOverlay = computed(() => manageRoleOverlayRegistry.value);
+const manageTeamApiOverlay = computed(() => manageTeamApiOverlayRegistry.value);
 const riskControlAutoRuleOverlay = computed(() => riskControlAutoRuleOverlayRegistry.value);
 const riskControlAmlManualQueryOverlay = computed(
   () => riskControlAmlManualQueryOverlayRegistry.value,
@@ -60,6 +63,7 @@ const riskControlAmlRecordDetailOverlay = computed(
       <SigningBatchFlowHost v-if="signingBatchFlow" :flow="signingBatchFlow" />
       <ManageWebhookOverlayHost v-if="manageWebhookOverlay" />
       <ManageRoleOverlayHost v-if="manageRoleOverlay" />
+      <ManageTeamApiOverlayHost v-if="manageTeamApiOverlay" />
       <RiskControlAutoRuleOverlayHost v-if="riskControlAutoRuleOverlay" />
       <RiskControlAmlManualQueryOverlayHost v-if="riskControlAmlManualQueryOverlay" />
       <RiskControlAmlRecordDetailOverlayHost v-if="riskControlAmlRecordDetailOverlay" />

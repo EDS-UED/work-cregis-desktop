@@ -14,6 +14,7 @@ export function buildQueryRecordsRecordFilterRowSnapshot(
 ): EgFilterRowSnapshot {
   return {
     amlCurrency: resolveQueryRecordsCurrencyFilterId(row.amlCurrencySymbol),
+    amlCollaborationNumber: row.amlCollaborationNumber?.trim() ?? '',
     amlWaasProject: row.amlWaasProject ?? '',
     amlQueryResult: row.amlQueryException
       ? resolveQueryRecordsResultFilterId('AML Exception')

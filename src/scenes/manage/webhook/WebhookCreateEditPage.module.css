@@ -44,6 +44,18 @@
   color: var(--text-base-primary);
 }
 
+.fieldBlockContent {
+  composes: fieldBlockContent from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.fieldBlockContentOptionCards {
+  composes: fieldBlockContentOptionCards from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.optionCardGroup {
+  composes: optionCardGroup from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
 .verifyActionStack {
   display: flex;
   flex-direction: column;

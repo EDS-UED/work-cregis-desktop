@@ -54,7 +54,7 @@ function onCancel() {
     @close="onPopupClosed"
   >
     <EgBusinessDialog
-      :class="styles.dialogHost"
+      :class="[styles.dialogHost, isCreateSuccessBody && styles.dialogHostCreateSuccess]"
       toolbar-divider-pinned
       :title="dialogTitle"
       :show-secondary-text="isCreateSuccessBody"

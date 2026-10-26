@@ -47,11 +47,20 @@
 }
 
 .selectAllIcon {
-  composes: selectAllIcon from './RiskControlAutoRuleOutflowCurrencyAddPicker.module.css';
+  composes: selectAllIcon from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
 }
 
 .selectAllIconGlyph {
-  composes: selectAllIconGlyph from './RiskControlAutoRuleOutflowCurrencyAddPicker.module.css';
+  composes: selectAllIconGlyph from '@eds/desktop-components/organisms/filter/FilterConditionCurrencyValue.module.css';
+}
+
+.optionList :global(.eds-flotation-menu-item) > span:has(.selectAllIcon),
+.cascadeList :global(.eds-flotation-menu-item) > span:has(.selectAllIcon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-sm);
+  height: var(--avatar-sm);
 }
 
 .optionRowWrap {

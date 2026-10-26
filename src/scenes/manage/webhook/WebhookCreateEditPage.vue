@@ -51,6 +51,12 @@ const emit = defineEmits<{
 
 const { ui } = useAppI18n();
 
+const optionCardGroupedSurface = {
+  surface: 'grouped' as const,
+  groupedRowSpacing: 'compact' as const,
+  groupedRowRounded: true,
+};
+
 const name = ref('');
 const nameBlurred = ref(false);
 const nameFocused = ref(false);
@@ -393,13 +399,18 @@ function onSubmit() {
 
           <section :class="styles.fieldBlock">
             <span :class="styles.fieldLabel">{{ ui('Event') }}</span>
-            <ProjectCreateModeCard
-              selection-control="checkbox"
-              :title="ui('Dangerous transaction')"
-              :description="ui('Dangerous transaction webhook description')"
-              :selected="eventSelected"
-              @select="onEventSelect"
-            />
+            <div :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]">
+              <div :class="styles.optionCardGroup">
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  selection-control="checkbox"
+                  :title="ui('Dangerous transaction')"
+                  :description="ui('Dangerous transaction webhook description')"
+                  :selected="eventSelected"
+                  @select="onEventSelect"
+                />
+              </div>
+            </div>
           </section>
 
           <div :class="styles.fieldBlock">
@@ -496,13 +507,18 @@ function onSubmit() {
 
           <section :class="styles.fieldBlock">
             <span :class="styles.fieldLabel">{{ ui('Event') }}</span>
-            <ProjectCreateModeCard
-              selection-control="checkbox"
-              :title="ui('Dangerous transaction')"
-              :description="ui('Dangerous transaction webhook description')"
-              :selected="eventSelected"
-              @select="onEventSelect"
-            />
+            <div :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]">
+              <div :class="styles.optionCardGroup">
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  selection-control="checkbox"
+                  :title="ui('Dangerous transaction')"
+                  :description="ui('Dangerous transaction webhook description')"
+                  :selected="eventSelected"
+                  @select="onEventSelect"
+                />
+              </div>
+            </div>
           </section>
 
           <div :class="styles.fieldBlock">

@@ -284,7 +284,7 @@ export function tasksDataListShowsAddressBlacklist(menuItem: string | undefined)
   return menuItem === 'Approval' || menuItem === 'Signing';
 }
 
-/** 已办 / 记录类列表：第 6、7 条 AML 风控状态与「风险拦截」行危险 Tag。 */
+/** 已办 / 记录类列表：第 6、7 条 AML 风控状态演示（地址浮层 Tag 仅第 6 条「风控查询中」）。 */
 export function tasksDataListShowsAmlRiskListStatusDemo(menuItem: string | undefined): boolean {
   return (
     menuItem === 'Approved'

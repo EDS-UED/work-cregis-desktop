@@ -178,6 +178,14 @@ export function usePaymentEngineDataListPage<T>(options: {
       return buttons;
     }
 
+    if (preset === 'refresh-add') {
+      buttons.push(
+        { key: 'refresh', item: refreshButton.value },
+        { key: 'addNew', item: addNewButton.value },
+      );
+      return buttons;
+    }
+
     if (preset === 'filter-add') {
       buttons.push(
         { key: 'filter', item: filterButton.value },
@@ -250,6 +258,11 @@ export function usePaymentEngineDataListPage<T>(options: {
           || button.key === 'export',
       );
     }
+    if (preset === 'refresh-add') {
+      return toolbarActionButtons.value.filter(
+        (button) => button.key === 'refresh' || button.key === 'addNew',
+      );
+    }
     if (preset === 'batch-filter-refresh') {
       return toolbarActionButtons.value.filter(
         (button) => button.key === 'filter' || button.key === 'refresh',
@@ -264,6 +277,7 @@ export function usePaymentEngineDataListPage<T>(options: {
       preset === 'filter-refresh'
       || preset === 'filter-refresh-add'
       || preset === 'filter-refresh-add-export'
+      || preset === 'refresh-add'
     ) {
       return false;
     }

@@ -93,7 +93,7 @@ export const SYSTEM_SIGNATURE_REJECT_ROW_INDEX = 7;
 /** 第 6 条（index 5）：接收方 AML「风控查询中」Tag + 详情演示。 */
 export const TASK_AML_RISK_QUERY_DEMO_ROW_INDEX = 5;
 
-/** 第 7 条（index 6）：接收方 AML「风险拦截」Tag + 详情演示。 */
+/** 第 7 条（index 6）：列表 Status「风险拦截」+ 详情演示（地址浮层不展示 Tag）。 */
 export const TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX = 6;
 
 export const TASK_AML_RISK_QUERY_STATUS_LABEL = 'Task list status AML risk querying';

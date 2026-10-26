@@ -416,6 +416,7 @@ export const I18N_DOC_ALIGNED_KEYS = new Set<string>([
   'Auto rule inflow scope required',
   'Auto rule inflow risk score dangerous hint',
   'Auto rule inflow risk alert inapp hint',
+  'Auto rule outflow risk alert inapp hint',
   'Auto rule inflow risk alert email hint',
   'AML query result disclaimer',
   'AML risk profile title',

@@ -25,6 +25,12 @@ const { ui } = useAppI18n();
 
 const SERVICE_PROVIDER_ELLIPTIC = 'Elliptic';
 
+const optionCardGroupedSurface = {
+  surface: 'grouped' as const,
+  groupedRowSpacing: 'compact' as const,
+  groupedRowRounded: true,
+};
+
 const queryTypeId = ref<AmlQueryTypeId | ''>('');
 const serviceProviderKey = ref('');
 const directionId = ref<AmlQueryDirectionId | ''>('');
@@ -114,7 +120,9 @@ defineExpose({
       <div
         :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]"
       >
+        <div :class="styles.optionCardGroup">
         <ProjectCreateModeCard
+          v-bind="optionCardGroupedSurface"
           radio-name="aml-manual-query-type"
           radio-value="address"
           expand-style="embeddedPanel"
@@ -142,6 +150,7 @@ defineExpose({
         </ProjectCreateModeCard>
 
         <ProjectCreateModeCard
+          v-bind="optionCardGroupedSurface"
           radio-name="aml-manual-query-type"
           radio-value="transaction-hash"
           expand-style="embeddedPanel"
@@ -154,49 +163,49 @@ defineExpose({
             <div :class="styles.cardBodyField">
               <span :class="styles.cardBodySectionTitle">{{ ui('Direction') }}</span>
               <EgFlotation
-              :class="styles.scopeFlotationHost"
-              placement="bottom"
-              align="start"
-              width-mode="trigger"
-              :show-add="false"
-              :show-menu-divider="false"
-              :close-on-scroll="false"
-              flip
-            >
-              <template #trigger="{ expanded }">
-                <EgFlotationTrigger
-                  :class="styles.scopeFlotationTrigger"
-                  trigger-style="subtle"
-                  size="md"
-                  width-mode="adaptive"
-                  :label="
-                    selectedDirection
-                      ? ui(selectedDirection.labelKey)
-                      : ui('Please Select')
-                  "
-                  :expanded="expanded"
-                />
-              </template>
-              <template #content="{ menuWidth, menuWidthMode, close }">
-                <EgFlotationMenu
-                  panel-radius="radius-md"
-                  :width-mode="menuWidthMode"
-                  :width="menuWidth"
-                  height-mode="adaptive"
-                  :show-add="false"
-                  :show-divider="false"
-                >
-                  <EgFlotationMenuItem
-                    v-for="option in AML_QUERY_DIRECTION_OPTIONS"
-                    :key="option.id"
-                    box-type="text"
-                    :label="ui(option.labelKey)"
-                    :focused="directionId === option.id"
-                    @click="selectDirection(option.id, close)"
+                :class="styles.scopeFlotationHost"
+                placement="bottom"
+                align="start"
+                width-mode="trigger"
+                :show-add="false"
+                :show-menu-divider="false"
+                :close-on-scroll="false"
+                flip
+              >
+                <template #trigger="{ expanded }">
+                  <EgFlotationTrigger
+                    :class="styles.scopeFlotationTrigger"
+                    trigger-style="subtle"
+                    size="md"
+                    width-mode="adaptive"
+                    :label="
+                      selectedDirection
+                        ? ui(selectedDirection.labelKey)
+                        : ui('Please Select')
+                    "
+                    :expanded="expanded"
                   />
-                </EgFlotationMenu>
-              </template>
-            </EgFlotation>
+                </template>
+                <template #content="{ menuWidth, menuWidthMode, close }">
+                  <EgFlotationMenu
+                    panel-radius="radius-md"
+                    :width-mode="menuWidthMode"
+                    :width="menuWidth"
+                    height-mode="adaptive"
+                    :show-add="false"
+                    :show-divider="false"
+                  >
+                    <EgFlotationMenuItem
+                      v-for="option in AML_QUERY_DIRECTION_OPTIONS"
+                      :key="option.id"
+                      box-type="text"
+                      :label="ui(option.labelKey)"
+                      :focused="directionId === option.id"
+                      @click="selectDirection(option.id, close)"
+                    />
+                  </EgFlotationMenu>
+                </template>
+              </EgFlotation>
             </div>
             <div :class="styles.cardBodyField">
               <span :class="styles.cardBodySectionTitle">{{ ui('Query Network') }}</span>
@@ -224,42 +233,50 @@ defineExpose({
             </div>
           </div>
         </ProjectCreateModeCard>
+        </div>
       </div>
     </section>
 
     <section :class="styles.fieldBlock">
       <span :class="styles.fieldLabel">{{ ui('Service Provider') }}</span>
-      <ProjectCreateModeCard
-        radio-name="aml-manual-query-service-provider"
-        radio-value="elliptic"
-        :title="SERVICE_PROVIDER_ELLIPTIC"
-        :selected="isEllipticProviderSelected"
-        @select="toggleServiceProvider"
+      <div
+        :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]"
       >
-        <template #description>
-          <EgLinkButton
-            tone="brand"
-            size="sm"
-            href="#"
-            @click.stop
-          >
-            {{ ui('Learn more') }}
-          </EgLinkButton>
-        </template>
-        <template #trailing>
-          <img
-            :class="styles.serviceProviderLogo"
-            :src="ellipticProviderLogoUrl"
-            alt=""
-            aria-hidden="true"
-          />
-        </template>
-      </ProjectCreateModeCard>
+        <div :class="styles.optionCardGroup">
+        <ProjectCreateModeCard
+          v-bind="optionCardGroupedSurface"
+          radio-name="aml-manual-query-service-provider"
+          radio-value="elliptic"
+          :title="SERVICE_PROVIDER_ELLIPTIC"
+          :selected="isEllipticProviderSelected"
+          @select="toggleServiceProvider"
+        >
+          <template #description>
+            <EgLinkButton
+              tone="brand"
+              size="sm"
+              href="#"
+              @click.stop
+            >
+              {{ ui('Learn more') }}
+            </EgLinkButton>
+          </template>
+          <template #trailing>
+            <img
+              :class="styles.serviceProviderLogo"
+              :src="ellipticProviderLogoUrl"
+              alt=""
+              aria-hidden="true"
+            />
+          </template>
+        </ProjectCreateModeCard>
+        </div>
+      </div>
     </section>
 
-    <section :class="styles.fieldBlock">
+    <section :class="styles.feeSection">
       <span :class="styles.fieldLabel">{{ ui('AML Query Fee') }}</span>
-      <div :class="styles.fieldBlockContent">
+      <div :class="styles.feeSectionContent">
         <p :class="styles.queryFeeLine">
           <span :class="styles.queryFeeAmount">{{ AML_QUERY_FEE_DISPLAY }}</span>
           {{ ui('AML query fee suffix') }}
@@ -269,11 +286,11 @@ defineExpose({
 
     <EgDivider type="page" direction="horizontal" :class="styles.sectionDivider" />
 
-    <section :class="styles.fieldBlock">
+    <section :class="styles.reminderSection">
       <div :class="styles.fieldLabelGroup">
         <span :class="styles.warmReminderLabel">{{ ui('Warm reminder') }}</span>
       </div>
-      <div :class="styles.fieldBlockContent">
+      <div :class="styles.reminderSectionContent">
         <ul :class="styles.noticeList">
           <li :class="styles.noticeItem">
             {{ ui('AML query caution dangerous address') }}

@@ -70,7 +70,6 @@ function onVerifyClosed(accepted: boolean) {
       v-model:open="noPermissionDialogOpen"
       title-key="Warm reminder"
       message-key="Auto rule no create permission"
-      :confirm-disabled="true"
     />
 
     <RiskControlAutoRuleAlertDialog

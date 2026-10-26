@@ -177,11 +177,21 @@ function compareRows(
     return compareText(rowA.ruleName ?? rowA.id, rowB.ruleName ?? rowB.id);
   }
 
-  if (columnKey === 'roleCreatorTime') {
+  if (columnKey === 'roleCreatorTime' || columnKey === 'teamApiCreatorTime') {
     if (segment === 'secondary') {
       return compareCreatedTime(rowA, rowB);
     }
     return compareText(rowA.logOperatorName ?? rowA.id, rowB.logOperatorName ?? rowB.id);
+  }
+
+  if (columnKey === 'teamApiNameKey') {
+    if (segment === 'secondary') {
+      return compareText(
+        rowA.teamApiKeyMasked ?? rowA.teamApiKeyFull ?? rowA.id,
+        rowB.teamApiKeyMasked ?? rowB.teamApiKeyFull ?? rowB.id,
+      );
+    }
+    return compareText(rowA.ruleName ?? rowA.id, rowB.ruleName ?? rowB.id);
   }
 
   return 0;

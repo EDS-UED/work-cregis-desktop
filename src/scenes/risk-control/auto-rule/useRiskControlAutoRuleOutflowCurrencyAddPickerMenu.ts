@@ -223,10 +223,6 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
     ).length;
   }
 
-  function isOptionParentCheckboxChecked(option: FilterCurrencyPreset): boolean {
-    return getOptionParentSelectionState(option) !== 'none';
-  }
-
   function getOptionParentNetworkTotalCount(option: FilterCurrencyPreset): number {
     const networks = option.networks ?? [];
     if (networks.length) return networks.length;
@@ -277,6 +273,10 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
     if (selectedCount === 0) return 'none';
     if (selectedCount === networkKeys.length) return 'all';
     return 'some';
+  }
+
+  function isOptionParentCheckboxChecked(option: FilterCurrencyPreset): boolean {
+    return getNetworkSelectAllMode(option) === 'all';
   }
 
   function hasOptionDraftSelection(option: FilterCurrencyPreset): boolean {

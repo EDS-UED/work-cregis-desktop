@@ -38,10 +38,20 @@
   display: inline-flex;
 }
 
-.tooltipPanel :global(.eds-tooltip-panel) {
-  padding: var(--spacing-1) var(--spacing-2);
+/** Icon 触发：勿继承文本溢出下划虚线。 */
+.fieldOvfHintHost :global(.eds-hover-tooltip-trigger__target::after) {
+  content: none;
+  display: none;
 }
 
+.fieldOvfHintHost :global(.eds-hover-tooltip-trigger__target),
+.fieldOvfHintHost :global(.eds-hover-tooltip-trigger:hover .eds-hover-tooltip-trigger__target),
+.fieldOvfHintHost
+  :global(.eds-hover-tooltip-trigger--focus:focus-within .eds-hover-tooltip-trigger__target) {
+  color: inherit;
+}
+
+/** 面板 padding / 字号由 EgFieldOvfTooltip `.panel` 继承；此处只排版行距与分数色。 */
 .hintContent {
   display: flex;
   flex-direction: column;
@@ -51,10 +61,16 @@
 .hintLine {
   margin: 0;
   color: var(--text-base-primary);
-  font-family: var(--eds-family-sans);
-  font-size: var(--eds-body-small-size);
-  font-weight: var(--eds-body-small-weight);
-  line-height: var(--eds-body-small-line-height);
   white-space: normal;
   word-break: break-word;
+}
+
+.hintLineMarkSuccess {
+  composes: typography-body-medium-strong from global;
+  color: var(--status-success);
+}
+
+.hintLineMarkDanger {
+  composes: typography-body-medium-strong from global;
+  color: var(--status-danger);
 }

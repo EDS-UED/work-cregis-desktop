@@ -322,6 +322,14 @@ export type PaymentEngineRecordRow = {
   webhookManuallyRetried?: boolean;
   webhookCreatorEmail?: string;
   webhookCreatorDisplay?: string;
+  /** Manage · 团队 API 列表掩码 Key。 */
+  teamApiKeyMasked?: string;
+  teamApiKeyFull?: string;
+  teamApiSecretKey?: string;
+  teamApiBaseUrl?: string;
+  teamApiPermissionsKey?: string;
+  teamApiIpWhitelist?: string;
+  teamApiAuthType?: string;
   /** 风控日志 · Webhook 名称（Event 列）。 */
   logWebhookName?: string;
   logWebhookEndpointUrl?: string;
@@ -601,7 +609,12 @@ export type PaymentEngineRecordColumnKey =
   | 'webhookPushActions'
   | 'roleName'
   | 'roleCreatorTime'
-  | 'roleActions';
+  | 'roleActions'
+  | 'teamApiNameKey'
+  | 'teamApiPermissions'
+  | 'teamApiCreatorTime'
+  | 'teamApiEnabled'
+  | 'teamApiActions';
 
 export type PaymentEngineDataListToolbarPreset =
   | 'default'
@@ -610,6 +623,7 @@ export type PaymentEngineDataListToolbarPreset =
   | 'rule-configuration'
   | 'filter-refresh-add-export'
   | 'filter-refresh-add'
+  | 'refresh-add'
   | 'filter-add';
 
 export type PaymentEngineColumnAlign = 'start' | 'center' | 'end';

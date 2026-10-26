@@ -346,6 +346,8 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
     'Upon detecting a risky transaction, Cregis AML will disable its receiving address and stop auto collecting the funds from the receiving address to control the risk. Once an address is disabled, Cregis AML will not screen transactions to that address until it is manually enabled.',
   'Auto rule inflow risk alert inapp hint':
     'After identifying a dangerous transaction, Cregis AML will send an in-app risk alert to the designated team member.',
+  'Auto rule outflow risk alert inapp hint':
+    'When a dangerous address is found, Cregis AML sends an in-app notification to the withdrawal initiator; you may also designate other recipients.',
   'Auto rule inflow risk alert email hint':
     "Also send alert emails to the recipients' registered email address",
   'In-app notification': 'In-App Notification',

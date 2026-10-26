@@ -24,6 +24,7 @@ import RiskControlAutoRuleSkipCheckRows from './RiskControlAutoRuleSkipCheckRows
 import RiskControlAutoRuleOutflowCurrencyField from './RiskControlAutoRuleOutflowCurrencyField.vue';
 import RiskControlAutoRuleOutflowWalletPicker from './RiskControlAutoRuleOutflowWalletPicker.vue';
 import RiskControlAutoRuleRecipientPicker from './RiskControlAutoRuleRecipientPicker.vue';
+import RiskControlFormHintInfoTrigger from '../RiskControlFormHintInfoTrigger.vue';
 import {
   INFLOW_TRIGGER_TYPE_OPTIONS,
   isInflowTriggerTypeKey,
@@ -47,6 +48,12 @@ const EXCEPTION_HANDLING_NOTIFY_DESIGNATED =
 const RISK_ALERT_IN_APP = 'In-app notification';
 const RISK_ALERT_EMAIL = 'Email notification';
 const SCOPE_PICKER_MENU_MAX_HEIGHT = 310;
+
+const optionCardGroupedSurface = {
+  surface: 'grouped' as const,
+  groupedRowSpacing: 'compact' as const,
+  groupedRowRounded: true,
+};
 
 const props = defineProps<{
   mode: RiskControlAutoRuleFormMode;
@@ -120,14 +127,6 @@ function riskAlertRecipientsValid(draft: RiskControlAutoRuleFormDraft): boolean 
   }
   return true;
 }
-
-const triggerRuleGroupActive = computed(
-  () => Boolean(localDraft.value.withdrawalTypeKey),
-);
-
-const isInflowTriggerSelected = computed(
-  () => !isOutflow.value && isInflowTriggerTypeKey(localDraft.value.withdrawalTypeKey),
-);
 
 const isManualOutflowSelected = computed(
   () => localDraft.value.withdrawalTypeKey === WITHDRAWAL_TYPE_MANUAL,
@@ -431,264 +430,272 @@ defineExpose({
             />
           </div>
 
-          <section :class="[styles.fieldBlock, styles.fieldBlockHasHint]">
-            <div :class="styles.fieldLabelGroup">
+          <section :class="styles.fieldBlock">
+            <div :class="styles.fieldLabelRow">
               <span :class="styles.fieldLabel">{{ ui('Auto rule trigger condition') }}</span>
-              <p :class="styles.fieldHint">
-                {{ ui('Auto rule outflow trigger hint') }}
-              </p>
+              <RiskControlFormHintInfoTrigger
+                v-if="isOutflow"
+                button-label-key="Auto rule trigger condition"
+                :hint-keys="['Auto rule outflow trigger hint']"
+              />
             </div>
             <div :class="styles.fieldBlockContent">
-            <div
-              :class="[
-                styles.outflowRuleGroup,
-                triggerRuleGroupActive && styles.outflowRuleGroupActive,
-              ]"
-            >
-              <div v-if="isOutflow">
-              <div :class="styles.outflowRuleTypeBlock">
+              <div
+                v-if="isOutflow"
+                role="radiogroup"
+                :aria-label="ui('Withdrawal Type')"
+                :class="styles.optionCardGroup"
+              >
                 <span :class="styles.outflowRuleTypeLabel">{{ ui('Withdrawal Type') }}</span>
-                <div
-                  role="radiogroup"
-                  :aria-label="ui('Withdrawal Type')"
-                  :class="styles.outflowRuleOptionStack"
-                >
                   <ProjectCreateModeCard
+                    v-bind="optionCardGroupedSurface"
+                    expand-style="embeddedPanel"
                     radio-name="auto-rule-withdrawal-type"
                     radio-value="manual"
-                    surface="grouped"
-                    grouped-row-spacing="compact"
-                    grouped-row-rounded
-                    grouped-highlight-selected-row
                     :title="ui('Auto rule manual withdrawal title')"
+                    :description="''"
                     :selected="isManualOutflowSelected"
                     @select="onWithdrawalTypeSelect(WITHDRAWAL_TYPE_MANUAL)"
-                  />
+                  >
+                    <div
+                      :class="styles.embeddedPanelBody"
+                      @click.stop
+                      @mousedown.stop
+                    >
+                      <div :class="styles.cardBodyField">
+                        <span :class="styles.cardBodySectionTitle">{{ ui('Wallet') }}</span>
+                        <div :class="styles.scopeFlotationHost">
+                          <RiskControlAutoRuleOutflowWalletPicker
+                            :class="styles.scopeFlotationTrigger"
+                            :model-value="localDraft.scopeWalletIds"
+                            :is-option-disabled="
+                              (label) => isScopeOptionDisabled(label, WITHDRAWAL_TYPE_MANUAL)
+                            "
+                            @update:model-value="patchDraft({ scopeWalletIds: $event })"
+                          />
+                        </div>
+                      </div>
+                      <div :class="styles.cardBodyField">
+                        <span :class="styles.cardBodySectionTitle">{{ ui('Currency') }}</span>
+                        <RiskControlAutoRuleOutflowCurrencyField
+                          :model-value="localDraft.currencyEntries"
+                          :scope-selected="outflowCurrencyScopeSelected"
+                          :scope-required-toast-key="triggerCurrencyScopeToastKey"
+                          @update:model-value="patchDraft({ currencyEntries: $event })"
+                        />
+                      </div>
+                      <RiskControlAutoRuleSkipCheckRows
+                        :skip-whitelist="localDraft.skipWhitelist"
+                        :skip-internal="localDraft.skipInternal"
+                        @skip-update="onSkipCheckboxUpdate"
+                      />
+                    </div>
+                  </ProjectCreateModeCard>
                   <ProjectCreateModeCard
+                    v-bind="optionCardGroupedSurface"
+                    expand-style="embeddedPanel"
                     radio-name="auto-rule-withdrawal-type"
                     radio-value="api"
-                    surface="grouped"
-                    grouped-row-spacing="compact"
-                    grouped-row-rounded
-                    grouped-highlight-selected-row
                     :title="ui('API Payout')"
+                    :description="''"
                     :selected="isApiOutflowSelected"
                     @select="onWithdrawalTypeSelect(WITHDRAWAL_TYPE_API)"
-                  />
-                </div>
-              </div>
-              <div v-if="isManualOutflowSelected" :class="styles.outflowRuleBody">
-                <div :class="styles.cardBodyField">
-                  <span :class="styles.cardBodySectionTitle">{{ ui('Wallet') }}</span>
-                  <div :class="styles.scopeFlotationHost">
-                    <RiskControlAutoRuleOutflowWalletPicker
-                      :class="styles.scopeFlotationTrigger"
-                      :model-value="localDraft.scopeWalletIds"
-                      :is-option-disabled="
-                        (label) => isScopeOptionDisabled(label, WITHDRAWAL_TYPE_MANUAL)
-                      "
-                      @update:model-value="patchDraft({ scopeWalletIds: $event })"
-                    />
-                  </div>
-                </div>
-                <div :class="styles.cardBodyField">
-                  <span :class="styles.cardBodySectionTitle">{{ ui('Currency') }}</span>
-                  <RiskControlAutoRuleOutflowCurrencyField
-                    :model-value="localDraft.currencyEntries"
-                    :scope-selected="outflowCurrencyScopeSelected"
-                    :scope-required-toast-key="triggerCurrencyScopeToastKey"
-                    @update:model-value="patchDraft({ currencyEntries: $event })"
-                  />
-                </div>
-                <RiskControlAutoRuleSkipCheckRows
-                  :skip-whitelist="localDraft.skipWhitelist"
-                  :skip-internal="localDraft.skipInternal"
-                  @skip-update="onSkipCheckboxUpdate"
-                />
-              </div>
-              <div v-else-if="isApiOutflowSelected" :class="styles.outflowRuleBody">
-                <div :class="styles.cardBodyField">
-                  <span :class="styles.cardBodySectionTitle">{{ ui('WaaS Project') }}</span>
-                  <EgFlotation
-                    :class="styles.scopeFlotationHost"
-                    placement="bottom"
-                    align="start"
-                    width-mode="trigger"
-                    :show-add="false"
-                    :show-menu-divider="false"
-                    close-on-scroll
                   >
-                    <template #trigger="{ expanded }">
-                      <EgFlotationTrigger
-                        :class="styles.scopeFlotationTrigger"
-                        trigger-style="subtle"
-                        size="md"
-                        width-mode="adaptive"
-                        :label="scopeWaasTriggerLabel || ui('Please Select')"
-                        :expanded="expanded"
-                      />
-                    </template>
-                    <template #content="{ menuWidth, menuWidthMode, close }">
-                      <EgFlotationMenu
-                        panel-radius="radius-md"
-                        :width-mode="menuWidthMode"
-                        :width="menuWidth"
-                        height-mode="adaptive"
-                        :max-height="SCOPE_PICKER_MENU_MAX_HEIGHT"
-                        :scrollable="true"
-                        :list-scroll="true"
-                        :show-add="false"
-                        :show-divider="false"
-                      >
-                        <EgFlotationMenuItem
-                          v-for="option in OUTFLOW_WAAS_PROJECT_OPTIONS"
-                          :key="option.id"
-                          box-type="text"
-                          :label="option.label"
-                          :show-tag="false"
-                          :disabled="isScopeOptionDisabled(option.label, WITHDRAWAL_TYPE_API)"
-                          :focused="localDraft.scopeTarget === option.label"
-                          @click="selectOutflowScope(option.label, WITHDRAWAL_TYPE_API, close)"
+                    <div
+                      :class="styles.embeddedPanelBody"
+                      @click.stop
+                      @mousedown.stop
+                    >
+                      <div :class="styles.cardBodyField">
+                        <span :class="styles.cardBodySectionTitle">{{ ui('WaaS Project') }}</span>
+                        <EgFlotation
+                          :class="styles.scopeFlotationHost"
+                          placement="bottom"
+                          align="start"
+                          width-mode="trigger"
+                          :show-add="false"
+                          :show-menu-divider="false"
+                          close-on-scroll
+                        >
+                          <template #trigger="{ expanded }">
+                            <EgFlotationTrigger
+                              :class="styles.scopeFlotationTrigger"
+                              trigger-style="subtle"
+                              size="md"
+                              width-mode="adaptive"
+                              :label="scopeWaasTriggerLabel || ui('Please Select')"
+                              :expanded="expanded"
+                            />
+                          </template>
+                          <template #content="{ menuWidth, menuWidthMode, close }">
+                            <EgFlotationMenu
+                              panel-radius="radius-md"
+                              :width-mode="menuWidthMode"
+                              :width="menuWidth"
+                              height-mode="adaptive"
+                              :max-height="SCOPE_PICKER_MENU_MAX_HEIGHT"
+                              :scrollable="true"
+                              :list-scroll="true"
+                              :show-add="false"
+                              :show-divider="false"
+                            >
+                              <EgFlotationMenuItem
+                                v-for="option in OUTFLOW_WAAS_PROJECT_OPTIONS"
+                                :key="option.id"
+                                box-type="text"
+                                :label="option.label"
+                                :show-tag="false"
+                                :disabled="isScopeOptionDisabled(option.label, WITHDRAWAL_TYPE_API)"
+                                :focused="localDraft.scopeTarget === option.label"
+                                @click="selectOutflowScope(option.label, WITHDRAWAL_TYPE_API, close)"
+                              />
+                            </EgFlotationMenu>
+                          </template>
+                        </EgFlotation>
+                      </div>
+                      <div :class="styles.cardBodyField">
+                        <span :class="styles.cardBodySectionTitle">{{ ui('Currency') }}</span>
+                        <RiskControlAutoRuleOutflowCurrencyField
+                          :model-value="localDraft.currencyEntries"
+                          :scope-selected="outflowCurrencyScopeSelected"
+                          :scope-required-toast-key="triggerCurrencyScopeToastKey"
+                          @update:model-value="patchDraft({ currencyEntries: $event })"
                         />
-                      </EgFlotationMenu>
-                    </template>
-                  </EgFlotation>
-                </div>
-                <div :class="styles.cardBodyField">
-                  <span :class="styles.cardBodySectionTitle">{{ ui('Currency') }}</span>
-                  <RiskControlAutoRuleOutflowCurrencyField
-                    :model-value="localDraft.currencyEntries"
-                    :scope-selected="outflowCurrencyScopeSelected"
-                    :scope-required-toast-key="triggerCurrencyScopeToastKey"
-                    @update:model-value="patchDraft({ currencyEntries: $event })"
-                  />
-                </div>
-                <RiskControlAutoRuleSkipCheckRows
-                  :skip-whitelist="localDraft.skipWhitelist"
-                  :skip-internal="localDraft.skipInternal"
-                  @skip-update="onSkipCheckboxUpdate"
-                />
-              </div>
-              </div>
-              <div v-else>
-                <div :class="styles.outflowRuleTypeBlock">
-                  <span :class="styles.outflowRuleTypeLabel">{{ ui('Deposit Method') }}</span>
-                  <div
-                    role="radiogroup"
-                    :aria-label="ui('Deposit Method')"
-                    :class="styles.outflowRuleOptionStack"
-                  >
-                    <ProjectCreateModeCard
-                      v-for="option in INFLOW_TRIGGER_TYPE_OPTIONS"
-                      :key="option.id"
-                      radio-name="auto-rule-inflow-trigger-type"
-                      :radio-value="option.id"
-                      surface="grouped"
-                      grouped-row-spacing="compact"
-                      grouped-row-rounded
-                      grouped-highlight-selected-row
-                      :title="ui(option.titleKey)"
-                      :selected="localDraft.withdrawalTypeKey === option.titleKey"
-                      @select="onInflowTriggerTypeSelect(option.titleKey)"
-                    />
-                  </div>
-                </div>
-                <div v-if="isInflowTriggerSelected" :class="styles.outflowRuleBody">
-                <div :class="styles.cardBodyField">
-                  <span :class="styles.cardBodySectionTitle">{{ ui('WaaS Project') }}</span>
-                  <EgFlotation
-                    :class="styles.scopeFlotationHost"
-                    placement="bottom"
-                    align="start"
-                    width-mode="trigger"
-                    :show-add="false"
-                    :show-menu-divider="false"
-                    close-on-scroll
-                  >
-                    <template #trigger="{ expanded }">
-                      <EgFlotationTrigger
-                        :class="styles.scopeFlotationTrigger"
-                        trigger-style="subtle"
-                        size="md"
-                        width-mode="adaptive"
-                        :label="scopeWaasTriggerLabel || ui('Please Select')"
-                        :expanded="expanded"
+                      </div>
+                      <RiskControlAutoRuleSkipCheckRows
+                        :skip-whitelist="localDraft.skipWhitelist"
+                        :skip-internal="localDraft.skipInternal"
+                        @skip-update="onSkipCheckboxUpdate"
                       />
-                    </template>
-                    <template #content="{ menuWidth, menuWidthMode, close }">
-                      <EgFlotationMenu
-                        panel-radius="radius-md"
-                        :width-mode="menuWidthMode"
-                        :width="menuWidth"
-                        height-mode="adaptive"
-                        :max-height="SCOPE_PICKER_MENU_MAX_HEIGHT"
-                        :scrollable="true"
-                        :list-scroll="true"
-                        :show-add="false"
-                        :show-divider="false"
-                      >
-                        <EgFlotationMenuItem
-                          v-for="option in OUTFLOW_WAAS_PROJECT_OPTIONS"
-                          :key="option.id"
-                          box-type="text"
-                          :label="option.label"
-                          :show-tag="false"
-                          :disabled="isScopeOptionDisabled(option.label, '')"
-                          :focused="localDraft.scopeTarget === option.label"
-                          @click="selectInflowScope(option.label, close)"
-                        />
-                      </EgFlotationMenu>
-                    </template>
-                  </EgFlotation>
-                </div>
-                <div :class="styles.cardBodyField">
-                  <span :class="styles.cardBodySectionTitle">{{ ui('Currency') }}</span>
-                  <RiskControlAutoRuleOutflowCurrencyField
-                    :model-value="localDraft.currencyEntries"
-                    :scope-selected="outflowCurrencyScopeSelected"
-                    :scope-required-toast-key="triggerCurrencyScopeToastKey"
-                    @update:model-value="patchDraft({ currencyEntries: $event })"
-                  />
-                </div>
-                <RiskControlAutoRuleSkipCheckRows
-                  :skip-whitelist="localDraft.skipWhitelist"
-                  :skip-internal="localDraft.skipInternal"
-                  @skip-update="onSkipCheckboxUpdate"
-                />
-                </div>
+                    </div>
+                  </ProjectCreateModeCard>
               </div>
-            </div>
+              <div
+                v-else
+                role="radiogroup"
+                :aria-label="ui('Deposit Method')"
+                :class="styles.optionCardGroup"
+              >
+                <span :class="styles.outflowRuleTypeLabel">{{ ui('Deposit Method') }}</span>
+                  <ProjectCreateModeCard
+                    v-for="option in INFLOW_TRIGGER_TYPE_OPTIONS"
+                    :key="option.id"
+                    v-bind="optionCardGroupedSurface"
+                    expand-style="embeddedPanel"
+                    radio-name="auto-rule-inflow-trigger-type"
+                    :radio-value="option.id"
+                    :title="ui(option.titleKey)"
+                    :description="''"
+                    :selected="localDraft.withdrawalTypeKey === option.titleKey"
+                    @select="onInflowTriggerTypeSelect(option.titleKey)"
+                  >
+                    <div
+                      :class="styles.embeddedPanelBody"
+                      @click.stop
+                      @mousedown.stop
+                    >
+                      <div :class="styles.cardBodyField">
+                        <span :class="styles.cardBodySectionTitle">{{ ui('WaaS Project') }}</span>
+                        <EgFlotation
+                          :class="styles.scopeFlotationHost"
+                          placement="bottom"
+                          align="start"
+                          width-mode="trigger"
+                          :show-add="false"
+                          :show-menu-divider="false"
+                          close-on-scroll
+                        >
+                          <template #trigger="{ expanded }">
+                            <EgFlotationTrigger
+                              :class="styles.scopeFlotationTrigger"
+                              trigger-style="subtle"
+                              size="md"
+                              width-mode="adaptive"
+                              :label="scopeWaasTriggerLabel || ui('Please Select')"
+                              :expanded="expanded"
+                            />
+                          </template>
+                          <template #content="{ menuWidth, menuWidthMode, close }">
+                            <EgFlotationMenu
+                              panel-radius="radius-md"
+                              :width-mode="menuWidthMode"
+                              :width="menuWidth"
+                              height-mode="adaptive"
+                              :max-height="SCOPE_PICKER_MENU_MAX_HEIGHT"
+                              :scrollable="true"
+                              :list-scroll="true"
+                              :show-add="false"
+                              :show-divider="false"
+                            >
+                              <EgFlotationMenuItem
+                                v-for="waasOption in OUTFLOW_WAAS_PROJECT_OPTIONS"
+                                :key="waasOption.id"
+                                box-type="text"
+                                :label="waasOption.label"
+                                :show-tag="false"
+                                :disabled="isScopeOptionDisabled(waasOption.label, '')"
+                                :focused="localDraft.scopeTarget === waasOption.label"
+                                @click="selectInflowScope(waasOption.label, close)"
+                              />
+                            </EgFlotationMenu>
+                          </template>
+                        </EgFlotation>
+                      </div>
+                      <div :class="styles.cardBodyField">
+                        <span :class="styles.cardBodySectionTitle">{{ ui('Currency') }}</span>
+                        <RiskControlAutoRuleOutflowCurrencyField
+                          :model-value="localDraft.currencyEntries"
+                          :scope-selected="outflowCurrencyScopeSelected"
+                          :scope-required-toast-key="triggerCurrencyScopeToastKey"
+                          @update:model-value="patchDraft({ currencyEntries: $event })"
+                        />
+                      </div>
+                      <RiskControlAutoRuleSkipCheckRows
+                        :skip-whitelist="localDraft.skipWhitelist"
+                        :skip-internal="localDraft.skipInternal"
+                        @skip-update="onSkipCheckboxUpdate"
+                      />
+                    </div>
+                  </ProjectCreateModeCard>
+              </div>
             </div>
           </section>
 
           <section :class="styles.fieldBlock">
             <span :class="styles.fieldLabel">{{ ui('Service Provider') }}</span>
-            <ProjectCreateModeCard
-              radio-name="auto-rule-service-provider"
-              radio-value="elliptic"
-              :title="SERVICE_PROVIDER_ELLIPTIC"
-              :selected="localDraft.serviceProvider === SERVICE_PROVIDER_ELLIPTIC"
-              @select="onServiceProviderSelect"
+            <div
+              :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]"
             >
-              <template #description>
-                <span :class="styles.serviceProviderFeeLine">
-                  <span :class="styles.serviceProviderFeeAmount">
-                    {{ AUTO_RULE_ELLIPTIC_UNIT_FEE_DISPLAY }}
-                  </span>
-                  <span :class="styles.serviceProviderFeeSuffix">
-                    {{ ui('Auto rule service provider per query') }}
-                  </span>
-                </span>
-              </template>
-              <template #trailing>
-                <img
-                  :class="styles.serviceProviderLogo"
-                  :src="ellipticProviderLogoUrl"
-                  alt=""
-                  aria-hidden="true"
-                />
-              </template>
-            </ProjectCreateModeCard>
+              <div :class="styles.optionCardGroup">
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  radio-name="auto-rule-service-provider"
+                  radio-value="elliptic"
+                  :title="SERVICE_PROVIDER_ELLIPTIC"
+                  :selected="localDraft.serviceProvider === SERVICE_PROVIDER_ELLIPTIC"
+                  @select="onServiceProviderSelect"
+                >
+                  <template #description>
+                    <span :class="styles.serviceProviderFeeLine">
+                      <span :class="styles.serviceProviderFeeAmount">
+                        {{ AUTO_RULE_ELLIPTIC_UNIT_FEE_DISPLAY }}
+                      </span>
+                      <span :class="styles.serviceProviderFeeSuffix">
+                        {{ ui('Auto rule service provider per query') }}
+                      </span>
+                    </span>
+                  </template>
+                  <template #trailing>
+                    <img
+                      :class="styles.serviceProviderLogo"
+                      :src="ellipticProviderLogoUrl"
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  </template>
+                </ProjectCreateModeCard>
+              </div>
+            </div>
           </section>
 
           <section
@@ -703,12 +710,13 @@ defineExpose({
             </div>
           </section>
 
-          <div :class="[styles.fieldBlock, styles.fieldBlockHasHint]">
-            <div :class="styles.fieldLabelGroup">
+          <div :class="styles.fieldBlock">
+            <div :class="styles.fieldLabelRow">
               <span :class="styles.fieldLabel">{{ ui('Risk Rating Criteria') }}</span>
-              <p :class="styles.fieldHint">
-                {{ ui('Auto rule risk score range hint min lead') }}<span :class="styles.riskScoreRangeHintValueSuccess">0.0</span>{{ ui('Auto rule risk score range hint min tail') }}{{ ui('Auto rule risk score range hint max lead') }}<span :class="styles.riskScoreRangeHintValueDanger">10.0</span>{{ ui('Auto rule risk score range hint max tail') }}
-              </p>
+              <RiskControlFormHintInfoTrigger
+                button-label-key="Risk Rating Criteria"
+                rich-risk-score-hint
+              />
             </div>
             <div :class="styles.fieldBlockContent">
               <EgInput
@@ -741,128 +749,133 @@ defineExpose({
             </div>
           </div>
 
-          <section
-            v-if="isOutflow"
-            :class="[styles.fieldBlock, styles.fieldBlockHasHint]"
-          >
-            <div :class="styles.fieldLabelGroup">
+          <section v-if="isOutflow" :class="styles.fieldBlock">
+            <div :class="styles.fieldLabelRow">
               <span :class="styles.fieldLabel">{{ ui('Risk control action') }}</span>
-              <p :class="styles.fieldHint">
-                {{ ui('Auto rule risk control action hint') }}
-              </p>
+              <RiskControlFormHintInfoTrigger
+                button-label-key="Risk control action"
+                :hint-keys="['Auto rule risk control action hint']"
+              />
             </div>
             <div
               :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]"
             >
-              <ProjectCreateModeCard
-                radio-name="auto-rule-risk-action"
-                radio-value="alarm"
-                :title="ui('Alarm the reviewer(s)/signer(s)')"
-                :description="''"
-                :selected="localDraft.riskControlActionKey === RISK_CONTROL_ACTION_ALARM"
-                @select="toggleDraftSingleChoice('riskControlActionKey', RISK_CONTROL_ACTION_ALARM)"
-              />
-              <ProjectCreateModeCard
-                radio-name="auto-rule-risk-action"
-                radio-value="reject"
-                :title="ui('Reject the withdrawal request')"
-                :description="''"
-                :selected="localDraft.riskControlActionKey === RISK_CONTROL_ACTION_REJECT"
-                @select="toggleDraftSingleChoice('riskControlActionKey', RISK_CONTROL_ACTION_REJECT)"
-              />
+              <div :class="styles.optionCardGroup">
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  radio-name="auto-rule-risk-action"
+                  radio-value="alarm"
+                  :title="ui('Alarm the reviewer(s)/signer(s)')"
+                  :description="''"
+                  :selected="localDraft.riskControlActionKey === RISK_CONTROL_ACTION_ALARM"
+                  @select="toggleDraftSingleChoice('riskControlActionKey', RISK_CONTROL_ACTION_ALARM)"
+                />
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  radio-name="auto-rule-risk-action"
+                  radio-value="reject"
+                  :title="ui('Reject the withdrawal request')"
+                  :description="''"
+                  :selected="localDraft.riskControlActionKey === RISK_CONTROL_ACTION_REJECT"
+                  @select="toggleDraftSingleChoice('riskControlActionKey', RISK_CONTROL_ACTION_REJECT)"
+                />
+              </div>
             </div>
           </section>
 
-          <section
-            v-if="isOutflow"
-            :class="[styles.fieldBlock, styles.fieldBlockHasHint]"
-          >
-            <div :class="styles.fieldLabelGroup">
+          <section v-if="isOutflow" :class="styles.fieldBlock">
+            <div :class="styles.fieldLabelRow">
               <span :class="styles.fieldLabel">{{ ui('Screening Exception handling') }}</span>
-              <p :class="styles.fieldHint">
-                {{ ui('Auto rule exception handling hint') }}
-              </p>
+              <RiskControlFormHintInfoTrigger
+                button-label-key="Screening Exception handling"
+                :hint-keys="['Auto rule exception handling hint']"
+              />
             </div>
             <div
               :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]"
             >
-              <ProjectCreateModeCard
-                radio-name="auto-rule-exception"
-                radio-value="skip-query"
-                :title="ui('Skip the query')"
-                :description="''"
-                :selected="localDraft.exceptionHandlingKey === EXCEPTION_HANDLING_SKIP_QUERY"
-                @select="onExceptionHandlingSelect(EXCEPTION_HANDLING_SKIP_QUERY)"
-              />
-              <ProjectCreateModeCard
-                radio-name="auto-rule-exception"
-                radio-value="notify-designated"
-                expand-style="embeddedPanel"
-                :title="ui('Notify designated personnel to handle')"
-                :description="''"
-                :selected="
-                  localDraft.exceptionHandlingKey === EXCEPTION_HANDLING_NOTIFY_DESIGNATED
-                "
-                @select="onExceptionHandlingSelect(EXCEPTION_HANDLING_NOTIFY_DESIGNATED)"
-              >
-                <div :class="styles.cardBodyField">
-                  <span :class="styles.cardBodySectionTitle">{{
-                    ui('Auto rule exception handler label')
-                  }}</span>
-                  <RiskControlAutoRuleRecipientPicker
-                    :show-title="false"
-                    :model-value="localDraft.exceptionHandlerMemberIds"
-                    @update:model-value="onExceptionHandlerMembers"
-                  />
-                </div>
-              </ProjectCreateModeCard>
+              <div :class="styles.optionCardGroup">
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  radio-name="auto-rule-exception"
+                  radio-value="skip-query"
+                  :title="ui('Skip the query')"
+                  :description="''"
+                  :selected="localDraft.exceptionHandlingKey === EXCEPTION_HANDLING_SKIP_QUERY"
+                  @select="onExceptionHandlingSelect(EXCEPTION_HANDLING_SKIP_QUERY)"
+                />
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  radio-name="auto-rule-exception"
+                  radio-value="notify-designated"
+                  expand-style="embeddedPanel"
+                  :title="ui('Notify designated personnel to handle')"
+                  :description="''"
+                  :selected="
+                    localDraft.exceptionHandlingKey === EXCEPTION_HANDLING_NOTIFY_DESIGNATED
+                  "
+                  @select="onExceptionHandlingSelect(EXCEPTION_HANDLING_NOTIFY_DESIGNATED)"
+                >
+                  <div :class="styles.cardBodyField">
+                    <span :class="styles.cardBodySectionTitle">{{
+                      ui('Auto rule exception handler label')
+                    }}</span>
+                    <RiskControlAutoRuleRecipientPicker
+                      :show-title="false"
+                      :model-value="localDraft.exceptionHandlerMemberIds"
+                      @update:model-value="onExceptionHandlerMembers"
+                    />
+                  </div>
+                </ProjectCreateModeCard>
+              </div>
             </div>
           </section>
 
-          <section :class="[styles.fieldBlock, styles.fieldBlockHasHint]">
-            <div :class="styles.fieldLabelGroup">
+          <section :class="styles.fieldBlock">
+            <div :class="styles.fieldLabelRow">
               <span :class="styles.fieldLabel">{{ ui('Risk Alert Recipient') }}</span>
-              <p v-if="isOutflow" :class="styles.fieldHint">
-                {{ ui(riskAlertRecipientsHintKey) }}
-              </p>
+              <RiskControlFormHintInfoTrigger
+                button-label-key="Risk Alert Recipient"
+                :hint-keys="[riskAlertRecipientsHintKey]"
+              />
             </div>
             <div
               :class="[styles.fieldBlockContent, styles.fieldBlockContentOptionCards]"
             >
-              <ProjectCreateModeCard
-                selection-control="checkbox"
-                expand-style="embeddedPanel"
-                :title="ui('In-app notification')"
-                :description="
-                  isOutflow ? '' : ui('Auto rule inflow risk alert inapp hint')
-                "
-                :selected="localDraft.riskAlertRecipientKeys.includes(RISK_ALERT_IN_APP)"
-                @select="toggleRiskAlertRecipientKey(RISK_ALERT_IN_APP)"
-              >
-                <RiskControlAutoRuleRecipientPicker
-                  :model-value="localDraft.riskAlertInAppRecipientIds"
-                  @update:model-value="
-                    (value) => patchDraft({ riskAlertInAppRecipientIds: value })
-                  "
-                />
-              </ProjectCreateModeCard>
-              <ProjectCreateModeCard
-                selection-control="checkbox"
-                expand-style="embeddedPanel"
-                :title="ui('Email notification')"
-                :description="
-                  isOutflow ? '' : ui('Auto rule inflow risk alert email hint')
-                "
-                :selected="localDraft.riskAlertRecipientKeys.includes(RISK_ALERT_EMAIL)"
-                @select="toggleRiskAlertRecipientKey(RISK_ALERT_EMAIL)"
-              >
-                <RiskControlAutoRuleRecipientPicker
-                  :model-value="localDraft.riskAlertEmailTeamMemberIds"
-                  @update:model-value="
-                    (value) => patchDraft({ riskAlertEmailTeamMemberIds: value })
-                  "
-                />
-              </ProjectCreateModeCard>
+              <div :class="styles.optionCardGroup">
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  selection-control="checkbox"
+                  expand-style="embeddedPanel"
+                  :title="ui('In-app notification')"
+                  :description="''"
+                  :selected="localDraft.riskAlertRecipientKeys.includes(RISK_ALERT_IN_APP)"
+                  @select="toggleRiskAlertRecipientKey(RISK_ALERT_IN_APP)"
+                >
+                  <RiskControlAutoRuleRecipientPicker
+                    :model-value="localDraft.riskAlertInAppRecipientIds"
+                    @update:model-value="
+                      (value) => patchDraft({ riskAlertInAppRecipientIds: value })
+                    "
+                  />
+                </ProjectCreateModeCard>
+                <ProjectCreateModeCard
+                  v-bind="optionCardGroupedSurface"
+                  selection-control="checkbox"
+                  expand-style="embeddedPanel"
+                  :title="ui('Email notification')"
+                  :description="''"
+                  :selected="localDraft.riskAlertRecipientKeys.includes(RISK_ALERT_EMAIL)"
+                  @select="toggleRiskAlertRecipientKey(RISK_ALERT_EMAIL)"
+                >
+                  <RiskControlAutoRuleRecipientPicker
+                    :model-value="localDraft.riskAlertEmailTeamMemberIds"
+                    @update:model-value="
+                      (value) => patchDraft({ riskAlertEmailTeamMemberIds: value })
+                    "
+                  />
+                </ProjectCreateModeCard>
+              </div>
             </div>
           </section>
 

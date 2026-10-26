@@ -1,15 +1,12 @@
-import {
-  PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH,
-  type PaymentEngineRecordPageConfig,
-} from '@/scenes/payment-engine/paymentEngineRecordConfigs';
+import type { PaymentEngineRecordPageConfig } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { DATA_LIST_COLUMN_HEIGHT_XL } from '@/scenes/payment-engine/usePaymentEngineDataListPage';
 import { PAYMENT_ENGINE_RECORD_ROW_COUNT } from '@/scenes/payment-engine/paymentEngineOrderRecordData';
 import { dataListTimeColumnLabelKey } from '@/scenes/shared/dataListTimeLabelKeys';
 import { isManageRoleMenuItem } from '../manageMenuData';
 
-const ROLE_NAME_MIN = '232px';
-/** 创建人 | 创建时间 UTC+08:00 · 仅时间排序，对齐 Webhook 配置列表组合列。 */
-const ROLE_CREATOR_TIME_MIN = PAYMENT_ENGINE_CALLBACK_AMOUNT_TIME_COLUMN_MIN_WIDTH;
+const ROLE_NAME_MIN = '332px';
+/** 创建人 | 创建时间 UTC+08:00 · 仅时间排序（相对通用组合列 −100px）。 */
+const ROLE_CREATOR_TIME_MIN = '172px';
 const ROLE_ACTIONS_MIN = '200px';
 
 const ROLE_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
