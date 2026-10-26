@@ -17,6 +17,12 @@ export function webhookNameIsValid(value: string): boolean {
   return !webhookNameHasInvalidCharacters(value) && webhookNameLengthValid(value);
 }
 
+/** 编辑页底栏：有改动即可点保存；超长等在提交时再拦并展示校验。 */
+export function webhookNameAllowsEditSave(value: string): boolean {
+  const trimmed = value.trim();
+  return trimmed.length >= 2 && !webhookNameHasInvalidCharacters(trimmed);
+}
+
 export function endpointUrlHasInvalidCharacters(value: string): boolean {
   if (EMOJI_PATTERN.test(value)) return true;
   return CJK_PATTERN.test(value);

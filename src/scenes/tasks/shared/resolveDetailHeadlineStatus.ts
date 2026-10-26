@@ -1,8 +1,5 @@
 import type { TagStatus } from '@eds/desktop-components';
-import {
-  isTaskAmlRiskListStatusLabel,
-  type TasksListFieldStatusRow,
-} from '../list-field/tasksListFieldStatusRowData';
+import type { TasksListFieldStatusRow } from '../list-field/tasksListFieldStatusRowData';
 import type { DetailApprovalProgressStep } from './detailApprovalProgress.types';
 
 export type DetailHeadlineStatus = {
@@ -50,19 +47,35 @@ function isTerminalListStatus(label: string): boolean {
   return TERMINAL_PROGRESS_LABELS.has(label) || label === 'Approval Reject';
 }
 
+function isInFlightListStatusLabel(label: string): boolean {
+  return IN_FLIGHT_PROGRESS_LABELS.has(label);
+}
+
 export function resolveDetailHeadlineStatus(
   steps: DetailApprovalProgressStep[],
   translate: (key: string) => string,
   listStatus?: TasksListFieldStatusRow,
+  options?: {
+    readOnly?: boolean;
+    progressListStatus?: TasksListFieldStatusRow;
+  },
 ): DetailHeadlineStatus | null {
-  if (listStatus && isTaskAmlRiskListStatusLabel(listStatus.label)) {
-    return {
-      label: translate(listStatus.label),
-      status: listStatus.status,
-    };
-  }
-
   if (isProgressInFlight(steps)) {
+    if (options?.readOnly) {
+      const progress = options.progressListStatus;
+      if (progress && isInFlightListStatusLabel(progress.label)) {
+        return {
+          label: translate(progress.label),
+          status: progress.status,
+        };
+      }
+      if (listStatus && isInFlightListStatusLabel(listStatus.label)) {
+        return {
+          label: translate(listStatus.label),
+          status: listStatus.status,
+        };
+      }
+    }
     return null;
   }
 

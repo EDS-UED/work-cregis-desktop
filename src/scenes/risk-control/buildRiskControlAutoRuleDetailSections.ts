@@ -24,9 +24,14 @@ export function buildAutoRuleExpandedCurrencyValueEntries(
   detail: ReturnType<typeof resolveRiskControlAutoRuleRecordDetail>,
   translate: (key: string) => string,
 ) {
+  const thresholdLabelKey =
+    detail.direction === 'outflow'
+      ? 'Auto rule per payout amount threshold'
+      : 'Auto rule collection amount threshold';
   return buildRiskControlExpandedCurrencyValueEntries(
     detail.currencyConditions,
     translate,
+    thresholdLabelKey,
   );
 }
 
@@ -79,6 +84,7 @@ function buildOutflowTriggerItems(
     conditions: detail.currencyConditions,
     hiddenCount: detail.hiddenCurrencyConditionCount,
     translate,
+    thresholdLabelKey: 'Auto rule per payout amount threshold',
   });
   if (currencyItem) items.push(currencyItem);
 
@@ -97,7 +103,7 @@ function buildOutflowTriggerItems(
         title: translate('Screening Node'),
         value: translate(detail.screeningNodeKey ?? 'Before approval process'),
       }),
-      titleIcon: 'eds-arrow-workflow',
+      titleIcon: 'eds-hierarchy',
     },
     {
       ...createDetailApplyItemRow('text', {
@@ -174,11 +180,14 @@ export function buildRiskControlAutoRuleDetailSections(
   });
 
   const overviewItems: DetailItemData[] = [
-    createDetailApplyItemRow('brand-number', {
-      key: 'auto-rule-record-number',
-      title: translate('Rule Number'),
-      value: detail.recordNumber,
-    }),
+    {
+      ...createDetailApplyItemRow('brand-number', {
+        key: 'auto-rule-record-number',
+        title: translate('Rule Number'),
+        value: detail.recordNumber,
+      }),
+      titleIcon: 'eds-brand-numbers',
+    },
     createDetailApplyItemRow('initiated-by', {
       key: AUTO_RULE_CREATOR_ITEM_KEY,
       title: translate('Creator'),

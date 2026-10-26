@@ -1,8 +1,6 @@
 import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
 import { resolveSampleAddressForSymbol } from '../list-field/listFieldCryptoSampleAddresses';
 import { resolveCurrencyRowPreset } from '../list-field/tasksListFieldCurrencyRowData';
-import { TASK_ADDRESS_DETAILS_MOCK_ROW_COUNT } from './taskAddressDetailsPopup.constants';
-
 export type TaskAddressDetailsSide = 'sender' | 'receiver';
 
 export type TaskAddressDetailsRow = {
@@ -44,7 +42,7 @@ function resolveOrderRowCount(detail: AddressOrderDetail, side: TaskAddressDetai
   const orderCount =
     side === 'sender' ? detail.senderOrderCount ?? 0 : detail.receiverOrderCount ?? 0;
   if (orderCount > 1) {
-    return TASK_ADDRESS_DETAILS_MOCK_ROW_COUNT;
+    return orderCount;
   }
   const entries = side === 'sender' ? detail.senders : detail.receivers;
   return Math.max(1, entries.length);

@@ -19,6 +19,7 @@ import { resolveDetailHeadlineStatus } from '../shared/resolveDetailHeadlineStat
 import { usePopupShellLifecycle } from '../shared/usePopupShellLifecycle';
 import { useDetailToolbarPageMotion } from '../shared/useDetailToolbarPageMotion';
 import { buildApprovalDetailSections } from './buildApprovalDetailSections';
+import { isTaskAmlRiskDemoRowIndex } from '../list-field/tasksListFieldStatusRowData';
 import { parseRowIndexFromApprovalId } from './approvalStore';
 import type { ApprovalDetail } from './types';
 import DetailHeadlineGroupPortal from '../shared/DetailHeadlineGroupPortal.vue';
@@ -51,6 +52,7 @@ const props = withDefaults(
   listStatusKind?: TagStatus;
   /** 已审批详情进度演示；缺省与 listStatusLabel 相同。 */
   progressListStatusLabel?: string;
+  progressListStatusKind?: TagStatus;
   recordMenuItem?: string;
   showWithdrawAction?: boolean;
   onRemarkBeforeOpen?: () => void | Promise<void>;
@@ -200,6 +202,7 @@ const progressSteps = computed(() => {
       listStatusLabel: props.listStatusLabel,
       progressListStatusLabel: props.progressListStatusLabel,
       thresholdSubtitle,
+      amlRiskDemoRow: isTaskAmlRiskDemoRowIndex(parseRowIndexFromApprovalId(props.detail.id)),
     }),
   );
 });
@@ -210,7 +213,14 @@ const headlineStatus = computed(() => {
     props.listStatusLabel && props.listStatusKind
       ? { label: props.listStatusLabel, status: props.listStatusKind }
       : undefined;
-  return resolveDetailHeadlineStatus(progressSteps.value, ui, listStatus);
+  const progressListStatus =
+    props.progressListStatusLabel && props.progressListStatusKind
+      ? { label: props.progressListStatusLabel, status: props.progressListStatusKind }
+      : undefined;
+  return resolveDetailHeadlineStatus(progressSteps.value, ui, listStatus, {
+    readOnly: props.readOnly,
+    progressListStatus,
+  });
 });
 const showStatusTag = computed(() => headlineStatus.value != null);
 const statusTag = computed(() => headlineStatus.value?.label ?? '');

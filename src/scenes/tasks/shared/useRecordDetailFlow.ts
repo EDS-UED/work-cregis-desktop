@@ -113,6 +113,9 @@ export function useRecordDetailFlow(options: {
   const statusTagLabel = computed(() => listColumnStatus.value.label);
   const statusTagStatus = computed(() => listColumnStatus.value.status as TasksListFieldStatusKind);
   const progressListStatusLabel = computed(() => progressListStatus.value.label);
+  const progressListStatusKind = computed(
+    () => progressListStatus.value.status as TasksListFieldStatusKind,
+  );
   const activeRecordMenuItem = computed(
     () => detailMenuItem.value ?? options.menuItem.value,
   );
@@ -221,6 +224,7 @@ export function useRecordDetailFlow(options: {
     statusTagLabel,
     statusTagStatus,
     progressListStatusLabel,
+    progressListStatusKind,
     showWithdrawAction,
     viewMoreOpen,
     viewMoreSide,

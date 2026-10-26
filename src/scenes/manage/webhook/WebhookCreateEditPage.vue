@@ -22,6 +22,7 @@ import {
   endpointUrlHttpsValid,
   endpointUrlIsValid,
   webhookNameHasInvalidCharacters,
+  webhookNameAllowsEditSave,
   webhookNameIsValid,
   webhookNameLengthValid,
 } from './webhookFormValidation';
@@ -67,9 +68,28 @@ function clearEndpointVerifyFlow() {
   endpointVerifyButtonOutcome.value = null;
 }
 
+function initialEndpointUrlTrimmed(): string {
+  return props.initial?.endpointUrl?.trim() ?? '';
+}
+
+function syncEndpointVerifyStateForCurrentUrl() {
+  const trimmed = endpointUrl.value.trim();
+  if (
+    props.mode === 'edit'
+    && props.initial?.endpointVerified
+    && trimmed === initialEndpointUrlTrimmed()
+  ) {
+    endpointVerifiedForSubmit.value = true;
+    endpointVerifyButtonOutcome.value = { kind: 'success' };
+    return;
+  }
+  clearEndpointVerifyFlow();
+}
+
 watch(
   () => props.initial,
-  (value) => {
+  (value, previous) => {
+    if (value === previous) return;
     name.value = value?.name ?? '';
     endpointUrl.value = value?.endpointUrl ?? '';
     nameBlurred.value = false;
@@ -79,8 +99,8 @@ watch(
     endpointFocused.value = false;
     endpointVerifyButtonOutcome.value = null;
     if (props.mode === 'edit' && value?.endpointVerified) {
-      endpointVerifiedForSubmit.value = true;
       eventSelected.value = true;
+      syncEndpointVerifyStateForCurrentUrl();
     } else {
       endpointVerifiedForSubmit.value = false;
     }
@@ -135,7 +155,7 @@ watch(endpointUrl, () => {
     verifyTimer = null;
   }
   verifyLoading.value = false;
-  clearEndpointVerifyFlow();
+  syncEndpointVerifyStateForCurrentUrl();
 });
 
 const nameShowValidation = computed(() => nameBlurred.value && !nameFocused.value);
@@ -181,13 +201,30 @@ const endpointHint = computed(() => {
   return ui('HTTPS endpoint hint');
 });
 
-const canSubmit = computed(
-  () =>
+const isEditFormDirty = computed(() => {
+  if (props.mode !== 'edit' || !props.initial) return true;
+  const initial = props.initial;
+  return (
+    name.value.trim() !== initial.name.trim()
+    || endpointUrl.value.trim() !== initial.endpointUrl.trim()
+  );
+});
+
+const canSubmit = computed(() => {
+  const nameReady =
+    props.mode === 'edit'
+      ? webhookNameAllowsEditSave(name.value)
+      : webhookNameIsValid(name.value);
+  const formValid =
     eventSelected.value
-    && webhookNameIsValid(name.value)
+    && nameReady
     && endpointUrlIsValid(endpointUrl.value)
-    && endpointVerifiedForSubmit.value,
-);
+    && endpointVerifiedForSubmit.value;
+  if (props.mode === 'edit') {
+    return formValid && isEditFormDirty.value;
+  }
+  return formValid;
+});
 
 const verifySubtitle = computed(() => ui('Verify endpoint to complete creation'));
 
@@ -322,6 +359,7 @@ function onSubmit() {
   nameBlurred.value = true;
   endpointBlurred.value = true;
   if (!canSubmit.value) return;
+  if (!webhookNameIsValid(name.value)) return;
   emit('submit', buildDraft());
 }
 </script>

@@ -24,7 +24,9 @@ import DetailApprovalProgressAppend from '../shared/DetailApprovalProgressAppend
 import { resolveDetailHeadlineStatus } from '../shared/resolveDetailHeadlineStatus';
 import { usePopupShellLifecycle } from '../shared/usePopupShellLifecycle';
 import { useDetailToolbarPageMotion } from '../shared/useDetailToolbarPageMotion';
+import { isTaskAmlRiskDemoRowIndex } from '../list-field/tasksListFieldStatusRowData';
 import { buildSigningDetailSections } from './buildSigningDetailSections';
+import { parseRowIndexFromSigningId } from './signingStore';
 import {
   resolveDetailTaskAmlInterceptFromReceivers,
   resolveDetailTaskAmlPassInterceptKind,
@@ -61,6 +63,7 @@ const props = withDefaults(
     listStatusLabel?: string;
     listStatusKind?: TagStatus;
     progressListStatusLabel?: string;
+    progressListStatusKind?: TagStatus;
     onRemarkBeforeOpen?: () => void | Promise<void>;
   }>(),
   {
@@ -211,6 +214,7 @@ const progressSteps = computed(() => {
       listStatusLabel: props.listStatusLabel,
       progressListStatusLabel: props.progressListStatusLabel,
       thresholdSubtitle,
+      amlRiskDemoRow: isTaskAmlRiskDemoRowIndex(parseRowIndexFromSigningId(props.detail.id)),
     }),
   );
 });
@@ -221,7 +225,14 @@ const headlineStatus = computed(() => {
     props.listStatusLabel && props.listStatusKind
       ? { label: props.listStatusLabel, status: props.listStatusKind }
       : undefined;
-  return resolveDetailHeadlineStatus(progressSteps.value, ui, listStatus);
+  const progressListStatus =
+    props.progressListStatusLabel && props.progressListStatusKind
+      ? { label: props.progressListStatusLabel, status: props.progressListStatusKind }
+      : undefined;
+  return resolveDetailHeadlineStatus(progressSteps.value, ui, listStatus, {
+    readOnly: props.readOnly,
+    progressListStatus,
+  });
 });
 const showStatusTag = computed(() => headlineStatus.value != null);
 const statusTag = computed(() => headlineStatus.value?.label ?? '');

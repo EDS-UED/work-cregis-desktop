@@ -12,8 +12,9 @@ import {
 export function formatRiskControlCurrencyConditionThresholdLabel(
   entry: RiskControlCurrencyCondition,
   translate: (key: string) => string,
+  thresholdLabelKey = 'Auto rule collection amount threshold',
 ): string {
-  return translate('Auto rule collection amount threshold')
+  return translate(thresholdLabelKey)
     .replace('{amount}', entry.thresholdAmount)
     .replace('{symbol}', entry.thresholdSymbol);
 }
@@ -21,9 +22,14 @@ export function formatRiskControlCurrencyConditionThresholdLabel(
 export function buildRiskControlCurrencyConditionValueEntries(
   conditions: RiskControlCurrencyCondition[],
   translate: (key: string) => string,
+  thresholdLabelKey?: string,
 ): DetailItemValueEntry[] {
   return conditions.map((entry, index) => ({
-    value: formatRiskControlCurrencyConditionThresholdLabel(entry, translate),
+    value: formatRiskControlCurrencyConditionThresholdLabel(
+      entry,
+      translate,
+      thresholdLabelKey,
+    ),
     valueLeading: entry.symbol,
     valueIcon: resolveDataListCryptoName(entry.symbol, entry.cryptoName),
     tag: entry.networkLabel?.trim() || undefined,
@@ -36,10 +42,12 @@ export function buildRiskControlCurrencyConditionValueEntries(
 export function buildRiskControlExpandedCurrencyValueEntries(
   visibleConditions: RiskControlCurrencyCondition[],
   translate: (key: string) => string,
+  thresholdLabelKey?: string,
 ): DetailItemValueEntry[] {
   return buildRiskControlCurrencyConditionValueEntries(
     mergeRiskControlCurrencyConditions(visibleConditions),
     translate,
+    thresholdLabelKey,
   );
 }
 
@@ -49,15 +57,21 @@ export function buildRiskControlCurrencyConditionsItem(options: {
   conditions: RiskControlCurrencyCondition[];
   hiddenCount: number;
   translate: (key: string) => string;
+  thresholdLabelKey?: string;
 }): DetailItemData | null {
-  const { itemKey, title, conditions, hiddenCount, translate } = options;
+  const { itemKey, title, conditions, hiddenCount, translate, thresholdLabelKey } =
+    options;
   if (conditions.length === 0) {
     return null;
   }
 
   const primary = conditions[0]!;
   const totalCount = conditions.length + hiddenCount;
-  const valueEntries = buildRiskControlCurrencyConditionValueEntries(conditions, translate);
+  const valueEntries = buildRiskControlCurrencyConditionValueEntries(
+    conditions,
+    translate,
+    thresholdLabelKey,
+  );
   const showExpandFooter = hiddenCount > 0;
 
   if (conditions.length === 1 && !showExpandFooter) {
@@ -91,7 +105,11 @@ export function buildRiskControlCurrencyConditionsItem(options: {
     ...createDetailApplyItemRow('text', {
       key: itemKey,
       title,
-      value: formatRiskControlCurrencyConditionThresholdLabel(primary, translate),
+      value: formatRiskControlCurrencyConditionThresholdLabel(
+        primary,
+        translate,
+        thresholdLabelKey,
+      ),
       addressLayout: 'multi-expanded',
       addressCount: showExpandFooter ? totalCount : conditions.length,
       addressViewMoreLabel: showExpandFooter

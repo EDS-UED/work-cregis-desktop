@@ -45,6 +45,7 @@ const nextDisabled = computed(() => props.flow.nextDisabled.value);
 const listStatusLabel = computed(() => props.flow.statusTagLabel.value);
 const listStatusKind = computed(() => props.flow.statusTagStatus.value);
 const progressListStatusLabel = computed(() => props.flow.progressListStatusLabel.value);
+const progressListStatusKind = computed(() => props.flow.progressListStatusKind.value);
 const showWithdrawAction = computed(() => props.flow.showWithdrawAction.value);
 const recordMenuItem = computed(
   () =>
@@ -71,6 +72,7 @@ const addressDetailsDetail = computed(
     :list-status-label="listStatusLabel"
     :list-status-kind="listStatusKind"
     :progress-list-status-label="progressListStatusLabel"
+    :progress-list-status-kind="progressListStatusKind"
     :record-menu-item="recordMenuItem"
     :show-withdraw-action="showWithdrawAction"
     @popup-closed="flow.onDetailPopupClosed()"
@@ -92,6 +94,7 @@ const addressDetailsDetail = computed(
     :list-status-label="listStatusLabel"
     :list-status-kind="listStatusKind"
     :progress-list-status-label="progressListStatusLabel"
+    :progress-list-status-kind="progressListStatusKind"
     @popup-closed="flow.onDetailPopupClosed()"
     @prev="flow.navigateRelative(-1)"
     @next="flow.navigateRelative(1)"

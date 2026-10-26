@@ -10,7 +10,10 @@ import {
   tasksDataListShowsAddressBlacklist,
   tasksDataListShowsAmlRiskListStatusDemo,
 } from '../tasksDataListPageData';
-import { TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX } from './tasksListFieldStatusRowData';
+import {
+  TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX,
+  TASK_AML_RISK_QUERY_DEMO_ROW_INDEX,
+} from './tasksListFieldStatusRowData';
 import {
   MAX_CURRENCY_SIDE_ADDRESSES,
   currencyAddressTagsEnabledKey,
@@ -63,7 +66,7 @@ function currencyTagCountKey(
   return `${currencyTagKeyPrefix(side, addressIndex, slot)}Count`;
 }
 
-function currencyTagItemKey(
+export function currencyTagItemKey(
   side: 'from' | 'to',
   addressIndex: number,
   slot: CurrencyTagPanelSlot,
@@ -328,6 +331,23 @@ export function currencyAddressBlacklistTagOverrides(
 }
 
 /** 接收方 AML「危险」演示 Tag（label = Danger / 危险）。 */
+/** 已办 AML 演示：接收方单 Tag，文案为列表原 Status catalog（展示在详情接收方）。 */
+export function currencyAddressAmlListStatusTagOverrides(
+  side: 'from' | 'to',
+  addressIndex: number,
+  statusLabelKey: string,
+  customStyle: TagCustomStyle,
+): Record<string, unknown> {
+  return {
+    [currencyAddressTagsEnabledKey(side, addressIndex)]: true,
+    [currencyTagShowKey(side, addressIndex, 'system')]: false,
+    [currencyTagShowKey(side, addressIndex, 'custom')]: true,
+    [currencyTagCountKey(side, addressIndex, 'custom')]: '1',
+    [currencyTagItemKey(side, addressIndex, 'custom', 'Label', 1)]: statusLabelKey,
+    [currencyTagItemKey(side, addressIndex, 'custom', 'CustomStyle', 1)]: customStyle,
+  };
+}
+
 export function currencyAddressDangerTagOverrides(
   side: 'from' | 'to',
   addressIndex: number,
@@ -406,6 +426,7 @@ function resolveCurrencyDemoRowsWithAddressTags(menuItem?: string): Set<number> 
     rows.add(CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX);
   }
   if (tasksDataListShowsAmlRiskListStatusDemo(menuItem)) {
+    rows.add(TASK_AML_RISK_QUERY_DEMO_ROW_INDEX);
     rows.add(TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX);
   }
   return rows;

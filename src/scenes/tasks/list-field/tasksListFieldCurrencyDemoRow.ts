@@ -3,11 +3,15 @@ import {
   CURRENCY_CUSTOM_TAG_DEFAULT_COUNT,
   CURRENCY_DEMO_ROW_TON_AML_TAG_INDEX,
   CURRENCY_DEMO_ROW_WITH_TAGS_INDEX,
+  currencyAddressAmlListStatusTagOverrides,
   currencyAddressBlacklistTagOverrides,
   currencyAddressDangerTagOverrides,
   currencyAddressCustomTagOverrides,
+  currencyTagItemKey,
   currencyTagShowKey,
 } from './listFieldCurrencyTagCustomize';
+import { DANGER_LABEL_KEY } from '../shared/hasBlacklistAddressTags';
+import { TASK_ADDRESS_DETAILS_MOCK_ROW_COUNT } from '../shared/taskAddressDetailsPopup.constants';
 import {
   resolveSampleAddressForSymbol,
   sideAddressPoolIndex,
@@ -17,7 +21,12 @@ import {
   tasksDataListShowsAddressBlacklist,
   tasksDataListShowsAmlRiskListStatusDemo,
 } from '../tasksDataListPageData';
-import { TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX } from './tasksListFieldStatusRowData';
+import {
+  TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX,
+  TASK_AML_RISK_INTERCEPT_STATUS_LABEL,
+  TASK_AML_RISK_QUERY_DEMO_ROW_INDEX,
+  TASK_AML_RISK_QUERY_STATUS_LABEL,
+} from './tasksListFieldStatusRowData';
 
 function seededFraction(seed: number): number {
   const x = Math.sin(seed * 9973) * 10000;
@@ -72,7 +81,7 @@ function buildDemoSideAddressOverrides(
   return entries;
 }
 
-/** 第 3 条演示行：发送方 23 笔订单（单地址）；接收方 Blacklist + 5 自定义 Tag。 */
+/** 第 3 条演示行：发送方 / 接收方各 51 笔订单（与地址详情弹窗 mock 行数一致）；接收方 Blacklist + Danger + 4 自定义 Tag。 */
 export function applyCurrencyDemoRowOverrides(
   customize: Record<string, unknown>,
   rowIndex: number,
@@ -100,7 +109,24 @@ export function applyCurrencyDemoRowOverrides(
     };
   }
 
-  /** 第 7 条（index 6）：已办 / 记录类「风险拦截」行，接收方危险 Tag。 */
+  /** 第 6 条（index 5）：列表 Status「待审批」+ 接收方「风控查询中」Tag（与详情 1:1）。 */
+  if (
+    rowIndex === TASK_AML_RISK_QUERY_DEMO_ROW_INDEX
+    && tasksDataListShowsAmlRiskListStatusDemo(menuItem)
+  ) {
+    return {
+      ...customize,
+      [currencyAddressTagsEnabledKey('from', 1)]: false,
+      ...currencyAddressAmlListStatusTagOverrides(
+        'to',
+        1,
+        TASK_AML_RISK_QUERY_STATUS_LABEL,
+        'aml-ready',
+      ),
+    };
+  }
+
+  /** 第 7 条（index 6）：列表 Status「待审批」+ 接收方「风险拦截」Tag（与详情 1:1）。 */
   if (
     rowIndex === TASK_AML_RISK_INTERCEPT_DEMO_ROW_INDEX
     && tasksDataListShowsAmlRiskListStatusDemo(menuItem)
@@ -108,9 +134,12 @@ export function applyCurrencyDemoRowOverrides(
     return {
       ...customize,
       [currencyAddressTagsEnabledKey('from', 1)]: false,
-      [currencyAddressTagsEnabledKey('to', 1)]: true,
-      [currencyTagShowKey('to', 1, 'custom')]: false,
-      ...currencyAddressDangerTagOverrides('to', 1, 1, true),
+      ...currencyAddressAmlListStatusTagOverrides(
+        'to',
+        1,
+        TASK_AML_RISK_INTERCEPT_STATUS_LABEL,
+        'aml-danger',
+      ),
     };
   }
 
@@ -118,12 +147,15 @@ export function applyCurrencyDemoRowOverrides(
     return {
       ...customize,
       fromAddressCount: '1',
-      fromOrderCount: '23',
+      fromOrderCount: String(TASK_ADDRESS_DETAILS_MOCK_ROW_COUNT),
+      toOrderCount: String(TASK_ADDRESS_DETAILS_MOCK_ROW_COUNT),
       fromAlias1: 'Mr. Wang',
       [currencyAddressTagsEnabledKey('from', 1)]: false,
       [currencyAddressTagsEnabledKey('to', 1)]: true,
       ...(showBlacklist ? currencyAddressBlacklistTagOverrides('to', 1, 1, true) : {}),
       ...currencyAddressCustomTagOverrides('to', 1, CURRENCY_CUSTOM_TAG_DEFAULT_COUNT, true),
+      [currencyTagItemKey('to', 1, 'custom', 'Label', 1)]: DANGER_LABEL_KEY,
+      [currencyTagItemKey('to', 1, 'custom', 'CustomStyle', 1)]: 'aml-danger',
     };
   }
 

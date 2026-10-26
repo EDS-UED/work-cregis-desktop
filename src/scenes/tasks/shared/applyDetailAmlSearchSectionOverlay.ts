@@ -10,6 +10,7 @@ import {
   tagMatchesBlacklistLabel,
   tagMatchesDangerLabel,
 } from './hasBlacklistAddressTags';
+import { tagMatchesTaskAmlListStatusLabel } from '../list-field/tasksListFieldStatusRowData';
 import {
   tagMatchesDetailAmlSearchResult,
   type DetailAmlSearchResultVariant,
@@ -45,6 +46,7 @@ function shouldStripTagForAmlPending(
 ): boolean {
   if (tagMatchesBlacklistLabel(tag, translate)) return false;
   if (tagMatchesDangerLabel(tag, translate)) return false;
+  if (tagMatchesTaskAmlListStatusLabel(tag, translate)) return false;
   return tagMatchesDetailAmlSearchResult(tag, translate);
 }
 

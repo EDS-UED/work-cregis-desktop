@@ -432,6 +432,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Risk Alert Recipient': '风险警报接收人',
   'Expand All ({count})': '展开全部 ({count})',
   'Auto rule collection amount threshold': '收款金额 ≥ {amount} {symbol}',
+  'Auto rule per payout amount threshold': '单笔出款金额 ≥ {amount} {symbol}',
   'Webhook Configuration': 'Webhook配置',
   'Webhook Logs': 'Webhook日志',
   Webhook: 'Webhook',
@@ -1132,7 +1133,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Broadcast Successful': '广播成功',
   'Broadcast Failed': '广播失败',
   Currency: '币种',
-  'Greater than or equal to': '大于等于',
+  'Greater than or equal to': '单笔大于等于',
   Close: '关闭',
   Waiting: '等待中',
   'Ready to sign': '准备就绪',
@@ -1179,9 +1180,9 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   Tag: '标签',
   Blacklist: '黑名单',
   'This address has been blacklisted. Transactions to this address are prohibited. We recommend rejecting this application.':
-    '请注意，该地址已被列入黑名单,禁止向该地址发送交易，建议驳回申请。',
+    '请注意，存在黑名单地址，禁止向该地址发送交易，建议驳回申请',
   'Task detail receiver AML danger feedback':
-    '请注意，该地址被Cregis AML判定为危险地址，请谨慎交易',
+    '请注意，存在危险地址，请谨慎交易',
   'Task list status AML risk querying': '风控查询中',
   'Task list status AML risk intercept': '风险拦截',
   'Task address details sample remark': '示例：薪资发放',

@@ -1,17 +1,14 @@
-import { isTaskAmlRiskListStatusLabel } from '../list-field/tasksListFieldStatusRowData';
 import type { BuildDetailApprovalProgressOptions } from './buildDetailApprovalProgressSteps';
 
-/** 列表 Status 为 AML 演示态时：标题 Tag 仍用 AML，审批进度与待审批 workflow 一致。 */
+/** 已办 AML 演示行（index 5/6）：审批进度与待审批 workflow 一致；AML 文案在详情接收方 Tag。 */
 export function resolveDetailProgressStepBuildOptions(input: {
   readOnly: boolean;
   listStatusLabel?: string;
   progressListStatusLabel?: string;
   thresholdSubtitle?: string;
+  amlRiskDemoRow?: boolean;
 }): BuildDetailApprovalProgressOptions {
-  const amlListStatusProgress =
-    Boolean(input.listStatusLabel && isTaskAmlRiskListStatusLabel(input.listStatusLabel));
-
-  if (amlListStatusProgress) {
+  if (input.amlRiskDemoRow) {
     return {
       thresholdSubtitle: input.thresholdSubtitle,
       viewMode: 'workflow',
