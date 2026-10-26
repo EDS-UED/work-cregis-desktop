@@ -443,6 +443,7 @@ export const I18N_DOC_ALIGNED_KEYS = new Set<string>([
   'AML record confirm reject',
   'AML manual review dialog title',
   'AML manual review level label',
+  'AML risk rating manual review tag',
   'Optional, Max. 1000 characters',
   'Inbound direction',
   'Outbound direction',

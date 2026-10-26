@@ -71,12 +71,20 @@
   color: var(--text-base-secondary);
 }
 
-/** 分级阈值数字 · 12px Footnote · weight 500 · primary 100% */
+/** 分级阈值 · 对齐 TransactionRecords walletHeaderTooltipCode + eds-code-text */
 .scoreMetaSubtextThreshold {
-  composes: typography-footnote-strong from global;
+  display: inline-block;
+  vertical-align: baseline;
+  box-sizing: border-box;
+  margin-inline: var(--spacing-1);
+  padding: var(--spacing-025) var(--spacing-1);
+  border-radius: var(--radius-xs);
+  background: var(--material-card-moderate);
   color: var(--text-base-primary);
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-strong-weight);
+  line-height: var(--eds-footnote-line-height);
   font-variant-numeric: tabular-nums;
-  padding-inline: var(--spacing-1);
 }
 
 .scoreRow {

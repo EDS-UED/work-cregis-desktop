@@ -58,11 +58,14 @@ export function buildWebhookPushDetailSections(
       title: translate('Last Push Time'),
       value: row.createdAt,
     }),
-    createDetailApplyItemRow('ip', {
-      key: 'webhook-push-endpoint',
-      title: translate('Webhook endpoint URL label'),
-      value: row.callbackUrl ?? '',
-    }),
+    {
+      ...createDetailApplyItemRow('ip', {
+        key: 'webhook-push-endpoint',
+        title: translate('Webhook endpoint URL label'),
+        value: row.callbackUrl ?? '',
+      }),
+      titleIcon: 'eds-link',
+    },
     {
       ...createDetailApplyItemRow('text', {
         key: 'webhook-push-attempt-count',

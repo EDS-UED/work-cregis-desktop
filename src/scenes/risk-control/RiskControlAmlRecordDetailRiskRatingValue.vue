@@ -10,11 +10,17 @@ const props = defineProps<{
   customStyle: string | undefined;
   queryFailed?: boolean;
   queryException?: boolean;
+  manualReviewCompleted?: boolean;
 }>();
 
 const { ui } = useAppI18n();
 
 const riskLabel = computed(() => ui(props.labelKey));
+
+const manualReviewTag = computed(() => {
+  if (!props.manualReviewCompleted) return '';
+  return ui('AML risk rating manual review tag').trim();
+});
 const riskVisual = computed(() => {
   if (props.queryException) return resolveAmlRiskRatingVisual('aml-suspicious');
   return resolveAmlRiskRatingVisual(props.customStyle);
@@ -32,6 +38,9 @@ const riskToneClass = computed(() => {
   <div v-if="queryFailed" :class="[styles.host, styles.riskToneNa]">
     <span :class="['typography-body-small-strong', styles.riskLabel]">
       {{ riskLabel }}
+      <span v-if="manualReviewTag" :class="styles.riskLabelSuffix">
+        ({{ manualReviewTag }})
+      </span>
     </span>
   </div>
   <div v-else :class="[styles.host, riskToneClass]">
@@ -40,6 +49,9 @@ const riskToneClass = computed(() => {
     </span>
     <span :class="['typography-body-small-strong', styles.riskLabel]">
       {{ riskLabel }}
+      <span v-if="manualReviewTag" :class="styles.riskLabelSuffix">
+        ({{ manualReviewTag }})
+      </span>
     </span>
   </div>
 </template>

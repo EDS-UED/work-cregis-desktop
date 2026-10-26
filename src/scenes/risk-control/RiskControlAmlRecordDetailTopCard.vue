@@ -36,13 +36,17 @@ const showRiskScoreMeta = computed(
 
 const amlRiskVisual = computed(() => resolveAmlRiskRatingVisual(props.detail.riskCustomStyle));
 
+const scoreRiskVisual = computed(() =>
+  resolveAmlRiskRatingVisual(props.detail.riskScoreCustomStyle),
+);
+
 const scoreToneClass = computed(() => {
   const numerator = props.detail.riskScoreNumerator.trim();
   if (numerator === '--' || props.detail.riskLabelKey === 'NA') {
     return styles.scoreValueNa;
   }
-  if (amlRiskVisual.value.tone === 'danger') return styles.scoreValueDanger;
-  if (amlRiskVisual.value.tone === 'warning') return styles.scoreValueWarning;
+  if (scoreRiskVisual.value.tone === 'danger') return styles.scoreValueDanger;
+  if (scoreRiskVisual.value.tone === 'warning') return styles.scoreValueWarning;
   return styles.scoreValueSuccess;
 });
 
@@ -52,15 +56,38 @@ const showEllipticProvider = computed(
 
 const riskRatingCriteriaRuleName = computed(() => props.detail.ruleName.trim());
 
-const riskClassificationLine = computed(() => {
+type RiskClassificationSegments = {
+  rulePrefix: string;
+  beforeThreshold: string;
+  threshold: string;
+  afterThreshold: string;
+};
+
+const riskClassificationSegments = computed((): RiskClassificationSegments | null => {
   const template = ui('AML query risk classification sentence').trim();
-  if (!template) return '';
-  return template
-    .replace('{ruleName}', riskRatingCriteriaRuleName.value)
-    .replace('{threshold}', String(props.detail.riskThreshold));
+  if (!template || !template.includes('{threshold}')) return null;
+
+  const [beforeRaw, afterThreshold = ''] = template.split('{threshold}');
+  const threshold = String(props.detail.riskThreshold);
+  const ruleName = riskRatingCriteriaRuleName.value;
+
+  let rulePrefix = '';
+  let beforeThreshold = beforeRaw;
+  if (beforeRaw.includes('{ruleName}')) {
+    const ruleIndex = beforeRaw.indexOf('{ruleName}');
+    rulePrefix = ruleName;
+    beforeThreshold = beforeRaw.slice(ruleIndex + '{ruleName}'.length);
+  }
+
+  return {
+    rulePrefix,
+    beforeThreshold,
+    threshold,
+    afterThreshold,
+  };
 });
 
-const showRiskClassificationLine = computed(() => riskClassificationLine.value.length > 0);
+const showRiskClassificationLine = computed(() => riskClassificationSegments.value !== null);
 </script>
 
 <template>
@@ -98,6 +125,7 @@ const showRiskClassificationLine = computed(() => riskClassificationLine.value.l
             :custom-style="detail.riskCustomStyle"
             :query-failed="detail.isQueryFailed"
             :query-exception="detail.isQueryException && !detail.exceptionHandlingResolved"
+            :manual-review-completed="detail.manualReviewCompleted"
           />
           <template v-if="showRiskScoreMeta">
             <EgDivider
@@ -120,10 +148,20 @@ const showRiskClassificationLine = computed(() => riskClassificationLine.value.l
           </template>
         </div>
         <p
-          v-if="showRiskClassificationLine"
+          v-if="showRiskClassificationLine && riskClassificationSegments"
           :class="['typography-footnote', styles.scoreMetaSubtext]"
         >
-          {{ riskClassificationLine }}
+          <span
+            v-if="riskClassificationSegments.rulePrefix"
+            :class="styles.scoreMetaSubtextRuleName"
+          >
+            {{ riskClassificationSegments.rulePrefix }}
+          </span>
+          <span>{{ riskClassificationSegments.beforeThreshold }}</span>
+          <span :class="['eds-code-text', styles.scoreMetaSubtextThreshold]">
+            {{ riskClassificationSegments.threshold }}
+          </span>
+          <span>{{ riskClassificationSegments.afterThreshold }}</span>
         </p>
       </div>
     </div>

@@ -157,7 +157,7 @@ function buildAmlQueryRequesterItem(
         title: translate('Query Initiator'),
         value: detail.requesterName,
       }),
-      titleIcon: 'eds-arrow-launch-circle',
+      titleIcon: 'eds-user-searches',
     };
   }
   return createDetailApplyItemRow('initiated-by', {
@@ -180,11 +180,14 @@ function buildQueryDetailTabItems(
     return [
       buildAmlQueryRequesterItem(detail, translate, true),
       buildAmlQueryServiceProviderItem(detail, translate),
-      createDetailApplyItemRow('brand-number', {
-        key: AML_QUERY_DETAIL_COLLABORATION_ITEM_KEY,
-        title: translate('Collaboration number'),
-        value: detail.collaborationNumber,
-      }),
+      {
+        ...createDetailApplyItemRow('brand-number', {
+          key: AML_QUERY_DETAIL_COLLABORATION_ITEM_KEY,
+          title: translate('Collaboration number'),
+          value: detail.collaborationNumber,
+        }),
+        titleIcon: 'eds-steps-number',
+      },
       buildAmlQueryAddressApplyItem('receiver', {
         key: AML_QUERY_DETAIL_ADDRESS_ITEM_KEY,
         title: translate('Receiver address'),
@@ -197,14 +200,11 @@ function buildQueryDetailTabItems(
         value: detail.senderAddress,
         networkLabel: detail.networkLabel,
       }),
-      {
-        ...createDetailApplyItemRow('amount', {
-          key: AML_QUERY_DETAIL_AMOUNT_ITEM_KEY,
-          title: translate('Transaction application amount'),
-          value: `${detail.transactionAmount} ${detail.transactionSymbol}`,
-        }),
-        titleIcon: 'eds-circle-pentagram',
-      },
+      createDetailApplyItemRow('amount', {
+        key: AML_QUERY_DETAIL_AMOUNT_ITEM_KEY,
+        title: translate('Transaction application amount'),
+        value: `${detail.transactionAmount} ${detail.transactionSymbol}`,
+      }),
       {
         ...createDetailApplyItemRow('text', {
           key: AML_QUERY_DETAIL_NETWORK_ITEM_KEY,

@@ -257,6 +257,8 @@ export type PaymentEngineRecordRow = {
   amlRiskLabelKey?: string;
   /** AML · 风险 Tag customStyle（aml-danger / aml-suspicious / aml-safe）。 */
   amlRiskCustomStyle?: 'aml-danger' | 'aml-suspicious' | 'aml-safe' | 'aml-handled';
+  /** AML · Headline 风险分数颜色（人工审核后不变，与 amlRiskCustomStyle 解耦）。 */
+  amlRiskScoreCustomStyle?: 'aml-danger' | 'aml-suspicious' | 'aml-safe' | 'aml-handled';
   /** AML · 风险评分展示值。 */
   amlRiskScore?: string;
   /** AML · WaaS 项目（筛选 / 触发规则详情）。 */
@@ -298,6 +300,8 @@ export type PaymentEngineRecordRow = {
   /** AML 指定处理人异常 · 处置已完成（详情按钮禁用）。 */
   amlExceptionHandlingResolved?: boolean;
   amlExceptionHandlingOutcome?: 'retry' | 'pass' | 'reject';
+  /** AML 查询结果 · 已完成人工审核（Headline 展示「人工审核」后缀，评分不变）。 */
+  amlManualReviewCompleted?: boolean;
   /** AML 出款自动查询（查询人为规则名）。 */
   amlOutflowAutoQuery?: boolean;
   /** AML 列表 · 查询时间展示（余额不足等可为 `--`）。 */

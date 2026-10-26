@@ -1,10 +1,16 @@
 .root {
+  composes: motion-ease is-paint from global;
   box-sizing: border-box;
   width: calc(100% - 2 * var(--spacing-3));
   margin: 0 var(--spacing-3);
   overflow: hidden;
   border-radius: var(--radius-sm);
-  background-color: var(--material-card-subtle);
+  background-color: var(--material-card-shallow);
+  transition: var(--motion-recipe-hover);
+}
+
+.root:hover {
+  background-color: var(--event-hover);
 }
 
 .header {

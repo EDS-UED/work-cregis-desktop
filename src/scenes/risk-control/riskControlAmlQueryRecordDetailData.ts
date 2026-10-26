@@ -21,6 +21,8 @@ export type RiskControlAmlQueryRecordDetail = {
   riskScoreNumerator: string;
   riskLabelKey: string;
   riskCustomStyle: 'aml-danger' | 'aml-suspicious' | 'aml-safe' | 'aml-handled';
+  /** Headline 分数颜色；人工审核后不随评级文案改变。 */
+  riskScoreCustomStyle: 'aml-danger' | 'aml-suspicious' | 'aml-safe' | 'aml-handled';
   riskThreshold: number;
   serviceProvider: string;
   belongingEntity: string;
@@ -56,6 +58,8 @@ export type RiskControlAmlQueryRecordDetail = {
   destinationTrace: RiskControlAmlRiskTraceSection;
   reviewLog: RiskControlAmlReviewLog;
   exceptionHandlingResolved: boolean;
+  /** 人工审核后 Headline 风险评级后缀。 */
+  manualReviewCompleted: boolean;
 };
 
 /** 实体标签 mock · 每行仅 1 个 Tag；文案与 customStyle 按 rowIndex 确定性选取。 */
@@ -195,6 +199,41 @@ function resolveDemoRequesterEmailMasked(rowIndex: number): string {
   return emails[rowIndex % emails.length] ?? emails[0]!;
 }
 
+type AmlRiskCustomStyle = RiskControlAmlQueryRecordDetail['riskCustomStyle'];
+
+function normalizeAmlRiskCustomStyle(style: string | undefined): AmlRiskCustomStyle {
+  const key = style?.trim();
+  if (
+    key === 'aml-danger'
+    || key === 'aml-suspicious'
+    || key === 'aml-safe'
+    || key === 'aml-handled'
+  ) {
+    return key;
+  }
+  return 'aml-safe';
+}
+
+function resolveAmlRiskScoreCustomStyle(
+  row: PaymentEngineRecordRow,
+  rawScore: string,
+  isFailed: boolean,
+): AmlRiskCustomStyle {
+  if (isFailed) return 'aml-safe';
+
+  const preserved = row.amlRiskScoreCustomStyle?.trim();
+  if (preserved) return normalizeAmlRiskCustomStyle(preserved);
+
+  if (row.amlManualReviewCompleted) {
+    const numeric = Number.parseFloat(rawScore);
+    if (Number.isFinite(numeric) && numeric >= AML_DEFAULT_RISK_THRESHOLD) {
+      return 'aml-danger';
+    }
+  }
+
+  return normalizeAmlRiskCustomStyle(row.amlRiskCustomStyle);
+}
+
 function parseRiskNumerator(score: string, isFailed: boolean): string {
   if (isFailed) return '--';
   const trimmed = score.trim();
@@ -212,6 +251,9 @@ function resolveIsDanger(
   isFailed: boolean,
   isException: boolean,
 ): boolean {
+  if (row.amlManualReviewCompleted) {
+    return row.amlRiskCustomStyle === 'aml-danger' || row.amlRiskLabelKey === 'Danger';
+  }
   if (isFailed || isException) return false;
   if (row.amlRiskCustomStyle === 'aml-danger' || row.amlRiskLabelKey === 'Danger') {
     return true;
@@ -497,6 +539,8 @@ export function resolveRiskControlAmlQueryRecordDetail(
     ? 'NA'
     : (row.amlRiskScore?.trim() || '6.8');
   const riskScoreNumerator = parseRiskNumerator(rawScore, isFailed);
+  const manualReviewCompleted = Boolean(row.amlManualReviewCompleted);
+  const riskScoreCustomStyle = resolveAmlRiskScoreCustomStyle(row, rawScore, isFailed);
   const isDanger = resolveIsDanger(row, rawScore, isFailed, isUnresolvedException);
   const targetValue = row.amlTargetValue?.trim() || row.id;
   const requesterName = row.amlRequesterName?.trim() || row.id;
@@ -522,16 +566,21 @@ export function resolveRiskControlAmlQueryRecordDetail(
       ? 'NA'
       : isUnresolvedException
         ? 'AML Exception'
-        : isDanger
-          ? 'Danger'
-          : (row.amlRiskLabelKey ?? 'Safe'),
+        : manualReviewCompleted && row.amlRiskLabelKey
+          ? row.amlRiskLabelKey
+          : isDanger
+            ? 'Danger'
+            : (row.amlRiskLabelKey ?? 'Safe'),
     riskCustomStyle: isFailed
       ? 'aml-safe'
       : isUnresolvedException
         ? 'aml-suspicious'
-        : isDanger
-          ? 'aml-danger'
-          : (row.amlRiskCustomStyle ?? 'aml-safe'),
+        : manualReviewCompleted && row.amlRiskCustomStyle
+          ? row.amlRiskCustomStyle
+          : isDanger
+            ? 'aml-danger'
+            : (row.amlRiskCustomStyle ?? 'aml-safe'),
+    riskScoreCustomStyle,
     riskThreshold: AML_DEFAULT_RISK_THRESHOLD,
     serviceProvider: row.amlServiceProvider?.trim() || 'Elliptic',
     belongingEntity: isFailed || isException
@@ -594,6 +643,7 @@ export function resolveRiskControlAmlQueryRecordDetail(
       rowIndex,
     ),
     exceptionHandlingResolved,
+    manualReviewCompleted,
     reviewLog: buildDemoReviewLog(
       rowIndex,
       isFailed,

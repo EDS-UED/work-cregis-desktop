@@ -53,6 +53,7 @@ import {
 } from '@/scenes/risk-control/buildRiskControlAmlRecordDetailSections';
 import { resolveRiskControlAmlQueryRecordDetail } from '@/scenes/risk-control/riskControlAmlQueryRecordDetailData';
 import RiskControlAmlRecordDetailHeadline from '@/scenes/risk-control/RiskControlAmlRecordDetailHeadline.vue';
+import RiskControlAmlRecordDetailHeadlinePortal from '@/scenes/risk-control/RiskControlAmlRecordDetailHeadlinePortal.vue';
 import RiskControlAmlRecordDetailRiskProfileTabAppend from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskProfileTabAppend.vue';
 import RiskControlAmlRecordDetailRiskTracePanel from '@/scenes/risk-control/RiskControlAmlRecordDetailRiskTracePanel.vue';
 import { riskControlAmlRecordDetailOverlayRegistry } from '@/scenes/risk-control/riskControlAmlRecordDetailOverlayContext';
@@ -605,6 +606,12 @@ function onDetailClose() {
           />
         </template>
       </EgDetail>
+      <RiskControlAmlRecordDetailHeadlinePortal
+        v-if="isAmlRecordDetail && amlRecordDetail && popupOpen"
+        :host-ref="detailHostRef"
+        :detail="amlRecordDetail"
+        :page-key="detailToolbarPageKey"
+      />
     </div>
   </EgDetailPopup>
 </template>

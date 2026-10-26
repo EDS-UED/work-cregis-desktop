@@ -330,6 +330,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
     '重新查询将扣除1次免费次数，若免费次数为0，将从团队账户中扣除查询费用。是否确认重查？',
   'AML record confirm pass': '确认放行该出款申请？',
   'AML record confirm reject': '确认驳回该出款申请？',
+  'AML risk rating manual review tag': '人工审核',
   'AML manual review dialog title': '确认风险等级',
   'AML manual review level label': '风险等级',
   'AML manual review note label': '备注',

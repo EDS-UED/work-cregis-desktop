@@ -38,20 +38,36 @@ function riskPatchForOutcome(outcome: AmlExceptionHandlingOutcome): Partial<Paym
   };
 }
 
+function resolveScoreCustomStyleForManualReview(
+  recordId: string,
+): PaymentEngineRecordRow['amlRiskScoreCustomStyle'] | undefined {
+  const flow = paymentEngineDetailFlowRegistry.value;
+  const current = flow?.detailRow.value;
+  if (!current || current.id !== recordId) return undefined;
+  const style = current.amlRiskScoreCustomStyle ?? current.amlRiskCustomStyle;
+  return style;
+}
+
 function riskPatchForManualReview(
   level: AmlManualReviewRiskLevel,
+  recordId: string,
 ): Partial<PaymentEngineRecordRow> {
+  const scoreCustomStyle = resolveScoreCustomStyleForManualReview(recordId);
+  const scorePatch = scoreCustomStyle ? { amlRiskScoreCustomStyle: scoreCustomStyle } : {};
+
   if (level === 'danger') {
     return {
       amlRiskLabelKey: 'Danger',
       amlRiskCustomStyle: 'aml-danger',
-      amlRiskScore: '10',
+      amlManualReviewCompleted: true,
+      ...scorePatch,
     };
   }
   return {
     amlRiskLabelKey: 'Safe',
     amlRiskCustomStyle: 'aml-safe',
-    amlRiskScore: '0.0',
+    amlManualReviewCompleted: true,
+    ...scorePatch,
   };
 }
 
@@ -67,7 +83,7 @@ export function applyAmlManualReviewOutcome(
   recordId: string,
   level: AmlManualReviewRiskLevel,
 ) {
-  const riskPatch = riskPatchForManualReview(level);
+  const riskPatch = riskPatchForManualReview(level, recordId);
   riskControlAmlQueryRecordPatchesRef.value = {
     ...riskControlAmlQueryRecordPatchesRef.value,
     [recordId]: {

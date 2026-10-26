@@ -36,6 +36,12 @@
   color: inherit;
 }
 
+.riskLabelSuffix {
+  composes: typography-body-small from global;
+  color: var(--text-base-primary);
+  font-weight: var(--eds-body-small-weight);
+}
+
 .riskToneNa {
   color: var(--text-base-secondary);
 }
