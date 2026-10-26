@@ -9,3 +9,4 @@ import RiskControlFormHintInfoTrigger from './RiskControlFormHintInfoTrigger.vue
     show-risk-score-unavailable-hint
     boundary-selector=".eds-popup"
   />
+</template>
