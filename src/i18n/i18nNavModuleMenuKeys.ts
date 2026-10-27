@@ -1,4 +1,4 @@
-/** 导航 / 模块菜单 catalog key：英文展示保持 key 原文，不走 Excel doc_en 映射。 */
+/** 导航 / 模块菜单 catalog key：en 用 I18N_DOC_EN_LABELS（与 Showcase 菜单一致），无映射则 catalog 原文。 */
 export const I18N_NAV_MODULE_MENU_CATALOG_KEYS = new Set<string>([
   // Nav & module titles
   'Wallet',

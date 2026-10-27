@@ -65,6 +65,14 @@ if (!read('src/scenes/tasks/shared/batchAmlDangerGateChrome.module.css').include
   fail('batchAmlDangerGateChrome 须在 AML 等待时隐藏 BatchBar beforeOpen loading');
 }
 
+const timingSource = read('src/scenes/tasks/shared/batchAmlDangerGateTiming.ts');
+if (
+  timingSource.includes('BATCH_AML_SIMULATED_PREP_CLASS')
+  || timingSource.includes('batchAmlDangerSimulatedPrep')
+) {
+  fail('直点签名勿叠 simulated prep CSS（EgDataList eds-load 已承担转圈）');
+}
+
 if (!read('src/scenes/tasks/shared/batchAmlDangerGateChrome.ts').includes('setBatchAmlGateExceptAnchor')) {
   fail('batchAmlDangerGateChrome 须登记 closeAll except 锚点以保留批处理 Popover 会话');
 }

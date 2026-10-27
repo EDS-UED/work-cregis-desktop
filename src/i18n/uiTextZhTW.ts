@@ -377,6 +377,11 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   Next: '下一項',
   // Risk Control · AML
   'Query Records': '查詢記錄',
+  'Auto Rules': '自動規則',
+  'Webhook Config': 'Webhook設定',
+  'Webhook Configuration': 'Webhook設定',
+  'Webhook Logs': 'Webhook日誌',
+  'Push Records': '推送記錄',
   Entity: '實體',
   Label: '標籤',
   'Entity of Sending Address': '出款地址所屬實體',

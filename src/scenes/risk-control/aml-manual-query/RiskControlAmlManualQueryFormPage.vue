@@ -10,7 +10,7 @@ import {
   EgLinkButton,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
-import ellipticProviderLogoUrl from '@/assets/risk-control/elliptic-provider-logo.svg';
+import EllipticProviderLogo from '../EllipticProviderLogo.vue';
 import ProjectCreateModeCard from '@/scenes/project/components/ProjectCreateModeCard.vue';
 import {
   AML_QUERY_DIRECTION_OPTIONS,
@@ -262,12 +262,7 @@ defineExpose({
             </EgLinkButton>
           </template>
           <template #trailing>
-            <img
-              :class="styles.serviceProviderLogo"
-              :src="ellipticProviderLogoUrl"
-              alt=""
-              aria-hidden="true"
-            />
+            <EllipticProviderLogo :class="styles.serviceProviderLogo" />
           </template>
         </ProjectCreateModeCard>
         </div>

@@ -30,7 +30,7 @@ function isDocAligned(catalogKey: string): boolean {
  * 2. 表外（未在 I18N_DOC_ALIGNED_KEYS）→ en / zh-TW / zh-CN 均显示 catalog 简体中文。
  * 3. UI 标签 / 固定文案须走 ui() / 本函数（页面、详情 title、弹窗、tooltip、tag…）。
  * 4. 字段 value、人名、地址、金额等业务数据禁止传入本函数（见 work.mdc §5）。
- * 5. en：表内用 Excel en-us（I18N_DOC_EN_LABELS）；表外显示 catalog 简体；无 doc 映射时不二次 Title Case。
+ * 5. en：表内用 Excel en-us（I18N_DOC_EN_LABELS）；模块菜单 key 同样走 doc_en；表外显示 catalog 简体。
  */
 export function translateUiText(locale: AppLocale, text: string): string {
   const trimmed = text.trim();
@@ -50,7 +50,7 @@ export function translateUiText(locale: AppLocale, text: string): string {
       return UI_TEXT_ZH_TW[catalogKey] ?? catalogValue;
     }
     if (I18N_NAV_MODULE_MENU_CATALOG_KEYS.has(catalogKey)) {
-      return catalogKey;
+      return I18N_DOC_EN_LABELS[catalogKey] ?? catalogKey;
     }
     if (isLocaleNeutralDisplayText(catalogValue)) return catalogValue;
     return I18N_DOC_EN_LABELS[catalogKey] ?? catalogKey;

@@ -20,11 +20,9 @@ import {
   resolveNavBarClickState,
   type CregisModuleMenuBusinessTitle,
 } from '@/presets/module-menu/businessModuleTitles';
+import { handleModuleMenuBranchParentSelect } from '@/presets/module-menu/moduleMenuBranchToggleNavigation';
 import { resolveFirstSubitemForBranchLabel } from '@/presets/module-menu/resolveModuleMenuBranchDefaultItem';
-import {
-  syncModuleMenuBranchSubitemFocus,
-  syncModuleMenuItemFocus,
-} from '@/presets/module-menu/syncModuleMenuItemFocus';
+import { syncModuleMenuItemFocus } from '@/presets/module-menu/syncModuleMenuItemFocus';
 import { resolveEnglishUiText } from '@/i18n/translateUiText';
 import PaymentEngineDataListPage from '@/scenes/payment-engine/PaymentEngineDataListPage.vue';
 import {
@@ -99,6 +97,9 @@ const activeModuleTitle = ref<CregisModuleMenuBusinessTitle>(
 const activeNavLabel = ref('Wallet');
 
 const activeModuleMenuItem = ref<string | null>(null);
+
+/** tier-2 分支展开前所在菜单 catalog（英文）；收起时恢复。 */
+const moduleMenuBranchRestoreBeforeExpand = ref<Record<string, string>>({});
 
 const isWaasModule = computed(() => isWaasModuleTitle(activeModuleTitle.value));
 const isPaymentEngineModule = computed(() => isPaymentEngineModuleTitle(activeModuleTitle.value));
@@ -216,6 +217,10 @@ watch(
   { immediate: true },
 );
 
+watch(activeModuleTitle, () => {
+  moduleMenuBranchRestoreBeforeExpand.value = {};
+});
+
 watch(activeModuleTitle, (title) => {
   if (title === 'Tasks') {
     activeModuleMenuItem.value = DEFAULT_TASKS_DATA_LIST_MENU_ITEM;
@@ -307,17 +312,7 @@ onBeforeUnmount(() => {
   }
 });
 
-function onModuleMenuItemSelect(label: string) {
-  const branchDefault = resolveFirstSubitemForBranchLabel(
-    resolveShellModuleMenuGroups(),
-    label,
-  );
-  if (branchDefault) {
-    syncModuleMenuBranchSubitemFocus(label, branchDefault, translateModuleMenu);
-    onModuleMenuItemSelect(branchDefault);
-    return;
-  }
-
+function applyModuleMenuCatalogSelection(label: string) {
   if (activeModuleTitle.value === 'Tasks') {
     if (isTasksDataListMenuItem(label)) {
       activeModuleMenuItem.value = label as TasksDataListMenuItemLabel;
@@ -352,6 +347,23 @@ function onModuleMenuItemSelect(label: string) {
       activeModuleMenuItem.value = label;
     }
   }
+}
+
+function onModuleMenuItemSelect(label: string) {
+  const groups = resolveShellModuleMenuGroups();
+  if (resolveFirstSubitemForBranchLabel(groups, label)) {
+    handleModuleMenuBranchParentSelect({
+      branchCatalogLabel: label,
+      groups,
+      activeCatalog: activeModuleMenuItem,
+      restoreBeforeExpandByBranch: moduleMenuBranchRestoreBeforeExpand,
+      translate: translateModuleMenu,
+      applyCatalogSelection: applyModuleMenuCatalogSelection,
+    });
+    return;
+  }
+
+  applyModuleMenuCatalogSelection(label);
 }
 
 function onModuleMenuTitleAdd() {

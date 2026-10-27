@@ -126,7 +126,6 @@
   flex-shrink: 0;
   width: auto;
   height: var(--scale-7);
-  object-fit: contain;
 }
 
 .providerFallback {

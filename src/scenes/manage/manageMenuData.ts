@@ -11,6 +11,8 @@ export const MANAGE_ROLE_MENU_ITEM = 'Role';
 
 export const MANAGE_API_MANAGE_MENU_ITEM = 'API Manage';
 
+export const MANAGE_TEAM_SECURITY_MENU_ITEM = 'Team Security';
+
 export const MANAGE_WEBHOOK_MENU_ITEMS = [
   MANAGE_WEBHOOK_CONFIG_MENU_ITEM,
   MANAGE_WEBHOOK_PUSH_RECORDS_MENU_ITEM,
@@ -46,6 +48,10 @@ export function isManageRoleMenuItem(menuItem: string): boolean {
 
 export function isManageApiManageMenuItem(menuItem: string): boolean {
   return menuItem === MANAGE_API_MANAGE_MENU_ITEM;
+}
+
+export function isManageTeamSecurityMenuItem(menuItem: string): boolean {
+  return menuItem === MANAGE_TEAM_SECURITY_MENU_ITEM;
 }
 
 export function isManageModuleMenuItem(label: string): boolean {

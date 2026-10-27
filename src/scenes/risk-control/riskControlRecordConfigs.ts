@@ -177,7 +177,7 @@ const AUTO_RULES_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
 const AML_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   {
     key: 'amlAddressRequester',
-    labelKey: 'Address',
+    labelKey: 'Query Object',
     secondaryLabelKey: 'Requester',
     minWidth: AML_ADDRESS_REQUESTER_COLUMN_MIN_WIDTH,
     width: AML_ADDRESS_REQUESTER_COLUMN_MIN_WIDTH,

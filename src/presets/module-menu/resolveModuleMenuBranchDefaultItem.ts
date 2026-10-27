@@ -23,3 +23,20 @@ export function isModuleMenuBranchParentLabel(
 ): boolean {
   return resolveFirstSubitemForBranchLabel(groups, label) !== null;
 }
+
+export function isCatalogSubitemOfBranch(
+  groups: readonly ModuleMenuPresetGroup[] | undefined,
+  branchCatalogLabel: string,
+  catalogLabel: string,
+): boolean {
+  if (!groups?.length) return false;
+
+  for (const group of groups) {
+    for (const item of group.items) {
+      if (item.label !== branchCatalogLabel || !item.subitems?.length) continue;
+      return item.subitems.some((subitem) => subitem.label === catalogLabel);
+    }
+  }
+
+  return false;
+}

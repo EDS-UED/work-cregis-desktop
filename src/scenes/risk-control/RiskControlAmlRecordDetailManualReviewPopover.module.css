@@ -1,0 +1,9 @@
+/**
+ * AML 人工复核 EgPopover（:has 限定本表单）；对齐 RemarkPopover top-tool 节奏。
+ * 勿写入 ManualReviewDialog.module.css（verify 禁全局 patch eds-popover）。
+ */
+:global(
+    .eds-popover:has([data-aml-manual-review-popover-form]) [class*='topToolTitle']
+  ) {
+  padding-bottom: var(--spacing-1);
+}

@@ -7,6 +7,11 @@
   box-sizing: border-box;
 }
 
+.panelRootPopover {
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-2);
+}
+
 .confirm {
   width: 100%;
 }
@@ -33,69 +38,16 @@
   font-weight: var(--eds-body-small-weight);
 }
 
-/**
- * 对齐 AML 自动规则 · 出款类型（outflowRuleGroup + grouped ProjectCreateModeCard）。
- * 勿 composes 跨目录引用（Vite postcss fileResolve 须绝对路径）。
- */
+/** 对齐 AML 自动规则 · Risk control action `optionCardGroup`。 */
 .levelRuleGroup {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--spacing-2);
-  width: 100%;
-  min-width: 0;
-  padding: var(--spacing-1);
-  border-radius: var(--radius-sm);
-  background: var(--material-card-subtle);
-  border: var(--stroke-xs) solid transparent;
-  box-sizing: border-box;
-}
-
-.levelRuleGroupDangerActive {
-  background: var(--event-focus-brand-subtle);
-  border-color: transparent;
-}
-
-.levelRuleGroupSafeActive {
-  background: var(--status-success-weaken);
-  border-color: transparent;
-}
-
-.levelRuleOptionStack {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: var(--spacing-025);
   width: 100%;
   min-width: 0;
-}
-
-.levelRuleOptionStack :global(.eds-decide:focus),
-.levelRuleOptionStack :global(.eds-decide:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
-
-.levelRuleOptionStack :global([class*='itemRow']:focus),
-.levelRuleOptionStack :global([class*='itemRow']:focus-visible) {
-  outline: none;
-  box-shadow: none;
-}
-
-.levelRuleOptionStack :global([class*='itemRow']:focus:not([class*='itemRowSelected'])),
-.levelRuleOptionStack :global([class*='itemRow']:focus-visible:not([class*='itemRowSelected'])) {
-  background: transparent;
-}
-
-.levelRuleOptionStack :global([class*='itemRowSelected']),
-.levelRuleOptionStack :global([class*='itemRowSelected']:hover),
-.levelRuleOptionStack :global([class*='itemRowSelected']:focus),
-.levelRuleOptionStack :global([class*='itemRowSelected']:focus-visible),
-.levelRuleOptionStack :global([class*='itemRowSelected']:focus:hover),
-.levelRuleOptionStack :global([class*='itemRowSelected']:focus-visible:hover) {
-  background: transparent;
-}
-
-.levelRuleGroup .levelRuleOptionStack :global([class*='itemRow']:hover:not([class*='itemRowSelected'])) {
-  background-color: var(--event-hover);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  border: var(--stroke-xs) solid var(--stroke-divider-page);
+  box-sizing: border-box;
 }

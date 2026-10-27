@@ -185,7 +185,16 @@ Pages CI pin 远程 eds-desktop HEAD。
 
 ### 4.3 模块菜单 tier-2
 
-`tier:2`+`subitems` 父级（AML、Webhook、Collection Record 等）无独立列表页。点击分支→`AppShellView` `onModuleMenuItemSelect` 取当前 `:groups` 的 **`subitems[0].label`（英文 catalog）**+ `syncModuleMenuItemFocus`。**禁**父级 label 早退不更新 focus。
+`tier:2`+`subitems` 父级（AML、Webhook、Collection Record 等）无独立列表页。**禁**父级 label 早退不更新 focus。
+
+**分支展开 / 收起（全局 · `AppShellView`）**
+
+| 动作 | 路由 | 菜单聚焦 |
+|------|------|----------|
+| **展开**（父级 `item-select` 后 `aria-expanded=true`） | 记住展开前 catalog（若当前页不是该分支 subitem），再进入 **`subitems[0].label`（英文 catalog）** | `syncModuleMenuBranchSubitemFocus` |
+| **收起**（`aria-expanded=false`） | 恢复展开前记住的 catalog（无记录则不改路由） | `syncModuleMenuItemFocus` |
+
+实现：`handleModuleMenuBranchParentSelect`（`presets/module-menu/moduleMenuBranchToggleNavigation.ts`）+ `isModuleMenuBranchExpandedByCatalog`；切换顶栏模块时清空 `moduleMenuBranchRestoreBeforeExpand`。
 
 ---
 

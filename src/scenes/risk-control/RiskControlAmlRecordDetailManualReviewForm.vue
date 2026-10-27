@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, withDefaults } from 'vue';
 import {
   EgButton,
   EgFormSubmission,
@@ -9,10 +9,17 @@ import { useAppI18n } from '@/composables/useAppI18n';
 import ProjectCreateModeCard from '@/scenes/project/components/ProjectCreateModeCard.vue';
 import styles from './RiskControlAmlRecordDetailManualReviewDialog.module.css';
 
-const props = defineProps<{
-  initialRiskLevel?: 'danger' | 'safe' | null;
-  showSafeWaasHintWhenSelectingSafe?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    initialRiskLevel?: 'danger' | 'safe' | null;
+    showSafeWaasHintWhenSelectingSafe?: boolean;
+    /** 详情浮层 EgPopover；与 EgDialog 共用字段，间距单独收紧。 */
+    variant?: 'dialog' | 'popover';
+  }>(),
+  {
+    variant: 'dialog',
+  },
+);
 
 const emit = defineEmits<{
   submit: [level: 'danger' | 'safe'];
@@ -67,48 +74,41 @@ function onSubmit() {
 </script>
 
 <template>
-  <div :class="styles.panelRoot">
+  <div
+    :class="[styles.panelRoot, props.variant === 'popover' && styles.panelRootPopover]"
+    :data-aml-manual-review-popover-form="props.variant === 'popover' ? '' : undefined"
+  >
     <div :class="[styles.fieldBlock, styles.fieldBlockLevel]">
       <span :class="['typography-body-small', styles.fieldLabel]">
         {{ ui('AML manual review level label') }}
       </span>
       <div
-        :class="[
-          styles.levelRuleGroup,
-          riskLevel === 'danger' && styles.levelRuleGroupDangerActive,
-          riskLevel === 'safe' && styles.levelRuleGroupSafeActive,
-        ]"
+        role="radiogroup"
+        :aria-label="ui('AML manual review level label')"
+        :class="styles.levelRuleGroup"
       >
-        <div
-          role="radiogroup"
-          :aria-label="ui('AML manual review level label')"
-          :class="styles.levelRuleOptionStack"
-        >
-          <ProjectCreateModeCard
-            radio-name="aml-manual-review-risk-level"
-            radio-value="danger"
-            surface="grouped"
-            grouped-row-spacing="compact"
-            grouped-row-rounded
-            grouped-highlight-selected-row
-            :title="ui('Danger')"
-            :description="''"
-            :selected="riskLevel === 'danger'"
-            @select="selectLevel('danger')"
-          />
-          <ProjectCreateModeCard
-            radio-name="aml-manual-review-risk-level"
-            radio-value="safe"
-            surface="grouped"
-            grouped-row-spacing="compact"
-            grouped-row-rounded
-            grouped-highlight-selected-row
-            :title="ui('Safe')"
-            :description="''"
-            :selected="riskLevel === 'safe'"
-            @select="selectLevel('safe')"
-          />
-        </div>
+        <ProjectCreateModeCard
+          radio-name="aml-manual-review-risk-level"
+          radio-value="danger"
+          surface="grouped"
+          grouped-row-spacing="compact"
+          grouped-row-rounded
+          :title="ui('Danger')"
+          :description="''"
+          :selected="riskLevel === 'danger'"
+          @select="selectLevel('danger')"
+        />
+        <ProjectCreateModeCard
+          radio-name="aml-manual-review-risk-level"
+          radio-value="safe"
+          surface="grouped"
+          grouped-row-spacing="compact"
+          grouped-row-rounded
+          :title="ui('Safe')"
+          :description="''"
+          :selected="riskLevel === 'safe'"
+          @select="selectLevel('safe')"
+        />
       </div>
       <EgFormSubmission
         v-if="showSafeWaasHint"

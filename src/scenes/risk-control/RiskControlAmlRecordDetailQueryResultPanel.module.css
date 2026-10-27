@@ -64,7 +64,7 @@
   width: 100%;
   min-width: 0;
   padding-top: var(--spacing-5);
-  border-top: var(--stroke-sm) solid var(--stroke-divider-page);
+  border-top: var(--stroke-xs) solid var(--stroke-divider-page);
   box-sizing: border-box;
 }
 

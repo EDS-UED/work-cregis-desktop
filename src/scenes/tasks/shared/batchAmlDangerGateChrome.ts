@@ -4,9 +4,6 @@ import { queryBatchBarActionByLabel } from './resolveBatchAmlDangerActionAnchor'
 /** 底栏「通过 / 签名」AML 等待态：与 BatchBar actionTextActive 一致，非 beforeOpen loading。 */
 export const BATCH_AML_ANCHOR_PRESSED_CLASS = 'batchAmlDangerAnchorPressed';
 
-/** 直点批处理钮（无 Popover beforeOpen）时模拟 EDS prep Loading。 */
-export const BATCH_AML_SIMULATED_PREP_CLASS = 'batchAmlDangerSimulatedPrep';
-
 export const BATCH_AML_GATE_PREVIEW_ATTR = 'data-tasks-batch-aml-gate-open';
 
 /** 直点「签名」等无 Popover beforeOpen 时标记底栏锚点，供 global CSS 点按态。 */

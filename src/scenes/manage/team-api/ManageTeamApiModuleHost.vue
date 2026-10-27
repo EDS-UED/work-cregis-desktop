@@ -201,7 +201,13 @@ function onTeamApiRowClick(row: PaymentEngineRecordRow): boolean {
 }
 
 function openEdit(row: PaymentEngineRecordRow) {
-  openDetailForRow(row);
+  const config = findTeamApiConfigById(row.id);
+  if (!config) return;
+  closeAllAnchoredTooltips();
+  detailOpen.value = false;
+  detailRow.value = null;
+  editDraft.value = { ...config };
+  createPageOpen.value = true;
 }
 
 function onToolbarAction(key: string) {

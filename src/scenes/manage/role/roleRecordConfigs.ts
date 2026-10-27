@@ -4,9 +4,9 @@ import { PAYMENT_ENGINE_RECORD_ROW_COUNT } from '@/scenes/payment-engine/payment
 import { dataListTimeColumnLabelKey } from '@/scenes/shared/dataListTimeLabelKeys';
 import { isManageRoleMenuItem } from '../manageMenuData';
 
-const ROLE_NAME_MIN = '332px';
-/** 创建人 | 创建时间 UTC+08:00 · 仅时间排序（相对通用组合列 −100px）。 */
-const ROLE_CREATOR_TIME_MIN = '172px';
+const ROLE_NAME_MIN = '312px';
+/** 创建人 | 创建时间 UTC+08:00 · 仅时间排序（相对通用组合列 −80px）。 */
+const ROLE_CREATOR_TIME_MIN = '192px';
 const ROLE_ACTIONS_MIN = '200px';
 
 const ROLE_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [

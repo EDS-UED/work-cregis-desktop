@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { EgFormSubmission, EgInput, EgTextarea } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import LayoutChromeConfigFormPageChrome from '@/scenes/project/LayoutChromeConfigFormPageChrome.vue';
@@ -54,9 +54,26 @@ function syncFromInitial(record: TeamApiConfigRecord | null | undefined) {
   contentRevision.value = String(Number(contentRevision.value) + 1);
 }
 
-if (props.initial) {
-  syncFromInitial(props.initial);
-}
+watch(
+  () => [props.mode, props.initial] as const,
+  ([mode, initial]) => {
+    if (mode === 'create' && !initial) {
+      name.value = '';
+      walletPermission.value = true;
+      ipWhitelist.value = '';
+      nameBlurred.value = false;
+      ipBlurred.value = false;
+      contentRevision.value = String(Number(contentRevision.value) + 1);
+      return;
+    }
+    syncFromInitial(initial);
+  },
+  { immediate: true },
+);
+
+watch([name, ipWhitelist, walletPermission], () => {
+  contentRevision.value = String(Number(contentRevision.value) + 1);
+});
 
 const toolbarTitle = computed(() =>
   ui(props.mode === 'create' ? 'Create Team API' : 'Edit Team API'),

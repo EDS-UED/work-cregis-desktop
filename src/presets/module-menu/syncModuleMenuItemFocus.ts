@@ -31,6 +31,31 @@ export function syncModuleMenuItemFocus(displayLabel: string) {
  * @param branchCatalogLabel 父级英文 catalog（如 Collection Record）
  * @param subitemCatalogLabel 子项英文 catalog（如 Collection History）
  */
+/** EgModuleMenu tier-2 父级在点击后的 `aria-expanded`（EDS 已先 toggle）。 */
+export function isModuleMenuBranchExpandedByCatalog(
+  branchCatalogLabel: string,
+  translate: (catalogLabel: string) => string,
+  root: ParentNode | null = document.querySelector('.app-preview'),
+): boolean {
+  if (!root) return false;
+
+  const branchDisplay = translate(branchCatalogLabel).trim();
+
+  for (const branch of root.querySelectorAll('[class*="itemBranch"]')) {
+    const parentButton = branch.querySelector(':scope > button.eds-module-menu-item');
+    if (!(parentButton instanceof HTMLButtonElement)) continue;
+
+    const parentLabel = parentButton
+      .querySelector('[class*="itemLabel"]')
+      ?.textContent?.trim();
+    if (parentLabel !== branchDisplay) continue;
+
+    return parentButton.getAttribute('aria-expanded') === 'true';
+  }
+
+  return false;
+}
+
 export function syncModuleMenuBranchSubitemFocus(
   branchCatalogLabel: string,
   subitemCatalogLabel: string,

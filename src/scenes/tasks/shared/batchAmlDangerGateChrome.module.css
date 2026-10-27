@@ -2,42 +2,6 @@
  * beforeOpen：EDS prep 500ms → 转圈 500ms → AML；AML 阶段 BatchBar actionTextActive + 无 eds-load。
  * 选择器须 :global(.app-preview)，避免 CSS Modules 哈希导致 gate 样式未命中。
  */
-:global(.app-preview) :global(.eds-batch-bar-action-item.batchAmlDangerSimulatedPrep) {
-  background-color: var(--material-hide);
-  color: var(--stroke-base-secondary);
-  cursor: default;
-  pointer-events: none;
-}
-
-:global(.app-preview)
-  :global(.eds-batch-bar-action-item.batchAmlDangerSimulatedPrep [class*='actionTextLabel']) {
-  visibility: hidden;
-}
-
-:global(.app-preview) :global(.eds-batch-bar-action-item.batchAmlDangerSimulatedPrep::after) {
-  content: '';
-  display: block;
-  width: var(--scale-4);
-  height: var(--scale-4);
-  border: 2px solid var(--stroke-base-secondary);
-  border-top-color: transparent;
-  border-radius: var(--radius-full);
-  animation-duration: var(--motion-duration-spin-slow);
-  animation-timing-function: var(--motion-easing-linear);
-  animation-name: batch-aml-danger-simulated-spin;
-  animation-iteration-count: infinite;
-}
-
-@keyframes batch-aml-danger-simulated-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 :global(.app-preview[data-tasks-batch-aml-gate-open]) :global(.eds-batch-bar-glass) {
   position: relative;
 }

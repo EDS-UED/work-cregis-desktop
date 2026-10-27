@@ -1,0 +1,85 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4) 0;
+  min-width: 0;
+}
+
+.leading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.iconHost {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--scale-10);
+  height: var(--scale-10);
+  border-radius: var(--radius-md);
+  background: var(--box-fill-secondary);
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.titleRow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.statusIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-md);
+  height: var(--icon-md);
+  line-height: 0;
+}
+
+.statusIcon :global(.eds-icon) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.statusIconAttention {
+  color: var(--status-danger);
+}
+
+.statusIconComplete {
+  color: var(--status-success);
+}
+
+.statusIcon :global(.eds-i-f),
+.statusIcon :global(.eds-i-f path) {
+  fill: currentColor;
+}
+
+.upgradeTag {
+  flex-shrink: 0;
+}
+
+.description {
+  margin: 0;
+  color: var(--text-base-secondary);
+}
+
+.action {
+  flex-shrink: 0;
+}

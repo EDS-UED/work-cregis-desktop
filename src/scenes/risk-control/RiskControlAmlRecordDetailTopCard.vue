@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { EgDivider } from '@eds/desktop-components';
-import ellipticProviderLogoUrl from '@/assets/risk-control/elliptic-provider-logo.svg';
+import EllipticProviderLogo from './EllipticProviderLogo.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
 import type { RiskControlAmlQueryRecordDetail } from './riskControlAmlQueryRecordDetailData';
 import RiskControlAmlRecordDetailEntityTags from './RiskControlAmlRecordDetailEntityTags.vue';
@@ -105,12 +105,9 @@ const showRiskClassificationLine = computed(() => riskClassificationSegments.val
               :tags="detail.entityTags"
             />
           </div>
-          <img
+          <EllipticProviderLogo
             v-if="showEllipticProvider"
             :class="styles.providerLogo"
-            :src="ellipticProviderLogoUrl"
-            alt=""
-            aria-hidden="true"
           />
           <span
             v-else-if="detail.serviceProvider.trim()"

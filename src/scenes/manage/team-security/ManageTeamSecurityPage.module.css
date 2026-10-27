@@ -1,0 +1,65 @@
+.page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.scrollBody {
+  composes: layoutChromeScroll from '../../project/layoutChromePage.shared.module.css';
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: var(--spacing-4) var(--spacing-6) var(--spacing-6);
+  box-sizing: border-box;
+}
+
+.teamHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.teamMeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.teamNumberRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.teamNumberLabel {
+  flex-shrink: 0;
+  color: var(--text-base-secondary);
+}
+
+.teamNumberCopy {
+  flex-shrink: 0;
+}
+
+.sectionDivider,
+.rowDivider {
+  box-sizing: border-box;
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dissolveIcon {
+  color: var(--status-danger);
+}

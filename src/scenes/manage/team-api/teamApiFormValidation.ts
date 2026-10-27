@@ -16,10 +16,14 @@ export function teamApiNameHasInvalidCharacters(value: string): boolean {
   return webhookNameHasInvalidCharacters(value);
 }
 
-export function teamApiIpWhitelistIsValid(value: string): boolean {
+function teamApiIpWhitelistTokens(value: string): string[] {
   const trimmed = value.trim();
-  if (!trimmed) return false;
-  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  if (!trimmed) return [];
+  return trimmed.split(/[\s,;、]+/).filter(Boolean);
+}
+
+export function teamApiIpWhitelistIsValid(value: string): boolean {
+  const tokens = teamApiIpWhitelistTokens(value);
   if (!tokens.length) return false;
   return tokens.every((token) => /^[0-9a-fA-F.:]+$/.test(token));
 }

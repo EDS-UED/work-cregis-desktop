@@ -33,7 +33,7 @@ import {
   OUTFLOW_WAAS_PROJECT_OPTIONS,
   outflowWalletLabelForId,
 } from './riskControlAutoRuleOutflowScopeOptions';
-import ellipticProviderLogoUrl from '@/assets/risk-control/elliptic-provider-logo.svg';
+import EllipticProviderLogo from '../EllipticProviderLogo.vue';
 import styles from './RiskControlAutoRuleFormPage.module.css';
 
 const WITHDRAWAL_TYPE_MANUAL = 'Manual Transfer';
@@ -686,12 +686,7 @@ defineExpose({
                     </span>
                   </template>
                   <template #trailing>
-                    <img
-                      :class="styles.serviceProviderLogo"
-                      :src="ellipticProviderLogoUrl"
-                      alt=""
-                      aria-hidden="true"
-                    />
+                    <EllipticProviderLogo :class="styles.serviceProviderLogo" />
                   </template>
                 </ProjectCreateModeCard>
               </div>
