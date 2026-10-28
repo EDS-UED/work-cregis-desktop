@@ -554,8 +554,40 @@ const guardSource = readFileSync(
 if (!/export const nativeWindowAddEventListener/.test(guardSource)) {
   fail('I15', 'installShellDebugFloatLayerGuard 须导出 nativeWindowAddEventListener');
 }
-if (!/nativeWindowAddEventListener\(\s*'pointerdown'/.test(pickerSource)) {
-  fail('I15', 'useElementPicker 的 pointerdown 须用 nativeWindowAddEventListener（浮层 Pin）');
+if (
+  !/onEarlyDocumentPointerCapture/.test(guardSource)
+  || !/stopImmediatePropagation\(\)/.test(guardSource)
+  || !/shouldDeferStopImmediateForDevPicker/.test(guardSource)
+  || !/installDevInspectPointerCapture/.test(guardSource)
+  || !/shouldSkipAnchoredOutsideDismiss[\s\S]{0,120}developerInspectActive\.value/.test(guardSource)
+) {
+  fail('I17', 'Shell Debug 须在 document capture 最早阶段 shield pointerdown，避免 AnchoredTooltip closeNow 关掉业务 Popover');
+}
+const devPointerCaptureSource = readFileSync(
+  join(repoRoot, 'src/dev/shell-debug/inspect/devInspectPointerCapture.ts'),
+  'utf8',
+);
+if (!/installDevInspectPointerCapture/.test(devPointerCaptureSource)
+  || !/onDevInspectPointerDownCapture/.test(devPointerCaptureSource)
+  || !/nativeWindowAddEventListener\('pointerdown', onDevInspectPointerDownCapture/.test(
+    devPointerCaptureSource,
+  )) {
+  fail('I15', 'Dev 浮层 Pin 须在 early shield 之前注册 native window capture pointerdown');
+}
+if (
+  !/developerInspectActive\.value[\s\S]{0,80}return;/.test(
+    guardSource.slice(
+      guardSource.indexOf('function onEarlyDocumentPointerCapture'),
+      guardSource.indexOf('event.stopImmediatePropagation()'),
+    ),
+  )
+) {
+  fail('I15', 'Dev 点选期间 early shield 不得 stopImmediatePropagation（否则 Pin 失效）');
+}
+if (!/swallowDevInspectBusinessEvent/.test(pickerSource)
+  || !/nativeDocumentAddEventListener\(type, swallowDevInspectBusinessEvent/.test(pickerSource)
+  || !/isShellDebugUiEvent\(event\)/.test(pickerSource)) {
+  fail('I17', 'Dev 点选须用 native document capture 吞掉业务 click，勿走 float guard 包装 listener');
 }
 const syncPinnedStart = pickerSource.indexOf('function syncPinnedRect');
 const syncPinnedEnd = pickerSource.indexOf('function syncHoverRect');
@@ -565,23 +597,30 @@ const syncPinnedSource = syncPinnedStart >= 0 && syncPinnedEnd > syncPinnedStart
 if (/clearInspectSelection\(\)/.test(syncPinnedSource)) {
   fail('I15', 'syncPinnedRect 不得在 element disconnect 时 clearInspectSelection');
 }
-const onPointerDownStart = pickerSource.indexOf('function onPointerDown');
-const onPointerDownEnd = pickerSource.indexOf('function onScrollOrResize');
-const onPointerDownSource = onPointerDownStart >= 0 && onPointerDownEnd > onPointerDownStart
-  ? pickerSource.slice(onPointerDownStart, onPointerDownEnd)
-  : '';
-const resolveTargetIdx = onPointerDownSource.indexOf('elementFromPreviewPoint');
-if (
-  resolveTargetIdx >= 0
-  && /isShellDebugUiElement\(eventTarget\)[\s\S]{0,120}return;/.test(
-    onPointerDownSource.slice(0, resolveTargetIdx),
-  )
-) {
-  fail('I15', 'onPointerDown 不得在 elementFromPreviewPoint 之前因 eventTarget 早退');
+const devPinHandlerSource = readFileSync(
+  join(repoRoot, 'src/dev/shell-debug/inspect/devInspectPinHandler.ts'),
+  'utf8',
+);
+if (!/tryCommitDevInspectPin/.test(devPinHandlerSource)
+  || !/pickInspectableElementFromPointer/.test(devPinHandlerSource)
+  || !/buildElementInspectInfo/.test(devPinHandlerSource)
+  || !/markShellDebugUiInteraction/.test(devPinHandlerSource)) {
+  fail('I15', 'Dev Pin 须 devInspectPinHandler：pick + buildElementInspectInfo + markShellDebugUiInteraction');
 }
-if (!/function isShellDebugUiPointerEvent/.test(pickerSource)
-  || !/if \(isShellDebugUiPointerEvent\(event\)\) \{[\s\S]{0,220}markShellDebugUiInteraction/.test(onPointerDownSource)) {
-  fail('I15', 'onPointerDown 点击 Dev 参数面板须 isShellDebugUiPointerEvent + markShellDebugUiInteraction，不得 clearInspectSelection');
+if (!/tryCommitDevInspectPin/.test(devPointerCaptureSource)
+  || !/onDevInspectClickCapture/.test(devPointerCaptureSource)) {
+  fail('I15', 'Dev 浮层 Pin 须 pointerdown + click capture 回退（devInspectPointerCapture）');
+}
+const devPanelHostSource = readFileSync(
+  join(repoRoot, 'src/dev/shell-debug/inspect/DevInspectPanelHost.vue'),
+  'utf8',
+);
+if (!/:micro-float="false"/.test(devPanelHostSource) || !/:active="true"/.test(devPanelHostSource)) {
+  fail('I17', 'DevInspectPanelHost EgPopover 须 micro-float=false、active=true，避免 Teleport 面板不可见');
+}
+if (!/pickInspectableElementFromPointer/.test(pickerSource)
+  || !/composedPath/.test(readFileSync(join(inspectDir, 'inspectPickTarget.ts'), 'utf8'))) {
+  fail('I15', 'Dev 点选 hit-test 须 inspectPickTarget（elementsFromPoint + composedPath 回退）');
 }
 
 // I16 布局线框底图：生命周期仅 developerInspectActive；与 hover/pin 路径解耦。
@@ -608,8 +647,8 @@ if (!/bodyMutationObserver/.test(layoutMapVueSource) || !/observe\(document\.bod
 if (/collectLayoutMapItems|buildLayoutMap|scheduleLayoutMapRebuild/.test(hoverFnSource)) {
   fail('I16', 'updateHoverTarget 不得触发 layout map 重建');
 }
-if (/collectLayoutMapItems|buildLayoutMap|scheduleLayoutMapRebuild/.test(onPointerDownSource)) {
-  fail('I16', 'onPointerDown 不得触发 layout map 重建');
+if (/collectLayoutMapItems|buildLayoutMap|scheduleLayoutMapRebuild/.test(devPinHandlerSource)) {
+  fail('I16', 'Dev Pin handler 不得触发 layout map 重建');
 }
 if (/clearHoverSelection[\s\S]{0,200}layoutItems/.test(layoutMapVueSource)) {
   fail('I16', 'layout map 不得绑 clearHoverSelection');
@@ -724,6 +763,42 @@ if (!/resolveLayoutHostGaps/.test(layoutMapSource) || !/layoutMapGapDistanceMatc
 }
 if (!/shouldDrawLayoutMapSolidFrame/.test(layoutMapSource) || !/isLayoutMapGroupEnvelope/.test(layoutMapSource)) {
   fail('I16', 'buildLayoutMap 须区分组外壳实线与内部虚线');
+}
+
+const anchoredShimSource = readFileSync(
+  join(repoRoot, 'src/dev/shell-debug/shim/anchoredTooltipManager.ts'),
+  'utf8',
+);
+if (
+  !/shouldPreserveBusinessAnchoredTooltipClose/.test(anchoredShimSource)
+  || !/isShellDebugUiInteractionPending/.test(anchoredShimSource)
+  || !/isShellDebugUiElement\(explicitExcept\)/.test(anchoredShimSource)
+  || !/shouldPreserveBusinessWhenShellFloatCoexists/.test(anchoredShimSource)
+  || !/isBusinessAppAnchoredTooltipHost/.test(anchoredShimSource)
+  || !/developerInspectActive/.test(anchoredShimSource)
+  || !/invokeAnchoredTooltipClose/.test(anchoredShimSource)
+) {
+  fail('I17', 'anchoredTooltipManager shim 须在 Dev 点选/壳层交互时保留业务 click Popover');
+}
+const devLauncherSource = readFileSync(
+  join(repoRoot, 'src/dev/shell-debug/ShellDebugDevLauncher.vue'),
+  'utf8',
+);
+if (!/useBusinessAnchoredLayerBlocksDevIdleHint/.test(devLauncherSource)) {
+  fail('I17', 'Dev 启动器须在业务 click 浮层打开时禁用 hover 提示，避免 closeAll 关掉批处理等');
+}
+if (!/v-if="showIdleHintTooltip"/.test(devLauncherSource) || !/ShellDebugDevLauncherTrigger/.test(devLauncherSource)) {
+  fail('I17', '业务 Popover 打开时 Dev 启动器须移除外层 hover EgTooltip，避免 Dev 胶囊 hover 样式丢失');
+}
+if (!/DevInspectPanelHost/.test(devLauncherSource) || !/data-dev-inspect-teleport-host/.test(readFileSync(join(repoRoot, 'src/dev/shell-debug/inspect/DevInspectPanelHost.vue'), 'utf8'))) {
+  fail('I17', 'Dev 参数面板须 Teleport 独立挂载，勿再挂 click EgTooltip 以免 outside-dismiss 关掉面板');
+}
+const anchoredPopoverShimSource = readFileSync(
+  join(repoRoot, 'src/dev/shell-debug/shim/AnchoredPopover.vue'),
+  'utf8',
+);
+if (!/closeAllAnchoredTooltips\(\{\s*exceptAncestorsOf:\s*shellTrigger/.test(anchoredPopoverShimSource)) {
+  fail('I17', '壳层 AnchoredPopover 开层 closeAll 须 except 壳 trigger，以保留业务 tooltip/popover');
 }
 
 // ---------------------------------------------------------------- report

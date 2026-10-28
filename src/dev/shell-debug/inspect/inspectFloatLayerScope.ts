@@ -4,7 +4,10 @@ import { isShellDebugUiElement } from '../shellDebugUiScope';
 const INSPECT_FLOAT_ROOT_SELECTORS = [
   '[id^="eds-tooltip-"]',
   '.eds-flotation-menu',
-  '.eds-popover.desktopTokens',
+  '.eds-popover',
+  '.effect-flotation-box',
+  '.eds-flotation',
+  '.eds-crypto-address-tooltip-menu',
 ] as const;
 
 export function isInspectFloatLayerElement(element: Element): boolean {

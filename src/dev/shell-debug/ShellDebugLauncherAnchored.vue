@@ -86,7 +86,7 @@ function syncPopoverAlign() {
 
 function onLauncherPointerDown(event: PointerEvent) {
   event.stopPropagation();
-  markShellDebugUiInteraction();
+  markShellDebugUiInteraction(400);
 }
 
 function onTriggerClick(event: MouseEvent, active: boolean, open: () => void) {

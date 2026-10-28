@@ -55,15 +55,18 @@
   outline: none;
 }
 
-.launcherButton:hover {
+.launcherButton:hover,
+.launcherButtonPointerOver {
   background-color: var(--event-hover);
 }
 
-.launcherButton:hover:not(.launcherButtonDevActive) .launcherIcon {
+.launcherButton:hover:not(.launcherButtonDevActive) .launcherIcon,
+.launcherButtonPointerOver:not(.launcherButtonDevActive) .launcherIcon {
   color: var(--event-hover-base);
 }
 
-.launcherButton:hover:not(.launcherButtonDevActive) .launcherLabel {
+.launcherButton:hover:not(.launcherButtonDevActive) .launcherLabel,
+.launcherButtonPointerOver:not(.launcherButtonDevActive) .launcherLabel {
   color: var(--event-hover-base);
 }
 

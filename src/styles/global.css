@@ -296,6 +296,12 @@ body > [id^='eds-tooltip-v-']:has(.eds-popover.desktopTokens .shell-debug-dev-in
   z-index: 10050;
 }
 
+/* Dev Inspect 参数面板（Teleport 独立宿主，非 eds-tooltip-v-*） */
+body > [data-dev-inspect-teleport-host] {
+  z-index: 10050;
+  pointer-events: auto;
+}
+
 /*
  * List Field 行内图标 — 对齐 Showcase listFieldScene.cryptoInlineIcon*。
  * 单行：icon-xl（24px）；双行主行：icon-lg（20px）。人物头像 EgAvatar size="sm"（--avatar-sm 20px）。

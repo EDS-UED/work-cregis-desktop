@@ -64,9 +64,12 @@ const emit = defineEmits<{
   dismiss: [];
 }>();
 
-const anchorRef = ref<{ toggle: () => void; close: () => void; openPanel: () => void } | null>(
-  null,
-);
+const anchorRef = ref<{
+  toggle: () => void;
+  close: () => void;
+  openPanel: () => void;
+  getTriggerElement?: () => HTMLElement | null;
+} | null>(null);
 const expanded = ref(false);
 const prepBusy = ref(false);
 const prepDeferredLoading = ref(false);
@@ -118,7 +121,8 @@ async function onTriggerClick() {
     return;
   }
 
-  closeAllAnchoredTooltips();
+  const shellTrigger = anchorRef.value?.getTriggerElement?.() ?? null;
+  closeAllAnchoredTooltips({ exceptAncestorsOf: shellTrigger });
 
   if (!props.onBeforeOpen) {
     anchorRef.value?.openPanel();

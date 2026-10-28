@@ -3,6 +3,10 @@ import {
   markShellDebugUiInteraction,
 } from './shellDebugFloatInteraction';
 import { developerInspectActive } from './inspect/developerInspectSession';
+import {
+  installDevInspectDocumentPointerCapture,
+  installDevInspectPointerCapture,
+} from './inspect/devInspectPointerCapture';
 import { isInspectFloatLayerElement } from './inspect/inspectFloatLayerScope';
 import { isShellDebugUiElement } from './shellDebugUiScope';
 
@@ -14,6 +18,9 @@ export const nativeDocumentRemoveEventListener = document.removeEventListener.bi
 export const nativeWindowAddEventListener = window.addEventListener.bind(window);
 export const nativeWindowRemoveEventListener = window.removeEventListener.bind(window);
 
+const SHELL_DEBUG_POINTER_SHIELD_MS = 800;
+const INSPECT_FLOAT_POINTER_SHIELD_MS = 600;
+
 function isCapture(options?: boolean | AddEventListenerOptions): boolean {
   if (options === true) return true;
   if (options && typeof options === 'object') return Boolean(options.capture);
@@ -24,7 +31,7 @@ function nodeInShellDebugUi(node: EventTarget | null): boolean {
   return node instanceof Element && isShellDebugUiElement(node);
 }
 
-function isShellDebugFloatInteraction(event: Event): boolean {
+export function isShellDebugFloatInteraction(event: Event): boolean {
   if (nodeInShellDebugUi(event.target)) return true;
 
   if ('composedPath' in event) {
@@ -36,14 +43,88 @@ function isShellDebugFloatInteraction(event: Event): boolean {
   return false;
 }
 
-function shouldSkipAnchoredOutsideDismiss(event: Event): boolean {
-  if (isShellDebugUiInteractionPending() || isShellDebugFloatInteraction(event)) {
+const APP_PREVIEW_SELECTOR = '.app-preview';
+
+function resolveAppPreview(): Element | null {
+  return document.querySelector(APP_PREVIEW_SELECTOR);
+}
+
+function shouldShieldDocumentPointerFromAnchoredDismiss(event: Event): boolean {
+  if (isShellDebugFloatInteraction(event)) {
     return true;
   }
-  if (!developerInspectActive.value) return false;
+  /*
+   * Dev 点选：任意 document pointer 不得走 AnchoredTooltip outside-dismiss。
+   * 否则点击批处理 / 地址 Menu / 其它 teleport 浮层会把 Dev 参数面板（click EgTooltip）关掉。
+   */
+  if (developerInspectActive.value) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Dev picker 的 native pointerdown 与 early shield 同处 document capture；
+ * 须让点选事件继续传播，否则浮层内 pin 永不触发。
+ */
+function shouldDeferStopImmediateForDevPicker(event: Event): boolean {
+  if (!developerInspectActive.value || !(event instanceof PointerEvent)) {
+    return false;
+  }
+  if (isShellDebugFloatInteraction(event)) {
+    return true;
+  }
   const target = event.target;
-  if (!(target instanceof Element)) return false;
-  return isInspectFloatLayerElement(target);
+  if (!(target instanceof Element)) {
+    return false;
+  }
+  if (isInspectFloatLayerElement(target)) {
+    return true;
+  }
+  const preview = resolveAppPreview();
+  return Boolean(preview?.contains(target));
+}
+
+function onEarlyDocumentPointerCapture(event: Event) {
+  if (!(event instanceof PointerEvent)) return;
+  if (!shouldShieldDocumentPointerFromAnchoredDismiss(event)) return;
+
+  if (isShellDebugFloatInteraction(event)) {
+    markShellDebugUiInteraction(SHELL_DEBUG_POINTER_SHIELD_MS);
+  } else {
+    markShellDebugUiInteraction(INSPECT_FLOAT_POINTER_SHIELD_MS);
+  }
+
+  if (shouldDeferStopImmediateForDevPicker(event)) {
+    return;
+  }
+
+  /*
+   * Dev 点选期间 wrapped outside-dismiss 已由 shouldSkipAnchoredOutsideDismiss 短路；
+   * 此处不得 stopImmediate，否则 Dev picker 若注册在 early shield 之后会永远 Pin 不上。
+   */
+  if (developerInspectActive.value) {
+    return;
+  }
+
+  /*
+   * AnchoredTooltip 在 document capture 上挂 outside-dismiss；须在 Dev picker 之后、
+   * 其它 capture listener 之前 stopImmediatePropagation。
+   */
+  event.stopImmediatePropagation();
+}
+
+function shouldSkipAnchoredOutsideDismiss(event: Event): boolean {
+  if (developerInspectActive.value) {
+    return true;
+  }
+  if (shouldShieldDocumentPointerFromAnchoredDismiss(event)) {
+    return true;
+  }
+  if (isShellDebugUiInteractionPending()) {
+    return true;
+  }
+  return false;
 }
 
 type EventTargetLike = {
@@ -65,12 +146,9 @@ function patchCaptureListenerTarget(target: EventTargetLike): void {
       return rawAdd(type, listener, options);
     }
 
-    if (type === 'pointerdown') {
+    if (type === 'pointerdown' || type === 'mousedown' || type === 'click') {
       const wrapped: EventListener = (event) => {
         if (shouldSkipAnchoredOutsideDismiss(event)) {
-          if (isShellDebugFloatInteraction(event)) {
-            markShellDebugUiInteraction();
-          }
           return;
         }
         listener.call(target, event);
@@ -98,7 +176,10 @@ function patchCaptureListenerTarget(target: EventTargetLike): void {
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions,
   ) {
-    if ((type === 'pointerdown' || type === 'scroll') && typeof listener === 'function') {
+    if (
+      (type === 'pointerdown' || type === 'mousedown' || type === 'click' || type === 'scroll')
+      && typeof listener === 'function'
+    ) {
       const wrapped = wrappedListeners.get(listener);
       if (wrapped) {
         wrappedListeners.delete(listener);
@@ -119,6 +200,10 @@ function patchCaptureListenerTarget(target: EventTargetLike): void {
 export function installShellDebugFloatLayerGuard(): void {
   if (installed || typeof document === 'undefined') return;
   installed = true;
+
+  installDevInspectPointerCapture();
+  nativeDocumentAddEventListener('pointerdown', onEarlyDocumentPointerCapture, true);
+  installDevInspectDocumentPointerCapture();
 
   patchCaptureListenerTarget(document);
   patchCaptureListenerTarget(window);

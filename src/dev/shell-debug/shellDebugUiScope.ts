@@ -4,7 +4,7 @@
  */
 
 export const SHELL_DEBUG_UI_ROOT_SELECTOR =
-  '[data-shell-debug-ui], [data-dev-inspect-overlay], [data-dev-inspect-panel], [data-dev-inspect-hover-popover]';
+  '[data-shell-debug-ui], [data-dev-inspect-overlay], [data-dev-inspect-panel], [data-dev-inspect-hover-popover], [data-dev-inspect-teleport-host]';
 
 /** 与 installShellDebugFloatLayerGuard / ShellDebugPlatform.module.css 对齐。 */
 export const SHELL_DEBUG_FLOAT_CONTENT_MARKERS =
