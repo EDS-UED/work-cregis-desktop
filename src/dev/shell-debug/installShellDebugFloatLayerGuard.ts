@@ -8,7 +8,7 @@ import {
   installDevInspectPointerCapture,
 } from './inspect/devInspectPointerCapture';
 import { isInspectFloatLayerElement } from './inspect/inspectFloatLayerScope';
-import { isHoverAnchoredTooltipInteractionTarget } from '@/utils/anchoredTooltipLayerScope';
+import { shouldSkipClickPopoverOutsideDismissForCoexistence } from '@/utils/anchoredTooltipLayerScope';
 import { isShellDebugUiElement } from './shellDebugUiScope';
 
 let installed = false;
@@ -125,7 +125,7 @@ function shouldSkipAnchoredOutsideDismiss(event: Event): boolean {
   if (isShellDebugUiInteractionPending()) {
     return true;
   }
-  if (event.target instanceof Node && isHoverAnchoredTooltipInteractionTarget(event.target)) {
+  if (shouldSkipClickPopoverOutsideDismissForCoexistence(event)) {
     return true;
   }
   return false;

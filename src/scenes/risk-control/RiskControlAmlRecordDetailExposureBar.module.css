@@ -30,26 +30,26 @@
 }
 
 :global(html[data-theme='dark']) .host[data-direction='source'] {
-  --aml-exposure-tone-1: rgb(137 186 154);
-  --aml-exposure-tone-1: color(display-p3 0.5373 0.7294 0.6039);
-  --aml-exposure-tone-2: rgb(143 190 182);
-  --aml-exposure-tone-2: color(display-p3 0.5608 0.7451 0.7137);
-  --aml-exposure-tone-3: rgb(146 188 192);
-  --aml-exposure-tone-3: color(display-p3 0.5725 0.7373 0.7529);
-  --aml-exposure-tone-4: rgb(148 180 194);
-  --aml-exposure-tone-4: color(display-p3 0.5804 0.7059 0.7608);
-  --aml-exposure-tone-5: rgb(150 174 195);
-  --aml-exposure-tone-5: color(display-p3 0.5882 0.6824 0.7647);
-  --aml-exposure-tone-6: rgb(152 168 196);
-  --aml-exposure-tone-6: color(display-p3 0.5961 0.6588 0.7686);
-  --aml-exposure-tone-7: rgb(154 163 198);
-  --aml-exposure-tone-7: color(display-p3 0.6039 0.6392 0.7765);
-  --aml-exposure-tone-8: rgb(156 158 199);
-  --aml-exposure-tone-8: color(display-p3 0.6118 0.6196 0.7804);
-  --aml-exposure-tone-9: rgb(161 157 200);
-  --aml-exposure-tone-9: color(display-p3 0.6314 0.6157 0.7843);
-  --aml-exposure-tone-10: rgb(168 159 201);
-  --aml-exposure-tone-10: color(display-p3 0.6588 0.6235 0.7882);
+  --aml-exposure-tone-1: rgb(90 144 108);
+  --aml-exposure-tone-1: color(display-p3 0.3529 0.5647 0.4235);
+  --aml-exposure-tone-2: rgb(70 143 119);
+  --aml-exposure-tone-2: color(display-p3 0.2745 0.5608 0.4667);
+  --aml-exposure-tone-3: rgb(51 140 131);
+  --aml-exposure-tone-3: color(display-p3 0.2 0.549 0.5137);
+  --aml-exposure-tone-4: rgb(34 137 142);
+  --aml-exposure-tone-4: color(display-p3 0.1333 0.5373 0.5569);
+  --aml-exposure-tone-5: rgb(27 134 151);
+  --aml-exposure-tone-5: color(display-p3 0.1059 0.5255 0.5922);
+  --aml-exposure-tone-6: rgb(38 129 157);
+  --aml-exposure-tone-6: color(display-p3 0.149 0.5059 0.6157);
+  --aml-exposure-tone-7: rgb(57 123 160);
+  --aml-exposure-tone-7: color(display-p3 0.2235 0.4824 0.6275);
+  --aml-exposure-tone-8: rgb(77 117 160);
+  --aml-exposure-tone-8: color(display-p3 0.302 0.4588 0.6275);
+  --aml-exposure-tone-9: rgb(95 110 156);
+  --aml-exposure-tone-9: color(display-p3 0.3725 0.4314 0.6118);
+  --aml-exposure-tone-10: rgb(111 103 148);
+  --aml-exposure-tone-10: color(display-p3 0.4353 0.4039 0.5804);
 }
 
 .host[data-direction='destination'] {
@@ -76,26 +76,26 @@
 }
 
 :global(html[data-theme='dark']) .host[data-direction='destination'] {
-  --aml-exposure-tone-1: rgb(206 167 147);
-  --aml-exposure-tone-1: color(display-p3 0.8078 0.6549 0.5765);
-  --aml-exposure-tone-2: rgb(198 139 160);
-  --aml-exposure-tone-2: color(display-p3 0.7765 0.5451 0.6275);
-  --aml-exposure-tone-3: rgb(193 135 177);
-  --aml-exposure-tone-3: color(display-p3 0.7569 0.5294 0.6941);
-  --aml-exposure-tone-4: rgb(188 131 189);
-  --aml-exposure-tone-4: color(display-p3 0.7373 0.5137 0.7412);
-  --aml-exposure-tone-5: rgb(169 128 186);
-  --aml-exposure-tone-5: color(display-p3 0.6627 0.502 0.7294);
-  --aml-exposure-tone-6: rgb(152 126 183);
-  --aml-exposure-tone-6: color(display-p3 0.5961 0.4941 0.7176);
-  --aml-exposure-tone-7: rgb(137 124 180);
-  --aml-exposure-tone-7: color(display-p3 0.5373 0.4863 0.7059);
-  --aml-exposure-tone-8: rgb(123 122 177);
-  --aml-exposure-tone-8: color(display-p3 0.4824 0.4784 0.6941);
-  --aml-exposure-tone-9: rgb(120 129 174);
-  --aml-exposure-tone-9: color(display-p3 0.4706 0.5059 0.6824);
-  --aml-exposure-tone-10: rgb(118 137 171);
-  --aml-exposure-tone-10: color(display-p3 0.4627 0.5373 0.6706);
+  --aml-exposure-tone-1: rgb(154 105 80);
+  --aml-exposure-tone-1: color(display-p3 0.6039 0.4118 0.3137);
+  --aml-exposure-tone-2: rgb(158 100 87);
+  --aml-exposure-tone-2: color(display-p3 0.6196 0.3922 0.3412);
+  --aml-exposure-tone-3: rgb(159 96 96);
+  --aml-exposure-tone-3: color(display-p3 0.6235 0.3765 0.3765);
+  --aml-exposure-tone-4: rgb(157 93 106);
+  --aml-exposure-tone-4: color(display-p3 0.6157 0.3647 0.4157);
+  --aml-exposure-tone-5: rgb(151 92 116);
+  --aml-exposure-tone-5: color(display-p3 0.5922 0.3608 0.4549);
+  --aml-exposure-tone-6: rgb(143 92 126);
+  --aml-exposure-tone-6: color(display-p3 0.5608 0.3608 0.4941);
+  --aml-exposure-tone-7: rgb(131 94 135);
+  --aml-exposure-tone-7: color(display-p3 0.5137 0.3686 0.5294);
+  --aml-exposure-tone-8: rgb(116 97 142);
+  --aml-exposure-tone-8: color(display-p3 0.4549 0.3804 0.5569);
+  --aml-exposure-tone-9: rgb(98 99 146);
+  --aml-exposure-tone-9: color(display-p3 0.3843 0.3882 0.5725);
+  --aml-exposure-tone-10: rgb(78 102 148);
+  --aml-exposure-tone-10: color(display-p3 0.3059 0.4 0.5804);
 }
 
 .track {

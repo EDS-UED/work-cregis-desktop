@@ -127,21 +127,26 @@ const EDS_ANCHORED_TOOLTIP_MANAGER = resolve(
   'molecules/tooltip/anchoredTooltipManager.ts',
 );
 
-/** @fs 直链 EDS 源码时仍走业务 shim（resolve.alias 字符串匹配不足以覆盖）。 */
+/**
+ * EDS 内部是相对路径 import（`./anchoredTooltipManager`）。
+ * 只匹配绝对路径 / `@eds/...` 拦不住，hover `openNow` 会走到原版 closeAll，把 click Popover 一并关掉。
+ */
 function aliasEdsAnchoredShims(): Plugin {
   return {
     name: 'alias-eds-anchored-shims',
     enforce: 'pre',
-    resolveId(source) {
-      if (
-        source === EDS_ANCHORED_POPOVER
-        || source.endsWith('/molecules/popovers/AnchoredPopover.vue')
-      ) {
+    async resolveId(source, importer, options) {
+      const resolved = await this.resolve(source, importer, { ...options, skipSelf: true });
+      if (!resolved?.id) {
+        return undefined;
+      }
+      const id = resolved.id.split('?')[0]!;
+      if (id === EDS_ANCHORED_POPOVER || id.endsWith('/molecules/popovers/AnchoredPopover.vue')) {
         return SHIM_ANCHORED_POPOVER;
       }
       if (
-        source === EDS_ANCHORED_TOOLTIP_MANAGER
-        || source.endsWith('/molecules/tooltip/anchoredTooltipManager.ts')
+        id === EDS_ANCHORED_TOOLTIP_MANAGER
+        || id.endsWith('/molecules/tooltip/anchoredTooltipManager.ts')
       ) {
         return SHIM_ANCHORED_TOOLTIP_MANAGER;
       }

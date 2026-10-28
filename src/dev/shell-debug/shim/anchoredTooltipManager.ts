@@ -7,7 +7,10 @@ import {
   BATCH_AML_GATE_PREVIEW_ATTR,
   resolveBatchAmlGateExceptAnchor,
 } from '@/scenes/tasks/shared/batchAmlDangerGateChrome';
-import { isClickAnchoredTooltipOpenExceptNode } from '@/utils/anchoredTooltipLayerScope';
+import {
+  isClickAnchoredTooltipOpenExceptNode,
+  isHoverAnchoredTooltipExceptNode,
+} from '@/utils/anchoredTooltipLayerScope';
 import {
   resolveShellDebugFloatExceptNode,
 } from '../shellDebugPopoverExcept';
@@ -44,7 +47,7 @@ function inferCloseAllLayerScope(options?: CloseAllAnchoredTooltipsOptions): Clo
   if (!(except instanceof HTMLElement)) {
     return 'click-only';
   }
-  if (except.closest('.eds-hover-tooltip-trigger')) {
+  if (isHoverAnchoredTooltipExceptNode(except)) {
     return 'hover-only';
   }
   if (isClickAnchoredTooltipOpenExceptNode(except)) {
