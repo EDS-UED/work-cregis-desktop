@@ -1,0 +1,27 @@
+/**
+ * AML 确认已打开：底栏「签名 / 通过」退出 eds-load，保持点按态文案。
+ * 须是普通全局 CSS。`.module.css` 且无 class 绑定会被生产构建 tree-shake，
+ * dev 仍注入，于是本地正常、Pages 上按钮一直转圈。
+ */
+.app-preview[data-tasks-batch-aml-gate-open] .eds-batch-bar-glass {
+  position: relative;
+}
+
+.app-preview[data-tasks-batch-aml-gate-open]
+  .eds-batch-bar-action-item[data-tasks-batch-aml-gate-anchor] {
+  background-color: var(--event-focus);
+  color: var(--text-base-secondary);
+  cursor: default;
+}
+
+.app-preview[data-tasks-batch-aml-gate-open]
+  .eds-batch-bar-action-item[data-tasks-batch-aml-gate-anchor]
+  [class*='actionTextLabel'] {
+  visibility: visible;
+}
+
+.app-preview[data-tasks-batch-aml-gate-open]
+  .eds-batch-bar-action-item[data-tasks-batch-aml-gate-anchor]
+  [class*='actionLoadingSpin'] {
+  display: none;
+}

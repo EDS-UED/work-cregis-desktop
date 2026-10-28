@@ -20,10 +20,11 @@ if (!hostSource.includes('data-eds-trigger-metrics')) {
 }
 
 if (
-  !read('src/scenes/tasks/shared/batchAmlDangerGateChrome.module.css').includes(':global(.app-preview[data-tasks-batch-aml-gate-open])')
+  !read('src/scenes/tasks/shared/batchAmlDangerGateChrome.css').includes('.app-preview[data-tasks-batch-aml-gate-open]')
+  || read('src/scenes/tasks/TasksDataListPage.vue').includes('batchAmlDangerGateChrome.module.css')
   || !read('src/dev/shell-debug/shim/AnchoredPopover.vue').includes('showTriggerActive')
 ) {
-  fail('AML gate 须 global preview 选择器 + AnchoredPopover showTriggerActive 点按态');
+  fail('AML gate 样式须为全局 CSS（生产构建会丢掉无绑定的 .module.css）');
 }
 
 if (!hostSource.includes('registerPopoverTrigger(onClick)')) {
@@ -61,8 +62,8 @@ if (!read('src/scenes/tasks/shared/TasksBatchAmlDangerConfirmHost.vue').includes
   fail('TasksBatchAmlDangerConfirmHost 须忽略 confirm 后的 dismiss，避免 gate 被取消');
 }
 
-if (!read('src/scenes/tasks/shared/batchAmlDangerGateChrome.module.css').includes('data-tasks-batch-aml-gate-open')) {
-  fail('batchAmlDangerGateChrome 须在 AML 等待时隐藏 BatchBar beforeOpen loading');
+if (!read('src/scenes/tasks/shared/batchAmlDangerGateChrome.css').includes('actionLoadingSpin')) {
+  fail('batchAmlDangerGateChrome 须在 AML 等待时隐藏 BatchBar loading');
 }
 
 const timingSource = read('src/scenes/tasks/shared/batchAmlDangerGateTiming.ts');

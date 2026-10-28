@@ -39,7 +39,7 @@ import SentRequestSenderListCell from './list-field/sentRequest/SentRequestSende
 import SentRequestStatusListCell from './list-field/sentRequest/SentRequestStatusListCell.vue';
 import DataListHeaderSortTrigger from './DataListHeaderSortTrigger.vue';
 import pageStyles from './TasksDataListPage.module.css';
-import '@/scenes/tasks/shared/batchAmlDangerGateChrome.module.css';
+import '@/scenes/tasks/shared/batchAmlDangerGateChrome.css';
 import {
   clearBatchAmlAnchorPressed,
   setBatchAmlGatePreviewOpen,
