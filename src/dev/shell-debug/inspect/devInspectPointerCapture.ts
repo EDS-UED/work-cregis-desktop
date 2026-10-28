@@ -1,9 +1,25 @@
+import { markShellDebugUiInteraction } from '../shellDebugFloatInteraction';
+import { isShellDebugUiElement } from '../shellDebugUiScope';
 import { developerInspectActive } from './developerInspectSession';
 import {
   isDevInspectPinGestureCommitted,
   resetDevInspectPinGestureFlag,
   tryCommitDevInspectPin,
 } from './devInspectPinHandler';
+
+function isShellDebugUiPointerEvent(event: PointerEvent | MouseEvent): boolean {
+  if (event.target instanceof Element && isShellDebugUiElement(event.target)) {
+    return true;
+  }
+  if ('composedPath' in event) {
+    for (const node of event.composedPath()) {
+      if (node instanceof Element && isShellDebugUiElement(node)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 const nativeWindowAddEventListener = window.addEventListener.bind(window);
 const nativeWindowRemoveEventListener = window.removeEventListener.bind(window);
 
@@ -16,6 +32,11 @@ const handledPinPointerEvents = new WeakSet<Event>();
 export function onDevInspectPointerDownCapture(event: PointerEvent) {
   if (handledPinPointerEvents.has(event)) return;
   if (!developerInspectActive.value) return;
+
+  if (isShellDebugUiPointerEvent(event)) {
+    markShellDebugUiInteraction();
+    return;
+  }
 
   resetDevInspectPinGestureFlag();
 
@@ -31,6 +52,12 @@ export function onDevInspectPointerDownCapture(event: PointerEvent) {
 
 function onDevInspectClickCapture(event: MouseEvent) {
   if (!developerInspectActive.value) return;
+
+  if (isShellDebugUiPointerEvent(event)) {
+    markShellDebugUiInteraction();
+    return;
+  }
+
   if (isDevInspectPinGestureCommitted()) return;
 
   if (!tryCommitDevInspectPin(event)) {

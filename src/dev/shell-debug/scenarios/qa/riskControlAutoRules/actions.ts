@@ -1,4 +1,4 @@
-import { closeAllAnchoredTooltips } from '@eds/desktop-components';
+import { closeAllAnchoredTooltipsForShellDebugScenarioReset } from '../../../shellDebugScenarioAnchoredLayers';
 import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { riskControlAutoRuleFlowRegistry } from '@/scenes/risk-control/auto-rule/riskControlAutoRuleFlowContext';
@@ -142,7 +142,7 @@ export async function applyAutoRuleFormSubmitVerifyQa() {
   const overlay = await waitForShellDebugRegistry(riskControlAutoRuleOverlayRegistry);
   if (!overlay) return;
 
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
   overlay.confirmCreateDirection('outflow');
   overlay.requestSubmit();
 }

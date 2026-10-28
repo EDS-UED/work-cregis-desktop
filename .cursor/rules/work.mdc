@@ -31,7 +31,7 @@ Desktop 客户端（非 Showcase / Website 壳）。EDS 真源：`../eds-desktop
 | 9 | mock→`egDataListMockData.ts`（§7.8 规则） | 7.8 |
 | 10 | 用户说推/推送：Agent 预检后 **自行双仓 push**（禁 force）；未要求不 push | 2.5 |
 | 11 | 禁改 EDS；Eg* + 文档化扩展点 | 1.3 |
-| 12 | 锚定 click 浮层互斥：`closeAllAnchoredTooltips` | 1.4 |
+| 12 | click 锚定浮层 **默认互斥**；与 **hover/focus** 可共存；**特别声明**可多层 click 共存 | 1.4 |
 | 13 | EgPopup 同屏一层 shell；上层 Verify/Dialog→下层 `suspended` | 3、7.1 |
 | 14 | 成功反馈仅 `AppEndFeedbackHost` · `EgEndFeedbackCard` | 7.9 |
 | 15 | Eg* 按 Showcase/EDS 资产直接集成；禁平行包壳 Vue、仿 Eg* CSS、单场景新 registry | 1.3、4.1 |
@@ -90,11 +90,28 @@ Showcase 有 **Website token 壳**，无效 token 仍「凑合能看」。本仓
 
 **触发器锚点**：需对齐 toolbar iconSlot 时，优先 **`EgIconProButton`**（内置 `data-eds-trigger-metrics`）外包 `EgTooltip`/`EgAnchoredPopover`；若 Showcase/EDS 有专用场景组件（`EgGuidancePopover`、`EgFlotation` 等）则用场景组件。参考本仓：`TasksDataListPage` 批处理触发、`RiskControlLogsFilterGuidance` 筛选引导（结构对齐 EDS，非新造 trigger 组件）。
 
-### 1.4 锚定浮层互斥
+### 1.4 锚定 click 浮层（默认互斥 · 特别声明可共存）
 
-**【必须】** `.app-preview` 内同屏仅一层 click 锚定浮层（`EgFlotation`、`EgAnchoredPopover`、click `EgTooltip` 等）。新开前 `closeAllAnchoredTooltips()`。
+**默认（无特别声明时）**
 
-**【禁止】** 多浮层同时驻留；业务侧绕过 EDS 登记逐层 patch。
+**【必须】** `.app-preview` 内 **click 聚焦类**锚定浮层（`EgFlotation`、`EgAnchoredPopover`、click `EgTooltip` 等；EDS 登记 `dismissOnBarInteract: false`）**默认同屏仅一层**。再开一层 click 前 `closeAllAnchoredTooltips()`（或 EDS 等价 `openNow` 链里已含 closeAll 的，勿重复手搓关层）。
+
+**【必须】** **hover / focus 类**与 click 聚焦类 **允许同屏**（如 AML 危险地址 click Popover 打开时，列表金额 hover 提示仍可出现且 **不得** 关掉该 Popover）。真源 `src/utils/anchoredTooltipLayerScope.ts` + `anchoredTooltipManager` shim：`openNow` 的 click opener 仅认 **`[tabindex="0"][aria-expanded]`**（禁止误匹配行内其它 `tabindex=0`）；hover opener → **hover-only closeAll**；`installShellDebugFloatLayerGuard` 在 hover 浮层 pointer 上 **跳过 click outside-dismiss**。无 `except` 的业务 `closeAll` 仍仅关 click。
+
+**【禁止】** 在未特别声明可共存的前提下 **多个 click 聚焦类** 同时驻留；业务侧绕过 EDS `anchoredTooltipManager` 登记逐层 patch DOM / capture listener。
+
+**特别声明可共存（须在代码或文档写清范围）**
+
+**【必须】** 仅当以下之一成立时，允许多层 click 锚定浮层（或 Dev 壳层与业务浮层）**同屏**；**未写入声明的一律仍按默认互斥**。
+
+| 声明位置 | 允许共存的范围（摘要） |
+|----------|------------------------|
+| EDS 已文档化行为 | 如 AnchoredTooltip 对 **嵌套 teleport 子层**（地址 Menu、Flotation 内下拉等）的 `isInsideNestedTeleportedLayer` 不 dismiss 外层；以 `packages/components` + Showcase 为准，**禁**业务侧复制一套 |
+| `src/dev/shell-debug/AGENTS.md` | Dev 点选 / Teleport 参数面板与业务 click Popover 等同屏；`closeAllAnchoredTooltips` shim 的 `except` / `developerInspectActive` 保留规则 |
+| 业务模块 **就近** `AGENTS.md` 或 flow 文件顶注释 | 写明哪两个（或哪类）浮层可同时打开、触发顺序、是否仍须 `closeAll({ exceptAncestorsOf })`；PR 须可对照 |
+| `closeAllAnchoredTooltips({ exceptAncestorsOf })` 的 **单次** 调用点 | 须在同行或相邻函数注释说明「保留哪条宿主、为何不算违反默认互斥」 |
+
+**【禁止】** 无上述声明仅凭「需要两个浮层」就长期双开；把 Dev / QA 壳层惯例 silently 推广到业务模块而不写声明。
 
 ---
 

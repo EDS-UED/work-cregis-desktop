@@ -1,4 +1,4 @@
-import { closeAllAnchoredTooltips } from '@eds/desktop-components';
+import { closeAllAnchoredTooltipsForShellDebugScenarioReset } from '../shellDebugScenarioAnchoredLayers';
 import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import { buildWaasOrderModeRecordRows } from '@/scenes/waas-project/waasOrderModeRecordData';
 import { applyWaasOrderModeScenario } from './waasScenarioActions';
@@ -7,7 +7,7 @@ import { waitForPaymentEngineDetailFlow } from './waitForPaymentEngineDetailFlow
 
 export function resetWaasWalletPayoutScenarioBaseline() {
   clearQaLoadingTimeout();
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
 
   const flow = paymentEngineDetailFlowRegistry.value;
   if (flow) {

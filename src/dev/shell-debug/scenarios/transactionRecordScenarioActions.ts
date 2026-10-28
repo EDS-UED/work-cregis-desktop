@@ -1,11 +1,11 @@
-import { closeAllAnchoredTooltips } from '@eds/desktop-components';
+import { closeAllAnchoredTooltipsForShellDebugScenarioReset } from '../shellDebugScenarioAnchoredLayers';
 import { transactionRecordDetailFlowRegistry } from '@/scenes/transaction-records/transactionRecordDetailFlowContext';
 import { transactionRecordsDataListShellApiRegistry } from '@/scenes/transaction-records/transactionRecordsDataListShellApi';
 import { clearQaLoadingTimeout } from './commonScenarioActions';
 
 export function resetTransactionRecordScenarioBaseline() {
   clearQaLoadingTimeout();
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
 
   const flow = transactionRecordDetailFlowRegistry.value;
   if (flow) {

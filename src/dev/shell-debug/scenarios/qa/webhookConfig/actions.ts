@@ -1,4 +1,4 @@
-import { closeAllAnchoredTooltips } from '@eds/desktop-components';
+import { closeAllAnchoredTooltipsForShellDebugScenarioReset } from '../../../shellDebugScenarioAnchoredLayers';
 import {
   WEBHOOK_ENDPOINT_VERIFY_ERROR_KEYS,
   type WebhookEndpointVerifyErrorKey,
@@ -27,7 +27,7 @@ const VERIFY_ERROR_HOST_FRAGMENT: Record<WebhookEndpointVerifyErrorKey, string> 
 
 export function resetWebhookConfigQaBaseline() {
   clearQaLoadingTimeout();
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
 }
 
 function openCreateAndApply(patch: Parameters<typeof applyWebhookCreateFormQaPatch>[0]) {

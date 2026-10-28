@@ -1,4 +1,4 @@
-import { closeAllAnchoredTooltips } from '@eds/desktop-components';
+import { closeAllAnchoredTooltipsForShellDebugScenarioReset } from '../shellDebugScenarioAnchoredLayers';
 import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import type { PaymentEngineOrderRecordDetailTabKind } from '@/scenes/payment-engine/buildPaymentEngineOrderRecordDetailSections';
 import { resolvePaymentEngineOrderRecordDetailTabKinds } from '@/scenes/payment-engine/buildPaymentEngineOrderRecordDetailSections';
@@ -20,7 +20,7 @@ import { waitForPaymentEngineDetailFlow } from './waitForPaymentEngineDetailFlow
 
 export function resetWaasOrderRecordScenarioBaseline() {
   clearQaLoadingTimeout();
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
 
   const flow = paymentEngineDetailFlowRegistry.value;
   if (flow) {

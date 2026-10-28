@@ -1,4 +1,7 @@
-import { buildElementInspectInfo } from './buildElementInspectInfo';
+import {
+  buildElementInspectInfo,
+  buildElementInspectPinStub,
+} from './buildElementInspectInfo';
 import {
   inspectHoverInfo,
   inspectHoverRect,
@@ -68,13 +71,21 @@ export function tryCommitDevInspectPin(event: PointerEvent | MouseEvent): boolea
     return false;
   }
 
-  const info = buildElementInspectInfo(target, preview, { includeAdaptive: true });
-  if (!info) {
+  const stub = buildElementInspectPinStub(target, preview);
+  if (!stub) {
     return false;
   }
 
-  inspectPinnedInfo.value = info;
   inspectPinnedRect.value = target.getBoundingClientRect();
+  inspectPinnedInfo.value = stub;
+
+  queueMicrotask(() => {
+    if (inspectPinnedInfo.value?.element !== target) return;
+    const full = buildElementInspectInfo(target, preview, { includeAdaptive: true });
+    if (full) {
+      inspectPinnedInfo.value = full;
+    }
+  });
   inspectHoverInfo.value = null;
   inspectHoverRect.value = null;
   inspectMeasureElement.value = null;

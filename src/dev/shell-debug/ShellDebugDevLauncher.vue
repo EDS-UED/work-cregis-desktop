@@ -10,7 +10,6 @@ import {
   inspectPinnedInfo,
   setDeveloperInspectActive,
 } from './inspect/developerInspectSession';
-import { useDevInspectPanelPosition } from './inspect/useDevInspectPanelPosition';
 import { markShellDebugUiInteraction } from './installShellDebugFloatLayerGuard';
 import { closeShellDebugLauncherPopovers } from './shellDebugLauncherPopovers';
 import { useBusinessAnchoredLayerBlocksDevIdleHint } from './useBusinessAnchoredLayerBlocksDevIdleHint';
@@ -24,9 +23,15 @@ const INSPECT_SCROLL_EPSILON = 2;
 
 type PopoverAlign = 'center' | 'end';
 
+type DevInspectAnchor = {
+  openPanel: () => void;
+  close: () => void;
+};
+
 const popoverAlign = ref<PopoverAlign>('end');
 const hintPopoverAlign = ref<PopoverAlign>('end');
 const triggerRef = ref<HTMLElement | null>(null);
+const devInspectAnchorRef = ref<DevInspectAnchor | null>(null);
 const devInspectPanelDismissed = ref(false);
 
 let inspectScrollSlot: HTMLElement | null = null;
@@ -46,12 +51,6 @@ const devInspectPanelOpen = computed(
     developerInspectActive.value
     && pinnedInfo.value != null
     && !devInspectPanelDismissed.value,
-);
-
-const { panelStyle, syncPanelPosition } = useDevInspectPanelPosition(
-  triggerRef,
-  popoverAlign,
-  DEV_INSPECT_POPOVER_WIDTH,
 );
 
 function resolvePopoverAlign(popoverWidth: number): PopoverAlign {
@@ -79,7 +78,14 @@ function resolvePopoverAlign(popoverWidth: number): PopoverAlign {
 function syncPopoverAlign() {
   popoverAlign.value = resolvePopoverAlign(DEV_INSPECT_POPOVER_WIDTH);
   hintPopoverAlign.value = resolvePopoverAlign(DEV_HINT_POPOVER_EST_WIDTH);
-  syncPanelPosition();
+}
+
+function openDevInspectAnchorPanel() {
+  devInspectAnchorRef.value?.openPanel();
+}
+
+function closeDevInspectAnchorPanel() {
+  devInspectAnchorRef.value?.close();
 }
 
 function showDevInspectPanelAfterPin() {
@@ -88,6 +94,7 @@ function showDevInspectPanelAfterPin() {
   markShellDebugUiInteraction(400);
   syncPopoverAlign();
   nextTick(() => {
+    openDevInspectAnchorPanel();
     bindInspectScrollChrome();
     resetInspectScrollPosition();
   });
@@ -104,6 +111,7 @@ function onTriggerClick(event: MouseEvent) {
   markShellDebugUiInteraction(400);
 
   if (developerInspectActive.value) {
+    closeDevInspectAnchorPanel();
     setDeveloperInspectActive(false);
     clearInspectSelection();
     devInspectPanelDismissed.value = false;
@@ -118,6 +126,7 @@ function onTriggerClick(event: MouseEvent) {
 
 function closeDevPanel() {
   devInspectPanelDismissed.value = true;
+  closeDevInspectAnchorPanel();
   unbindInspectScrollChrome();
 }
 
@@ -181,17 +190,18 @@ watch(
     if (!info || !developerInspectActive.value) return;
     showDevInspectPanelAfterPin();
   },
-  { flush: 'post' },
+  { flush: 'sync' },
 );
 
 watch(devInspectPanelOpen, (open) => {
   if (open) {
     nextTick(() => {
-      syncPanelPosition();
+      openDevInspectAnchorPanel();
       bindInspectScrollChrome();
     });
     return;
   }
+  closeDevInspectAnchorPanel();
   unbindInspectScrollChrome();
 });
 
@@ -243,23 +253,36 @@ onBeforeUnmount(() => {
       </template>
     </EgTooltip>
 
-    <ShellDebugDevLauncherTrigger
+    <EgTooltip
       v-else
-      :developer-inspect-active="developerInspectActive"
-      :dev-inspect-panel-open="devInspectPanelOpen"
-      @launcher-pointerdown="onLauncherPointerDown"
-      @trigger-click="onTriggerClick"
-    />
+      ref="devInspectAnchorRef"
+      placement="top"
+      :align="popoverAlign"
+      trigger="click"
+      :click-toggle="false"
+      :wrap-tooltip="false"
+      :close-on-scroll="false"
+      teleport-to="body"
+      boundary-selector="body"
+    >
+      <ShellDebugDevLauncherTrigger
+        :developer-inspect-active="developerInspectActive"
+        :dev-inspect-panel-open="devInspectPanelOpen"
+        @launcher-pointerdown="onLauncherPointerDown"
+        @trigger-click="onTriggerClick"
+      />
 
-    <DevInspectPanelHost
-      v-if="devInspectPanelOpen && pinnedInfo"
-      :panel-title="panelTitle"
-      :pinned-info="pinnedInfo"
-      :popover-align="popoverAlign"
-      :width="DEV_INSPECT_POPOVER_WIDTH"
-      :max-height="POPOVER_MAX_HEIGHT"
-      :panel-style="panelStyle"
-      @close="closeDevPanel"
-    />
+      <template #content>
+        <DevInspectPanelHost
+          v-if="devInspectPanelOpen && pinnedInfo"
+          :panel-title="panelTitle"
+          :pinned-info="pinnedInfo"
+          :popover-align="popoverAlign"
+          :width="DEV_INSPECT_POPOVER_WIDTH"
+          :max-height="POPOVER_MAX_HEIGHT"
+          @close="closeDevPanel"
+        />
+      </template>
+    </EgTooltip>
   </div>
 </template>

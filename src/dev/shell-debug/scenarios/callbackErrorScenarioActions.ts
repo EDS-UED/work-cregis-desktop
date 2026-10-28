@@ -1,4 +1,4 @@
-import { closeAllAnchoredTooltips } from '@eds/desktop-components';
+import { closeAllAnchoredTooltipsForShellDebugScenarioReset } from '../shellDebugScenarioAnchoredLayers';
 import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import {
   buildPaymentEngineRecordRows,
@@ -13,7 +13,7 @@ import { waitForPaymentEngineDetailFlow } from './waitForPaymentEngineDetailFlow
 
 export function resetCallbackErrorScenarioBaseline() {
   clearQaLoadingTimeout();
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
 
   const flow = paymentEngineDetailFlowRegistry.value;
   if (flow) {

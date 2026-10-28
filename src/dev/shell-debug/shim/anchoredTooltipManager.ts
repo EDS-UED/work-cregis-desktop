@@ -7,6 +7,7 @@ import {
   BATCH_AML_GATE_PREVIEW_ATTR,
   resolveBatchAmlGateExceptAnchor,
 } from '@/scenes/tasks/shared/batchAmlDangerGateChrome';
+import { isClickAnchoredTooltipOpenExceptNode } from '@/utils/anchoredTooltipLayerScope';
 import {
   resolveShellDebugFloatExceptNode,
 } from '../shellDebugPopoverExcept';
@@ -26,7 +27,48 @@ let openClickAnchoredTooltipCount = 0;
 
 export type CloseAllAnchoredTooltipsOptions = {
   exceptAncestorsOf?: HTMLElement | null;
+  /**
+   * true：同时关闭 hover/focus 类（`dismissOnBarInteract`）。
+   * 默认 false：仅关闭 click 类，与 hover 同屏（§1.4）。
+   */
+  includeHoverLayers?: boolean;
 };
+
+type CloseAllLayerScope = 'click-only' | 'hover-only' | 'all';
+
+function inferCloseAllLayerScope(options?: CloseAllAnchoredTooltipsOptions): CloseAllLayerScope {
+  if (options?.includeHoverLayers) {
+    return 'all';
+  }
+  const except = options?.exceptAncestorsOf;
+  if (!(except instanceof HTMLElement)) {
+    return 'click-only';
+  }
+  if (except.closest('.eds-hover-tooltip-trigger')) {
+    return 'hover-only';
+  }
+  if (isClickAnchoredTooltipOpenExceptNode(except)) {
+    return 'click-only';
+  }
+  /*
+   * hover/focus `openNow` 的 except 为无 tabindex 的 trigger；须只互斥其它 hover，
+   * 保留 AML 确认 Popover 等 click 会话。
+   */
+  return 'hover-only';
+}
+
+function shouldCloseAnchoredTooltipEntry(
+  entry: AnchoredTooltipCloseEntry,
+  scope: CloseAllLayerScope,
+): boolean {
+  if (scope === 'all') {
+    return true;
+  }
+  if (scope === 'click-only') {
+    return !entry.dismissOnBarInteract;
+  }
+  return entry.dismissOnBarInteract;
+}
 
 function isShellDebugLauncherTooltipHost(host: HTMLElement | null | undefined): boolean {
   if (!host) return false;
@@ -165,10 +207,15 @@ export function registerAnchoredTooltipClose(
 
 export function closeAllAnchoredTooltips(options?: CloseAllAnchoredTooltipsOptions): void {
   const explicitExcept = options?.exceptAncestorsOf ?? null;
+  const closeScope = inferCloseAllLayerScope(options);
   const shellDebugExcept = resolveShellDebugFloatExceptNode();
   const batchAmlExcept = resolveBatchAmlGateExceptAnchor();
 
   closeHandlers.forEach((entry) => {
+    if (!shouldCloseAnchoredTooltipEntry(entry, closeScope)) {
+      return;
+    }
+
     const host = entry.getHostElement?.() ?? null;
 
     if (isShellDebugLauncherTooltipHost(host)) {

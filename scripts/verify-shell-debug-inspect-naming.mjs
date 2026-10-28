@@ -615,8 +615,10 @@ const devPanelHostSource = readFileSync(
   join(repoRoot, 'src/dev/shell-debug/inspect/DevInspectPanelHost.vue'),
   'utf8',
 );
-if (!/:micro-float="false"/.test(devPanelHostSource) || !/:active="true"/.test(devPanelHostSource)) {
-  fail('I17', 'DevInspectPanelHost EgPopover 须 micro-float=false、active=true，避免 Teleport 面板不可见');
+if (
+  /data-dev-inspect-teleport-host|:micro-float="false"|:active="true"/.test(devPanelHostSource)
+) {
+  fail('I17', 'DevInspectPanelHost 须 EgPopover 默认 micro-float（锚点 motion），禁 Teleport/active 拆层');
 }
 if (!/pickInspectableElementFromPointer/.test(pickerSource)
   || !/composedPath/.test(readFileSync(join(inspectDir, 'inspectPickTarget.ts'), 'utf8'))) {
@@ -777,8 +779,11 @@ if (
   || !/isBusinessAppAnchoredTooltipHost/.test(anchoredShimSource)
   || !/developerInspectActive/.test(anchoredShimSource)
   || !/invokeAnchoredTooltipClose/.test(anchoredShimSource)
+  || !/includeHoverLayers/.test(anchoredShimSource)
+  || !/inferCloseAllLayerScope/.test(anchoredShimSource)
+  || !/hover-only/.test(anchoredShimSource)
 ) {
-  fail('I17', 'anchoredTooltipManager shim 须在 Dev 点选/壳层交互时保留业务 click Popover');
+  fail('I17', 'anchoredTooltipManager shim 须分 scope：hover open 不关 click Popover（如 AML 确认），click open 互斥 click');
 }
 const devLauncherSource = readFileSync(
   join(repoRoot, 'src/dev/shell-debug/ShellDebugDevLauncher.vue'),
@@ -790,8 +795,19 @@ if (!/useBusinessAnchoredLayerBlocksDevIdleHint/.test(devLauncherSource)) {
 if (!/v-if="showIdleHintTooltip"/.test(devLauncherSource) || !/ShellDebugDevLauncherTrigger/.test(devLauncherSource)) {
   fail('I17', '业务 Popover 打开时 Dev 启动器须移除外层 hover EgTooltip，避免 Dev 胶囊 hover 样式丢失');
 }
-if (!/DevInspectPanelHost/.test(devLauncherSource) || !/data-dev-inspect-teleport-host/.test(readFileSync(join(repoRoot, 'src/dev/shell-debug/inspect/DevInspectPanelHost.vue'), 'utf8'))) {
-  fail('I17', 'Dev 参数面板须 Teleport 独立挂载，勿再挂 click EgTooltip 以免 outside-dismiss 关掉面板');
+if (
+  !/devInspectAnchorRef/.test(devLauncherSource)
+  || !/openDevInspectAnchorPanel/.test(devLauncherSource)
+  || !/DevInspectPanelHost/.test(devLauncherSource)
+) {
+  fail('I17', 'Dev 参数面板须挂 EgTooltip 锚点（openPanel），与 Dev 触发器同 motion，勿 fixed Teleport 拆层');
+}
+const devInspectPanelHostSource = readFileSync(
+  join(repoRoot, 'src/dev/shell-debug/inspect/DevInspectPanelHost.vue'),
+  'utf8',
+);
+if (/data-dev-inspect-teleport-host|micro-float="false"|:active="true"/.test(devInspectPanelHostSource)) {
+  fail('I17', 'DevInspectPanelHost 须 EgPopover 默认 micro-float，禁 Teleport/active 拆层');
 }
 const anchoredPopoverShimSource = readFileSync(
   join(repoRoot, 'src/dev/shell-debug/shim/AnchoredPopover.vue'),

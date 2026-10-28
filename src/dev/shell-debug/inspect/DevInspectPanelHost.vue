@@ -2,9 +2,7 @@
 import { EgPopover } from '@eds/desktop-components';
 import type { ElementInspectInfo } from './buildElementInspectInfo';
 import InspectDetailPanel from './InspectDetailPanel.vue';
-import { markShellDebugUiInteraction } from '../installShellDebugFloatLayerGuard';
 import styles from '../ShellDebugLauncherAnchored.module.css';
-import hostStyles from './devInspectPanelHost.module.css';
 
 type PopoverAlign = 'center' | 'end';
 
@@ -14,7 +12,6 @@ defineProps<{
   popoverAlign: PopoverAlign;
   width: number;
   maxHeight: number;
-  panelStyle: Record<string, string>;
 }>();
 
 const emit = defineEmits<{
@@ -23,37 +20,25 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <Teleport to="body">
+  <EgPopover
+    placement="top"
+    :align="popoverAlign"
+    width-mode="fixed"
+    :width="width"
+    height-mode="adaptive"
+    :max-height="maxHeight"
+    top-tool
+    :top-tool-title="panelTitle"
+    top-tool-closable
+    @top-tool-close="emit('close')"
+  >
     <div
-      data-dev-inspect-teleport-host
+      class="shell-debug-popover-content shell-debug-dev-inspect-popover"
+      :class="styles.popoverContent"
+      data-dev-inspect-panel
       data-shell-debug-ui
-      class="desktopTokens"
-      :class="hostStyles.teleportHost"
-      :style="panelStyle"
     >
-      <EgPopover
-        placement="top"
-        :align="popoverAlign"
-        width-mode="fixed"
-        :width="width"
-        height-mode="adaptive"
-        :max-height="maxHeight"
-        :micro-float="false"
-        :active="true"
-        top-tool
-        :top-tool-title="panelTitle"
-        top-tool-closable
-        @top-tool-close="emit('close')"
-      >
-        <div
-          class="shell-debug-popover-content shell-debug-dev-inspect-popover"
-          :class="styles.popoverContent"
-          data-dev-inspect-panel
-          @pointerdown.stop="markShellDebugUiInteraction()"
-        >
-          <InspectDetailPanel :info="pinnedInfo" embedded />
-        </div>
-      </EgPopover>
+      <InspectDetailPanel :info="pinnedInfo" embedded />
     </div>
-  </Teleport>
+  </EgPopover>
 </template>

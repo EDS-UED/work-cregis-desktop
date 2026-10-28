@@ -1,4 +1,4 @@
-import { closeAllAnchoredTooltips } from '@eds/desktop-components';
+import { closeAllAnchoredTooltipsForShellDebugScenarioReset } from '../shellDebugScenarioAnchoredLayers';
 import { nextTick } from 'vue';
 import type { AppLocale } from '@/composables/useAppLocale';
 import { tasksDataListShellApiRegistry } from '@/scenes/tasks/tasksDataListShellApi';
@@ -34,7 +34,7 @@ import { clearQaLoadingTimeout } from './commonScenarioActions';
 /** 通过公开 API 恢复演示基线；不修改业务源码。 */
 export function resetShellDebugScenarioBaseline() {
   clearQaLoadingTimeout();
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
   resetSigningStoreForDemo();
   closeBatchSigningProgress();
   batchSigningStopConfirmOpen.value = false;

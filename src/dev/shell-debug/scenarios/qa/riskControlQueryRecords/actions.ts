@@ -1,4 +1,4 @@
-import { closeAllAnchoredTooltips } from '@eds/desktop-components';
+import { closeAllAnchoredTooltipsForShellDebugScenarioReset } from '../../../shellDebugScenarioAnchoredLayers';
 import { paymentEngineDetailFlowRegistry } from '@/scenes/payment-engine/paymentEngineDetailFlowContext';
 import { buildRiskControlRecordRows } from '@/scenes/risk-control/riskControlRecordData';
 import {
@@ -34,7 +34,7 @@ function resolveAmlDetailTabIndex(
 
 export function resetRiskControlQueryRecordsQaBaseline() {
   clearQaLoadingTimeout();
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
   clearAmlQueryRecordPatches();
 
   const manualQuery = riskControlAmlManualQueryOverlayRegistry.value;
@@ -78,7 +78,7 @@ export async function applyAmlExceptionHandlingResolvedPreviewQa(
   outcome: 'retry' | 'pass' | 'reject' = 'pass',
 ) {
   clearQaLoadingTimeout();
-  closeAllAnchoredTooltips();
+  closeAllAnchoredTooltipsForShellDebugScenarioReset();
   clearAmlQueryRecordPatches();
 
   applyAmlExceptionHandlingOutcome(AML_DESIGNATED_HANDLER_EXCEPTION_RECORD_ID, outcome);

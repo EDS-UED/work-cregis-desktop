@@ -250,6 +250,39 @@ export type BuildElementInspectInfoOptions = {
   includeAdaptive?: boolean;
 };
 
+/** Pin 首帧：仅 label + 尺寸，完整属性异步补齐（避免 styleSheet 冷启动卡住面板入场）。 */
+export function buildElementInspectPinStub(
+  element: Element,
+  preview: Element,
+): ElementInspectInfo | null {
+  if (!preview.contains(element) && !isInspectFloatLayerElement(element)) return null;
+  if (isShellDebugUiElement(element)) return null;
+
+  const rect = element.getBoundingClientRect();
+  const label = resolveInspectPrimaryLabel(element);
+  const sizeItem = buildSizePropertyItem(rect);
+  const elementAttributes = [sizeItem];
+
+  return {
+    element,
+    label,
+    componentChain: [label],
+    tagName: element.tagName.toLowerCase(),
+    domPath: '',
+    classList: [...element.classList],
+    edsComponentHints: [],
+    edsComponent: null,
+    elementAttributes,
+    rect: {
+      width: Math.round(rect.width * 10) / 10,
+      height: Math.round(rect.height * 10) / 10,
+    },
+    code: { layout: [], style: [] },
+    groups: [],
+    copyBundle: label,
+  };
+}
+
 export function buildElementInspectInfo(
   element: Element,
   preview: Element,

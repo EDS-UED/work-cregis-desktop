@@ -188,7 +188,7 @@ onBeforeUnmount(() => {
             type="button"
             :class="$style.propButton"
             :disabled="!item.copyLine"
-            @click="onCopyLine(item.copyLine, `property-${item.label}`)"
+            @click.stop="onCopyLine(item.copyLine, `property-${item.label}`)"
           >
             <span :class="$style.propLabel">{{ item.label }}</span>
             <span :class="$style.propValueCell">
