@@ -1,8 +1,8 @@
-import type { CryptoName, EgFilterFieldCurrencyOption } from '@eds/desktop-components';
+import type { CryptoName } from '@eds/desktop-components';
 import {
-  buildWaasSubAddressCurrencyFilterOptions,
-  parseWaasSubAddressCurrencyPickerValue,
-} from '@/scenes/waas-project/buildWaasSubAddressCurrencyFilterOptions';
+  AUTO_RULE_CURRENCY_PICKER_CATALOG,
+  parseFilterCurrencyValue,
+} from './riskControlAutoRuleCurrencyPickerCatalog';
 
 export type RiskControlAutoRuleOutflowCurrencyEntry = {
   valueKey: string;
@@ -11,9 +11,6 @@ export type RiskControlAutoRuleOutflowCurrencyEntry = {
   networkLabel: string;
   minAmount: string;
 };
-
-export const AUTO_RULE_OUTFLOW_CURRENCY_OPTIONS: EgFilterFieldCurrencyOption[] =
-  buildWaasSubAddressCurrencyFilterOptions();
 
 export function buildAutoRuleOutflowCurrencyValueKey(
   optionId: string,
@@ -30,8 +27,8 @@ export function resolveAutoRuleOutflowCurrencyEntryFromValueKey(
   const trimmed = valueKey.trim();
   if (!trimmed) return null;
 
-  const { currencyKey, networkKey } = parseWaasSubAddressCurrencyPickerValue(trimmed);
-  const option = AUTO_RULE_OUTFLOW_CURRENCY_OPTIONS.find((entry) => entry.id === currencyKey);
+  const { currencyId, networkKey } = parseFilterCurrencyValue(trimmed);
+  const option = AUTO_RULE_CURRENCY_PICKER_CATALOG.find((entry) => entry.id === currencyId);
   if (!option) return null;
 
   const network = networkKey
@@ -39,7 +36,7 @@ export function resolveAutoRuleOutflowCurrencyEntryFromValueKey(
     : undefined;
 
   return {
-    valueKey: buildAutoRuleOutflowCurrencyValueKey(currencyKey, networkKey),
+    valueKey: buildAutoRuleOutflowCurrencyValueKey(currencyId, networkKey),
     symbol: option.label,
     cryptoName: option.cryptoName,
     networkLabel: network?.label ?? option.chainTagLabel ?? '',

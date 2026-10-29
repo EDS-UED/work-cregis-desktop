@@ -1,34 +1,35 @@
 import { computed, nextTick, ref, watch, type ComputedRef } from 'vue';
-import type { EgFilterFieldCurrencyOption } from '@eds/desktop-components';
 import {
   FILTER_CURRENCY_CASCADE_PICKER_HEIGHT,
   type FilterCurrencyPreset,
 } from '@eds/desktop-components/organisms/filter/filterCurrencyPresets';
 import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
+import { AUTO_RULE_CURRENCY_PICKER_CATALOG } from './riskControlAutoRuleCurrencyPickerCatalog';
 import { buildAutoRuleOutflowCurrencyValueKey } from './riskControlAutoRuleOutflowCurrencyOptions';
 
 type FilterSelectAllMode = 'none' | 'some' | 'all';
 type FilterOptionSelectionState = 'none' | 'partial' | 'full';
 
+const cascadeSubmenuStyle = {
+  '--filter-cascade-max-height': `${FILTER_CURRENCY_CASCADE_PICKER_HEIGHT}px`,
+} as const;
+
 export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
-  currencyOptions: ComputedRef<readonly EgFilterFieldCurrencyOption[]>;
   committedValueKeys: ComputedRef<readonly string[]>;
   translate: (key: string) => string;
 }) {
   const searchQuery = ref('');
   const draftValues = ref<Set<string>>(new Set());
   const activeCascadeKey = ref<string | null>(null);
-  const cascadeDraftSnapshot = ref<Set<string> | null>(null);
   const scrollRef = ref<HTMLElement | null>(null);
   const optionListRef = ref<HTMLElement | null>(null);
   const cascadeScrollRef = ref<HTMLElement | null>(null);
   const cascadeListRef = ref<HTMLElement | null>(null);
 
-  const visibleCurrencyPresets = computed(
-    (): FilterCurrencyPreset[] => options.currencyOptions.value as FilterCurrencyPreset[],
-  );
+  /** EgCryptoTooltip 默认 catalog（28 行）；仅搜索框收窄，不按已提交 entry 删行。 */
+  const visibleCurrencyPresets = computed((): FilterCurrencyPreset[] => AUTO_RULE_CURRENCY_PICKER_CATALOG);
 
-  const filteredOptions = computed(() => {
+  const searchMatchedOptions = computed(() => {
     const query = searchQuery.value.trim().toLowerCase();
     const presets = visibleCurrencyPresets.value;
     if (!query) return presets;
@@ -36,7 +37,7 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
   });
 
   const showSearchEmpty = computed(
-    () => Boolean(searchQuery.value.trim()) && filteredOptions.value.length === 0,
+    () => Boolean(searchQuery.value.trim()) && searchMatchedOptions.value.length === 0,
   );
 
   function buildValueKey(currencyId: string, networkKey?: string): string {
@@ -98,13 +99,8 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
     topScrim: cascadeTopScrim,
     update: updateCascadeScroll,
   } = useScrollChromeScrim(cascadeScrollRef, { contentRef: cascadeListRef });
-
-  const cascadeSubmenuStyle = computed(() => ({
-    '--filter-cascade-max-height': `${FILTER_CURRENCY_CASCADE_PICKER_HEIGHT}px`,
-  }));
-
   watch(
-    () => [filteredOptions.value.length, searchQuery.value, showSearchEmpty.value],
+    () => [searchMatchedOptions.value.length, searchQuery.value, showSearchEmpty.value],
     () => {
       updatePickerScroll();
     },
@@ -122,7 +118,6 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
 
   function clearActiveCascade() {
     activeCascadeKey.value = null;
-    cascadeDraftSnapshot.value = null;
   }
 
   function resetDraft() {
@@ -192,30 +187,11 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
   function getOptionSelectionState(option: FilterCurrencyPreset): FilterOptionSelectionState {
     return getOptionSelectionStateFromValues(option, valuesForDisplay.value);
   }
-
-  function resolveOptionValueSetForParentRow(option: FilterCurrencyPreset): Set<string> {
-    if (
-      activeCascadeKey.value !== option.id
-      || cascadeDraftSnapshot.value === null
-    ) {
-      return valuesForDisplay.value;
-    }
-
-    const merged = cloneValueSet(draftValues.value);
-    removeOptionKeys(merged, option);
-    cascadeDraftSnapshot.value.forEach((valueKey) => merged.add(valueKey));
-    return merged;
-  }
-
-  function getOptionParentSelectionState(option: FilterCurrencyPreset): FilterOptionSelectionState {
-    return getOptionSelectionStateFromValues(option, resolveOptionValueSetForParentRow(option));
-  }
-
   function getOptionParentSelectedNetworkCount(option: FilterCurrencyPreset): number {
     const networks = option.networks ?? [];
     if (!networks.length) return 0;
 
-    const values = resolveOptionValueSetForParentRow(option);
+    const values = valuesForDisplay.value;
     if (values.has(option.id)) return networks.length;
 
     return networks.filter((network) =>
@@ -248,7 +224,7 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
   }
 
   const selectAllMode = computed<FilterSelectAllMode>(() => {
-    const list = filteredOptions.value.filter((option) => !isOptionFullyCommitted(option));
+    const list = searchMatchedOptions.value.filter((option) => !isOptionFullyCommitted(option));
     if (!list.length) return 'none';
 
     const states = list.map((option) => getOptionSelectionState(option));
@@ -273,16 +249,6 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
     if (selectedCount === 0) return 'none';
     if (selectedCount === networkKeys.length) return 'all';
     return 'some';
-  }
-
-  function isOptionParentCheckboxChecked(option: FilterCurrencyPreset): boolean {
-    return getNetworkSelectAllMode(option) === 'all';
-  }
-
-  function hasOptionDraftSelection(option: FilterCurrencyPreset): boolean {
-    if (draftValues.value.has(option.id)) return true;
-    const prefix = `${option.id}:`;
-    return [...draftValues.value].some((valueKey) => valueKey.startsWith(prefix));
   }
 
   function setMultiValue(valueKey: string, selected: boolean) {
@@ -322,7 +288,7 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
     const next = cloneValueSet(draftValues.value);
     const shouldSelectAll = selectAllMode.value !== 'all';
 
-    filteredOptions.value.forEach((option) => {
+    searchMatchedOptions.value.forEach((option) => {
       if (isOptionFullyCommitted(option)) return;
       if (shouldSelectAll) {
         selectOptionFully(next, option);
@@ -415,45 +381,9 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
 
   function onCascadeOpen(option: FilterCurrencyPreset) {
     activeCascadeKey.value = option.id;
-    cascadeDraftSnapshot.value = cloneValueSet(
-      [...draftValues.value].filter(
-        (valueKey) => valueKey === option.id || valueKey.startsWith(`${option.id}:`),
-      ),
-    );
     void nextTick(() => {
       updateCascadeScroll();
     });
-  }
-
-  function onCascadeConfirm(closeNetwork: () => void) {
-    const optionId = activeCascadeKey.value;
-    if (optionId) {
-      const option = filteredOptions.value.find((item) => item.id === optionId);
-      if (option?.multiChain && option.networks?.length) {
-        const next = cloneValueSet(draftValues.value);
-        normalizeOptionSelection(next, option);
-        draftValues.value = next;
-      }
-    }
-    cascadeDraftSnapshot.value = null;
-    closeNetwork();
-  }
-
-  function onCascadeCancel(option: FilterCurrencyPreset, closeNetwork: () => void) {
-    if (cascadeDraftSnapshot.value) {
-      const next = cloneValueSet(draftValues.value);
-      removeOptionKeys(next, option);
-      cascadeDraftSnapshot.value.forEach((valueKey) => next.add(valueKey));
-      draftValues.value = next;
-      cascadeDraftSnapshot.value = null;
-    }
-    closeNetwork();
-  }
-
-  function onCascadeClear(option: FilterCurrencyPreset) {
-    const next = cloneValueSet(draftValues.value);
-    removeOptionKeys(next, option);
-    draftValues.value = next;
   }
 
   function onCascadeRowEnter(optionId: string) {
@@ -495,7 +425,7 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
     searchQuery,
     scrollRef,
     optionListRef,
-    filteredOptions,
+    searchMatchedOptions,
     showSearchEmpty,
     pickerCanScroll,
     pickerTopScrim,
@@ -508,10 +438,8 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
     resolveOptionModeTag,
     showOptionParentMessage,
     getOptionParentMessageText,
-    isOptionParentCheckboxChecked,
     isCascadeFlotationDisabled,
     getNetworkSelectAllMode,
-    hasOptionDraftSelection,
     isOptionSelected,
     isNetworkSelected,
     setCascadeScrollRef,
@@ -523,9 +451,6 @@ export function useRiskControlAutoRuleOutflowCurrencyAddPickerMenu(options: {
     onNetworkClick,
     onNetworkSelectAllToggle,
     onCascadeOpen,
-    onCascadeConfirm,
-    onCascadeCancel,
-    onCascadeClear,
     onCascadeRowEnter,
     onCascadeFlotationClose,
     onPickerClear,

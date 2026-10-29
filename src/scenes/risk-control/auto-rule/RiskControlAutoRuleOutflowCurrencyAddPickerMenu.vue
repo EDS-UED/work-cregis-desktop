@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { EgFilterFieldCurrencyOption, TooltipWidthMode } from '@eds/desktop-components';
+import type { TooltipWidthMode } from '@eds/desktop-components';
 import {
   EgComboFloatButton,
   EgDivider,
@@ -24,7 +24,6 @@ const FILTER_CURRENCY_SELECT_ALL_ICON = 'eds-list-lattice-mobile-fill';
 const CASCADE_BOUNDARY_SELECTOR = '.app-preview';
 
 const props = defineProps<{
-  currencyOptions: readonly EgFilterFieldCurrencyOption[];
   committedValueKeys: readonly string[];
   menuWidth?: number;
   menuWidthMode: TooltipWidthMode;
@@ -38,14 +37,13 @@ const emit = defineEmits<{
 
 const { ui } = useAppI18n();
 
-const currencyOptionsRef = computed(() => props.currencyOptions);
 const committedValueKeysRef = computed(() => props.committedValueKeys);
 
 const {
   searchQuery,
   scrollRef,
   optionListRef,
-  filteredOptions,
+  searchMatchedOptions,
   showSearchEmpty,
   pickerCanScroll,
   pickerTopScrim,
@@ -58,10 +56,8 @@ const {
   resolveOptionModeTag,
   showOptionParentMessage,
   getOptionParentMessageText,
-  isOptionParentCheckboxChecked,
   isCascadeFlotationDisabled,
   getNetworkSelectAllMode,
-  hasOptionDraftSelection,
   isOptionSelected,
   isNetworkSelected,
   setCascadeScrollRef,
@@ -73,9 +69,6 @@ const {
   onNetworkClick,
   onNetworkSelectAllToggle,
   onCascadeOpen,
-  onCascadeConfirm,
-  onCascadeCancel,
-  onCascadeClear,
   onCascadeRowEnter,
   onCascadeFlotationClose,
   onPickerClear,
@@ -86,7 +79,6 @@ const {
   isOptionRowDisabled,
   isNetworkRowDisabled,
 } = useRiskControlAutoRuleOutflowCurrencyAddPickerMenu({
-  currencyOptions: currencyOptionsRef,
   committedValueKeys: committedValueKeysRef,
   translate: (key) => ui(key),
 });
@@ -180,7 +172,7 @@ function onCancel() {
             </template>
           </EgFlotationMenuItem>
 
-          <template v-for="option in filteredOptions" :key="option.id">
+          <template v-for="option in searchMatchedOptions" :key="option.id">
             <div
               v-if="option.multiChain && option.networks?.length"
               :class="styles.optionRowWrap"
@@ -191,7 +183,7 @@ function onCancel() {
                 :class="styles.networkFlotation"
                 placement="right"
                 align="start"
-                flip
+                :flip="true"
                 trigger="hover"
                 width-mode="fixed"
                 :width="FILTER_CURRENCY_CASCADE_PICKER_WIDTH"
@@ -218,15 +210,15 @@ function onCancel() {
                       show-cascader
                       :show-tag="false"
                       show-checkbox
-                      :checked="isOptionParentCheckboxChecked(option)"
-                      :checkbox-indeterminate="false"
+                      :checked="getNetworkSelectAllMode(option) === 'all'"
+                      :checkbox-indeterminate="getNetworkSelectAllMode(option) === 'some'"
                       :disabled="isOptionRowDisabled(option)"
                       @click="onOptionClick(option)"
                       @update:checked="onCheckboxUpdate(option, $event)"
                     />
                   </div>
                 </template>
-                <template #content="{ close: closeNetwork }">
+                <template #content>
                   <EgFlotationMenu
                     :class="styles.networkSubmenu"
                     :style="cascadeSubmenuStyle"
@@ -241,71 +233,55 @@ function onCancel() {
                     :show-add="false"
                     :show-divider="false"
                   >
-                    <div :class="styles.cascadePanel">
+                    <div
+                      :ref="(element) =>
+                        setCascadeScrollRef(option.id, element as HTMLElement | null)"
+                      :class="[
+                        styles.cascadeListScroll,
+                        cascadeTopScrim && styles.listScrollFadeTop,
+                      ]"
+                    >
                       <div
                         :ref="(element) =>
-                          setCascadeScrollRef(option.id, element as HTMLElement | null)"
-                        :class="[
-                          styles.cascadeListScroll,
-                          cascadeTopScrim && styles.listScrollFadeTop,
-                        ]"
+                          setCascadeListRef(option.id, element as HTMLElement | null)"
+                        :class="styles.cascadeList"
                       >
-                        <div
-                          :ref="(element) =>
-                            setCascadeListRef(option.id, element as HTMLElement | null)"
-                          :class="styles.cascadeList"
+                        <EgFlotationMenuItem
+                          data-eds-filter-cascade-item
+                          box-type="image-text"
+                          :label="ui('All')"
+                          show-checkbox
+                          :checked="getNetworkSelectAllMode(option) === 'all'"
+                          :checkbox-indeterminate="getNetworkSelectAllMode(option) === 'some'"
+                          :show-tag="false"
+                          @click="onNetworkSelectAllToggle(option)"
+                          @update:checked="onNetworkSelectAllToggle(option)"
                         >
-                          <EgFlotationMenuItem
-                            data-eds-filter-cascade-item
-                            box-type="image-text"
-                            :label="ui('All')"
-                            show-checkbox
-                            :checked="getNetworkSelectAllMode(option) === 'all'"
-                            :checkbox-indeterminate="getNetworkSelectAllMode(option) === 'some'"
-                            :show-tag="false"
-                            @click="onNetworkSelectAllToggle(option)"
-                            @update:checked="onNetworkSelectAllToggle(option)"
-                          >
-                            <template #leading>
-                              <span :class="styles.selectAllIcon">
-                                <span :class="styles.selectAllIconGlyph">
-                                  <EgIcon :name="FILTER_CURRENCY_SELECT_ALL_ICON" fit />
-                                </span>
+                          <template #leading>
+                            <span :class="styles.selectAllIcon">
+                              <span :class="styles.selectAllIconGlyph">
+                                <EgIcon :name="FILTER_CURRENCY_SELECT_ALL_ICON" fit />
                               </span>
-                            </template>
-                          </EgFlotationMenuItem>
-                          <EgFlotationMenuItem
-                            v-for="network in option.networks"
-                            :key="`${option.id}-${network.key}`"
-                            data-eds-filter-cascade-item
-                            box-type="image-text"
-                            :label="network.label"
-                            :symbol-icon="network.cryptoName"
-                            :show-tag="false"
-                            show-checkbox
-                            :checked="isNetworkSelected(option, network.key)"
-                            :disabled="isNetworkRowDisabled(option, network.key)"
-                            @click="onNetworkClick(option, network.key)"
-                            @update:checked="
-                              onNetworkCheckboxUpdate(option, network.key, $event)
-                            "
-                          />
-                        </div>
+                            </span>
+                          </template>
+                        </EgFlotationMenuItem>
+                        <EgFlotationMenuItem
+                          v-for="network in option.networks"
+                          :key="`${option.id}-${network.key}`"
+                          data-eds-filter-cascade-item
+                          box-type="image-text"
+                          :label="network.label"
+                          :symbol-icon="network.cryptoName"
+                          :show-tag="false"
+                          show-checkbox
+                          :checked="isNetworkSelected(option, network.key)"
+                          :disabled="isNetworkRowDisabled(option, network.key)"
+                          @click="onNetworkClick(option, network.key)"
+                          @update:checked="
+                            onNetworkCheckboxUpdate(option, network.key, $event)
+                          "
+                        />
                       </div>
-                      <EgComboFloatButton
-                        :class="styles.cascadeAction"
-                        tone="decor"
-                        :count="2"
-                        :clear="hasOptionDraftSelection(option)"
-                        direction="right"
-                        bar-padding="compact"
-                        divider
-                        :cancel-label="ui('Cancel')"
-                        :confirm-label="ui('Confirm')"
-                        @clear="onCascadeClear(option)"
-                        @cancel="onCascadeCancel(option, closeNetwork)"
-                        @confirm="onCascadeConfirm(closeNetwork)"
-                      />
                     </div>
                   </EgFlotationMenu>
                 </template>
