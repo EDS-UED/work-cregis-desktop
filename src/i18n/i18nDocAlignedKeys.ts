@@ -316,6 +316,8 @@ export const I18N_DOC_ALIGNED_KEYS = new Set<string>([
   'API Payout',
   'Auto rule risk score threshold hint prefix',
   'Auto rule risk score threshold hint suffix',
+  'Auto rule risk score threshold hint prefix inflow',
+  'Auto rule risk score threshold hint suffix inflow',
   'Auto rule risk score range hint min lead',
   'Auto rule risk score range hint min tail',
   'Auto rule risk score range hint max lead',

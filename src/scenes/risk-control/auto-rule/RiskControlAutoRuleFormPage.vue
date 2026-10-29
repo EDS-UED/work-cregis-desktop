@@ -111,6 +111,18 @@ const autoRuleFormFootnoteKey = computed(() =>
   isOutflow.value ? 'AML query caution coverage limit' : 'Auto rule form footnote inflow',
 );
 
+const riskScoreThresholdHintPrefixKey = computed(() =>
+  isOutflow.value
+    ? 'Auto rule risk score threshold hint prefix'
+    : 'Auto rule risk score threshold hint prefix inflow',
+);
+
+const riskScoreThresholdHintSuffixKey = computed(() =>
+  isOutflow.value
+    ? 'Auto rule risk score threshold hint suffix'
+    : 'Auto rule risk score threshold hint suffix inflow',
+);
+
 function riskAlertRecipientsValid(draft: RiskControlAutoRuleFormDraft): boolean {
   if (draft.riskAlertRecipientKeys.length === 0) return false;
   if (
@@ -650,11 +662,6 @@ defineExpose({
                           @update:model-value="patchDraft({ currencyEntries: $event })"
                         />
                       </div>
-                      <RiskControlAutoRuleSkipCheckRows
-                        :skip-whitelist="localDraft.skipWhitelist"
-                        :skip-internal="localDraft.skipInternal"
-                        @skip-update="onSkipCheckboxUpdate"
-                      />
                     </div>
                   </ProjectCreateModeCard>
               </div>
@@ -731,7 +738,7 @@ defineExpose({
                 </span>
                 <span :class="feedbackStyles.formBody">
                   <span :class="feedbackStyles.formText">
-                    {{ ui('Auto rule risk score threshold hint prefix') }}<span :class="styles.riskScoreThresholdHintValue">{{ riskScoreThresholdHintValue }}</span>{{ ui('Auto rule risk score threshold hint suffix') }}
+                    {{ ui(riskScoreThresholdHintPrefixKey) }}<span :class="styles.riskScoreThresholdHintValue">{{ riskScoreThresholdHintValue }}</span>{{ ui(riskScoreThresholdHintSuffixKey) }}
                   </span>
                 </span>
               </div>

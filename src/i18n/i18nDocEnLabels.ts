@@ -316,6 +316,9 @@ export const I18N_DOC_EN_LABELS: Record<string, string> = {
   'Auto rule risk score threshold hint prefix':
     'Cregis AML will take risk control action if the receiving address has a risk score ≥ ',
   'Auto rule risk score threshold hint suffix': '.',
+  'Auto rule risk score threshold hint prefix inflow':
+    'When the transaction fund risk score is ≥ ',
+  'Auto rule risk score threshold hint suffix inflow': ', the transaction is deemed dangerous',
   'Auto rule risk score range hint min lead': 'Minimum risk score is ',
   'Auto rule risk score range hint min tail': ' (very safe)',
   'Auto rule risk score range hint max lead': '; maximum is ',

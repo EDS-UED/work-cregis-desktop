@@ -199,6 +199,8 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Auto rule risk score invalid': '风险分级标准为大于0且小于等于10.0，保留一位小数',
   'Auto rule risk score threshold hint prefix': '收款地址的风险评分大于等于',
   'Auto rule risk score threshold hint suffix': '时，Cregis AML将执行风险控制措施',
+  'Auto rule risk score threshold hint prefix inflow': '交易资金风险评分大于等于',
+  'Auto rule risk score threshold hint suffix inflow': '时，认定该交易为危险交易',
   'Auto rule risk score range hint min lead': '风险评分最低为',
   'Auto rule risk score range hint min tail': '(非常安全)',
   'Auto rule risk score range hint max lead': '；最高为',
