@@ -47,6 +47,7 @@ export function buildReportAmountCustomize(row: TransactionRecordRow): Record<st
     cryptoSymbol: row.symbol,
     fiatValue: row.fiatAmount,
     showCryptoIcon: false,
+    showCryptoSymbolInPrimary: false,
     alignEnd: true,
     tooltipTrigger: 'hover',
   };

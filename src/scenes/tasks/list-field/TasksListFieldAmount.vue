@@ -71,7 +71,14 @@ const fiatValue = computed(() =>
 const cryptoValue = computed(() =>
   formatGroupedDecimalAmount(String(props.customize.cryptoValue ?? '12,500.000001')),
 );
-const cryptoPrimaryText = computed(() => `${cryptoValue.value} ${cryptoSymbol.value}`);
+const showCryptoSymbolInPrimary = computed(
+  () => props.customize.showCryptoSymbolInPrimary !== false,
+);
+const cryptoPrimaryText = computed(() =>
+  showCryptoSymbolInPrimary.value
+    ? `${cryptoValue.value} ${cryptoSymbol.value}`
+    : cryptoValue.value,
+);
 const showAmountCryptoIcon = computed(() => props.customize.showCryptoIcon !== false);
 const cryptoName = computed((): CryptoName => {
   const explicit = String(props.customize.cryptoName ?? '').trim();

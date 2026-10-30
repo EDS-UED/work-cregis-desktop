@@ -183,6 +183,7 @@ function resolveWalletName(index: number): string {
 }
 
 function resolveFromAlias(index: number): string {
+  if (index === 1) return '';
   return FROM_ALIASES[index % FROM_ALIASES.length]!;
 }
 
