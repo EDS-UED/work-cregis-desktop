@@ -11,6 +11,7 @@ import {
   EgFieldOvfTooltip,
   EgFormSubmission,
   EgLinkButton,
+  EgOdometer,
   EgSkid,
   EgSwitch,
   EgToolBar,
@@ -85,6 +86,7 @@ const {
   canSave: balanceReminderCanSave,
   submit: submitBalanceReminder,
 } = useManageOverviewBalanceReminderForm();
+const odometerPlayKey = ref(0);
 
 const scrollRef = ref<HTMLElement | null>(null);
 const contentRef = ref<HTMLElement | null>(null);
@@ -182,9 +184,14 @@ function onGasProxyPaymentSwitch(account: GasAccountOverviewItem, next: boolean)
   requestGasProxyPaymentToggle(account.key, next, account.gasProxyPaymentLockedOn);
 }
 
+function replayOdometer() {
+  odometerPlayKey.value += 1;
+}
+
 function showBalanceAmount() {
   if (balanceAmountVisible.value) return;
   balanceAmountVisible.value = true;
+  replayOdometer();
 }
 
 function hideBalanceAmount() {
@@ -338,9 +345,11 @@ onBeforeUnmount(() => {
               "
               @click="toggleBalanceAmountVisibility"
             >
-              <span v-if="balanceAmountVisible" class="typography-display">
-                {{ TOTAL_BALANCE_DISPLAY }}
-              </span>
+              <EgOdometer
+                v-if="balanceAmountVisible"
+                :key="odometerPlayKey"
+                :value="TOTAL_BALANCE_DISPLAY"
+              />
               <span v-else class="typography-display" :class="styles.totalBalanceMask">
                 {{ BALANCE_MASK }}
               </span>
