@@ -1,11 +1,13 @@
 import { computed } from 'vue';
 import type { ModuleMenuPresetGroup } from '@eds/desktop-components';
 import { getCregisModuleMenuGroups } from '@eds/desktop-components';
+import { patchManageTeamAccountBalanceBranch } from './manageModuleMenuGroupsPatch';
 
 function remapManageMenuGroups(
   groups: readonly ModuleMenuPresetGroup[],
 ): ModuleMenuPresetGroup[] {
-  return groups.map((group) => ({
+  const withTeamAccountBranch = patchManageTeamAccountBalanceBranch(groups);
+  return withTeamAccountBranch.map((group) => ({
     ...group,
     items: group.items.map((item) => {
       if (item.label !== 'Webhook' || !item.subitems?.length) {

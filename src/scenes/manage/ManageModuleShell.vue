@@ -12,6 +12,7 @@ import {
   isManageWebhookConfigMenuItem,
   isManageWebhookPushRecordsMenuItem,
 } from './manageMenuData';
+import { MANAGE_TEAM_ACCOUNT_BALANCE_MENU_ITEM } from './manageModuleMenuGroupsPatch';
 import ManageFeeRecordsModuleHost from './fee-records/ManageFeeRecordsModuleHost.vue';
 import ManageGasProxyPaymentRecordsModuleHost from './gas-proxy-payment-records/ManageGasProxyPaymentRecordsModuleHost.vue';
 import ManageOverviewPage from './overview/ManageOverviewPage.vue';
@@ -51,7 +52,10 @@ defineProps<{
     :menu-item="menuItem"
   />
   <ManageOverviewPage
-    v-else-if="menuItem && isManageOverviewMenuItem(menuItem)"
+    v-else-if="
+      menuItem
+        && (isManageOverviewMenuItem(menuItem) || menuItem === MANAGE_TEAM_ACCOUNT_BALANCE_MENU_ITEM)
+    "
   />
   <ManageFeeRecordsModuleHost
     v-else-if="menuItem && isManageFeeRecordsMenuItem(menuItem)"

@@ -67,8 +67,10 @@ import { useRiskControlModuleMenuGroups } from '@/scenes/risk-control/useRiskCon
 import ManageModuleShell from '@/scenes/manage/ManageModuleShell.vue';
 import {
   DEFAULT_MANAGE_MENU_ITEM,
+  MANAGE_OVERVIEW_MENU_ITEM,
   isManageModuleMenuItem,
 } from '@/scenes/manage/manageMenuData';
+import { MANAGE_TEAM_ACCOUNT_BALANCE_MENU_ITEM } from '@/scenes/manage/manageModuleMenuGroupsPatch';
 import { useManageModuleMenuGroups } from '@/scenes/manage/useManageModuleMenuGroups';
 
 const { messages, ui, locale } = useAppI18n();
@@ -343,6 +345,10 @@ function applyModuleMenuCatalogSelection(label: string) {
   }
 
   if (activeModuleTitle.value === 'Manage') {
+    if (label === MANAGE_TEAM_ACCOUNT_BALANCE_MENU_ITEM) {
+      activeModuleMenuItem.value = MANAGE_OVERVIEW_MENU_ITEM;
+      return;
+    }
     if (isManageModuleMenuItem(label)) {
       activeModuleMenuItem.value = label;
     }
