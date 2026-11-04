@@ -15,6 +15,9 @@ import {
 } from '@eds/desktop-components';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { resolveAppEgFilterPresetBind } from '@/scenes/shared/appEgFilterLayoutDefaults';
+
+const egFilterPresetBind = resolveAppEgFilterPresetBind();
 import {
   hasSeenRiskControlLogsFilterGuide,
   markRiskControlLogsFilterGuideSeen,
@@ -144,16 +147,9 @@ onBeforeUnmount(() => {
         <EgFilter
           v-model="conditions"
           v-model:logic-mode="logicMode"
+          v-bind="egFilterPresetBind"
           :fields="fields"
-          :operators="operators"
           :translate="filterTranslate"
-          add-label="添加条件"
-          :max-conditions="20"
-          placement="bottom"
-          align="start"
-          value-align="end"
-          boundary-selector=".app-preview"
-          teleport-to=".app-preview"
           :disabled="disabled"
         >
           <template #trigger="{ active, count, onClick }">

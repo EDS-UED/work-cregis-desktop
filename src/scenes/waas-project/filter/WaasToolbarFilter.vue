@@ -1,49 +1,30 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import {
-  EgFilter,
-  createFilterTranslate,
-  type EgFilterCondition,
-  type EgFilterField,
-  type EgFilterLogicMode,
-  type EgFilterOperator,
+import type {
+  EgFilterCondition,
+  EgFilterField,
+  EgFilterLogicMode,
+  EgFilterOperator,
 } from '@eds/desktop-components';
-import { useAppI18n } from '@/composables/useAppI18n';
+import AppToolbarEgFilter from '@/scenes/shared/AppToolbarEgFilter.vue';
+import type { AppEgFilterLayoutMode } from '@/scenes/shared/appEgFilterLayoutDefaults';
 
 const props = defineProps<{
   fields: EgFilterField[];
-  operators: EgFilterOperator[];
+  operators?: EgFilterOperator[];
   disabled?: boolean;
+  layoutMode?: AppEgFilterLayoutMode;
 }>();
 
 const conditions = defineModel<EgFilterCondition[]>({ default: () => [] });
 const logicMode = defineModel<EgFilterLogicMode>('logicMode', { default: 'all' });
-
-const { locale, ui } = useAppI18n();
-const filterTranslate = computed(() => {
-  const filterUi = createFilterTranslate(locale.value);
-  return (text: string) => {
-    const appText = ui(text);
-    if (appText !== text) return appText;
-    return filterUi(text);
-  };
-});
 </script>
 
 <template>
-  <EgFilter
+  <AppToolbarEgFilter
+    :fields="props.fields"
+    :disabled="props.disabled"
+    :layout-mode="props.layoutMode"
     v-model="conditions"
     v-model:logic-mode="logicMode"
-    :fields="props.fields"
-    :operators="props.operators"
-    :translate="filterTranslate"
-    add-label="添加条件"
-    :max-conditions="20"
-    placement="bottom"
-    align="start"
-    value-align="end"
-    boundary-selector=".app-preview"
-    teleport-to=".app-preview"
-    :disabled="props.disabled"
   />
 </template>
