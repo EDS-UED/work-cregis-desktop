@@ -20,7 +20,6 @@ import {
   MANAGE_ROLE_UNSAVED_EXIT_AT_TOOLBAR,
 } from './manageRoleUnsavedExitConfirm';
 import permissionStyles from './manageRoleDetailPermission.module.css';
-import listActionStyles from './list-field/RoleListFieldActions.module.css';
 import ManageRolePermissionSectionHints from './ManageRolePermissionSectionHints.vue';
 import ManageRolePermissionCheckboxValue from './ManageRolePermissionCheckboxValue.vue';
 import { buildManageRolePermissionValueSlots } from './manageRolePermissionValueSlots';
@@ -300,9 +299,8 @@ function onToolbarConfirmSave() {
           <template v-else>
             <EgButton
               variant="text"
-              tone="subtle"
+              tone="danger"
               size="md"
-              :class="listActionStyles.deleteButton"
               @click="onToolbarDeleteClick"
             >
               {{ ui('Delete') }}
@@ -313,7 +311,7 @@ function onToolbarConfirmSave() {
               tone="decor"
               @click="onToolbarEditPermissions"
             >
-              {{ ui('Edit Permissions') }}
+              {{ ui('Edit') }}
             </EgButton>
           </template>
         </template>

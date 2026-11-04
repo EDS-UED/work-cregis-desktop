@@ -15,6 +15,8 @@ import type {
   PaymentEngineRecordRow,
 } from './paymentEngineRecordConfigs';
 import { resolveCallbackEventLabelKey } from './paymentEngineListFieldCustomize';
+import { buildPaymentExceptionId } from './paymentEnginePaymentExceptionDetailData';
+import { buildWalletPayoutThirdPartyBusinessNo } from './paymentEngineWalletPayoutDetailData';
 /** @deprecated 使用 resolveEgDataListDemoRowIndex */
 export const resolvePaymentEngineDemoRowIndex = resolveEgDataListDemoRowIndex;
 
@@ -590,15 +592,26 @@ function buildSettlementRecordRow(rowIndex: number): PaymentEngineRecordRow {
   const status = resolveShowcaseThenCompletedStatus(rowIndex, SETTLEMENT_STATUS_SHOWCASE, 'success');
   const fiatNumeric = amountRow.fiatValue.replace(/[^\d.]/g, '');
 
+  const walletToAddress = resolveDemoWalletAddress(rowIndex, preset, 'to');
+  const receivedNumeric = Number.parseFloat(amountRow.cryptoValue.replace(/,/g, ''));
+  const settlementFee = 0.125 + (rowIndex % 5) * 0.025;
+  const settlementTotal = Number.isFinite(receivedNumeric)
+    ? receivedNumeric + settlementFee
+    : receivedNumeric;
+  const settlementAmount = formatGroupedDecimalAmount(
+    Number.isFinite(settlementTotal) ? settlementTotal.toFixed(4) : amountRow.cryptoValue,
+  );
+
   return {
     id: `po1442856738070${528 - rowIndex}`,
     merchantOrderId: buildDemoHexRecordId(rowIndex),
     status,
     createdAt: '2032-10-23 12:22:54',
-    receivedAmount: '',
+    receivedAmount: amountRow.cryptoValue,
     receivedSymbol: preset.symbol,
-    receivedFiat: '',
-    orderAmount: amountRow.cryptoValue,
+    receivedFiat: `${formatAmount(fiatNumeric)} USDT`,
+    orderAmount: settlementAmount,
+    walletToAddress,
     orderSymbol: preset.symbol,
     orderFiat: `${formatAmount(fiatNumeric)} USDT`,
     networkLabel: preset.showNetwork ? preset.networkLabel : undefined,
@@ -633,7 +646,6 @@ function buildBulkTransferRows(
     const status = menuItem === 'Wallet Payout'
       ? resolveShowcaseThenCompletedStatus(index, WALLET_PAYOUT_STATUS_SHOWCASE, 'completed')
       : resolveShowcaseThenCompletedStatus(index, BULK_TRANSFER_STATUS_SHOWCASE, 'success');
-
     return {
       id: `${transferIdPrefix}-${88001 + index}`,
       merchantOrderId: buildDemoHexRecordId(index),
@@ -653,6 +665,10 @@ function buildBulkTransferRows(
       bulkTransferId: buildDemoHexRecordId(index + 17),
       walletFromAlias: menuItem === 'Wallet Payout' ? aliases.from : undefined,
       walletToAlias: menuItem === 'Wallet Payout' ? aliases.to : undefined,
+      thirdPartyBusinessNo:
+        menuItem === 'Wallet Payout'
+          ? buildWalletPayoutThirdPartyBusinessNo(index)
+          : undefined,
     };
   });
 }
@@ -672,6 +688,7 @@ function buildPaymentExceptionRows(
     return {
       id: `PE-${88001 + index}`,
       merchantOrderId: buildDemoHexRecordId(index + 60),
+      paymentExceptionId: buildPaymentExceptionId(index),
       status: resolveShowcaseThenCompletedStatus(
         index,
         PAYMENT_EXCEPTION_STATUS_SHOWCASE,
@@ -830,6 +847,14 @@ export function isPaymentEngineAmountAddressMenuItem(menuItem: string): boolean 
 
 export function isPaymentRefundRecordMenuItem(menuItem: string): boolean {
   return PAYMENT_REFUND_RECORD_MENU_ITEMS.has(menuItem);
+}
+
+export function isWaasTransactionHistoryMenuItem(menuItem: string): boolean {
+  return menuItem === 'History';
+}
+
+export function isWaasTransactionRecordListMenuItem(menuItem: string): boolean {
+  return menuItem === 'History' || menuItem === 'Processing';
 }
 
 export function isWalletPayoutRecordMenuItem(menuItem: string): boolean {

@@ -241,6 +241,7 @@ function buildPolicySettingsRow(rowIndex: number): PaymentEngineRecordRow {
     ruleEnabled: rowIndex < POLICY_ENABLED_SHOWCASE.length
       ? POLICY_ENABLED_SHOWCASE[rowIndex]
       : rowIndex % 5 !== 1,
+    logOperatorName: LOG_OPERATOR_SHOWCASE[rowIndex % LOG_OPERATOR_SHOWCASE.length],
   };
 }
 
@@ -312,6 +313,7 @@ function buildAutomationRow(rowIndex: number): PaymentEngineRecordRow {
     ruleEnabled: rowIndex < AUTOMATION_ENABLED_SHOWCASE.length
       ? AUTOMATION_ENABLED_SHOWCASE[rowIndex]
       : rowIndex % 5 !== 1,
+    logOperatorName: LOG_OPERATOR_SHOWCASE[rowIndex % LOG_OPERATOR_SHOWCASE.length],
   };
 }
 

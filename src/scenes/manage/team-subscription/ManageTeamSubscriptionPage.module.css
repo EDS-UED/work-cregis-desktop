@@ -1,0 +1,225 @@
+.page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page :deep(.eds-layout) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.scrollBody {
+  composes: layoutChromeScroll from '../../project/layoutChromePage.shared.module.css';
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-6) var(--spacing-6);
+  box-sizing: border-box;
+}
+
+.toolbarOperation {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+.toolbarHint {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+  white-space: nowrap;
+}
+
+.planCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  min-width: 0;
+  padding: var(--spacing-4) var(--spacing-5);
+  border: var(--stroke-xs) solid var(--stroke-outline-shallow);
+  border-radius: var(--radius-md);
+  background: var(--material-face-primary);
+  box-sizing: border-box;
+}
+
+.planLeading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.planName {
+  margin: 0;
+  color: var(--text-base-primary);
+}
+
+.planMetaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.planExpiry {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.planActions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--spacing-2);
+}
+
+.sectionCard {
+  border: var(--stroke-xs) solid var(--stroke-outline-shallow);
+  border-radius: var(--radius-md);
+  background: var(--material-face-primary);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  min-width: 0;
+  padding: var(--spacing-3) var(--spacing-5);
+  border-bottom: var(--stroke-xs) solid var(--stroke-outline-shallow);
+  box-sizing: border-box;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+}
+
+.sectionAside {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.sectionBody,
+.sectionBodySplit {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sectionBodySplit {
+  padding-right: var(--spacing-5);
+}
+
+.quotaRowBlock {
+  min-width: 0;
+}
+
+.quotaRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  min-width: 0;
+  padding: var(--spacing-4) var(--spacing-5);
+  box-sizing: border-box;
+}
+
+.quotaLeading {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.quotaLabelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.quotaMetaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.metaSecondary {
+  color: var(--text-base-secondary);
+}
+
+.metaDanger {
+  color: var(--text-danger-primary);
+}
+
+.quotaProgress {
+  max-width: 280px;
+  min-width: 160px;
+  width: 100%;
+}
+
+.quotaTrailing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.quotaValue {
+  color: var(--text-base-primary);
+  white-space: nowrap;
+}
+
+.quotaValueBrand {
+  color: var(--text-brand-primary);
+  white-space: nowrap;
+}
+
+.quotaActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+}
+
+.rowDivider {
+  margin: 0 var(--spacing-5);
+}
+
+.infoTooltip {
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.infoButton {
+  flex-shrink: 0;
+}
+
+.infoButton:global(.eds-icon-button:hover),
+.infoButton:global(.eds-icon-button:active) {
+  background-color: var(--event-hover);
+}
+
+.infoButton:global(.eds-icon-button:focus-visible),
+.infoTooltip :global([data-eds-tooltip-open]) .infoButton:global(.eds-icon-button) {
+  background-color: var(--event-focus);
+}

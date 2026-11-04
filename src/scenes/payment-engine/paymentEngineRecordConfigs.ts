@@ -155,6 +155,7 @@ export type PaymentEngineRecordRow = {
   currencyShowNetwork?: boolean;
   currencyCryptoName?: string;
   bulkTransferId?: string;
+  paymentExceptionId?: string;
   refundId?: string;
   walletFromAddress?: string;
   walletFromAlias?: string;
@@ -223,6 +224,10 @@ export type PaymentEngineRecordRow = {
   transactionTypeKey?: string;
   /** WaaS 提币记录 · 类型 i18n key（API / Manual Operation）。 */
   payoutTypeKey?: string;
+  /** 钱包提币列表 · 三方业务编号（展示字段，非 i18n）。 */
+  thirdPartyBusinessNo?: string;
+  /** WaaS 历史记录 · 链上交易哈希（列表展示，非 i18n）。 */
+  txHash?: string;
   /** WaaS 处理中 · 业务类型 i18n key。 */
   businessTypeKey?: string;
   /** 风控策略 · 权重。 */
@@ -330,6 +335,12 @@ export type PaymentEngineRecordRow = {
   teamApiPermissionsKey?: string;
   teamApiIpWhitelist?: string;
   teamApiAuthType?: string;
+  /** Manage · 成员列表状态（mock）。 */
+  manageMemberStatusKey?: 'pending-join' | 'disabled' | 'normal';
+  /** Manage · 成员详情权限对齐的角色 ID。 */
+  manageMemberLinkedRoleId?: string;
+  /** Manage · 成员列表「创建人」Tag（首行 mock）。 */
+  manageMemberShowCreatorTag?: boolean;
   /** 风控日志 · Webhook 名称（Event 列）。 */
   logWebhookName?: string;
   logWebhookEndpointUrl?: string;
@@ -532,6 +543,9 @@ export type PaymentEnginePaymentExceptionDetailRecord = {
 export type PaymentEngineRecordColumnKey =
   | 'orderIds'
   | 'settlementNumber'
+  | 'settlementMeta'
+  | 'settlementAddress'
+  | 'settlementAmounts'
   | 'status'
   | 'createdAt'
   | 'receivedAmount'
@@ -540,11 +554,13 @@ export type PaymentEngineRecordColumnKey =
   | 'crypto'
   | 'bulkState'
   | 'bulkMeta'
+  | 'paymentExceptionMeta'
   | 'bulkAmount'
   | 'refundState'
   | 'refundMeta'
   | 'refundAmount'
   | 'refundActions'
+  | 'paymentExceptionActions'
   | 'callbackEvent'
   | 'callbackAmount'
   | 'callbackAmountTime'
@@ -562,6 +578,7 @@ export type PaymentEngineRecordColumnKey =
   | 'ruleNameId'
   | 'collectionCurrencyRange'
   | 'ruleEnabled'
+  | 'ruleCreatorTime'
   | 'ruleActions'
   | 'taskCurrencyId'
   | 'taskStatus'
@@ -569,6 +586,7 @@ export type PaymentEngineRecordColumnKey =
   | 'taskAmount'
   | 'taskCount'
   | 'collectionHistoryMeta'
+  | 'collectionBusinessId'
   | 'subAddressMeta'
   | 'subAddressActions'
   | 'transactionType'
@@ -577,8 +595,10 @@ export type PaymentEngineRecordColumnKey =
   | 'processingMeta'
   | 'processingAmount'
   | 'processingActions'
+  | 'apiCollectionActions'
   | 'policyWeight'
   | 'policyType'
+  | 'policyTypeWeight'
   | 'policyActions'
   | 'automationType'
   | 'automationActions'
@@ -609,12 +629,20 @@ export type PaymentEngineRecordColumnKey =
   | 'webhookPushActions'
   | 'roleName'
   | 'roleCreatorTime'
+  | 'roleEnabled'
   | 'roleActions'
+  | 'memberNicknameEmail'
+  | 'memberRole'
+  | 'memberStatus'
+  | 'memberJoinedTime'
+  | 'memberActions'
   | 'teamApiNameKey'
   | 'teamApiPermissions'
   | 'teamApiCreatorTime'
   | 'teamApiEnabled'
-  | 'teamApiActions';
+  | 'teamApiActions'
+  | 'thirdPartyReference'
+  | 'transactionTypeTxHash';
 
 export type PaymentEngineDataListToolbarPreset =
   | 'default'
@@ -676,7 +704,32 @@ export const PAYMENT_ENGINE_ORDER_RECORD_CREATED_TIME_COLUMN_MIN_WIDTH = '176px'
 /** flex 列吸收余量；尾列承担主要回拨。 */
 export const PAYMENT_ENGINE_ORDER_RECORD_ORDER_AMOUNTS_COLUMN_MIN_WIDTH = '279px';
 
+/** 订单记录 · 4 列：订单编号|商户订单编号 → 订单状态 → 创建时间 → 实收金额|订单金额。 */
 const ORDER_RECORD_COLUMNS: PaymentEngineRecordColumnConfig[] = [
+  {
+    key: 'orderIds',
+    labelKey: 'Order ID',
+    secondaryLabelKey: 'Merchant Order ID',
+    minWidth: PAYMENT_ENGINE_ORDER_RECORD_ORDER_IDS_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    flexGrow: false,
+    displayOrder: 1,
+  },
+  {
+    key: 'status',
+    labelKey: 'Order Status',
+    minWidth: PAYMENT_ENGINE_ORDER_RECORD_STATUS_COLUMN_MIN_WIDTH,
+    align: 'center',
+    displayOrder: 2,
+  },
+  {
+    key: 'createdAt',
+    labelKey: 'Creation Time UTC+08:00',
+    minWidth: PAYMENT_ENGINE_ORDER_RECORD_CREATED_TIME_COLUMN_MIN_WIDTH,
+    align: 'end',
+    sortable: true,
+    displayOrder: 3,
+  },
   {
     key: 'orderAmounts',
     labelKey: 'Actual Received Amount',
@@ -686,31 +739,8 @@ const ORDER_RECORD_COLUMNS: PaymentEngineRecordColumnConfig[] = [
     headerKind: 'combo',
     sortable: true,
     secondarySortable: true,
-    displayOrder: 1,
-  },
-  {
-    key: 'orderIds',
-    labelKey: 'Order ID',
-    secondaryLabelKey: 'Merchant Order ID',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_ORDER_IDS_COLUMN_MIN_WIDTH,
-    headerKind: 'combo',
-    sortable: true,
-    secondarySortable: false,
-    displayOrder: 2,
-  },
-  {
-    key: 'status',
-    labelKey: 'Order Status',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_STATUS_COLUMN_MIN_WIDTH,
-    align: 'center',
-    displayOrder: 3,
-  },
-  {
-    key: 'createdAt',
-    labelKey: 'Creation Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_CREATED_TIME_COLUMN_MIN_WIDTH,
     align: 'end',
-    sortable: true,
+    comboAlignEnd: true,
     displayOrder: 4,
   },
 ];
@@ -747,56 +777,65 @@ export const PAYMENT_ENGINE_CALLBACK_STATUS_COLUMN_MIN_WIDTH = '128px';
 export const PAYMENT_ENGINE_CALLBACK_URL_COLUMN_MIN_WIDTH = '200px';
 export const PAYMENT_ENGINE_CALLBACK_ACTIONS_COLUMN_MIN_WIDTH = '168px';
 
+/** 结算记录 · 4 列：创建时间|结算单号 → 地址 → 结算状态 → 总实收|总结算金额。 */
+export const PAYMENT_ENGINE_SETTLEMENT_META_COLUMN_MIN_WIDTH = '248px';
+export const PAYMENT_ENGINE_SETTLEMENT_ADDRESS_COLUMN_MIN_WIDTH = '180px';
+export const PAYMENT_ENGINE_SETTLEMENT_STATUS_COLUMN_MIN_WIDTH = '145px';
+export const PAYMENT_ENGINE_SETTLEMENT_AMOUNTS_COLUMN_MIN_WIDTH = '248px';
+
 const SETTLEMENT_RECORD_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   {
-    key: 'orderAmounts',
-    labelKey: 'Actual Received Amount',
-    secondaryLabelKey: 'Order Amount',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_ORDER_AMOUNTS_COLUMN_MIN_WIDTH,
-    flexGrow: true,
+    key: 'settlementMeta',
+    labelKey: 'Creation Time UTC+08:00',
+    secondaryLabelKey: 'Settlement ID',
+    minWidth: PAYMENT_ENGINE_SETTLEMENT_META_COLUMN_MIN_WIDTH,
     headerKind: 'combo',
     sortable: true,
-    secondarySortable: true,
+    secondarySortable: false,
+    flexGrow: true,
     displayOrder: 1,
   },
   {
-    key: 'settlementNumber',
-    labelKey: 'Settlement ID',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_ORDER_IDS_COLUMN_MIN_WIDTH,
-    width: PAYMENT_ENGINE_ORDER_RECORD_ORDER_IDS_COLUMN_MIN_WIDTH,
-    sortable: true,
+    key: 'settlementAddress',
+    labelKey: 'Address',
+    minWidth: PAYMENT_ENGINE_SETTLEMENT_ADDRESS_COLUMN_MIN_WIDTH,
     displayOrder: 2,
   },
   {
     key: 'status',
     labelKey: 'Settlement Status',
-    minWidth: PAYMENT_ENGINE_BULK_TRANSFER_STATUS_COLUMN_MIN_WIDTH,
+    minWidth: PAYMENT_ENGINE_SETTLEMENT_STATUS_COLUMN_MIN_WIDTH,
     align: 'center',
     displayOrder: 3,
   },
   {
-    key: 'createdAt',
-    labelKey: 'Settlement Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_CREATED_TIME_COLUMN_MIN_WIDTH,
-    align: 'end',
+    key: 'settlementAmounts',
+    labelKey: 'Total Actual Received Amount',
+    secondaryLabelKey: 'Total Settlement Amount',
+    minWidth: PAYMENT_ENGINE_SETTLEMENT_AMOUNTS_COLUMN_MIN_WIDTH,
+    flexGrow: true,
+    headerKind: 'combo',
     sortable: true,
+    secondarySortable: true,
+    align: 'end',
+    comboAlignEnd: true,
     displayOrder: 4,
   },
 ];
 
-const AMOUNT_ADDRESS_COMBO_COLUMN: PaymentEngineRecordColumnConfig = {
-  key: 'bulkAmount',
-  labelKey: 'Amount',
-  secondaryLabelKey: 'Address',
-  minWidth: PAYMENT_ENGINE_BULK_TRANSFER_TOKEN_ADDRESS_COLUMN_MIN_WIDTH,
-  width: PAYMENT_ENGINE_BULK_TRANSFER_TOKEN_ADDRESS_COLUMN_MIN_WIDTH,
-  headerKind: 'combo',
-  sortable: true,
-  displayOrder: 1,
-};
-
+/** 批量转账记录 · 3 列：创建时间|批量转账单号 → 状态 → 金额|地址。 */
 const BULK_TRANSFER_COLUMNS: PaymentEngineRecordColumnConfig[] = [
-  AMOUNT_ADDRESS_COMBO_COLUMN,
+  {
+    key: 'bulkMeta',
+    labelKey: 'Creation Time UTC+08:00',
+    secondaryLabelKey: 'Bulk Transfer ID',
+    minWidth: PAYMENT_ENGINE_BULK_TRANSFER_META_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    sortable: true,
+    secondarySortable: false,
+    flexGrow: true,
+    displayOrder: 1,
+  },
   {
     key: 'bulkState',
     labelKey: 'Status',
@@ -805,23 +844,30 @@ const BULK_TRANSFER_COLUMNS: PaymentEngineRecordColumnConfig[] = [
     displayOrder: 2,
   },
   {
-    key: 'createdAt',
-    labelKey: 'Creation Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_CREATED_TIME_COLUMN_MIN_WIDTH,
+    key: 'bulkAmount',
+    labelKey: 'Amount',
+    secondaryLabelKey: 'Address',
+    minWidth: PAYMENT_ENGINE_BULK_TRANSFER_TOKEN_ADDRESS_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    sortable: true,
     flexGrow: true,
     align: 'end',
-    sortable: true,
+    comboAlignEnd: true,
     displayOrder: 3,
   },
 ];
 
+/** 退款记录 · 4 列：创建时间|订单编号 → 退款状态 → 退款金额 → 操作。 */
 const REFUND_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   {
-    key: 'refundAmount',
-    labelKey: 'Amount',
-    minWidth: PAYMENT_ENGINE_REFUND_AMOUNT_COLUMN_MIN_WIDTH,
+    key: 'refundMeta',
+    labelKey: 'Creation Time UTC+08:00',
+    secondaryLabelKey: 'Order ID',
+    minWidth: PAYMENT_ENGINE_REFUND_META_COLUMN_MIN_WIDTH,
     flexGrow: true,
+    headerKind: 'combo',
     sortable: true,
+    secondarySortable: false,
     displayOrder: 1,
   },
   {
@@ -832,14 +878,11 @@ const REFUND_COLUMNS: PaymentEngineRecordColumnConfig[] = [
     displayOrder: 2,
   },
   {
-    key: 'refundMeta',
-    labelKey: 'Creation Time UTC+08:00',
-    secondaryLabelKey: 'Order ID',
-    minWidth: PAYMENT_ENGINE_REFUND_META_COLUMN_MIN_WIDTH,
+    key: 'refundAmount',
+    labelKey: 'Refund Amount',
+    minWidth: PAYMENT_ENGINE_REFUND_AMOUNT_COLUMN_MIN_WIDTH,
     flexGrow: true,
-    headerKind: 'combo',
     sortable: true,
-    secondarySortable: false,
     displayOrder: 3,
   },
   {
@@ -851,8 +894,31 @@ const REFUND_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   },
 ];
 
-/** 异常支付单：金额|地址 + 状态 + 时间（3 列均 flex）。 */
+/** 异常支付单 · 接收时间|单号列 min（批量转账 meta 248 − 30）。 */
+export const PAYMENT_ENGINE_PAYMENT_EXCEPTION_META_COLUMN_MIN_WIDTH = '218px';
+/** 异常支付单 · 结算/退款状态列 min（批量转账状态 145 + 30）。 */
+export const PAYMENT_ENGINE_PAYMENT_EXCEPTION_STATUS_COLUMN_MIN_WIDTH = '175px';
+
+/** 异常支付单记录 · 5 列：接收时间|异常支付单号 → 结算/退款状态 → 金额|地址 → 操作（转账）。 */
 const PAYMENT_EXCEPTION_COLUMNS: PaymentEngineRecordColumnConfig[] = [
+  {
+    key: 'paymentExceptionMeta',
+    labelKey: 'Receive Time UTC+08:00',
+    secondaryLabelKey: 'Payment Exception ID',
+    minWidth: PAYMENT_ENGINE_PAYMENT_EXCEPTION_META_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    sortable: true,
+    secondarySortable: false,
+    flexGrow: true,
+    displayOrder: 1,
+  },
+  {
+    key: 'bulkState',
+    labelKey: 'Settlement/Refund State',
+    minWidth: PAYMENT_ENGINE_PAYMENT_EXCEPTION_STATUS_COLUMN_MIN_WIDTH,
+    align: 'center',
+    displayOrder: 2,
+  },
   {
     key: 'bulkAmount',
     labelKey: 'Amount',
@@ -861,44 +927,66 @@ const PAYMENT_EXCEPTION_COLUMNS: PaymentEngineRecordColumnConfig[] = [
     headerKind: 'combo',
     sortable: true,
     flexGrow: true,
-    displayOrder: 1,
-  },
-  {
-    key: 'bulkState',
-    labelKey: 'Status',
-    minWidth: PAYMENT_ENGINE_BULK_TRANSFER_STATUS_COLUMN_MIN_WIDTH,
-    align: 'center',
-    flexGrow: true,
-    displayOrder: 2,
-  },
-  {
-    key: 'createdAt',
-    labelKey: 'Creation Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_CREATED_TIME_COLUMN_MIN_WIDTH,
-    flexGrow: true,
-    align: 'end',
-    sortable: true,
     displayOrder: 3,
+  },
+  {
+    key: 'paymentExceptionActions',
+    labelKey: 'Actions',
+    minWidth: PAYMENT_ENGINE_REFUND_ACTIONS_COLUMN_MIN_WIDTH,
+    align: 'end',
+    displayOrder: 4,
   },
 ];
 
+/** 钱包提币 · 列 min（三方/状态略收紧；余宽由金额|申请时间列 flex 吸收）。 */
+export const WALLET_PAYOUT_SENDER_COLUMN_MIN_WIDTH = '144px';
+export const WALLET_PAYOUT_RECEIVER_COLUMN_MIN_WIDTH = '144px';
+export const WALLET_PAYOUT_THIRD_PARTY_COLUMN_MIN_WIDTH = '72px';
+export const WALLET_PAYOUT_STATUS_COLUMN_MIN_WIDTH = '72px';
+export const WALLET_PAYOUT_AMOUNT_TIME_COLUMN_MIN_WIDTH = '248px';
+
+/** 钱包提币 · 发送方/接收方列（历史记录等同构复用）。 */
+export const WALLET_PAYOUT_CALLBACK_SENDER_COLUMN: PaymentEngineRecordColumnConfig = {
+  key: 'callbackSender',
+  labelKey: 'Sender',
+  minWidth: WALLET_PAYOUT_SENDER_COLUMN_MIN_WIDTH,
+};
+
+export const WALLET_PAYOUT_CALLBACK_RECEIVER_COLUMN: PaymentEngineRecordColumnConfig = {
+  key: 'callbackReceiver',
+  labelKey: 'Receiver',
+  minWidth: WALLET_PAYOUT_RECEIVER_COLUMN_MIN_WIDTH,
+};
+
+/** 钱包提币 / 子地址提币 · 5 列：发送方、接收方、三方业务编号、状态、金额|申请时间。 */
 const WALLET_PAYOUT_COLUMNS: PaymentEngineRecordColumnConfig[] = [
-  AMOUNT_ADDRESS_COMBO_COLUMN,
+  { ...WALLET_PAYOUT_CALLBACK_SENDER_COLUMN, displayOrder: 1 },
+  { ...WALLET_PAYOUT_CALLBACK_RECEIVER_COLUMN, displayOrder: 2 },
+  {
+    key: 'thirdPartyReference',
+    labelKey: 'Third-party Reference',
+    minWidth: WALLET_PAYOUT_THIRD_PARTY_COLUMN_MIN_WIDTH,
+    displayOrder: 3,
+  },
   {
     key: 'bulkState',
     labelKey: 'Status',
-    minWidth: PAYMENT_ENGINE_BULK_TRANSFER_STATUS_COLUMN_MIN_WIDTH,
+    minWidth: WALLET_PAYOUT_STATUS_COLUMN_MIN_WIDTH,
     align: 'center',
-    displayOrder: 2,
+    displayOrder: 4,
   },
   {
-    key: 'createdAt',
-    labelKey: 'Creation Time UTC+08:00',
-    minWidth: PAYMENT_ENGINE_ORDER_RECORD_CREATED_TIME_COLUMN_MIN_WIDTH,
+    key: 'callbackAmountTime',
+    labelKey: 'Amount',
+    secondaryLabelKey: 'Application Time UTC+08:00',
+    minWidth: WALLET_PAYOUT_AMOUNT_TIME_COLUMN_MIN_WIDTH,
     flexGrow: true,
-    align: 'end',
+    headerKind: 'combo',
     sortable: true,
-    displayOrder: 3,
+    secondarySortable: true,
+    align: 'end',
+    comboAlignEnd: true,
+    displayOrder: 5,
   },
 ];
 

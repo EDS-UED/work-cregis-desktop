@@ -34,7 +34,7 @@ function onEditPermissionsClick() {
       {{ ui('Delete') }}
     </EgButton>
     <EgButton variant="solid" size="md" tone="decor" @click="onEditPermissionsClick">
-      {{ ui('Edit Permissions') }}
+      {{ ui('Edit') }}
     </EgButton>
   </div>
 </template>

@@ -79,6 +79,10 @@ const cryptoPrimaryText = computed(() =>
     ? `${cryptoValue.value} ${cryptoSymbol.value}`
     : cryptoValue.value,
 );
+const primaryAmountKind = computed(() => String(props.customize.primaryAmountKind ?? 'crypto'));
+const primaryAmountText = computed(() =>
+  primaryAmountKind.value === 'fiat' ? fiatValue.value : cryptoPrimaryText.value,
+);
 const showAmountCryptoIcon = computed(() => props.customize.showCryptoIcon !== false);
 const cryptoName = computed((): CryptoName => {
   const explicit = String(props.customize.cryptoName ?? '').trim();
@@ -116,6 +120,20 @@ const showNetworkTag = computed(() => props.customize.showNetwork !== false);
 const networkTagLabel = computed(() => {
   const label = String(props.customize.networkLabel ?? '').trim();
   return label ? ui(label) : '';
+});
+const networkLabelPlacement = computed(() =>
+  String(props.customize.networkLabelPlacement ?? 'primary').trim(),
+);
+const showPrimaryNetworkTag = computed(() => {
+  if (!showNetworkTag.value || !networkTagLabel.value) return false;
+  const placement = networkLabelPlacement.value;
+  return placement === 'primary' || placement === 'both' || placement === '';
+});
+
+const showSecondaryNetworkTag = computed(() => {
+  if (!showNetworkTag.value || !networkTagLabel.value) return false;
+  const placement = networkLabelPlacement.value;
+  return placement === 'secondary' || placement === 'both';
 });
 const countdownSuffixKey = computed(() =>
   String(props.customize.countdownSuffixKey ?? 'Expires in xx:xx').trim() || 'Expires in xx:xx',
@@ -169,7 +187,7 @@ const cellMinWidthStyle = computed(() => {
         :tooltip-trigger="tooltipTrigger"
       />
       <EgTag
-        v-if="showNetworkTag && networkTagLabel"
+        v-if="showPrimaryNetworkTag"
         size="sm"
         system-type="stroke-subtle"
         truncate
@@ -199,7 +217,7 @@ const cellMinWidthStyle = computed(() => {
         :tooltip-trigger="tooltipTrigger"
       />
       <EgTag
-        v-if="showNetworkTag && networkTagLabel"
+        v-if="showPrimaryNetworkTag"
         size="sm"
         system-type="stroke-subtle"
         truncate
@@ -250,13 +268,13 @@ const cellMinWidthStyle = computed(() => {
         :label="cryptoSymbol"
       />
       <EgListFieldOverflowText
-        :text="cryptoPrimaryText"
+        :text="primaryAmountText"
         variant="primary"
         tabular
         :tooltip-trigger="tooltipTrigger"
       />
       <EgTag
-        v-if="showNetworkTag && networkTagLabel"
+        v-if="showPrimaryNetworkTag"
         size="sm"
         system-type="stroke-subtle"
         truncate
@@ -306,6 +324,20 @@ const cellMinWidthStyle = computed(() => {
           :tooltip-trigger="tooltipTrigger"
         />
       </span>
+    </div>
+    <div
+      v-else-if="useTransferTypeSecondary && showSecondaryNetworkTag"
+      :class="styles.amountSecondaryRow"
+    >
+      <EgListFieldOverflowText
+        :text="secondaryValue"
+        variant="secondary"
+        tabular
+        :tooltip-trigger="tooltipTrigger"
+      />
+      <EgTag size="sm" system-type="stroke-subtle" truncate>
+        {{ networkTagLabel }}
+      </EgTag>
     </div>
     <EgListFieldOverflowText
       v-else-if="useTransferTypeSecondary"

@@ -10,15 +10,18 @@ import {
   type RiskControlDataListMenuItem,
 } from './riskControlMenuData';
 
-const POLICY_NAME_ID_COLUMN_MIN_WIDTH = '248px';
-const POLICY_WEIGHT_COLUMN_MIN_WIDTH = '88px';
+/** 规则名称|编号 · 略收窄，为策略状态列留宽。 */
+const POLICY_NAME_ID_COLUMN_MIN_WIDTH = '200px';
 const POLICY_TYPE_COLUMN_MIN_WIDTH = '128px';
+/** 创建人|创建时间 · 与 Webhook 列表同规，不参与 leading flex 均分。 */
+const POLICY_CREATOR_TIME_COLUMN_MIN_WIDTH = '200px';
 const POLICY_STATUS_COLUMN_MIN_WIDTH = '112px';
 const POLICY_ACTIONS_COLUMN_MIN_WIDTH = '168px';
 
-const AUTOMATION_NAME_ID_COLUMN_MIN_WIDTH = '280px';
+const AUTOMATION_NAME_ID_COLUMN_MIN_WIDTH = '200px';
 const AUTOMATION_TYPE_COLUMN_MIN_WIDTH = '128px';
-const AUTOMATION_STATUS_COLUMN_MIN_WIDTH = '128px';
+const AUTOMATION_CREATOR_TIME_COLUMN_MIN_WIDTH = '200px';
+const AUTOMATION_STATUS_COLUMN_MIN_WIDTH = '112px';
 const AUTOMATION_ACTIONS_COLUMN_MIN_WIDTH = '160px';
 
 /** 自动规则 · 首列固定；适用范围与服务商双 flex 均分余量。 */
@@ -45,25 +48,33 @@ const LOGS_EVENT_COLUMN_MIN_WIDTH = '320px';
 const LOGS_TIME_COLUMN_MIN_WIDTH = '180px';
 const LOGS_ACTIONS_COLUMN_MIN_WIDTH = '80px';
 
+/** 策略 · 5 列：规则名称|编号 → 策略类型|权重 → 创建人|创建时间 → 策略状态 → 操作。 */
 const POLICY_SETTINGS_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   {
     key: 'ruleNameId',
-    labelKey: 'Strategy Name',
+    labelKey: 'Rule Name',
     secondaryLabelKey: 'Number',
     minWidth: POLICY_NAME_ID_COLUMN_MIN_WIDTH,
     headerKind: 'combo',
+    flexGrow: false,
     displayOrder: 1,
   },
   {
-    key: 'policyWeight',
-    labelKey: 'Weight',
-    minWidth: POLICY_WEIGHT_COLUMN_MIN_WIDTH,
+    key: 'policyTypeWeight',
+    labelKey: 'Strategy Type',
+    secondaryLabelKey: 'Weight',
+    minWidth: POLICY_TYPE_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    flexGrow: true,
     displayOrder: 2,
   },
   {
-    key: 'policyType',
-    labelKey: 'Strategy Type',
-    minWidth: POLICY_TYPE_COLUMN_MIN_WIDTH,
+    key: 'ruleCreatorTime',
+    labelKey: 'Creator',
+    secondaryLabelKey: 'Creation Time UTC+08:00',
+    minWidth: POLICY_CREATOR_TIME_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    flexGrow: false,
     displayOrder: 3,
   },
   {
@@ -71,6 +82,7 @@ const POLICY_SETTINGS_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
     labelKey: 'Strategy Status',
     minWidth: POLICY_STATUS_COLUMN_MIN_WIDTH,
     align: 'center',
+    flexGrow: false,
     displayOrder: 4,
   },
   {
@@ -82,34 +94,47 @@ const POLICY_SETTINGS_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   },
 ];
 
+/** 自动化 · 5 列：规则名称|编号 → 类型 → 创建人|创建时间 → 状态 → 操作。 */
 const AUTOMATION_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   {
     key: 'ruleNameId',
-    labelKey: 'Automation Name',
+    labelKey: 'Rule Name',
     secondaryLabelKey: 'Number',
     minWidth: AUTOMATION_NAME_ID_COLUMN_MIN_WIDTH,
     headerKind: 'combo',
+    flexGrow: false,
     displayOrder: 1,
   },
   {
     key: 'automationType',
-    labelKey: 'Automation Type',
+    labelKey: 'Type',
     minWidth: AUTOMATION_TYPE_COLUMN_MIN_WIDTH,
+    flexGrow: true,
     displayOrder: 2,
   },
   {
+    key: 'ruleCreatorTime',
+    labelKey: 'Creator',
+    secondaryLabelKey: 'Creation Time UTC+08:00',
+    minWidth: AUTOMATION_CREATOR_TIME_COLUMN_MIN_WIDTH,
+    headerKind: 'combo',
+    flexGrow: false,
+    displayOrder: 3,
+  },
+  {
     key: 'ruleEnabled',
-    labelKey: 'Automation Status',
+    labelKey: 'Status',
     minWidth: AUTOMATION_STATUS_COLUMN_MIN_WIDTH,
     align: 'center',
-    displayOrder: 3,
+    flexGrow: false,
+    displayOrder: 4,
   },
   {
     key: 'automationActions',
     labelKey: 'Actions',
     minWidth: AUTOMATION_ACTIONS_COLUMN_MIN_WIDTH,
     align: 'end',
-    displayOrder: 4,
+    displayOrder: 5,
   },
 ];
 

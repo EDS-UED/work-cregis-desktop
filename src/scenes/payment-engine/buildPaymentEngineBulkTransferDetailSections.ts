@@ -3,7 +3,7 @@ import {
   type DetailSectionData,
 } from '@eds/desktop-components';
 import type { PaymentEngineBulkTransferDetailView } from './paymentEngineBulkTransferDetailView';
-import { createPaymentEngineTransferCreationTimeRow } from './paymentEngineDetailApplyItemRows';
+import { createPaymentEngineDetailTimeRow } from './paymentEngineDetailApplyItemRows';
 
 export function buildPaymentEngineBulkTransferDetailSections(
   view: PaymentEngineBulkTransferDetailView,
@@ -15,7 +15,7 @@ export function buildPaymentEngineBulkTransferDetailSections(
     {
       key: 'bulk-transfer-creation-meta',
       items: [
-        createPaymentEngineTransferCreationTimeRow({
+        createPaymentEngineDetailTimeRow({
           key: 'bulk-transfer-order-creation-time',
           title: translate(creationTime.labelKey),
           value: creationTime.value,

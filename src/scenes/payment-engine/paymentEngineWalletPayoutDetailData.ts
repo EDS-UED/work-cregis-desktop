@@ -33,7 +33,7 @@ const WALLET_PAYOUT_MEMO_SAMPLES = [
   'PAY-88421',
 ] as const;
 
-function buildThirdPartyBusinessNo(rowIndex: number): string {
+export function buildWalletPayoutThirdPartyBusinessNo(rowIndex: number): string {
   return `Coinbase_order_${800_389_028 + rowIndex}`;
 }
 
@@ -68,7 +68,7 @@ function buildWalletPayoutDetailRecord(
 
   return {
     walletName: WALLET_PAYOUT_WALLET_NAMES[rowIndex % WALLET_PAYOUT_WALLET_NAMES.length],
-    thirdPartyBusinessNo: buildThirdPartyBusinessNo(rowIndex),
+    thirdPartyBusinessNo: buildWalletPayoutThirdPartyBusinessNo(rowIndex),
     initiationTime: row.createdAt,
     senderAddress: row.walletFromAddress
       ?? resolveDemoWalletAddress(addressOffset, currencyPreset, 'from'),

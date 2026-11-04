@@ -1,0 +1,38 @@
+.dataListNest {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dataListNest :deep(.eds-layout) {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.dataListNest :deep(.eds-tool-bar) {
+  flex-shrink: 0;
+}
+
+.dataListNest :deep(.eds-paginer) {
+  flex-shrink: 0;
+}
+
+.dataListNest :deep(.eds-data-list) {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.listRegion {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}

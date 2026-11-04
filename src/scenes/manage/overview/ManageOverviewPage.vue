@@ -1,0 +1,563 @@
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import {
+  EgButton,
+  EgCrypto,
+  EgDivider,
+  EgIcon,
+  EgIconButton,
+  EgIconProButton,
+  EgLayout,
+  EgFieldOvfTooltip,
+  EgFormSubmission,
+  EgLinkButton,
+  EgOdometer,
+  EgSkid,
+  EgSwitch,
+  EgToolBar,
+} from '@eds/desktop-components';
+import ManageOverviewBalanceReminderSkidBody from './ManageOverviewBalanceReminderSkidBody.vue';
+import ManageOverviewRechargeSkidBody from './ManageOverviewRechargeSkidBody.vue';
+import type { OverviewGasRechargeAccountKey } from './overviewRechargeSkidData';
+import { useManageOverviewBalanceReminderForm } from './useManageOverviewBalanceReminderForm';
+import comboActionStyles from '@eds/desktop-components/molecules/combo/ComboAction.module.css';
+import { registerManageOverviewOverlay } from './manageOverviewOverlayContext';
+import { useManageOverviewGasProxyPaymentFlow } from './useManageOverviewGasProxyPaymentFlow';
+import { useAppI18n } from '@/composables/useAppI18n';
+import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
+import styles from './ManageOverviewPage.module.css';
+
+type GasAccountOverviewItem = {
+  key: OverviewGasRechargeAccountKey;
+  symbol: string;
+  cryptoName: string;
+  titleKey: string;
+  descriptionKey: string;
+  balance: string;
+  sharedWithTeam?: boolean;
+  insufficient?: boolean;
+  gasProxyPaymentLockedOn?: boolean;
+};
+
+const TOTAL_BALANCE_DISPLAY = '$425,682.77';
+const BALANCE_MASK = '************';
+const SUMMARY_AMOUNT_MASK = '********';
+const GAS_BALANCE_MASK = '********';
+
+const { ui } = useAppI18n();
+
+const gasProxyEnabled = ref(true);
+const gasProxyPaymentByKey = ref<Record<string, boolean>>({
+  trx: true,
+  eth: false,
+  bnb: true,
+  pol: false,
+  sol: false,
+});
+/** 全局「开启矿工费代付」模块能力（与单行开关权限独立）。 */
+const canConfigureGasProxy = true;
+/** 「矿工费代付配置」操作权限 · 控制 Gas 账户行内开关。 */
+const canConfigureGasProxyPayment = ref(true);
+/** Mock：是否已设置交易密码（未设置时开启代付引导先设置）。 */
+const transactionPasswordSet = ref(true);
+const balanceAmountVisible = ref(true);
+type OverviewRechargeSkidTarget = 'team' | 'gas';
+type OverviewSkidKind = 'recharge' | 'balance-reminder';
+
+const overviewSkidOpen = ref(false);
+const overviewSkidKind = ref<OverviewSkidKind>('recharge');
+const rechargeSkidTarget = ref<OverviewRechargeSkidTarget>('team');
+const rechargeGasAccountKey = ref<OverviewGasRechargeAccountKey>('trx');
+
+const overviewSkidTitleKey = computed(() => {
+  if (overviewSkidKind.value === 'balance-reminder') {
+    return 'Overview Balance Reminder';
+  }
+  return rechargeSkidTarget.value === 'team'
+    ? 'Overview Team Account Recharge'
+    : 'Overview Gas Account Recharge';
+});
+
+const overviewSkidShowsSave = computed(() => overviewSkidKind.value === 'balance-reminder');
+
+const {
+  form: balanceReminderForm,
+  showValidation: balanceReminderShowValidation,
+  canSave: balanceReminderCanSave,
+  submit: submitBalanceReminder,
+} = useManageOverviewBalanceReminderForm();
+const odometerPlayKey = ref(0);
+
+const scrollRef = ref<HTMLElement | null>(null);
+const contentRef = ref<HTMLElement | null>(null);
+
+const { canScroll, topScrim, update } = useScrollChromeScrim(scrollRef, {
+  contentRef,
+});
+
+const toolbarScrimActive = computed(() => canScroll.value && topScrim.value);
+
+const summaryAccounts = [
+  {
+    key: 'team',
+    titleKey: 'Team Account',
+    descriptionKey: 'Overview Team Account Description',
+    amount: '$128,430.52',
+  },
+  {
+    key: 'gas',
+    titleKey: 'Gas Account',
+    descriptionKey: 'Overview Gas Account Description',
+    amount: '$297,252.25',
+  },
+] as const;
+
+const gasAccounts: GasAccountOverviewItem[] = [
+  {
+    key: 'trx',
+    symbol: 'TRX',
+    cryptoName: 'eds-trx-tron',
+    titleKey: 'TRX Gas Account',
+    descriptionKey: 'Overview TRX Gas Account Description',
+    balance: '',
+    sharedWithTeam: true,
+    gasProxyPaymentLockedOn: true,
+  },
+  {
+    key: 'eth',
+    symbol: 'ETH',
+    cryptoName: 'eds-eth-ethereum',
+    titleKey: 'ETH Gas Account',
+    descriptionKey: 'Overview ETH Gas Account Description',
+    balance: '12.4821 ETH',
+    insufficient: true,
+  },
+  {
+    key: 'bnb',
+    symbol: 'BNB',
+    cryptoName: 'eds-bnb-binance coin',
+    titleKey: 'BNB Gas Account',
+    descriptionKey: 'Overview BNB Gas Account Description',
+    balance: '86.245 BNB',
+  },
+  {
+    key: 'pol',
+    symbol: 'POL',
+    cryptoName: 'eds-pol-polygon',
+    titleKey: 'POL Gas Account',
+    descriptionKey: 'Overview POL Gas Account Description',
+    balance: '42,680.00 POL',
+  },
+  {
+    key: 'sol',
+    symbol: 'SOL',
+    cryptoName: 'eds-sol-solana',
+    titleKey: 'SOL Gas Account',
+    descriptionKey: 'Overview SOL Gas Account Description',
+    balance: '1,286.40 SOL',
+  },
+];
+
+function gasProxySwitchValue(account: GasAccountOverviewItem) {
+  if (account.gasProxyPaymentLockedOn) return true;
+  return gasProxyPaymentByKey.value[account.key] ?? false;
+}
+
+const {
+  confirmDialogOpen,
+  confirmEnabling,
+  verifyOpen,
+  noPermissionDialogOpen,
+  setTransactionPasswordDialogOpen,
+  requestGasProxyPaymentToggle,
+  confirmToggleDialog,
+  cancelToggleDialog,
+  submitTradePassword,
+  onVerifyClosed,
+} = useManageOverviewGasProxyPaymentFlow({
+  canConfigureGasProxyPayment,
+  transactionPasswordSet,
+  gasProxyPaymentByKey,
+});
+
+function onGasProxyPaymentSwitch(account: GasAccountOverviewItem, next: boolean) {
+  requestGasProxyPaymentToggle(account.key, next, account.gasProxyPaymentLockedOn);
+}
+
+function replayOdometer() {
+  odometerPlayKey.value += 1;
+}
+
+function showBalanceAmount() {
+  if (balanceAmountVisible.value) return;
+  balanceAmountVisible.value = true;
+  replayOdometer();
+}
+
+function hideBalanceAmount() {
+  if (!balanceAmountVisible.value) return;
+  balanceAmountVisible.value = false;
+}
+
+function toggleBalanceAmountVisibility() {
+  if (balanceAmountVisible.value) {
+    hideBalanceAmount();
+    return;
+  }
+  showBalanceAmount();
+}
+
+function enableGasProxy() {
+  gasProxyEnabled.value = true;
+}
+
+function openRechargeSkid(
+  target: OverviewRechargeSkidTarget,
+  gasAccountKey?: OverviewGasRechargeAccountKey,
+) {
+  overviewSkidKind.value = 'recharge';
+  rechargeSkidTarget.value = target;
+  if (target === 'gas') {
+    rechargeGasAccountKey.value = gasAccountKey ?? 'trx';
+  }
+  overviewSkidOpen.value = true;
+}
+
+function openBalanceReminderSkid() {
+  overviewSkidKind.value = 'balance-reminder';
+  overviewSkidOpen.value = true;
+}
+
+function closeOverviewSkid() {
+  overviewSkidOpen.value = false;
+}
+
+function onBalanceReminderSave() {
+  if (!submitBalanceReminder()) return;
+  closeOverviewSkid();
+}
+
+watch(canScroll, () => {
+  update();
+});
+
+watch(gasProxyEnabled, () => {
+  update();
+});
+
+watch(overviewSkidOpen, () => {
+  update();
+});
+
+onMounted(() => {
+  registerManageOverviewOverlay({
+    confirmDialogOpen,
+    confirmEnabling,
+    verifyOpen,
+    noPermissionDialogOpen,
+    setTransactionPasswordDialogOpen,
+    confirmToggleDialog,
+    cancelToggleDialog,
+    submitTradePassword,
+    onVerifyClosed,
+  });
+});
+
+onBeforeUnmount(() => {
+  registerManageOverviewOverlay(null);
+});
+</script>
+
+<template>
+  <div :class="styles.overviewNest">
+    <EgLayout v-model:show-skid="overviewSkidOpen" type="empty" show-toolbar>
+      <template #toolbar>
+        <div :class="styles.toolbarSlotHost">
+          <EgToolBar
+            :title="ui('Overview Asset')"
+            :show-operation="!overviewSkidOpen"
+            :show-divider="toolbarScrimActive"
+          >
+            <template v-if="!overviewSkidOpen" #functional>
+              <EgIconProButton :label="ui('Overview Generate Bill')">
+                <EgIcon name="eds-bill" size="sm" />
+              </EgIconProButton>
+
+              <EgIconProButton
+                :label="ui('Overview Balance Reminder')"
+                @click="openBalanceReminderSkid"
+              >
+                <EgIcon name="eds-bell-ringing" size="sm" />
+              </EgIconProButton>
+            </template>
+          </EgToolBar>
+          <button
+            v-if="overviewSkidOpen"
+            type="button"
+            :class="styles.skidDismissBackdrop"
+            :aria-label="ui('Close')"
+            @click="closeOverviewSkid"
+          />
+        </div>
+      </template>
+
+      <div ref="scrollRef" :class="styles.scrollBody">
+        <button
+          v-if="overviewSkidOpen"
+          type="button"
+          :class="styles.skidDismissBackdrop"
+          :aria-label="ui('Close')"
+          @click="closeOverviewSkid"
+        />
+        <main ref="contentRef" class="desktopTokens" :class="styles.content">
+          <section :class="styles.assetHeader">
+            <div :class="styles.assetLabelRow">
+              <span class="typography-body-medium">{{ ui('Overview Balance') }}</span>
+              <EgIconButton
+                shape="square"
+                size="xs"
+                :class="styles.visibilityButton"
+                :label="
+                  ui(
+                    balanceAmountVisible
+                      ? 'Overview Hide Asset Valuation'
+                      : 'Overview Show Asset Valuation',
+                  )
+                "
+                @click="toggleBalanceAmountVisibility"
+              >
+                <EgIcon
+                  :name="balanceAmountVisible ? 'eds-eye' : 'eds-uneye'"
+                  fit
+                />
+              </EgIconButton>
+            </div>
+
+            <button
+              type="button"
+              :class="styles.totalBalanceButton"
+              :aria-label="
+                ui(
+                  balanceAmountVisible
+                    ? 'Overview Hide Asset Valuation'
+                    : 'Overview Show Asset Valuation',
+                )
+              "
+              @click="toggleBalanceAmountVisibility"
+            >
+              <EgOdometer
+                v-if="balanceAmountVisible"
+                :key="odometerPlayKey"
+                :value="TOTAL_BALANCE_DISPLAY"
+              />
+              <span v-else class="typography-display" :class="styles.totalBalanceMask">
+                {{ BALANCE_MASK }}
+              </span>
+            </button>
+
+            <div :class="styles.summaryGrid">
+              <article
+                v-for="account in summaryAccounts"
+                :key="account.key"
+                :class="styles.summaryCard"
+              >
+                <div :class="styles.summaryCopy">
+                  <div :class="styles.summaryTitleRow">
+                    <span class="typography-body-small">{{ ui(account.titleKey) }}</span>
+                    <EgFieldOvfTooltip
+                      :class="styles.accountInfoTooltip"
+                      :tooltip-text="ui(account.descriptionKey)"
+                      semantic-truncated
+                      trigger="hover"
+                      target-tone="inherit"
+                      boundary-selector=".app-preview"
+                      :max-width="328"
+                      :host-class="styles.fieldOvfHintHost"
+                    >
+                      <EgIconButton
+                        shape="square"
+                        size="xs"
+                        :class="styles.infoButton"
+                        :label="ui('Overview Account Description')"
+                        @click.stop
+                      >
+                        <EgIcon :class="styles.iconOutline" name="eds-information" fit />
+                        <EgIcon :class="styles.iconFill" name="eds-information-fill" fit />
+                      </EgIconButton>
+                    </EgFieldOvfTooltip>
+                  </div>
+                  <span class="typography-title" :class="styles.summaryAmount">
+                    {{
+                      balanceAmountVisible ? account.amount : SUMMARY_AMOUNT_MASK
+                    }}
+                  </span>
+                </div>
+                <span v-if="!overviewSkidOpen" :class="styles.summaryCardAction">
+                  <EgButton
+                    variant="solid"
+                    tone="decor"
+                    size="md"
+                    @click="openRechargeSkid(account.key)"
+                  >
+                    {{ ui('Recharge') }}
+                  </EgButton>
+                </span>
+              </article>
+            </div>
+          </section>
+
+          <div :class="styles.sectionDividerInset">
+            <EgDivider type="page" direction="horizontal" />
+          </div>
+
+          <section :class="styles.gasSection">
+            <h2 class="typography-body-small-strong" :class="styles.sectionTitle">
+              {{ ui('Overview Gas Account Balance') }}
+            </h2>
+
+            <div v-if="gasProxyEnabled" :class="styles.gasAccountRows">
+              <article
+                v-for="account in gasAccounts"
+                :key="account.key"
+                :class="styles.gasAccountRow"
+              >
+                  <div :class="styles.gasAccountLeading">
+                    <span :class="styles.gasCryptoHost">
+                      <EgCrypto :name="account.cryptoName" size="md" fit />
+                    </span>
+                    <div :class="styles.gasAccountCopy">
+                      <div :class="styles.gasAccountTextStack">
+                        <div :class="styles.gasAccountTitleRow">
+                          <span class="typography-body-medium">
+                            {{ ui(account.titleKey) }}
+                          </span>
+                        </div>
+                        <p :class="styles.gasAccountDescription">
+                          {{ ui(account.descriptionKey) }}
+                        </p>
+                      </div>
+                      <div :class="styles.gasProxyPaymentRow">
+                        <span :class="styles.gasProxyPaymentLabel">
+                          {{ ui('Overview Gas Proxy Payment') }}
+                        </span>
+                        <EgSwitch
+                          :model-value="gasProxySwitchValue(account)"
+                          :disabled="
+                            account.gasProxyPaymentLockedOn || !canConfigureGasProxyPayment
+                          "
+                          size="sm"
+                          @update:model-value="onGasProxyPaymentSwitch(account, $event)"
+                          @click.stop
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div :class="styles.gasAccountTrailing">
+                    <div :class="styles.gasBalanceDetailsStack">
+                      <div :class="styles.gasBalanceRow">
+                        <span class="typography-footnote" :class="styles.gasBalanceLabel">
+                          {{ ui('Overview Balance') }}
+                        </span>
+                        <span class="typography-body-medium" :class="styles.gasBalanceValue">
+                          {{
+                            balanceAmountVisible
+                              ? account.sharedWithTeam
+                                ? ui('Overview Shared With Team Account')
+                                : account.balance
+                              : GAS_BALANCE_MASK
+                          }}
+                        </span>
+                      </div>
+                      <div
+                        v-if="account.insufficient"
+                        :class="styles.gasBalanceLinkSubmissionRow"
+                      >
+                        <EgFormSubmission
+                          :class="styles.gasBalanceFormSubmission"
+                          type="danger"
+                          :show-link="false"
+                          :text="ui('Overview Insufficient Balance')"
+                        />
+                        <EgButton
+                          v-if="!overviewSkidOpen"
+                          variant="outline"
+                          tone="decor"
+                          size="xs"
+                          @click="openRechargeSkid('gas', account.key)"
+                        >
+                          {{ ui('Recharge') }}
+                        </EgButton>
+                      </div>
+                    </div>
+                  </div>
+              </article>
+            </div>
+
+            <article v-else :class="styles.disabledCard">
+              <div :class="styles.disabledCopy">
+                <h3 class="typography-body-large-strong" :class="styles.disabledTitle">
+                  {{ ui('Overview Enable Gas Proxy') }}
+                </h3>
+                <p class="typography-body-medium" :class="styles.disabledDescription">
+                  {{ ui('Overview Enable Gas Proxy Description') }}
+                </p>
+              </div>
+              <div :class="styles.disabledActions">
+                <EgLinkButton size="sm" tone="brand" href="#" @click.prevent>
+                  {{ ui('Overview Learn More') }}
+                </EgLinkButton>
+                <EgButton
+                  v-if="canConfigureGasProxy"
+                  variant="solid"
+                  tone="decor"
+                  size="md"
+                  @click="enableGasProxy"
+                >
+                  {{ ui('Enable') }}
+                </EgButton>
+              </div>
+            </article>
+          </section>
+        </main>
+      </div>
+
+      <template #skid>
+        <EgSkid
+          :title="ui(overviewSkidTitleKey)"
+          :show-button="overviewSkidShowsSave"
+          action-tone="decor"
+          :confirm-label="ui('Save')"
+          @confirm="onBalanceReminderSave"
+        >
+          <ManageOverviewBalanceReminderSkidBody
+            v-if="overviewSkidKind === 'balance-reminder'"
+            v-model="balanceReminderForm"
+            :show-validation="balanceReminderShowValidation"
+          />
+          <ManageOverviewRechargeSkidBody
+            v-else
+            :mode="rechargeSkidTarget"
+            :gas-account-key="rechargeGasAccountKey"
+          />
+          <template v-if="overviewSkidKind === 'balance-reminder'" #action>
+            <div :class="comboActionStyles.skidRoot">
+              <div :class="comboActionStyles.skidActions">
+                <EgButton
+                  :class="comboActionStyles.fullWidth"
+                  tone="decor"
+                  variant="solid"
+                  size="md"
+                  :disabled="!balanceReminderCanSave"
+                  @click="onBalanceReminderSave"
+                >
+                  {{ ui('Save') }}
+                </EgButton>
+              </div>
+            </div>
+          </template>
+        </EgSkid>
+      </template>
+    </EgLayout>
+  </div>
+</template>

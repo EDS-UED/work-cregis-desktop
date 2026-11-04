@@ -48,6 +48,17 @@ function buildCollectedAmount(row: PaymentEngineRecordRow, rowIndex: number): st
   return formatGroupedDecimalAmount(row.orderAmount);
 }
 
+/** 任务记录列表 · 归集金额（与详情 headline 同源）。 */
+export function resolveTaskRecordCollectedAmountForList(
+  row: PaymentEngineRecordRow,
+): string {
+  const rowIndex = resolveEgDataListDemoRowIndex(row);
+  if (rowIndex === 0) {
+    return '10000073.3002';
+  }
+  return String(row.orderAmount ?? '').trim();
+}
+
 function buildCollectionDetailLines(
   row: PaymentEngineRecordRow,
   rowIndex: number,

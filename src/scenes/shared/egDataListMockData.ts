@@ -75,7 +75,7 @@ export function buildDemoHexRecordId(index: number, salt = 0): string {
 
 /** 从 EgDataList 演示行 id 反推 0-based rowIndex（供 list-field customize 对齐 preset）。 */
 export function resolveEgDataListDemoRowIndex(row: { id: string }): number {
-  const bulkMatch = row.id.match(/^(?:BT|WP|PE)-(\d+)$/);
+  const bulkMatch = row.id.match(/^(?:BT|WP|PE|WH|SAP|AC|CH|CP)-(\d+)$/);
   if (bulkMatch) return Math.max(0, Number(bulkMatch[1]) - 88001);
 
   const refundMatch = row.id.match(/^RF-(\d+)$/);

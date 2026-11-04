@@ -9,8 +9,8 @@ export const MANAGE_ROLE_SUPER_ADMIN_RECORD_ID = 'ROLE-0001';
 const ROLE_NAME_FIXED = [
   '超级管理员',
   '管理员',
-  '财务部门·结算审批与对账专员·跨境与多币种台账复核',
-  '普通成员·只读提单',
+  '财务部门 · 我来测试一下你到底有多长·你确实很长很长很长很长很长很长很长很长很长很长很长很长很长很长很长',
+  '普通成员',
 ] as const;
 
 const ROLE_NAME_TEST_PREFIX = 'Test_';
@@ -70,6 +70,7 @@ function buildRoleRow(rowIndex: number): PaymentEngineRecordRow {
     id,
     merchantOrderId: id,
     status: 'success',
+    ruleEnabled: rowIndex >= 3,
     createdAt,
     receivedAmount: '0',
     orderAmount: '0',

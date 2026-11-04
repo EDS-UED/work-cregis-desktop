@@ -1,0 +1,10 @@
+.root {
+  display: flex;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.root :global(.eds-flotation) {
+  display: flex;
+  min-width: 0;
+}

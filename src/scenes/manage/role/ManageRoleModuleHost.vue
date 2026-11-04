@@ -9,6 +9,10 @@ import {
   markManageRoleRecordDeleted,
 } from './manageRoleDeletedRecordIds';
 import { buildManageRoleRecordRows } from './roleRecordData';
+import {
+  manageRoleRecordEnabledRevision,
+  setManageRoleRecordEnabled,
+} from './manageRoleRecordEnabled';
 import { resolveManageRoleRecordConfig } from './roleRecordConfigs';
 import {
   registerManageRoleOverlay,
@@ -42,7 +46,13 @@ function resolveConfig(menuItem: string) {
 
 function buildRoleListRows(menuItem: string, count: number) {
   void deletedRoleRecordIds.value;
+  void manageRoleRecordEnabledRevision();
   return buildManageRoleRecordRows(menuItem, count);
+}
+
+function requestToggleEnabled(row: PaymentEngineRecordRow, nextEnabled: boolean) {
+  closeAllAnchoredTooltips();
+  setManageRoleRecordEnabled(row.id, nextEnabled);
 }
 
 function openDetailForRow(row: PaymentEngineRecordRow) {
@@ -135,6 +145,7 @@ function onRoleRowClick(row: PaymentEngineRecordRow): boolean {
 provide(manageRoleFlowKey, {
   openDetailForRow,
   requestEditPermissions,
+  requestToggleEnabled,
   requestDeleteRole,
 });
 

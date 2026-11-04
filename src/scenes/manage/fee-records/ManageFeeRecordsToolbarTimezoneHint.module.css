@@ -1,0 +1,51 @@
+.tooltip {
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.infoButton {
+  flex-shrink: 0;
+}
+
+.infoButton:global(.eds-icon-button:hover),
+.infoButton:global(.eds-icon-button:active) {
+  background-color: var(--event-hover);
+}
+
+.infoButton:global(.eds-icon-button:focus-visible),
+.tooltip :global([data-eds-tooltip-open]) .infoButton:global(.eds-icon-button) {
+  background-color: var(--event-focus);
+}
+
+.iconOutline,
+.iconFill {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.iconFill {
+  display: none;
+}
+
+.infoButton:hover .iconOutline,
+.tooltip :global([data-eds-tooltip-open]) .iconOutline {
+  display: none;
+}
+
+.infoButton:hover .iconFill,
+.tooltip :global([data-eds-tooltip-open]) .iconFill {
+  display: inline-flex;
+}
+
+.fieldOvfHintHost :global(.eds-hover-tooltip-trigger__target::after) {
+  content: none;
+  display: none;
+}
+
+.fieldOvfHintHost :global(.eds-hover-tooltip-trigger__target),
+.fieldOvfHintHost :global(.eds-hover-tooltip-trigger:hover .eds-hover-tooltip-trigger__target),
+.fieldOvfHintHost
+  :global(.eds-hover-tooltip-trigger--focus:focus-within .eds-hover-tooltip-trigger__target) {
+  color: inherit;
+}

@@ -121,7 +121,7 @@ function isTransferRecordMenuItem(menuItem: string): boolean {
   return isBulkTransferRecordMenuItem(menuItem) || isPaymentExceptionRecordMenuItem(menuItem);
 }
 
-function isWalletPayoutMenuItem(menuItem: string): boolean {
+export function isWalletPayoutMenuItem(menuItem: string): boolean {
   return menuItem === 'Wallet Payout' || menuItem === 'Sub-Address Payout';
 }
 
@@ -174,12 +174,7 @@ export function buildPaymentEngineRecordStatusCustomize(
   }
 
   if (menuItem === 'Processing') {
-    if (status === 'pending') {
-      return { status: 'warning', label: 'Pending' };
-    }
-    if (status === 'success') {
-      return { status: 'success', label: 'Success' };
-    }
+    return { status: 'warning', label: 'Pending Confirmation' };
   }
 
   if (menuItem === 'Collection History') {
@@ -271,12 +266,7 @@ export function resolvePaymentEngineRecordStatusDetailLabel(
   }
 
   if (menuItem === 'Processing') {
-    if (row.status === 'pending') {
-      return translate('Pending');
-    }
-    if (row.status === 'success') {
-      return translate('Success');
-    }
+    return translate('Pending Confirmation');
   }
 
   if (isPaymentCallbackRecordMenuItem(menuItem) && row.callbackStatus) {
@@ -318,8 +308,7 @@ export function resolvePaymentEngineRecordStatusDetailTagStatus(
   }
 
   if (menuItem === 'Processing') {
-    if (row.status === 'pending') return 'warning';
-    return 'success';
+    return 'warning';
   }
 
   if (isPaymentCallbackRecordMenuItem(menuItem) && row.callbackStatus) {

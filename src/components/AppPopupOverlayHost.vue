@@ -17,14 +17,24 @@ import ManageWebhookOverlayHost from '@/scenes/manage/webhook/ManageWebhookOverl
 import { manageWebhookOverlayRegistry } from '@/scenes/manage/webhook/manageWebhookOverlayContext';
 import ManageRoleOverlayHost from '@/scenes/manage/role/ManageRoleOverlayHost.vue';
 import { manageRoleOverlayRegistry } from '@/scenes/manage/role/manageRoleOverlayContext';
+import ManageMemberOverlayHost from '@/scenes/manage/member/ManageMemberOverlayHost.vue';
+import { manageMemberOverlayRegistry } from '@/scenes/manage/member/manageMemberOverlayContext';
 import ManageTeamApiOverlayHost from '@/scenes/manage/team-api/ManageTeamApiOverlayHost.vue';
 import { manageTeamApiOverlayRegistry } from '@/scenes/manage/team-api/manageTeamApiOverlayContext';
+import ManageFeeRecordsOverlayHost from '@/scenes/manage/fee-records/ManageFeeRecordsOverlayHost.vue';
+import { manageFeeRecordsOverlayRegistry } from '@/scenes/manage/fee-records/manageFeeRecordsOverlayContext';
+import ManageGasProxyPaymentRecordsOverlayHost from '@/scenes/manage/gas-proxy-payment-records/ManageGasProxyPaymentRecordsOverlayHost.vue';
+import { manageGasProxyPaymentRecordsOverlayRegistry } from '@/scenes/manage/gas-proxy-payment-records/manageGasProxyPaymentRecordsOverlayContext';
 import RiskControlAmlManualQueryOverlayHost from '@/scenes/risk-control/aml-manual-query/RiskControlAmlManualQueryOverlayHost.vue';
 import { riskControlAmlManualQueryOverlayRegistry } from '@/scenes/risk-control/aml-manual-query/riskControlAmlManualQueryOverlayContext';
 import RiskControlAutoRuleOverlayHost from '@/scenes/risk-control/auto-rule/RiskControlAutoRuleOverlayHost.vue';
 import { riskControlAutoRuleOverlayRegistry } from '@/scenes/risk-control/auto-rule/riskControlAutoRuleOverlayContext';
 import RiskControlAmlRecordDetailOverlayHost from '@/scenes/risk-control/RiskControlAmlRecordDetailOverlayHost.vue';
 import { riskControlAmlRecordDetailOverlayRegistry } from '@/scenes/risk-control/riskControlAmlRecordDetailOverlayContext';
+import ManageOverviewOverlayHost from '@/scenes/manage/overview/ManageOverviewOverlayHost.vue';
+import { manageOverviewOverlayRegistry } from '@/scenes/manage/overview/manageOverviewOverlayContext';
+import ManageOrderManagementOverlayHost from '@/scenes/manage/order-management/ManageOrderManagementOverlayHost.vue';
+import { manageOrderManagementOverlayRegistry } from '@/scenes/manage/order-management/manageOrderManagementOverlayContext';
 
 const approvalFlow = computed(() => approvalFlowRegistry.value);
 const signingFlow = computed(() => signingFlowRegistry.value);
@@ -36,6 +46,7 @@ const transactionRecordDetailFlow = computed(
 const paymentEngineDetailFlow = computed(() => paymentEngineDetailFlowRegistry.value);
 const manageWebhookOverlay = computed(() => manageWebhookOverlayRegistry.value);
 const manageRoleOverlay = computed(() => manageRoleOverlayRegistry.value);
+const manageMemberOverlay = computed(() => manageMemberOverlayRegistry.value);
 const manageTeamApiOverlay = computed(() => manageTeamApiOverlayRegistry.value);
 const riskControlAutoRuleOverlay = computed(() => riskControlAutoRuleOverlayRegistry.value);
 const riskControlAmlManualQueryOverlay = computed(
@@ -43,6 +54,14 @@ const riskControlAmlManualQueryOverlay = computed(
 );
 const riskControlAmlRecordDetailOverlay = computed(
   () => riskControlAmlRecordDetailOverlayRegistry.value,
+);
+const manageOverviewOverlay = computed(() => manageOverviewOverlayRegistry.value);
+const manageFeeRecordsOverlay = computed(() => manageFeeRecordsOverlayRegistry.value);
+const manageGasProxyPaymentRecordsOverlay = computed(
+  () => manageGasProxyPaymentRecordsOverlayRegistry.value,
+);
+const manageOrderManagementOverlay = computed(
+  () => manageOrderManagementOverlayRegistry.value,
 );
 </script>
 
@@ -63,10 +82,15 @@ const riskControlAmlRecordDetailOverlay = computed(
       <SigningBatchFlowHost v-if="signingBatchFlow" :flow="signingBatchFlow" />
       <ManageWebhookOverlayHost v-if="manageWebhookOverlay" />
       <ManageRoleOverlayHost v-if="manageRoleOverlay" />
+      <ManageMemberOverlayHost v-if="manageMemberOverlay" />
       <ManageTeamApiOverlayHost v-if="manageTeamApiOverlay" />
       <RiskControlAutoRuleOverlayHost v-if="riskControlAutoRuleOverlay" />
       <RiskControlAmlManualQueryOverlayHost v-if="riskControlAmlManualQueryOverlay" />
       <RiskControlAmlRecordDetailOverlayHost v-if="riskControlAmlRecordDetailOverlay" />
+      <ManageOverviewOverlayHost v-if="manageOverviewOverlay" />
+      <ManageFeeRecordsOverlayHost v-if="manageFeeRecordsOverlay" />
+      <ManageGasProxyPaymentRecordsOverlayHost v-if="manageGasProxyPaymentRecordsOverlay" />
+      <ManageOrderManagementOverlayHost v-if="manageOrderManagementOverlay" />
       <SigningBatchGlobalProgressHost />
     </div>
   </div>

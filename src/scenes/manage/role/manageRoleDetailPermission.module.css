@@ -1,3 +1,13 @@
+/** 角色 / 成员权限详情：Headline 吸顶（EDS 无 Tab 时默认滚出，对齐有 Tab 的 headlineSticky）。 */
+.detailPermissionHost :global(.eds-detail [class*='scrollBody'] > header[class*='headline']) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 100%;
+  background: var(--box-page);
+}
+
 .detailPermissionHost :global(.eds-detail [class*='sections']) {
   gap: var(--spacing-4);
 }
@@ -146,4 +156,19 @@
 .detailPermissionHostUnsavedExit :global(.eds-detail [class*='systemBarClose']) {
   visibility: hidden;
   pointer-events: none;
+}
+
+/** 成员详情：权限只读，无 checkbox；权限行勿出现 Apply_Item 行 hover 点按态。 */
+.detailPermissionHostMemberReadonly
+  :global(.eds-detail [class*='item']:has([data-manage-member-permission-readonly]) [class*='itemRow']) {
+  cursor: default;
+}
+
+.detailPermissionHostMemberReadonly
+  :global(
+    .eds-detail
+      [class*='item']:has([data-manage-member-permission-readonly])
+      [class*='itemRow']:hover
+  ) {
+  background-color: var(--material-hide);
 }

@@ -4,10 +4,12 @@ import { PAYMENT_ENGINE_RECORD_ROW_COUNT } from '@/scenes/payment-engine/payment
 import { dataListTimeColumnLabelKey } from '@/scenes/shared/dataListTimeLabelKeys';
 import { isManageRoleMenuItem } from '../manageMenuData';
 
-const ROLE_NAME_MIN = '312px';
-/** 创建人 | 创建时间 UTC+08:00 · 仅时间排序（相对通用组合列 −80px）。 */
-const ROLE_CREATOR_TIME_MIN = '192px';
-const ROLE_ACTIONS_MIN = '200px';
+const ROLE_NAME_MIN = '272px';
+/** 创建人 | 创建时间 UTC+08:00 · 仅时间排序（176 − 80）。 */
+const ROLE_CREATOR_TIME_MIN = '96px';
+/** 状态（112 + 80）。 */
+const ROLE_STATUS_MIN = '192px';
+const ROLE_ACTIONS_MIN = '168px';
 
 const ROLE_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
   {
@@ -29,11 +31,20 @@ const ROLE_COLUMNS: PaymentEngineRecordPageConfig['columns'] = [
     flexGrow: false,
   },
   {
+    key: 'roleEnabled',
+    labelKey: 'Status',
+    minWidth: ROLE_STATUS_MIN,
+    width: ROLE_STATUS_MIN,
+    align: 'center',
+    displayOrder: 3,
+    flexGrow: false,
+  },
+  {
     key: 'roleActions',
     labelKey: 'Actions',
     minWidth: ROLE_ACTIONS_MIN,
     align: 'end',
-    displayOrder: 3,
+    displayOrder: 4,
   },
 ];
 

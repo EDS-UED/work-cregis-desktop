@@ -17,8 +17,8 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@eds/desktop-components": "link:../eds-desktop/packages/components",
     "@eds/desktop-animations": "link:../eds-desktop/packages/animations",
+    "@eds/desktop-components": "link:../eds-desktop/packages/components",
     "@eds/desktop-tokens": "link:../eds-desktop/packages/tokens",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"

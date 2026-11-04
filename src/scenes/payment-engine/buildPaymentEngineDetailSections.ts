@@ -7,7 +7,7 @@ import { resolveCryptoNameFromSymbol } from '@/scenes/tasks/list-field/listField
 import { buildDetailCurrencyAmountItems } from '@/scenes/tasks/shared/buildDetailCurrencyAmountItems';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 import { buildPaymentEngineCallbackErrorDetailSections } from './buildPaymentEngineCallbackErrorDetailSections';
-import { createPaymentEngineTransferBlockTimeRow } from './paymentEngineDetailApplyItemRows';
+import { createPaymentEngineDetailTimeRow } from './paymentEngineDetailApplyItemRows';
 import { buildPaymentEnginePaymentExceptionDetailSections } from './buildPaymentEnginePaymentExceptionDetailSections';
 import { buildPaymentEngineRefundRecordDetailSections } from './buildPaymentEngineRefundRecordDetailSections';
 import { buildPaymentEngineWalletPayoutDetailSections } from './buildPaymentEngineWalletPayoutDetailSections';
@@ -80,7 +80,7 @@ function buildSettlementRecordDetailItems(
       }),
       titleIcon: 'eds-text-numerical',
     },
-    createPaymentEngineTransferBlockTimeRow({
+    createPaymentEngineDetailTimeRow({
       key: 'settlement-time',
       title: translate('Settlement Time'),
       value: row.createdAt,

@@ -34,7 +34,7 @@ function buildTransferServiceFee(amount: string): string {
   return formatAmount(String(Math.max(fee, 0.00001)));
 }
 
-function buildPaymentExceptionId(rowIndex: number): string {
+export function buildPaymentExceptionId(rowIndex: number): string {
   const part1 = String(20_311_020 + rowIndex);
   const part2 = String(82_420_678 + rowIndex * 3);
   return `Number_${part1}_${part2}`;

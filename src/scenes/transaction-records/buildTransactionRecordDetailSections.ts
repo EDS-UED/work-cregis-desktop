@@ -232,14 +232,11 @@ function buildInboundDetailItemsThroughHash(
       },
       translate,
     ),
-    {
-      ...createDetailApplyItemRow('time', {
-        key: 'transaction-time',
-        title: translate('Transaction Time'),
-        value: row.transactionTime,
-      }),
-      titleIcon: 'eds-calendar-end',
-    },
+    createDetailApplyItemRow('time', {
+      key: 'transaction-time',
+      title: translate('Transaction Time'),
+      value: row.transactionTime,
+    }),
     createDetailApplyItemRow('type', {
       key: 'transaction-type',
       title: translate('Transaction Type'),

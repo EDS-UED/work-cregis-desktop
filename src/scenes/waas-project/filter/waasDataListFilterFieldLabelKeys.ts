@@ -7,6 +7,7 @@ export const WAAS_DATA_LIST_FILTER_FIELD_LABEL_KEYS = {
   transactionTime: 'Transaction Time',
   initiationTime: 'Initiation Time',
   startTime: 'Start Time',
+  receiveTime: 'Receive Time',
   endTime: 'End Date',
   completionTime: 'Completion Time',
   transactionCount: 'Transaction Count',
@@ -41,7 +42,12 @@ export type WaasDataListFilterFieldId = keyof typeof WAAS_DATA_LIST_FILTER_FIELD
 
 export type WaasDataListTimeFilterFieldId = Extract<
   WaasDataListFilterFieldId,
-  'transactionTime' | 'initiationTime' | 'startTime' | 'endTime' | 'completionTime'
+  | 'transactionTime'
+  | 'initiationTime'
+  | 'startTime'
+  | 'receiveTime'
+  | 'endTime'
+  | 'completionTime'
 >;
 
 export function resolveWaasDataListFilterFieldLabelKey(fieldId: string): string {

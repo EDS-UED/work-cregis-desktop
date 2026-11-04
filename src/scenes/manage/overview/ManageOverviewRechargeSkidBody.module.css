@@ -1,0 +1,155 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-2) var(--spacing-4) var(--spacing-4);
+  box-sizing: border-box;
+}
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1);
+  width: 100%;
+  min-width: 0;
+}
+
+.fieldLabel {
+  composes: typography-body-small from global;
+  color: var(--text-base-primary);
+}
+
+.networkControlStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1-5);
+  min-width: 0;
+}
+
+.scopeFlotationHost {
+  composes: scopeFlotationHost from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.networkFlotationTrigger {
+  composes: networkFlotationTrigger from '../../risk-control/aml-manual-query/RiskControlAmlManualQueryFormPage.module.css';
+}
+
+.networkTriggerSymbol {
+  composes: networkTriggerSymbol from '../../risk-control/aml-manual-query/RiskControlAmlManualQueryFormPage.module.css';
+}
+
+.addressSection {
+  composes: fieldBlock;
+}
+
+.addressCardGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1-5);
+  min-width: 0;
+}
+
+.addressCard {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  padding: var(--spacing-2) var(--spacing-4) var(--spacing-2) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background: var(--material-card-subtle);
+  box-sizing: border-box;
+}
+
+.addressRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+.addressMain {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.copyButton {
+  flex-shrink: 0;
+}
+
+.addressValue {
+  composes: typography-body-small-strong from global;
+  align-self: stretch;
+  margin: 0;
+  padding-top: var(--spacing-3);
+  color: var(--text-base-primary);
+  word-break: break-all;
+}
+
+.qrHost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: var(--spacing-2);
+  border-radius: var(--radius-sm);
+  background: var(--material-same-white-tertiary);
+  box-sizing: border-box;
+}
+
+.qrCanvas {
+  position: relative;
+  flex-shrink: 0;
+  width: calc(var(--scale-20) + var(--spacing-6));
+  height: calc(var(--scale-20) + var(--spacing-6));
+}
+
+.qrGraphic {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--material-base-primary);
+}
+
+.qrCenterMark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-xl);
+  height: var(--icon-xl);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-full);
+  background: var(--box-page);
+  box-shadow: var(--eds-shadow-subtle);
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+}
+
+.qrCenterSymbol {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-sm);
+  height: var(--avatar-sm);
+  overflow: hidden;
+}
+
+.qrCenterSymbol :global(.eds-crypto),
+.qrCenterSymbol :global([role='img']),
+.qrCenterSymbol :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

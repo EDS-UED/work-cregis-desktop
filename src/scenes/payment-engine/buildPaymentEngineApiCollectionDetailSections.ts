@@ -6,16 +6,19 @@ import {
 import { resolveCryptoNameFromSymbol } from '@/scenes/tasks/list-field/listFieldCryptoResolve';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 import {
-  createPaymentEngineTransferBlockTimeRow,
-  createPaymentEngineTransferCreationTimeRow,
+  createPaymentEngineDetailTimeRowByIndex,
+  type PaymentEngineTimeRowOverrides,
 } from './paymentEngineDetailApplyItemRows';
 import { resolvePaymentApiCollectionRecordDetail } from './paymentEngineApiCollectionDetailData';
 
+type ApiCollectionTimeRowFactory = (overrides: PaymentEngineTimeRowOverrides) => DetailItemData;
+
 function buildApiCollectionOverviewItems(
   row: PaymentEngineRecordRow,
+  detail: ReturnType<typeof resolvePaymentApiCollectionRecordDetail>,
   translate: (key: string) => string,
+  timeRow: ApiCollectionTimeRowFactory,
 ): DetailItemData[] {
-  const detail = resolvePaymentApiCollectionRecordDetail(row);
   const cryptoName =
     resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether';
   const networkTag = row.currencyNetwork?.trim() ?? '';
@@ -34,7 +37,7 @@ function buildApiCollectionOverviewItems(
       title: translate('IP Address'),
       value: detail.ipAddress,
     }),
-    createPaymentEngineTransferCreationTimeRow({
+    timeRow({
       key: 'api-collection-created-at',
       title: translate('Creation Time'),
       value: detail.createdAt,
@@ -43,11 +46,10 @@ function buildApiCollectionOverviewItems(
 }
 
 function buildApiCollectionTransferItems(
-  row: PaymentEngineRecordRow,
+  detail: ReturnType<typeof resolvePaymentApiCollectionRecordDetail>,
   translate: (key: string) => string,
+  timeRow: ApiCollectionTimeRowFactory,
 ): DetailItemData[] {
-  const detail = resolvePaymentApiCollectionRecordDetail(row);
-
   const items: DetailItemData[] = [
     createDetailApplyItemRow('sender', {
       key: 'api-collection-sender',
@@ -80,7 +82,7 @@ function buildApiCollectionTransferItems(
   }
 
   if (detail.completionTime) {
-    items.push(createPaymentEngineTransferBlockTimeRow({
+    items.push(timeRow({
       key: 'api-collection-completion-time',
       title: translate('Completion Time'),
       value: detail.completionTime,
@@ -94,15 +96,20 @@ export function buildPaymentEngineApiCollectionDetailSections(
   row: PaymentEngineRecordRow,
   translate: (key: string) => string,
 ): DetailSectionData[] {
+  const detail = resolvePaymentApiCollectionRecordDetail(row);
+  const timeFieldTotal = detail.completionTime ? 2 : 1;
+  let timeFieldIndex = 0;
+  const timeRow: ApiCollectionTimeRowFactory = (overrides) =>
+    createPaymentEngineDetailTimeRowByIndex(overrides, timeFieldIndex++, timeFieldTotal);
+
   return [
     {
-      key: 'api-collection-overview',
-      showDivider: true,
-      items: buildApiCollectionOverviewItems(row, translate),
-    },
-    {
-      key: 'api-collection-transfer',
-      items: buildApiCollectionTransferItems(row, translate),
+      key: 'api-collection-detail',
+      showDivider: false,
+      items: [
+        ...buildApiCollectionOverviewItems(row, detail, translate, timeRow),
+        ...buildApiCollectionTransferItems(detail, translate, timeRow),
+      ],
     },
   ];
 }

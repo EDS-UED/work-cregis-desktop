@@ -8,6 +8,7 @@ import {
 import {
   resolveSampleAddressForSymbol,
   resolveAddressFamily,
+  resolveVerifiedTxHashForRow,
   sideAddressPoolIndex,
 } from '@/scenes/tasks/list-field/listFieldCryptoSampleAddresses';
 import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
@@ -17,6 +18,9 @@ import {
   PAYMENT_ENGINE_RECORD_ROW_COUNT,
 } from '@/scenes/payment-engine/paymentEngineOrderRecordData';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
+import { buildWalletPayoutThirdPartyBusinessNo } from '@/scenes/payment-engine/paymentEngineWalletPayoutDetailData';
+import { resolveRuleConfigurationCreatorFields } from '@/scenes/payment-engine/paymentEngineRuleConfigurationDetailData';
+import { resolveWaasTransactionProcessingTypeKey } from './waasTransactionProcessingMock';
 import {
   WAAS_SUB_ADDRESS_DEFAULT_SELECTION,
   resolveWaasSubAddressCurrencyPresetFromSelection,
@@ -24,7 +28,8 @@ import {
 } from './waasSubAddressCurrencyPickerData';
 
 const TASK_RECORD_SHOWCASE = {
-  amount: '1.66',
+  /** 与任务详情 headline「已归集金额」展示同源（buildCollectedAmount rowIndex 0）。 */
+  amount: '10000073.3002',
   count: '30',
   startAt: '2026-08-27 21:24:47',
   endAt: '2026-08-27 21:29:00',
@@ -246,21 +251,26 @@ function buildPayoutRecordRow(
     orderAmount: amount,
     orderFiat: amountValues.fiatValue,
     payoutTypeKey: PAYOUT_TYPE_SHOWCASE[rowIndex % PAYOUT_TYPE_SHOWCASE.length],
+    thirdPartyBusinessNo: buildWalletPayoutThirdPartyBusinessNo(rowIndex),
     walletToAlias: PAYOUT_TO_ALIAS_SHOWCASE[rowIndex],
     transactionTypeKey: 'Send',
   };
 }
 
 function buildTransactionHistoryRow(rowIndex: number): PaymentEngineRecordRow {
+  const preset = resolveCurrencyRowPreset(rowIndex);
   const amountValues = resolveDemoAmountRowValues(rowIndex);
   const amount =
     rowIndex < TRANSACTION_AMOUNT_SHOWCASE.length
       ? TRANSACTION_AMOUNT_SHOWCASE[rowIndex]!
       : amountValues.cryptoValue;
+  const addressFamily = resolveAddressFamily(preset.symbol);
+  /** 发送方/接收方 list-field 与钱包提币同源（rowIndex + 地址/mock）。 */
+  const payoutRow = buildPayoutRecordRow('Wallet Payout', rowIndex);
 
   return {
-    ...buildCryptoAddressRowBase(rowIndex),
-    id: buildDemoHexRecordId(rowIndex, 820),
+    ...payoutRow,
+    id: `WH-${88001 + rowIndex}`,
     merchantOrderId: buildDemoHexRecordId(rowIndex, 821),
     status: resolveShowcaseThenCompletedStatus(
       rowIndex,
@@ -278,19 +288,23 @@ function buildTransactionHistoryRow(rowIndex: number): PaymentEngineRecordRow {
     orderAmount: amount,
     orderFiat: amountValues.fiatValue,
     transactionTypeKey: rowIndex === 0 ? 'Send' : 'Deposit',
+    txHash: resolveVerifiedTxHashForRow(rowIndex + 1, addressFamily),
   };
 }
 
 function buildTransactionProcessingRow(rowIndex: number): PaymentEngineRecordRow {
+  const transactionTypeKey = resolveWaasTransactionProcessingTypeKey(rowIndex);
   return {
     ...buildTransactionHistoryRow(rowIndex),
-    status: 'pending',
+    transactionTypeKey,
+    status: transactionTypeKey === 'Send' ? 'pending' : 'success',
   };
 }
 
 function buildCollectionProcessingRow(rowIndex: number): PaymentEngineRecordRow {
   return {
     ...buildCollectionHistoryRow(rowIndex),
+    id: `CP-${88001 + rowIndex}`,
     status: 'pending',
   };
 }
@@ -307,6 +321,7 @@ function buildRuleConfigurationRow(rowIndex: number): PaymentEngineRecordRow {
     rowIndex === 0
       ? 'CO1463926806912640'
       : `CO1463926806912${String(640 + rowIndex).padStart(3, '0')}`;
+  const creatorFields = resolveRuleConfigurationCreatorFields(rowIndex);
 
   return {
     ...buildRowCurrencyBase(rowIndex),
@@ -323,6 +338,9 @@ function buildRuleConfigurationRow(rowIndex: number): PaymentEngineRecordRow {
     ruleNumber,
     collectionAmountRangeKey: resolveDemoCollectionAmountRange(rowIndex),
     ruleEnabled: rowIndex === 1 || rowIndex === 2 || rowIndex === 5,
+    logOperatorName: creatorFields.logOperatorName,
+    webhookCreatorEmail: creatorFields.webhookCreatorEmail,
+    webhookCreatorDisplay: creatorFields.webhookCreatorDisplay,
   };
 }
 
@@ -367,11 +385,9 @@ function buildTaskRecordRow(rowIndex: number): PaymentEngineRecordRow {
 }
 
 function buildApiCollectionRow(rowIndex: number): PaymentEngineRecordRow {
-  const preset = resolveCurrencyRowPreset(rowIndex);
-  const fromAddress = resolveDemoWalletAddress(rowIndex, preset, 'from');
-  const toAddress = resolveDemoWalletAddress(rowIndex, preset, 'to');
   const amountValues = resolveDemoAmountRowValues(rowIndex);
-  const recordId = buildDemoHexRecordId(rowIndex, 920);
+  /** 发送方/接收方与钱包提币 list-field 同源（地址、别名、preset）。 */
+  const payoutRow = buildPayoutRecordRow('Wallet Payout', rowIndex);
   const status = resolveShowcaseThenCompletedStatus(
     rowIndex,
     API_COLLECTION_STATUS_SHOWCASE,
@@ -379,23 +395,20 @@ function buildApiCollectionRow(rowIndex: number): PaymentEngineRecordRow {
   );
 
   return {
-    ...buildRowCurrencyBase(rowIndex),
-    id: recordId,
-    merchantOrderId: recordId,
+    ...payoutRow,
+    id: `AC-${88001 + rowIndex}`,
+    merchantOrderId: buildDemoHexRecordId(rowIndex, 920),
     status,
     createdAt: offsetDateTime('2026-06-24 11:59:27', rowIndex),
     receivedAmount: '0',
     orderAmount: formatGroupedDecimalAmount(amountValues.cryptoValue),
-    walletFromAddress: fromAddress,
-    walletToAddress: toAddress,
   };
 }
 
 function buildCollectionHistoryRow(rowIndex: number): PaymentEngineRecordRow {
-  const preset = resolveCurrencyRowPreset(rowIndex);
-  const fromAddress = resolveDemoWalletAddress(rowIndex, preset, 'from');
-  const toAddress = resolveDemoWalletAddress(rowIndex + 1, preset, 'to');
   const amountValues = resolveDemoAmountRowValues(rowIndex);
+  /** 发送方/接收方与钱包提币 list-field 同源。 */
+  const payoutRow = buildPayoutRecordRow('Wallet Payout', rowIndex);
   const collectionId =
     rowIndex === 0
       ? '1464586558696768'
@@ -410,21 +423,20 @@ function buildCollectionHistoryRow(rowIndex: number): PaymentEngineRecordRow {
     COLLECTION_HISTORY_BUSINESS_TYPE_SHOWCASE,
     'Collection',
   );
+  const completionTime = offsetDateTime('2026-08-27 20:11:41', rowIndex);
 
   return {
-    ...buildRowCurrencyBase(rowIndex),
-    id: collectionId,
+    ...payoutRow,
+    id: `CH-${88001 + rowIndex}`,
     merchantOrderId: collectionId,
     status,
     businessTypeKey,
-    createdAt: offsetDateTime('2026-08-27 20:11:41', rowIndex),
+    createdAt: completionTime,
     receivedAmount: '0',
     orderAmount: amountValues.cryptoValue,
     orderFiat: amountValues.fiatValue,
-    walletFromAddress: fromAddress,
-    walletToAddress: toAddress,
     collectionId,
-    completionTime: offsetDateTime('2026-08-27 20:11:41', rowIndex),
+    completionTime,
     ruleName: resolveDemoRuleName(rowIndex),
     ruleNumber:
       rowIndex === 0

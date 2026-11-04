@@ -106,6 +106,15 @@ import {
   manageRoleDataListShowsEgFilter,
   shouldUseManageRoleRecordEgFilterSchema,
 } from '@/scenes/manage/role/filter/manageRoleShowsEgFilter';
+import { buildMemberRecordFilterRowSnapshot } from '@/scenes/manage/member/filter/buildMemberRecordFilterRowSnapshot';
+import {
+  MEMBER_RECORD_FILTER_OPERATORS,
+  buildMemberRecordFilterFields,
+} from '@/scenes/manage/member/filter/memberRecordFilterFields';
+import {
+  manageMemberDataListShowsEgFilter,
+  shouldUseManageMemberRecordEgFilterSchema,
+} from '@/scenes/manage/member/filter/manageMemberShowsEgFilter';
 import { buildWebhookPushRecordFilterRowSnapshot } from '@/scenes/manage/webhook/filter/buildWebhookPushRecordFilterRowSnapshot';
 import {
   WEBHOOK_PUSH_RECORD_FILTER_OPERATORS,
@@ -218,13 +227,17 @@ const usesManageWebhookEgFilter = computed(() =>
 const usesManageRoleEgFilter = computed(() =>
   manageRoleDataListShowsEgFilter(props.menuItem),
 );
+const usesManageMemberEgFilter = computed(() =>
+  manageMemberDataListShowsEgFilter(props.menuItem),
+);
 const usesEgFilter = computed(
   () =>
     usesPaymentEngineEgFilter.value
     || usesWaasEgFilter.value
     || usesRiskControlEgFilter.value
     || usesManageWebhookEgFilter.value
-    || usesManageRoleEgFilter.value,
+    || usesManageRoleEgFilter.value
+    || usesManageMemberEgFilter.value,
 );
 const usesWebhookConfigRecordEgFilter = computed(() =>
   shouldUseWebhookConfigRecordEgFilterSchema(props.menuItem),
@@ -234,6 +247,9 @@ const usesWebhookPushRecordEgFilter = computed(() =>
 );
 const usesManageRoleRecordEgFilter = computed(() =>
   shouldUseManageRoleRecordEgFilterSchema(props.menuItem),
+);
+const usesManageMemberRecordEgFilter = computed(() =>
+  shouldUseManageMemberRecordEgFilterSchema(props.menuItem),
 );
 const usesLogsRecordEgFilter = computed(() => shouldUseLogsRecordEgFilterSchema(props.menuItem));
 const usesAutoRulesRecordEgFilter = computed(() =>
@@ -277,7 +293,8 @@ function resolveWaasFilterSourceRowCount(): number {
     || usesAddressBookRecordEgFilter.value
     || usesWebhookConfigRecordEgFilter.value
     || usesWebhookPushRecordEgFilter.value
-    || usesManageRoleRecordEgFilter.value;
+    || usesManageRoleRecordEgFilter.value
+    || usesManageMemberRecordEgFilter.value;
   const baseCount = usesPaymentEngineRowSource
     ? resolvePaymentEngineRecordRowCount(props.menuItem)
     : resolveWaasStandardRecordRowCount(props.menuItem);
@@ -320,6 +337,9 @@ function buildFilterRowSnapshot(rowIndex: number, row: PaymentEngineRecordRow) {
   }
   if (usesManageRoleRecordEgFilter.value) {
     return buildRoleRecordFilterRowSnapshot(rowIndex, row);
+  }
+  if (usesManageMemberRecordEgFilter.value) {
+    return buildMemberRecordFilterRowSnapshot(rowIndex, row);
   }
   return buildWaasDataListFilterRowSnapshot(rowIndex, row, props.menuItem);
 }
@@ -367,6 +387,9 @@ const waasFilterFields = computed((): EgFilterField[] => {
   if (usesManageRoleRecordEgFilter.value) {
     return buildRoleRecordFilterFields((key) => ui(key), sourceRowCount);
   }
+  if (usesManageMemberRecordEgFilter.value) {
+    return buildMemberRecordFilterFields((key) => ui(key), sourceRowCount);
+  }
   return buildWaasDataListFilterFields(
     props.menuItem,
     (key) => ui(key),
@@ -388,6 +411,7 @@ const waasFilterOperators = computed(() => {
   if (usesWebhookConfigRecordEgFilter.value) return WEBHOOK_CONFIG_RECORD_FILTER_OPERATORS;
   if (usesWebhookPushRecordEgFilter.value) return WEBHOOK_PUSH_RECORD_FILTER_OPERATORS;
   if (usesManageRoleRecordEgFilter.value) return ROLE_RECORD_FILTER_OPERATORS;
+  if (usesManageMemberRecordEgFilter.value) return MEMBER_RECORD_FILTER_OPERATORS;
   return WAAS_DATA_LIST_FILTER_OPERATORS;
 });
 

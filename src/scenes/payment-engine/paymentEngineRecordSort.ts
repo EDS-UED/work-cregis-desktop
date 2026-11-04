@@ -45,6 +45,13 @@ function compareRows(
     return compareText(rowA.id, rowB.id);
   }
 
+  if (columnKey === 'transactionTypeTxHash') {
+    if (segment === 'secondary') {
+      return compareText(rowA.txHash ?? '', rowB.txHash ?? '');
+    }
+    return compareText(rowA.transactionTypeKey ?? '', rowB.transactionTypeKey ?? '');
+  }
+
   if (columnKey === 'callbackAmountTime' || columnKey === 'callbackAmountBusinessType') {
     if (segment === 'secondary') {
       if (columnKey === 'callbackAmountBusinessType') {
@@ -75,7 +82,12 @@ function compareRows(
     return compareText(rowA.callbackUrl ?? '', rowB.callbackUrl ?? '');
   }
 
-  if (columnKey === 'createdAt' || columnKey === 'callbackTime' || columnKey === 'amlQueryTime') {
+  if (
+    columnKey === 'createdAt'
+    || columnKey === 'callbackTime'
+    || columnKey === 'amlQueryTime'
+    || columnKey === 'memberJoinedTime'
+  ) {
     return compareCreatedTime(rowA, rowB);
   }
 
@@ -89,6 +101,44 @@ function compareRows(
   if (columnKey === 'refundMeta') {
     if (segment === 'secondary') {
       return compareText(rowA.merchantOrderId, rowB.merchantOrderId);
+    }
+    return compareCreatedTime(rowA, rowB);
+  }
+
+  if (columnKey === 'settlementMeta') {
+    if (segment === 'secondary') {
+      return compareText(rowA.id, rowB.id);
+    }
+    return compareCreatedTime(rowA, rowB);
+  }
+
+  if (columnKey === 'settlementAddress') {
+    return compareText(rowA.walletToAddress ?? '', rowB.walletToAddress ?? '');
+  }
+
+  if (columnKey === 'settlementAmounts') {
+    if (segment === 'secondary') {
+      return compareAmountValue(rowA.orderAmount, rowB.orderAmount);
+    }
+    return compareAmountValue(rowA.receivedAmount || '0', rowB.receivedAmount || '0');
+  }
+
+  if (columnKey === 'bulkMeta') {
+    if (segment === 'secondary') {
+      return compareText(
+        rowA.bulkTransferId ?? rowA.merchantOrderId,
+        rowB.bulkTransferId ?? rowB.merchantOrderId,
+      );
+    }
+    return compareCreatedTime(rowA, rowB);
+  }
+
+  if (columnKey === 'paymentExceptionMeta') {
+    if (segment === 'secondary') {
+      return compareText(
+        rowA.paymentExceptionId ?? rowA.id,
+        rowB.paymentExceptionId ?? rowB.id,
+      );
     }
     return compareCreatedTime(rowA, rowB);
   }
@@ -117,6 +167,13 @@ function compareRows(
     return compareText(rowA.ruleName ?? rowA.id, rowB.ruleName ?? rowB.id);
   }
 
+  if (columnKey === 'policyTypeWeight') {
+    if (segment === 'secondary') {
+      return compareText(rowA.policyWeight ?? '0', rowB.policyWeight ?? '0');
+    }
+    return compareText(rowA.policyTypeKey ?? '', rowB.policyTypeKey ?? '');
+  }
+
   if (columnKey === 'taskDateRange') {
     if (segment === 'secondary') {
       return compareCreatedTime({
@@ -141,6 +198,13 @@ function compareRows(
       return compareText(rowA.collectionId ?? rowA.id, rowB.collectionId ?? rowB.id);
     }
     return compareCreatedTime(rowA, rowB);
+  }
+
+  if (columnKey === 'collectionBusinessId') {
+    if (segment === 'secondary') {
+      return compareText(rowA.collectionId ?? rowA.id, rowB.collectionId ?? rowB.id);
+    }
+    return compareText(rowA.businessTypeKey ?? '', rowB.businessTypeKey ?? '');
   }
 
   if (columnKey === 'collectionHistoryMeta') {
@@ -177,7 +241,11 @@ function compareRows(
     return compareText(rowA.ruleName ?? rowA.id, rowB.ruleName ?? rowB.id);
   }
 
-  if (columnKey === 'roleCreatorTime' || columnKey === 'teamApiCreatorTime') {
+  if (
+    columnKey === 'roleCreatorTime'
+    || columnKey === 'teamApiCreatorTime'
+    || columnKey === 'ruleCreatorTime'
+  ) {
     if (segment === 'secondary') {
       return compareCreatedTime(rowA, rowB);
     }

@@ -45,7 +45,7 @@ export function useTransactionRecordsDataListPage(options?: {
     loading: false,
   });
 
-  const settingsLevelIndex = ref(2);
+  const settingsLevelIndex = ref(0);
   const settingsJumpValue = ref('');
   const currentPage = ref(1);
   const timeSortOrder = ref<TasksDataListSortOrder | ''>('');

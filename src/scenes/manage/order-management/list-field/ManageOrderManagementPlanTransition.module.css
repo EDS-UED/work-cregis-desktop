@@ -1,0 +1,33 @@
+.planLine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-05);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.planSegment {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.planArrow {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--scale-3);
+  height: var(--scale-3);
+  color: var(--text-base-secondary);
+}
+
+/* 与 CryptoAddress 箭头一致：EgIcon 默认 stroke-lg → --stroke-md（1.1px） */
+.planArrow > :global(span[role='img']) {
+  --eds-icon-stroke-screen: var(--stroke-md);
+}
+
+.planArrow :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

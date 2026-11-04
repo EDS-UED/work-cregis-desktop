@@ -15,6 +15,7 @@ const props = defineProps<{
   customize: Record<string, unknown>;
   transactionCount: string;
   amount: string;
+  alignEnd?: boolean;
 }>();
 
 const { ui } = useAppI18n();
@@ -37,9 +38,15 @@ const transactionCountText = computed(
 </script>
 
 <template>
-  <div class="desktopTokens list-field-general-structure" :class="styles.host">
-    <span class="hash-like-combo" :class="styles.hashLikeCombo">
-      <div :class="styles.titleRow">
+  <div
+    class="desktopTokens list-field-general-structure"
+    :class="[styles.host, alignEnd && styles.hostAlignEnd]"
+  >
+    <span
+      class="hash-like-combo"
+      :class="[styles.hashLikeCombo, alignEnd && styles.hashLikeComboAlignEnd]"
+    >
+      <div :class="[styles.titleRow, alignEnd && styles.titleRowAlignEnd]">
         <span :class="styles.cryptoInlineIcon">
           <EgCrypto :name="cryptoName" fit :label="symbol" />
         </span>

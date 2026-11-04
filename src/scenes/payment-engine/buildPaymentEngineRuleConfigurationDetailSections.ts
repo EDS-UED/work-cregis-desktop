@@ -3,7 +3,7 @@ import {
   type DetailSectionData,
 } from '@eds/desktop-components';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
-import { createPaymentEngineTransferCreationTimeRow } from './paymentEngineDetailApplyItemRows';
+import { createPaymentEngineDetailTimeRow } from './paymentEngineDetailApplyItemRows';
 import { resolvePaymentRuleConfigurationRecordDetail } from './paymentEngineRuleConfigurationDetailData';
 
 export const RULE_CONFIGURATION_CREATOR_ITEM_KEY = 'rule-configuration-creator';
@@ -56,7 +56,7 @@ export function buildPaymentEngineRuleConfigurationDetailSections(
         }),
         titleIcon: 'eds-user-pointer',
       },
-      createPaymentEngineTransferCreationTimeRow({
+      createPaymentEngineDetailTimeRow({
         key: 'rule-configuration-created-at',
         title: translate('Creation Time'),
         value: detail.createdAt,

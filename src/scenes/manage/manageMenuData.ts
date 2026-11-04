@@ -9,9 +9,21 @@ export const MANAGE_WEBHOOK_PUSH_RECORDS_MENU_ITEM = 'Push Records';
 
 export const MANAGE_ROLE_MENU_ITEM = 'Role';
 
+export const MANAGE_MEMBER_MENU_ITEM = 'Member';
+
 export const MANAGE_API_MANAGE_MENU_ITEM = 'API Manage';
 
 export const MANAGE_TEAM_SECURITY_MENU_ITEM = 'Team Security';
+
+export const MANAGE_TEAM_SUBSCRIPTION_MENU_ITEM = 'Team Subscription';
+
+export const MANAGE_ORDER_MANAGEMENT_MENU_ITEM = 'Order Management';
+
+export const MANAGE_OVERVIEW_MENU_ITEM = 'Overview';
+
+export const MANAGE_FEE_RECORDS_MENU_ITEM = 'Fee Records';
+
+export const MANAGE_GAS_PROXY_PAYMENT_RECORDS_MENU_ITEM = 'Gas Proxy Payment Records';
 
 export const MANAGE_WEBHOOK_MENU_ITEMS = [
   MANAGE_WEBHOOK_CONFIG_MENU_ITEM,
@@ -46,6 +58,10 @@ export function isManageRoleMenuItem(menuItem: string): boolean {
   return menuItem === MANAGE_ROLE_MENU_ITEM;
 }
 
+export function isManageMemberMenuItem(menuItem: string): boolean {
+  return menuItem === MANAGE_MEMBER_MENU_ITEM;
+}
+
 export function isManageApiManageMenuItem(menuItem: string): boolean {
   return menuItem === MANAGE_API_MANAGE_MENU_ITEM;
 }
@@ -54,7 +70,26 @@ export function isManageTeamSecurityMenuItem(menuItem: string): boolean {
   return menuItem === MANAGE_TEAM_SECURITY_MENU_ITEM;
 }
 
+export function isManageTeamSubscriptionMenuItem(menuItem: string): boolean {
+  return menuItem === MANAGE_TEAM_SUBSCRIPTION_MENU_ITEM;
+}
+
+export function isManageOrderManagementMenuItem(menuItem: string): boolean {
+  return menuItem === MANAGE_ORDER_MANAGEMENT_MENU_ITEM;
+}
+
+export function isManageOverviewMenuItem(menuItem: string): boolean {
+  return menuItem === MANAGE_OVERVIEW_MENU_ITEM;
+}
+
+export function isManageFeeRecordsMenuItem(menuItem: string): boolean {
+  return menuItem === MANAGE_FEE_RECORDS_MENU_ITEM;
+}
+
+export function isManageGasProxyPaymentRecordsMenuItem(menuItem: string): boolean {
+  return menuItem === MANAGE_GAS_PROXY_PAYMENT_RECORDS_MENU_ITEM;
+}
+
 export function isManageModuleMenuItem(label: string): boolean {
-  if (isManageWebhookBranchItem(label)) return false;
   return (MANAGE_SELECTABLE_MENU_ITEMS as readonly string[]).includes(label);
 }

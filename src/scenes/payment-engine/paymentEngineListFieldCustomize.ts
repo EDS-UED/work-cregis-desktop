@@ -5,12 +5,8 @@ import {
   resolveEgDataListDemoRowIndex,
 } from '@/scenes/shared/egDataListMockData';
 import { resolveDataListCryptoName } from '@/scenes/shared/resolveDataListCryptoName';
-import {
-  buildTasksListFieldBusinessTypeCustomize,
-} from '@/scenes/tasks/list-field/tasksListFieldBusinessTypeDefaults';
-import {
-  buildSenderWalletDisplayName,
-} from '@/scenes/tasks/list-field/tasksListFieldBusinessTypeRowData';
+import { buildTasksListFieldBusinessTypeCustomize } from '@/scenes/tasks/list-field/tasksListFieldBusinessTypeDefaults';
+import { buildSenderWalletDisplayName } from '@/scenes/tasks/list-field/tasksListFieldBusinessTypeRowData';
 import { buildTasksListFieldReceiverCustomize } from '@/scenes/tasks/list-field/tasksListFieldReceiverDefaults';
 import {
   CALLBACK_ERROR_WALLET_PAYOUT_SENDER_WALLET_NAME,
@@ -74,6 +70,52 @@ export function buildCallbackSenderCustomize(
 }
 
 /** 异常回调 · 接收方列（同协作 Tasks receiver 列）。 */
+/** 钱包提币 · 发送方（无地址 Tag / 行 Tag）。 */
+export function buildWalletPayoutSenderCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+  locale: AppLocale = 'en',
+  menuItem = 'Wallet Payout',
+): Record<string, unknown> {
+  const rowIndex = resolveEgDataListDemoRowIndex(row);
+  const customize = buildTasksListFieldBusinessTypeCustomize(
+    columnMinWidth,
+    rowIndex,
+    menuItem,
+    locale,
+  );
+  if (row.walletFromAddress) {
+    Object.assign(customize, {
+      address: row.walletFromAddress,
+      addressSecondaryText: isWalletPayoutReadableAlias(row.walletFromAlias)
+        ? row.walletFromAlias!.trim()
+        : buildSenderWalletDisplayName(rowIndex, locale),
+    });
+  }
+  customize.showRowTag = false;
+  return applyCurrencyRowTagVisibility(customize, -1);
+}
+
+/** 钱包提币 · 接收方（无地址 Tag）。 */
+export function buildWalletPayoutReceiverCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+  menuItem = 'Wallet Payout',
+): Record<string, unknown> {
+  const rowIndex = resolveEgDataListDemoRowIndex(row);
+  let customize = buildTasksListFieldReceiverCustomize(rowIndex, columnMinWidth, menuItem);
+  if (row.walletToAddress) {
+    Object.assign(customize, {
+      toAddress1: row.walletToAddress,
+      toAlias1: isWalletPayoutReadableAlias(row.walletToAlias)
+        ? row.walletToAlias!.trim()
+        : '',
+    });
+  }
+  customize = applyCurrencyRowTagVisibility(customize, -1);
+  return customize;
+}
+
 export function buildCallbackReceiverCustomize(
   row: PaymentEngineRecordRow,
   columnMinWidth = '',
@@ -267,6 +309,36 @@ export function buildPaymentEngineOrderAmountCustomize(options: {
     networkLabel,
     alignEnd: options.alignEnd !== false,
     minWidth: resolveListFieldColumnMinWidth(options.columnMinWidth),
+    tooltipTrigger: 'hover',
+  };
+}
+
+/** 结算记录尾列 · 单行 combo conversion（主行总实收 · 副行总结算 crypto 文案）。 */
+export function buildSettlementAmountsComboCustomize(
+  row: PaymentEngineRecordRow,
+  columnMinWidth = '',
+  alignEnd = true,
+): Record<string, unknown> {
+  const showNetwork = row.currencyShowNetwork ?? Boolean(String(row.currencyNetwork ?? '').trim());
+  const networkLabel = showNetwork
+    ? String(row.currencyNetwork ?? row.networkLabel ?? '').trim()
+    : '';
+  const symbol = row.receivedSymbol || row.orderSymbol || row.currencySymbol || 'USDT';
+  const settlementLine = `${row.orderAmount} ${row.orderSymbol || symbol}`.trim();
+
+  return {
+    amountType: 'conversion',
+    cryptoValue: row.receivedAmount,
+    cryptoSymbol: symbol,
+    cryptoName: resolveDataListCryptoName(symbol, row.currencyCryptoName),
+    fiatValue: '',
+    secondaryValue: settlementLine,
+    showCryptoIcon: true,
+    showNetwork: Boolean(networkLabel),
+    networkLabel,
+    networkLabelPlacement: 'both',
+    alignEnd,
+    minWidth: resolveListFieldColumnMinWidth(columnMinWidth),
     tooltipTrigger: 'hover',
   };
 }

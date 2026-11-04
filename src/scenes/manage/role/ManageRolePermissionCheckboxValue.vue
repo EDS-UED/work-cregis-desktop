@@ -25,10 +25,8 @@ function toggleEnabled() {
   emit('update:enabled', !props.enabled);
 }
 
-function onRowClick(event: MouseEvent) {
+function onRowClick() {
   if (!props.editable) return;
-  const target = event.target;
-  if (target instanceof Element && target.closest('.eds-checkbox')) return;
   toggleEnabled();
 }
 
@@ -55,6 +53,7 @@ function onRowKeydown(event: KeyboardEvent) {
     <EgCheckbox
       :disabled="!editable"
       :model-value="enabled"
+      @click.stop
       @update:model-value="onCheckboxUpdate"
     />
     <span :class="styles.label">{{ ui(labelKey) }}</span>

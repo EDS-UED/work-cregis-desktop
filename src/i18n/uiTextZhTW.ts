@@ -70,6 +70,9 @@ export const UI_TEXT_ZH_TW: Record<string, string> = {
   // Manage menu
   'Team Subscription': '團隊訂閱',
   'Team Account Balance': '團隊賬戶',
+  Overview: '總覽',
+  'Fee Records': '費用記錄',
+  'Gas Proxy Payment Records': 'Gas代付記錄',
   'Order Management': '訂單管理',
   Member: '成員',
   Role: '角色',

@@ -12,18 +12,29 @@ const props = defineProps<{
   menuItem: string;
   row: PaymentEngineRecordRow;
   columnMinWidth?: string;
+  alignEnd?: boolean;
 }>();
 
 const customize = computed(() => {
   const columnMinWidth = props.columnMinWidth ?? '';
+  const alignEnd = Boolean(props.alignEnd);
 
   if (props.menuItem === 'Payment Exception Record') {
-    return buildPaymentExceptionAmountAddressCustomize(props.row, columnMinWidth);
+    return {
+      ...buildPaymentExceptionAmountAddressCustomize(props.row, columnMinWidth),
+      alignEnd,
+    };
   }
   if (props.menuItem === 'Wallet Payout') {
-    return buildWalletPayoutAmountAddressCustomize(props.row, columnMinWidth);
+    return {
+      ...buildWalletPayoutAmountAddressCustomize(props.row, columnMinWidth),
+      alignEnd,
+    };
   }
-  return buildBulkTransferAmountAddressCustomize(props.row, columnMinWidth);
+  return {
+    ...buildBulkTransferAmountAddressCustomize(props.row, columnMinWidth),
+    alignEnd,
+  };
 });
 </script>
 

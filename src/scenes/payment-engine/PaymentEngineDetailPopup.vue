@@ -8,7 +8,8 @@ import {
   watch,
   withDefaults,
 } from 'vue';
-import { EgDetail, EgDetailPopup } from '@eds/desktop-components';
+import { EgButton, EgDetail, EgDetailPopup } from '@eds/desktop-components';
+import DetailToolbarSlot from '@/scenes/tasks/shared/DetailToolbarSlot.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { formatGroupedAmountText } from '@/utils/formatGroupedDisplay';
 import { splitDetailAmountHeadline } from '@/scenes/tasks/shared/splitDetailAmountHeadline';
@@ -130,6 +131,9 @@ const isCallbackRecordDetail = computed(() => isCallbackRecordDetailMenuItem(pro
 const isSettlementRecordDetail = computed(() => isPaymentSettlementRecordMenuItem(props.menuItem));
 const isWalletPayoutRecordDetail = computed(() => isWalletPayoutRecordMenuItem(props.menuItem));
 const isTransactionRecordDetail = computed(() => isTransactionRecordDetailMenuItem(props.menuItem));
+const showTransactionProcessingDetailToolbar = computed(
+  () => isTransactionRecordDetail.value && props.menuItem === 'Processing',
+);
 const isApiCollectionRecordDetail = computed(() => isApiCollectionRecordMenuItem(props.menuItem));
 const isCollectionRecordDetail = computed(() => isCollectionRecordDetailMenuItem(props.menuItem));
 const isRuleConfigurationRecordDetail = computed(
@@ -452,9 +456,10 @@ const detailEyebrowKey = computed(() => {
   return 'Amount';
 });
 
-const showDetailHeadlineStatus = computed(
-  () => !isAmlRecordDetail.value && detailHeadlineStatus.value != null,
-);
+const showDetailHeadlineStatus = computed(() => {
+  if (isAmlRecordDetail.value || detailHeadlineStatus.value == null) return false;
+  return true;
+});
 
 const expandedDetailItemKeys = ref(new Set<string>());
 
@@ -557,7 +562,6 @@ function onDetailClose() {
         v-if="detail"
         v-model:active-tab="activeTab"
         :toolbar-page-key="detailToolbarPageKey"
-        :show-toolbar-nav="showDetailTabs"
         :toolbar-current="activeTab"
         :eyebrow="ui(detailEyebrowKey)"
         :headline="headline"
@@ -569,7 +573,10 @@ function onDetailClose() {
         :show-tabs="showDetailTabs"
         :tab-labels="detailTabLabels"
         :sections="sections"
-        :show-toolbar="false"
+        :show-toolbar="showTransactionProcessingDetailToolbar"
+        :show-toolbar-nav="showDetailTabs && !showTransactionProcessingDetailToolbar"
+        toolbar-tone="decor"
+        toolbar-divider-pinned
         :value-copy-label="ui('Copy')"
         :value-address-book-label="ui('Add to address book')"
         :value-aml-search-label="ui('AML Search')"
@@ -604,6 +611,18 @@ function onDetailClose() {
             :source-trace="amlRiskTracePanelDetail.sourceTrace"
             :destination-trace="amlRiskTracePanelDetail.destinationTrace"
           />
+        </template>
+        <template v-if="showTransactionProcessingDetailToolbar" #toolbar>
+          <DetailToolbarSlot :show-toolbar-nav="false" toolbar-divider-pinned>
+            <template #actions>
+              <EgButton variant="text" tone="subtle" size="md">
+                {{ ui('Cancel') }}
+              </EgButton>
+              <EgButton variant="solid" tone="decor" size="md">
+                {{ ui('Transaction Acceleration') }}
+              </EgButton>
+            </template>
+          </DetailToolbarSlot>
         </template>
       </EgDetail>
       <RiskControlAmlRecordDetailHeadlinePortal

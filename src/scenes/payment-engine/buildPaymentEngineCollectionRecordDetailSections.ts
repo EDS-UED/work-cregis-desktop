@@ -5,18 +5,18 @@ import {
 } from '@eds/desktop-components';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 import {
-  createPaymentEngineTransferBlockTimeRow,
-  createPaymentEngineTransferCreationTimeRow,
+  createPaymentEngineDetailTimeRowByIndex,
+  type PaymentEngineTimeRowOverrides,
 } from './paymentEngineDetailApplyItemRows';
 import { resolvePaymentCollectionRecordDetail } from './paymentEngineCollectionRecordDetailData';
 
-function buildCollectionRecordOverviewItems(
-  row: PaymentEngineRecordRow,
-  menuItem: string,
-  translate: (key: string) => string,
-): DetailItemData[] {
-  const detail = resolvePaymentCollectionRecordDetail(row, menuItem);
+type CollectionTimeRowFactory = (overrides: PaymentEngineTimeRowOverrides) => DetailItemData;
 
+function buildCollectionRecordOverviewItems(
+  detail: ReturnType<typeof resolvePaymentCollectionRecordDetail>,
+  translate: (key: string) => string,
+  timeRow: CollectionTimeRowFactory,
+): DetailItemData[] {
   return [
     createDetailApplyItemRow('text', {
       key: 'collection-record-business-type',
@@ -37,7 +37,7 @@ function buildCollectionRecordOverviewItems(
       title: translate('Collection Number'),
       value: detail.collectionNumber,
     }),
-    createPaymentEngineTransferCreationTimeRow({
+    timeRow({
       key: 'collection-record-start-time',
       title: translate('Start Time'),
       value: detail.startTime,
@@ -46,12 +46,10 @@ function buildCollectionRecordOverviewItems(
 }
 
 function buildCollectionRecordTransferItems(
-  row: PaymentEngineRecordRow,
-  menuItem: string,
+  detail: ReturnType<typeof resolvePaymentCollectionRecordDetail>,
   translate: (key: string) => string,
+  timeRow: CollectionTimeRowFactory,
 ): DetailItemData[] {
-  const detail = resolvePaymentCollectionRecordDetail(row, menuItem);
-
   const items: DetailItemData[] = [
     createDetailApplyItemRow('sender', {
       key: 'collection-record-sender',
@@ -84,7 +82,7 @@ function buildCollectionRecordTransferItems(
   }
 
   if (detail.completionTime) {
-    items.push(createPaymentEngineTransferBlockTimeRow({
+    items.push(timeRow({
       key: 'collection-record-completion-time',
       title: translate('Completion Time'),
       value: detail.completionTime,
@@ -99,15 +97,20 @@ export function buildPaymentEngineCollectionRecordDetailSections(
   menuItem: string,
   translate: (key: string) => string,
 ): DetailSectionData[] {
+  const detail = resolvePaymentCollectionRecordDetail(row, menuItem);
+  const timeFieldTotal = detail.completionTime ? 2 : 1;
+  let timeFieldIndex = 0;
+  const timeRow: CollectionTimeRowFactory = (overrides) =>
+    createPaymentEngineDetailTimeRowByIndex(overrides, timeFieldIndex++, timeFieldTotal);
+
   return [
     {
-      key: 'collection-record-overview',
-      showDivider: true,
-      items: buildCollectionRecordOverviewItems(row, menuItem, translate),
-    },
-    {
-      key: 'collection-record-transfer',
-      items: buildCollectionRecordTransferItems(row, menuItem, translate),
+      key: 'collection-record-detail',
+      showDivider: false,
+      items: [
+        ...buildCollectionRecordOverviewItems(detail, translate, timeRow),
+        ...buildCollectionRecordTransferItems(detail, translate, timeRow),
+      ],
     },
   ];
 }

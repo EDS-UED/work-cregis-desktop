@@ -15,7 +15,10 @@ import TasksListFieldCurrency from '@/scenes/tasks/list-field/TasksListFieldCurr
 import TasksListFieldStatus from '@/scenes/tasks/list-field/TasksListFieldStatus.vue';
 import TasksListFieldAmount from '@/scenes/tasks/list-field/TasksListFieldAmount.vue';
 import TasksListFieldTime from '@/scenes/tasks/list-field/TasksListFieldTime.vue';
-import { buildTasksListFieldTimeCustomize } from '@/scenes/tasks/list-field/tasksListFieldTimeDefaults';
+import {
+  buildTasksListFieldTimeCustomize,
+  columnMinWidthForTimeCustomize,
+} from '@/scenes/tasks/list-field/tasksListFieldTimeDefaults';
 import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
 import PaymentEngineListFieldAmount from './list-field/PaymentEngineListFieldAmount.vue';
 import PaymentEngineListFieldAmountAddress from './list-field/PaymentEngineListFieldAmountAddress.vue';
@@ -23,6 +26,7 @@ import PaymentEngineListFieldCallbackAmountBusiness from './list-field/PaymentEn
 import PaymentEngineListFieldCallbackBusinessTypeAddress from './list-field/PaymentEngineListFieldCallbackBusinessTypeAddress.vue';
 import PaymentEngineListFieldCallbackBusinessTypeUrl from './list-field/PaymentEngineListFieldCallbackBusinessTypeUrl.vue';
 import PaymentEngineListFieldCallbackAmountTime from './list-field/PaymentEngineListFieldCallbackAmountTime.vue';
+import PaymentEngineListFieldTransactionTypeHash from './list-field/PaymentEngineListFieldTransactionTypeHash.vue';
 import PaymentEngineListFieldCallbackAddressTime from './list-field/PaymentEngineListFieldCallbackAddressTime.vue';
 import PaymentEngineListFieldCallbackEvent from './list-field/PaymentEngineListFieldCallbackEvent.vue';
 import PaymentEngineListFieldCallbackUrl from './list-field/PaymentEngineListFieldCallbackUrl.vue';
@@ -30,10 +34,12 @@ import TasksListFieldReceiver from '@/scenes/tasks/list-field/TasksListFieldRece
 import TasksListFieldSender from '@/scenes/tasks/list-field/TasksListFieldSender.vue';
 import columnCellStyles from '@/scenes/tasks/list-field/TasksDataListColumnCell.module.css';
 import PaymentEngineListFieldOrderAmounts from './list-field/PaymentEngineListFieldOrderAmounts.vue';
+import PaymentEngineListFieldSettlementAmounts from './list-field/PaymentEngineListFieldSettlementAmounts.vue';
+import PaymentEngineListFieldSettlementAddress from './list-field/PaymentEngineListFieldSettlementAddress.vue';
 import PaymentEngineListFieldRefundActions from './list-field/PaymentEngineListFieldRefundActions.vue';
+import PaymentEngineListFieldPaymentExceptionActions from './list-field/PaymentEngineListFieldPaymentExceptionActions.vue';
 import PaymentEngineListFieldMeta from './list-field/PaymentEngineListFieldMeta.vue';
 import PaymentEngineListFieldOrderIds from './list-field/PaymentEngineListFieldOrderIds.vue';
-import PaymentEngineListFieldSettlementNumber from './list-field/PaymentEngineListFieldSettlementNumber.vue';
 import PaymentEngineListFieldOrderStatus from './list-field/PaymentEngineListFieldOrderStatus.vue';
 import {
   buildBulkTransferCryptoCustomize,
@@ -43,23 +49,31 @@ import {
   buildAddressBookCryptoCustomize,
   buildCallbackReceiverCustomize,
   buildCallbackSenderCustomize,
+  buildWalletPayoutReceiverCustomize,
+  buildWalletPayoutSenderCustomize,
   resolveCallbackRowBusinessTypeLabelKey,
 } from './paymentEngineListFieldCustomize';
+import { isWalletPayoutMenuItem } from './paymentEngineRecordStatusCustomize';
+import { resolveTaskRecordCollectedAmountForList } from './paymentEngineCollectionDetailData';
 import {
   buildWaasCollectionAddressCryptoCustomize,
   buildWaasRuleCollectionCurrencyCustomize,
   buildWaasTaskCurrencyCustomize,
 } from '@/scenes/waas-project/waasListFieldCustomize';
 import WaasListFieldCollectionCurrencyRange from '@/scenes/waas-project/list-field/WaasListFieldCollectionCurrencyRange.vue';
+import WaasListFieldRuleCreatorTime from '@/scenes/waas-project/list-field/WaasListFieldRuleCreatorTime.vue';
 import WaasListFieldRuleNameId from '@/scenes/waas-project/list-field/WaasListFieldRuleNameId.vue';
 import WaasListFieldRuleStatus from '@/scenes/waas-project/list-field/WaasListFieldRuleStatus.vue';
 import WaasListFieldSubAddressMeta from '@/scenes/waas-project/list-field/WaasListFieldSubAddressMeta.vue';
 import WaasListFieldSubAddressActions from '@/scenes/waas-project/list-field/WaasListFieldSubAddressActions.vue';
 import WaasListFieldProcessingAmount from '@/scenes/waas-project/list-field/WaasListFieldProcessingAmount.vue';
 import WaasListFieldProcessingActions from '@/scenes/waas-project/list-field/WaasListFieldProcessingActions.vue';
+import WaasListFieldApiCollectionActions from '@/scenes/waas-project/list-field/WaasListFieldApiCollectionActions.vue';
 import WaasListFieldCallbackActions from '@/scenes/waas-project/list-field/WaasListFieldCallbackActions.vue';
 import WaasListFieldRuleActions from '@/scenes/waas-project/list-field/WaasListFieldRuleActions.vue';
 import RiskControlListFieldPolicyActions from '@/scenes/risk-control/list-field/RiskControlListFieldPolicyActions.vue';
+import RiskControlListFieldPolicyCreatorTime from '@/scenes/risk-control/list-field/RiskControlListFieldPolicyCreatorTime.vue';
+import RiskControlListFieldPolicyTypeWeight from '@/scenes/risk-control/list-field/RiskControlListFieldPolicyTypeWeight.vue';
 import RiskControlListFieldAutomationActions from '@/scenes/risk-control/list-field/RiskControlListFieldAutomationActions.vue';
 import RiskControlListFieldAddressBookAddress from '@/scenes/risk-control/list-field/RiskControlListFieldAddressBookAddress.vue';
 import RiskControlListFieldAddressBookActions from '@/scenes/risk-control/list-field/RiskControlListFieldAddressBookActions.vue';
@@ -68,12 +82,18 @@ import RiskControlListFieldLogActions from '@/scenes/risk-control/list-field/Ris
 import {
   isManageApiManageMenuItem,
   isManageRoleMenuItem,
+  isManageMemberMenuItem,
   isManageWebhookConfigMenuItem,
   isManageWebhookPushRecordsMenuItem,
 } from '@/scenes/manage/manageMenuData';
 import RoleListFieldActions from '@/scenes/manage/role/list-field/RoleListFieldActions.vue';
 import RoleListFieldCreatorTime from '@/scenes/manage/role/list-field/RoleListFieldCreatorTime.vue';
 import RoleListFieldName from '@/scenes/manage/role/list-field/RoleListFieldName.vue';
+import RoleListFieldStatus from '@/scenes/manage/role/list-field/RoleListFieldStatus.vue';
+import MemberListFieldActions from '@/scenes/manage/member/list-field/MemberListFieldActions.vue';
+import MemberListFieldJoinedTime from '@/scenes/manage/member/list-field/MemberListFieldJoinedTime.vue';
+import MemberListFieldNicknameEmail from '@/scenes/manage/member/list-field/MemberListFieldNicknameEmail.vue';
+import MemberListFieldStatus from '@/scenes/manage/member/list-field/MemberListFieldStatus.vue';
 import { resolveWebhookConfigCreatorAvatarColorSeed } from '@/scenes/manage/webhook/filter/buildWebhookConfigCreatorFilterOptions';
 import WebhookListFieldConfigActions from '@/scenes/manage/webhook/list-field/WebhookListFieldConfigActions.vue';
 import WebhookListFieldNameEvent from '@/scenes/manage/webhook/list-field/WebhookListFieldNameEvent.vue';
@@ -98,7 +118,14 @@ import {
   isRiskControlAmlMenuItem,
   isRiskControlAutoRulesMenuItem,
 } from '@/scenes/risk-control/riskControlMenuData';
-import { isWaasAmountAddressMenuItem, isWaasProcessingMenuItem } from '@/scenes/waas-project/waasStandardMenuData';
+import {
+  isWaasAmountAddressMenuItem,
+  isWaasApiCollectionMenuItem,
+  isWaasCollectionHistoryMenuItem,
+  isWaasCollectionProcessingMenuItem,
+  isWaasCollectionRecordListMenuItem,
+  isWaasProcessingMenuItem,
+} from '@/scenes/waas-project/waasStandardMenuData';
 import WaasListFieldTaskCount from '@/scenes/waas-project/list-field/WaasListFieldTaskCount.vue';
 import WaasListFieldTaskCurrencyId from '@/scenes/waas-project/list-field/WaasListFieldTaskCurrencyId.vue';
 import {
@@ -106,6 +133,7 @@ import {
   isPaymentEngineAmountAddressMenuItem,
   isPaymentOrderRecordMenuItem,
   isPaymentSettlementRecordMenuItem,
+  isWaasTransactionRecordListMenuItem,
 } from './paymentEngineOrderRecordData';
 import {
   type PaymentEngineRecordColumnConfig,
@@ -202,13 +230,24 @@ function columnProp(column: PaymentEngineRecordColumnConfig): string {
   if (column.key === 'orderIds' || column.key === 'settlementNumber') return 'id';
   if (column.key === 'status') return 'status';
   if (column.key === 'createdAt') return 'createdAt';
-  if (column.key === 'orderAmounts') return 'orderAmount';
+  if (column.key === 'orderAmounts' || column.key === 'settlementAmounts') return 'orderAmount';
   if (column.key === 'receivedAmount') return 'receivedAmount';
   if (column.key === 'orderAmount') return 'orderAmount';
   if (column.key === 'crypto') return 'currencySymbol';
   if (column.key === 'bulkState' || column.key === 'refundState') return 'status';
-  if (column.key === 'bulkMeta' || column.key === 'refundMeta') return 'createdAt';
+  if (
+    column.key === 'bulkMeta'
+    || column.key === 'refundMeta'
+    || column.key === 'paymentExceptionMeta'
+    || column.key === 'settlementMeta'
+  ) {
+    return 'createdAt';
+  }
+  if (column.key === 'settlementAddress') return 'walletToAddress';
   if (column.key === 'callbackEvent') return 'callbackEventId';
+  if (column.key === 'transactionTypeTxHash') {
+    return 'transactionTypeKey';
+  }
   if (
     column.key === 'callbackAmount'
     || column.key === 'callbackAmountTime'
@@ -232,14 +271,21 @@ function columnProp(column: PaymentEngineRecordColumnConfig): string {
   if (column.key === 'callbackTime') return 'createdAt';
   if (column.key === 'callbackUrl') return 'callbackUrl';
   if (column.key === 'ruleNameId') return 'id';
+  if (column.key === 'ruleCreatorTime') return 'logOperatorName';
   if (column.key === 'collectionCurrencyRange') return 'currencySymbol';
   if (column.key === 'ruleEnabled') return 'status';
-  if (column.key === 'ruleActions' || column.key === 'callbackActions' || column.key === 'refundActions') {
+  if (
+    column.key === 'ruleActions'
+    || column.key === 'callbackActions'
+    || column.key === 'refundActions'
+    || column.key === 'paymentExceptionActions'
+  ) {
     return 'actions';
   }
   if (
     column.key === 'subAddressActions'
     || column.key === 'processingActions'
+    || column.key === 'apiCollectionActions'
     || column.key === 'policyActions'
     || column.key === 'automationActions'
     || column.key === 'addressBookActions'
@@ -258,7 +304,12 @@ function columnProp(column: PaymentEngineRecordColumnConfig): string {
   if (column.key === 'amlRiskScore') return 'amlRiskScore';
   if (column.key === 'addressBookAddress') return 'walletToAddress';
   if (column.key === 'subAddressMeta') return 'walletFromAddress';
-  if (column.key === 'transactionType' || column.key === 'payoutType' || column.key === 'businessType') {
+  if (
+    column.key === 'transactionType'
+    || column.key === 'payoutType'
+    || column.key === 'businessType'
+    || column.key === 'thirdPartyReference'
+  ) {
     return 'merchantOrderId';
   }
   if (column.key === 'processingMeta') return 'createdAt';
@@ -272,8 +323,9 @@ function columnProp(column: PaymentEngineRecordColumnConfig): string {
   if (column.key === 'taskStatus') return 'status';
   if (column.key === 'taskDateRange') return 'createdAt';
   if (column.key === 'taskAmount') return 'orderAmount';
-  if (column.key === 'taskCount') return 'orderAmount';
+  if (column.key === 'taskCount') return 'collectionId';
   if (column.key === 'collectionHistoryMeta') return 'createdAt';
+  if (column.key === 'collectionBusinessId') return 'businessTypeKey';
   return 'orderAmount';
 }
 
@@ -283,6 +335,46 @@ function columnAlign(column: PaymentEngineRecordColumnConfig): 'left' | 'center'
   return 'left';
 }
 
+function usesWalletPayoutAddressColumns(menuItem: string): boolean {
+  return (
+    isWalletPayoutMenuItem(menuItem)
+    || isWaasTransactionRecordListMenuItem(menuItem)
+    || isWaasApiCollectionMenuItem(menuItem)
+    || isWaasCollectionRecordListMenuItem(menuItem)
+  );
+}
+
+function resolveRecordListAmountTimeDatetime(
+  row: PaymentEngineRecordRow,
+  menuItem: string,
+): string {
+  if (isWaasCollectionRecordListMenuItem(menuItem)) {
+    return row.completionTime ?? row.createdAt;
+  }
+  return row.createdAt;
+}
+
+function shouldTruncateStatusTagColumn(menuItem: string, columnKey: string): boolean {
+  if (
+    columnKey !== 'bulkState'
+    && columnKey !== 'refundState'
+    && columnKey !== 'status'
+    && columnKey !== 'callbackStatus'
+    && columnKey !== 'taskStatus'
+  ) {
+    return false;
+  }
+  if (columnKey === 'status' && isPaymentOrderRecordMenuItem(menuItem)) {
+    return false;
+  }
+  return true;
+}
+
+/** 交易历史/处理中 · 发送方/接收方 list-field 与钱包提币同构。 */
+function resolveWalletPayoutAddressCustomizeMenuItem(menuItem: string): string {
+  return isWaasTransactionRecordListMenuItem(menuItem) ? 'Wallet Payout' : menuItem;
+}
+
 /** 异常回调 · 金额|时间：列表左对齐，批选右对齐。 */
 function resolveCallbackAmountTimeAlignEnd(column: PaymentEngineRecordColumnConfig): boolean {
   if (column.key !== 'callbackAmountTime') {
@@ -290,6 +382,13 @@ function resolveCallbackAmountTimeAlignEnd(column: PaymentEngineRecordColumnConf
   }
   if (isCallbackErrorRecordMenuItem(props.menuItem)) {
     return selectMode.value;
+  }
+  if (
+    isWalletPayoutMenuItem(props.menuItem)
+    || isWaasTransactionRecordListMenuItem(props.menuItem)
+    || isWaasCollectionRecordListMenuItem(props.menuItem)
+  ) {
+    return Boolean(column.comboAlignEnd ?? column.align === 'end');
   }
   return column.align === 'end';
 }
@@ -342,8 +441,10 @@ function isActionColumn(column: PaymentEngineRecordColumnConfig): boolean {
     column.key === 'ruleActions'
     ||     column.key === 'callbackActions'
     || column.key === 'refundActions'
+    || column.key === 'paymentExceptionActions'
     || column.key === 'subAddressActions'
     || column.key === 'processingActions'
+    || column.key === 'apiCollectionActions'
     || column.key === 'policyActions'
     || column.key === 'automationActions'
     || column.key === 'addressBookActions'
@@ -485,7 +586,15 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               />
 
               <WaasListFieldProcessingActions
-                v-else-if="column.key === 'processingActions' && isWaasProcessingMenuItem(menuItem)"
+                v-else-if="
+                  column.key === 'processingActions'
+                    && isWaasProcessingMenuItem(menuItem)
+                    && !isWaasCollectionProcessingMenuItem(menuItem)
+                "
+              />
+
+              <WaasListFieldApiCollectionActions
+                v-else-if="column.key === 'apiCollectionActions' && isWaasApiCollectionMenuItem(menuItem)"
               />
 
               <WaasListFieldCallbackActions
@@ -496,6 +605,14 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
 
               <PaymentEngineListFieldRefundActions
                 v-else-if="column.key === 'refundActions' && menuItem === 'Refund Record'"
+                :row="recordRow(data)"
+              />
+
+              <PaymentEngineListFieldPaymentExceptionActions
+                v-else-if="
+                  column.key === 'paymentExceptionActions'
+                    && menuItem === 'Payment Exception Record'
+                "
                 :row="recordRow(data)"
               />
 
@@ -525,13 +642,47 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 :row="recordRow(data)"
               />
 
+              <MemberListFieldActions
+                v-else-if="column.key === 'memberActions' && isManageMemberMenuItem(menuItem)"
+                :row="recordRow(data)"
+              />
+
+              <MemberListFieldNicknameEmail
+                v-else-if="
+                  column.key === 'memberNicknameEmail'
+                    && isManageMemberMenuItem(menuItem)
+                "
+                :row="recordRow(data)"
+              />
+
+              <RoleListFieldName
+                v-else-if="
+                  (column.key === 'roleName' && isManageRoleMenuItem(menuItem))
+                    || (column.key === 'memberRole' && isManageMemberMenuItem(menuItem))
+                "
+                :row="recordRow(data)"
+              />
+
+              <MemberListFieldStatus
+                v-else-if="column.key === 'memberStatus' && isManageMemberMenuItem(menuItem)"
+                :row="recordRow(data)"
+              />
+
+              <MemberListFieldJoinedTime
+                v-else-if="
+                  column.key === 'memberJoinedTime'
+                    && isManageMemberMenuItem(menuItem)
+                "
+                :row="recordRow(data)"
+              />
+
               <RoleListFieldActions
                 v-else-if="column.key === 'roleActions' && isManageRoleMenuItem(menuItem)"
                 :row="recordRow(data)"
               />
 
-              <RoleListFieldName
-                v-else-if="column.key === 'roleName' && isManageRoleMenuItem(menuItem)"
+              <RoleListFieldStatus
+                v-else-if="column.key === 'roleEnabled' && isManageRoleMenuItem(menuItem)"
                 :row="recordRow(data)"
               />
 
@@ -742,9 +893,16 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 />
               </template>
 
-              <template v-else-if="column.key === 'settlementNumber'">
-                <PaymentEngineListFieldSettlementNumber
-                  :settlement-number="recordRow(data).id"
+              <template v-else-if="column.key === 'settlementMeta'">
+                <PaymentEngineListFieldMeta
+                  :primary="recordRow(data).createdAt"
+                  :secondary="recordRow(data).id"
+                />
+              </template>
+
+              <template v-else-if="column.key === 'settlementAddress'">
+                <PaymentEngineListFieldSettlementAddress
+                  :address="recordRow(data).walletToAddress ?? ''"
                 />
               </template>
 
@@ -761,7 +919,13 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                     || column.key === 'taskStatus'
                 "
               >
-                <TasksListFieldStatus :customize="statusCustomize(recordRow(data))" />
+                <TasksListFieldStatus
+                  :customize="{
+                    ...statusCustomize(recordRow(data)),
+                    minWidth: columnMinWidthForTimeCustomize(column.minWidth),
+                    truncate: shouldTruncateStatusTagColumn(menuItem, column.key),
+                  }"
+                />
               </template>
 
               <template v-else-if="column.key === 'createdAt'">
@@ -785,6 +949,13 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 <PaymentEngineListFieldMeta
                   :primary="recordRow(data).createdAt"
                   :secondary="recordRow(data).merchantOrderId"
+                />
+              </template>
+
+              <template v-else-if="column.key === 'paymentExceptionMeta'">
+                <PaymentEngineListFieldMeta
+                  :primary="recordRow(data).createdAt"
+                  :secondary="recordRow(data).paymentExceptionId ?? recordRow(data).id"
                 />
               </template>
 
@@ -829,20 +1000,36 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                     recordRow(data).currencyNetwork
                     ?? recordRow(data).networkLabel
                   "
-                  :datetime="recordRow(data).createdAt"
+                  :datetime="resolveRecordListAmountTimeDatetime(recordRow(data), menuItem)"
                   :align-end="resolveCallbackAmountTimeAlignEnd(column)"
+                />
+              </template>
+
+              <template v-else-if="column.key === 'collectionBusinessId'">
+                <PaymentEngineListFieldMeta
+                  :primary="ui(recordRow(data).businessTypeKey ?? 'Collection')"
+                  :secondary="recordRow(data).collectionId ?? recordRow(data).merchantOrderId ?? recordRow(data).id"
                 />
               </template>
 
               <template v-else-if="column.key === 'callbackSender'">
                 <div :class="columnCellStyles.listFieldCell">
                   <TasksListFieldSender
-                    :customize="buildCallbackSenderCustomize(
-                      recordRow(data),
-                      column.minWidth,
-                      locale,
-                      menuItem,
-                    )"
+                    :customize="
+                      usesWalletPayoutAddressColumns(menuItem)
+                        ? buildWalletPayoutSenderCustomize(
+                            recordRow(data),
+                            column.minWidth,
+                            locale,
+                            resolveWalletPayoutAddressCustomizeMenuItem(menuItem),
+                          )
+                        : buildCallbackSenderCustomize(
+                            recordRow(data),
+                            column.minWidth,
+                            locale,
+                            menuItem,
+                          )
+                    "
                   />
                 </div>
               </template>
@@ -850,11 +1037,19 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
               <template v-else-if="column.key === 'callbackReceiver'">
                 <div :class="columnCellStyles.listFieldCell">
                   <TasksListFieldReceiver
-                    :customize="buildCallbackReceiverCustomize(
-                      recordRow(data),
-                      column.minWidth,
-                      menuItem,
-                    )"
+                    :customize="
+                      usesWalletPayoutAddressColumns(menuItem)
+                        ? buildWalletPayoutReceiverCustomize(
+                            recordRow(data),
+                            column.minWidth,
+                            resolveWalletPayoutAddressCustomizeMenuItem(menuItem),
+                          )
+                        : buildCallbackReceiverCustomize(
+                            recordRow(data),
+                            column.minWidth,
+                            menuItem,
+                          )
+                    "
                   />
                 </div>
               </template>
@@ -892,6 +1087,14 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 <RiskControlListFieldAddressBookAddress
                   :address="recordRow(data).walletToAddress ?? recordRow(data).id"
                   :tag-label="recordRow(data).walletToAlias"
+                />
+              </template>
+
+              <template v-else-if="column.key === 'settlementAmounts'">
+                <PaymentEngineListFieldSettlementAmounts
+                  :row="recordRow(data)"
+                  :column-min-width="column.minWidth"
+                  :align-end="column.align === 'end'"
                 />
               </template>
 
@@ -961,6 +1164,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                   :menu-item="menuItem"
                   :row="recordRow(data)"
                   :column-min-width="column.minWidth"
+                  :align-end="column.align === 'end'"
                 />
                 <PaymentEngineListFieldAmount
                   v-else
@@ -973,7 +1177,10 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
 
               <template v-else-if="column.key === 'refundAmount'">
                 <TasksListFieldAmount
-                  :customize="buildRefundAmountCustomize(recordRow(data), column.minWidth)"
+                  :customize="{
+                    ...buildRefundAmountCustomize(recordRow(data), column.minWidth),
+                    alignEnd: column.align === 'end',
+                  }"
                 />
               </template>
 
@@ -984,6 +1191,15 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                   :symbol="recordRow(data).orderSymbol ?? 'BTC'"
                   :tag-label="recordRow(data).walletFromAlias"
                 />
+              </template>
+
+              <template v-else-if="column.key === 'transactionTypeTxHash'">
+                <div :class="columnCellStyles.listFieldCell">
+                  <PaymentEngineListFieldTransactionTypeHash
+                    :transaction-type-key="recordRow(data).transactionTypeKey ?? 'Deposit'"
+                    :tx-hash="recordRow(data).txHash ?? ''"
+                  />
+                </div>
               </template>
 
               <template v-else-if="column.key === 'transactionType'">
@@ -1000,6 +1216,18 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                   :text="ui(recordRow(data).payoutTypeKey ?? 'API')"
                   context="cell"
                 />
+              </template>
+
+              <template v-else-if="column.key === 'thirdPartyReference'">
+                <div :class="columnCellStyles.listFieldCell">
+                  <EgListFieldOverflowText
+                    :text="
+                      recordRow(data).thirdPartyBusinessNo ?? recordRow(data).merchantOrderId
+                    "
+                    variant="primary"
+                    tooltip-trigger="hover"
+                  />
+                </div>
               </template>
 
               <template v-else-if="column.key === 'businessType'">
@@ -1056,6 +1284,21 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 />
               </template>
 
+              <template v-else-if="column.key === 'ruleCreatorTime'">
+                <RiskControlListFieldPolicyCreatorTime
+                  v-if="menuItem === 'Policy Settings' || menuItem === 'Automation'"
+                  :row="recordRow(data)"
+                />
+                <WaasListFieldRuleCreatorTime
+                  v-else
+                  :row="recordRow(data)"
+                />
+              </template>
+
+              <template v-else-if="column.key === 'policyTypeWeight'">
+                <RiskControlListFieldPolicyTypeWeight :row="recordRow(data)" />
+              </template>
+
               <template v-else-if="column.key === 'policyWeight'">
                 <EgListFieldOverflowText
                   :text="recordRow(data).policyWeight ?? '0'"
@@ -1082,15 +1325,19 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 <WaasListFieldTaskCurrencyId
                   :customize="buildWaasTaskCurrencyCustomize(recordRow(data), column.minWidth)"
                   :transaction-count="recordRow(data).taskTransactionCount ?? '0'"
-                  :amount="recordRow(data).orderAmount ?? '0'"
+                  :amount="resolveTaskRecordCollectedAmountForList(recordRow(data))"
+                  :align-end="column.align === 'end'"
                 />
               </template>
 
               <template v-else-if="column.key === 'taskDateRange'">
-                <PaymentEngineListFieldMeta
-                  :primary="recordRow(data).taskStartAt ?? recordRow(data).createdAt"
-                  :secondary="recordRow(data).taskEndAt ?? recordRow(data).createdAt"
-                  :align-end="column.align === 'end'"
+                <TasksListFieldTime
+                  :customize="{
+                    ...buildTasksListFieldTimeCustomize(column.minWidth),
+                    lineLayout: 'double',
+                    datetime: recordRow(data).taskStartAt ?? recordRow(data).createdAt,
+                    secondaryDatetime: recordRow(data).taskEndAt ?? recordRow(data).createdAt,
+                  }"
                 />
               </template>
 

@@ -6,19 +6,23 @@ import {
 import { formatEmptyDisplayValue } from '@/utils/formatEmptyDisplay';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 import {
-  createPaymentEngineTransferBlockTimeRow,
-  createPaymentEngineTransferCreationTimeRow,
+  createPaymentEngineDetailTimeRowByIndex,
+  type PaymentEngineTimeRowOverrides,
 } from './paymentEngineDetailApplyItemRows';
 import { resolvePaymentTransactionRecordDetail } from './paymentEngineTransactionRecordDetailData';
 
-function buildTransactionRecordOverviewItems(
+function buildTransactionRecordDetailItems(
   row: PaymentEngineRecordRow,
   menuItem: string,
   translate: (key: string) => string,
 ): DetailItemData[] {
   const detail = resolvePaymentTransactionRecordDetail(row, menuItem);
+  const timeFieldTotal = detail.completionTime ? 2 : 1;
+  let timeFieldIndex = 0;
+  const timeRow = (overrides: PaymentEngineTimeRowOverrides) =>
+    createPaymentEngineDetailTimeRowByIndex(overrides, timeFieldIndex++, timeFieldTotal);
 
-  return [
+  const items: DetailItemData[] = [
     createDetailApplyItemRow('brand-number', {
       key: 'transaction-record-cregis-id',
       title: translate('Cregis ID'),
@@ -38,22 +42,11 @@ function buildTransactionRecordOverviewItems(
       showValueSymbol: true,
       valueSymbolKind: undefined,
     },
-    createPaymentEngineTransferCreationTimeRow({
+    timeRow({
       key: 'transaction-record-created-at',
       title: translate('Creation Time'),
       value: detail.createdAt,
     }),
-  ];
-}
-
-function buildTransactionRecordTransferItems(
-  row: PaymentEngineRecordRow,
-  menuItem: string,
-  translate: (key: string) => string,
-): DetailItemData[] {
-  const detail = resolvePaymentTransactionRecordDetail(row, menuItem);
-
-  const items: DetailItemData[] = [
     createDetailApplyItemRow('sender', {
       key: 'transaction-record-sender',
       title: translate('Sender'),
@@ -96,24 +89,14 @@ function buildTransactionRecordTransferItems(
   }
 
   if (detail.completionTime) {
-    items.push(createPaymentEngineTransferBlockTimeRow({
+    items.push(timeRow({
       key: 'transaction-record-completion-time',
       title: translate('Completion Time'),
       value: detail.completionTime,
     }));
   }
 
-  return items;
-}
-
-function buildTransactionRecordMemoItems(
-  row: PaymentEngineRecordRow,
-  menuItem: string,
-  translate: (key: string) => string,
-): DetailItemData[] {
-  const detail = resolvePaymentTransactionRecordDetail(row, menuItem);
-
-  return [
+  items.push(
     createDetailApplyItemRow('memo', {
       key: 'transaction-record-memo',
       title: translate('Memo'),
@@ -124,7 +107,9 @@ function buildTransactionRecordMemoItems(
       title: translate('Remark'),
       value: formatEmptyDisplayValue(detail.remark),
     }),
-  ];
+  );
+
+  return items;
 }
 
 export function buildPaymentEngineTransactionRecordDetailSections(
@@ -134,18 +119,9 @@ export function buildPaymentEngineTransactionRecordDetailSections(
 ): DetailSectionData[] {
   return [
     {
-      key: 'transaction-record-overview',
-      showDivider: true,
-      items: buildTransactionRecordOverviewItems(row, menuItem, translate),
-    },
-    {
-      key: 'transaction-record-transfer',
-      showDivider: true,
-      items: buildTransactionRecordTransferItems(row, menuItem, translate),
-    },
-    {
-      key: 'transaction-record-memo',
-      items: buildTransactionRecordMemoItems(row, menuItem, translate),
+      key: 'transaction-record-detail',
+      showDivider: false,
+      items: buildTransactionRecordDetailItems(row, menuItem, translate),
     },
   ];
 }

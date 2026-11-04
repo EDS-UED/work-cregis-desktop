@@ -7,6 +7,12 @@ export function formatGroupedDecimalAmount(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return trimmed;
 
+  const signed = /^([+-])(.+)$/.exec(trimmed);
+  if (signed) {
+    const [, sign, body] = signed;
+    return `${sign}${formatGroupedDecimalAmount(body.trim())}`;
+  }
+
   if (trimmed.startsWith('$')) {
     return `$${formatGroupedDecimalAmount(trimmed.slice(1))}`;
   }

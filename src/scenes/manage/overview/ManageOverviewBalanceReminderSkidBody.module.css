@@ -1,0 +1,103 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  min-width: 0;
+  padding: var(--spacing-2) var(--spacing-4) var(--spacing-4);
+  box-sizing: border-box;
+}
+
+.introRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+.introCopy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.introDescription {
+  composes: typography-body-medium from global;
+  margin: 0;
+  color: var(--text-base-primary);
+}
+
+.introSwitch {
+  flex-shrink: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.sectionTitle {
+  composes: typography-body-small-strong from global;
+  margin: 0;
+  color: var(--text-base-primary);
+}
+
+.checkboxList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.checkboxRowDisabled {
+  cursor: default;
+}
+
+.checkboxLabel {
+  composes: typography-body-medium from global;
+  min-width: 0;
+  color: var(--text-base-primary);
+}
+
+.channelList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.channelItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-05);
+  min-width: 0;
+}
+
+.channelTitle {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+}
+
+.channelDescription {
+  composes: typography-footnote from global;
+  margin: 0;
+  color: var(--text-base-secondary);
+}
+
+.validationHost {
+  min-width: 0;
+}

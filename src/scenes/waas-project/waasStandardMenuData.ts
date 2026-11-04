@@ -39,10 +39,23 @@ export const WAAS_AMOUNT_ADDRESS_MENU_ITEMS = new Set<WaasStandardDataListMenuIt
   'Sub-Address Payout',
   'History',
   'Processing',
-  'Collection History',
-  'Collection Processing',
-  'API Collection',
 ]);
+
+export function isWaasApiCollectionMenuItem(menuItem: string): boolean {
+  return menuItem === 'API Collection';
+}
+
+export function isWaasCollectionHistoryMenuItem(menuItem: string): boolean {
+  return menuItem === 'Collection History';
+}
+
+export function isWaasCollectionProcessingMenuItem(menuItem: string): boolean {
+  return menuItem === 'Collection Processing';
+}
+
+export function isWaasCollectionRecordListMenuItem(menuItem: string): boolean {
+  return isWaasCollectionHistoryMenuItem(menuItem) || isWaasCollectionProcessingMenuItem(menuItem);
+}
 
 export function isWaasProcessingMenuItem(menuItem: string): boolean {
   return menuItem === 'Processing' || menuItem === 'Collection Processing';

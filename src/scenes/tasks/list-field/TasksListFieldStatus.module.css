@@ -12,3 +12,8 @@
 .statusPreviewAlignEnd {
   align-items: flex-end;
 }
+
+.statusPreview :global(.eds-tag) {
+  max-width: 100%;
+  min-width: 0;
+}

@@ -15,6 +15,20 @@ const CREATOR_SAMPLES = [
   { name: 'Ethan Chen', avatarName: 'Ethan Chen', emailMasked: 'a******n@cregis.com' },
 ] as const;
 
+/** 列表 / 详情 · 创建人 mock（同 rowIndex 同源）。 */
+export function resolveRuleConfigurationCreatorFields(rowIndex: number) {
+  const creator = CREATOR_SAMPLES[rowIndex % CREATOR_SAMPLES.length]!;
+  const listDisplayValue = `${creator.name} (${creator.emailMasked})`;
+  return {
+    creatorName: creator.name,
+    creatorAvatarName: creator.avatarName,
+    creatorEmailMasked: creator.emailMasked,
+    logOperatorName: creator.name,
+    webhookCreatorEmail: creator.emailMasked,
+    webhookCreatorDisplay: listDisplayValue,
+  };
+}
+
 const DEFAULT_DEVICE_INFO: DetailProgressMemberDeviceInfo = {
   deviceType: 'MacOS(v3.6.0)',
   deviceId: 'AXSMJSAXJQ',
@@ -36,7 +50,7 @@ function buildRuleConfigurationDetailRecord(
   rowIndex: number,
 ): PaymentEngineRuleConfigurationDetailRecord {
   const currencyPreset = resolveCurrencyRowPreset(rowIndex);
-  const creator = CREATOR_SAMPLES[rowIndex % CREATOR_SAMPLES.length]!;
+  const creator = resolveRuleConfigurationCreatorFields(rowIndex);
 
   return {
     ruleNumber: row.ruleNumber ?? row.merchantOrderId ?? row.id,
@@ -46,9 +60,9 @@ function buildRuleConfigurationDetailRecord(
     collectionAmountRangeKey: resolveCollectionAmountRangeDisplay(row),
     receivingAddress: row.walletToAddress
       ?? resolveDemoWalletAddress(rowIndex + 3, currencyPreset, 'to'),
-    creatorName: creator.name,
-    creatorAvatarName: creator.avatarName,
-    creatorEmailMasked: creator.emailMasked,
+    creatorName: creator.creatorName,
+    creatorAvatarName: creator.creatorAvatarName,
+    creatorEmailMasked: creator.creatorEmailMasked,
     creatorDeviceInfo: DEFAULT_DEVICE_INFO,
     createdAt: row.createdAt,
   };
