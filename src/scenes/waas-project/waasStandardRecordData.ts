@@ -41,14 +41,12 @@ function resolveTaskCollectionNumber(rowIndex: number): string {
   return `GJ${TASK_COLLECTION_NUMBER_BASE + BigInt(rowIndex)}`;
 }
 
+/** API 归集：前 4 行依次 待处理 / 待确认 / 失败 / 驳回；其余成功。 */
 const API_COLLECTION_STATUS_SHOWCASE: readonly PaymentEngineRecordRow['status'][] = [
-  'external-pending',
+  'pending',
   'signed-pending-confirmation',
-  'approving',
-  'signature-pending',
   'transaction-failed',
   'rejected',
-  'completed',
 ];
 /** 任务记录：前 2 行依次展示完整状态；第 3 行起均为已结束。 */
 const TASK_RECORD_STATUS_SHOWCASE: readonly PaymentEngineRecordRow['status'][] = [
@@ -391,7 +389,7 @@ function buildApiCollectionRow(rowIndex: number): PaymentEngineRecordRow {
   const status = resolveShowcaseThenCompletedStatus(
     rowIndex,
     API_COLLECTION_STATUS_SHOWCASE,
-    'completed',
+    'success',
   );
 
   return {

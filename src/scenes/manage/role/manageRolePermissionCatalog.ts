@@ -64,6 +64,7 @@ export const MANAGE_ROLE_PERMISSION_ITEM_KEYS = [
     'Renewal Upgrade',
     'Token Listing Application',
     'Subscription Benefits Notification',
+    'Overview Gas Proxy Configuration',
     'Expansion',
   ],
   ['View', 'Modify Member', 'Invite Member', 'Delete Member'],

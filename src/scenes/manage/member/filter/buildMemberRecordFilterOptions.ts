@@ -1,4 +1,7 @@
-import type { EgFilterFieldDropdownOption } from '@eds/desktop-components';
+import type {
+  EgFilterFieldDropdownOption,
+  EgFilterFieldMemberOption,
+} from '@eds/desktop-components';
 import {
   compareDataListFilterCurrencyLabels,
   resolveDataListFilterOptionId,
@@ -46,9 +49,19 @@ export function resolveMemberRecordStatusFilterId(
 export function buildMemberRecordNicknameFilterOptions(
   rowCount: number,
 ): EgFilterFieldDropdownOption[] {
+  return buildMemberRecordNicknameMemberFilterOptions(rowCount).map(({ id, label }) => ({
+    id,
+    label,
+  }));
+}
+
+/** EgMemberTooltip 成员筛选项（带头像；id 与 nickname dropdown 一致）。 */
+export function buildMemberRecordNicknameMemberFilterOptions(
+  rowCount: number,
+): EgFilterFieldMemberOption[] {
   const rows = buildManageMemberRecordRows(MANAGE_MEMBER_MENU_ITEM, rowCount);
   const seen = new Set<string>();
-  const options: EgFilterFieldDropdownOption[] = [];
+  const options: EgFilterFieldMemberOption[] = [];
 
   for (const row of rows) {
     const label = String(row.logOperatorName ?? '').trim();
@@ -56,7 +69,7 @@ export function buildMemberRecordNicknameFilterOptions(
     const id = resolveMemberRecordNicknameFilterId(label);
     if (seen.has(id)) continue;
     seen.add(id);
-    options.push({ id, label });
+    options.push({ id, label, name: label });
   }
 
   return options.sort((left, right) =>

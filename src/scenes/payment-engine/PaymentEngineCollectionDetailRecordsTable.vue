@@ -18,6 +18,8 @@ import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
 import listStyles from './PaymentEngineDataListPage.module.css';
 import batchStyles from '@/scenes/tasks/signing/batch/batchSigning.shared.module.css';
 import { buildPaymentEngineCollectionDetailLineStatusCustomize } from './paymentEngineCollectionDetailLineStatusCustomize';
+import type { PaymentEngineCollectionDetailTabKind } from './paymentEngineCollectionDetailView';
+import collectionStyles from './PaymentEngineCollectionDetailPage.module.css';
 import {
   COLLECTION_DETAIL_ADDRESS_HASH_COLUMN_MIN_WIDTH,
   COLLECTION_DETAIL_AMOUNT_FEE_COLUMN_MIN_WIDTH,
@@ -33,8 +35,12 @@ const props = withDefaults(
   defineProps<{
     lines: readonly PaymentEngineCollectionDetailLineRecord[];
     fill?: boolean;
+    tableKind?: PaymentEngineCollectionDetailTabKind;
   }>(),
-  { fill: false },
+  {
+    fill: false,
+    tableKind: 'collection',
+  },
 );
 
 const { ui } = useAppI18n();
@@ -60,7 +66,11 @@ function lineFromData(data: DataListItem): PaymentEngineCollectionDetailLineReco
       batchStyles.batchDetailDataList,
       fill && batchStyles.batchDetailDataListFill,
       !fill && batchStyles.batchDetailDataListSized,
+      collectionStyles.recordsDataList,
+      tableKind === 'eip7702' && collectionStyles.recordsDataListEip7702,
+      tableKind === 'gas-top-up' && collectionStyles.recordsDataListGasTopUp,
     ]"
+    :data-collection-table-kind="tableKind"
     :style="fill ? undefined : { height: `${listHeightPx}px` }"
   >
     <EgDataList

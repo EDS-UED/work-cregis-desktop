@@ -18,6 +18,9 @@ import TransactionRecordParallelOutDetailTable from './TransactionRecordParallel
 import type { TransactionRecordDetailPage } from './transactionRecordDetailPage';
 import type { TransactionRecordParallelOutDetailLine } from './transactionRecordParallelOutDetailTypes';
 import type { TransactionRecordRow } from './transactionRecordTypes';
+import { useDetailAmlSearchFlow } from '@/scenes/tasks/shared/useDetailAmlSearchFlow';
+import { applyDetailAmlSearchSectionOverlay } from '@/scenes/tasks/shared/applyDetailAmlSearchSectionOverlay';
+import DetailAmlSearchToastHost from '@/scenes/tasks/shared/DetailAmlSearchToastHost.vue';
 
 const props = defineProps<{
   open: boolean;
@@ -32,6 +35,18 @@ const emit = defineEmits<{
 }>();
 
 const { ui, locale } = useAppI18n();
+
+const {
+  amlSearchActiveItemKey,
+  amlSearchResultsByKey,
+  amlToastText,
+  amlToastKeepMounted,
+  amlToastMotionActive,
+  onItemValueAmlSearchClick,
+} = useDetailAmlSearchFlow({
+  detailId: computed(() => props.detail?.id),
+  ui,
+});
 
 const { popupMounted, popupOpen, onPopupClosed } = usePopupShellLifecycle({
   open: toRef(props, 'open'),
@@ -60,7 +75,11 @@ const headlineParts = computed(() => splitDetailAmountHeadline(headline.value));
 const sections = computed(() => {
   void locale.value;
   if (!props.detail) return [];
-  return buildTransactionRecordDetailSections(props.detail, ui);
+  const base = buildTransactionRecordDetailSections(props.detail, ui);
+  return applyDetailAmlSearchSectionOverlay(base, {
+    resultsByKey: amlSearchResultsByKey.value,
+    translate: ui,
+  });
 });
 
 const parallelOutDetailLines = computed(() => {
@@ -174,8 +193,14 @@ function onParallelOutDetailBack() {
                     :show-tabs="false"
                     :sections="sections"
                     :show-toolbar="false"
+                    :value-copy-label="ui('Copy')"
+                    :value-address-book-label="ui('Add to address book')"
+                    :value-aml-search-label="ui('AML Search')"
+                    :value-browser-label="ui('Block explorer')"
+                    :aml-search-active-item-key="amlSearchActiveItemKey"
                     @close="onDetailClose"
                     @item-value-link-click="onItemValueLinkClick"
+                    @item-value-aml-search-click="onItemValueAmlSearchClick"
                   >
                     <template #headline-text>
                       {{ headlineParts.primary }}<span
@@ -224,5 +249,11 @@ function onParallelOutDetailBack() {
         </div>
       </div>
     </div>
+    <DetailAmlSearchToastHost
+      v-if="popupOpen"
+      :keep-mounted="amlToastKeepMounted"
+      :motion-active="amlToastMotionActive"
+      :text="amlToastText"
+    />
   </EgDetailPopup>
 </template>

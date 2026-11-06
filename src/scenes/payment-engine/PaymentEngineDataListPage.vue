@@ -3,6 +3,7 @@ import { computed, inject, onBeforeUnmount, onMounted, ref, unref, watch } from 
 import {
   EgLayout,
   EgToolBar,
+  type DataListBatchAction,
   type DataListItem,
   type EgFilterCondition,
   type EgFilterField,
@@ -149,6 +150,7 @@ import PaymentEngineRecordListToolbar from './PaymentEngineRecordListToolbar.vue
 import WaasSubAddressCurrencyPicker from '@/scenes/waas-project/WaasSubAddressCurrencyPicker.vue';
 import { useWaasSubAddressCurrencySelection } from '@/scenes/waas-project/useWaasSubAddressCurrencySelection';
 import { buildWaasStandardRecordRows } from '@/scenes/waas-project/waasStandardRecordData';
+import { isWaasApiCollectionMenuItem } from '@/scenes/waas-project/waasStandardMenuData';
 import type { PaymentEngineRecordSortTarget } from './paymentEngineRecordSort';
 import { isManageWebhookPushRecordsMenuItem } from '@/scenes/manage/manageMenuData';
 import { webhookFlowKey } from '@/scenes/manage/webhook/webhookFlowContext';
@@ -617,7 +619,7 @@ const displayToolbarFunctionalButtons = computed(() =>
 );
 
 const displayBatchActions = computed(() => {
-  let actions = dataListBatchActions.value;
+  let actions: DataListBatchAction[] = dataListBatchActions.value;
   if (isCallbackErrorRecordMenuItem(props.menuItem)) {
     actions = [
       { key: 'ignore', label: 'Ignore' },
@@ -625,6 +627,11 @@ const displayBatchActions = computed(() => {
     ];
   } else if (isManageWebhookPushRecordsMenuItem(props.menuItem)) {
     actions = [{ key: 'repush', label: 'Repush' }];
+  } else if (isWaasApiCollectionMenuItem(props.menuItem)) {
+    actions = [
+      { key: 'ignore', label: 'Reject', danger: true },
+      { key: 'retry', label: 'Collection' },
+    ];
   }
   return actions.map((action) => ({
     ...action,

@@ -16,7 +16,7 @@ const WALLET_PAYOUT_RECORD_STATUS_MAP: Record<
   PaymentEngineRecordRow['status'],
   PaymentEngineRecordStatusCustomize
 > = {
-  'external-pending': { status: 'ready', label: 'Pending External Confirmation' },
+  'external-pending': { status: 'warning', label: 'Pending External Confirmation' },
   approving: { status: 'warning', label: 'Approving' },
   'signature-pending': { status: 'warning', label: 'Pending Signature' },
   'signed-pending-confirmation': { status: 'ready', label: 'Signed Pending Confirmation' },
@@ -27,7 +27,7 @@ const WALLET_PAYOUT_RECORD_STATUS_MAP: Record<
   transferred: { status: 'success', label: 'Transaction Completed' },
   success: { status: 'success', label: 'Transaction Completed' },
   failed: { status: 'danger', label: 'Transaction Failed' },
-  initiated: { status: 'ready', label: 'Pending External Confirmation' },
+  initiated: { status: 'warning', label: 'Pending External Confirmation' },
   'additional-payment-required': { status: 'warning', label: 'Approving' },
   expired: { status: 'danger', label: 'Transaction Failed' },
   cancelled: { status: 'danger', label: 'Reject' },
@@ -159,8 +159,19 @@ export function buildPaymentEngineRecordStatusCustomize(
   }
 
   if (menuItem === 'API Collection') {
-    const item = WALLET_PAYOUT_RECORD_STATUS_MAP[status];
-    if (item) return item;
+    if (status === 'pending') {
+      return { status: 'warning', label: 'Pending' };
+    }
+    if (status === 'signed-pending-confirmation') {
+      return { status: 'warning', label: 'Pending Confirmation' };
+    }
+    if (status === 'transaction-failed' || status === 'failed') {
+      return { status: 'danger', label: 'Failed' };
+    }
+    if (status === 'rejected' || status === 'cancelled') {
+      return { status: 'danger', label: 'Reject' };
+    }
+    return { status: 'success', label: 'Success' };
   }
 
   if (menuItem === 'History') {

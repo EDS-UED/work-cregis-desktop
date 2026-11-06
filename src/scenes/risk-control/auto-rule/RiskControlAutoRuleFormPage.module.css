@@ -56,6 +56,12 @@
   background-color: transparent;
 }
 
+/** option 卡片内成员 Add：勿让 EgMemberTooltip 全宽层 intercept 滚动/点击。 */
+.optionCardGroup :global([class*='bodyPanel']) [class*='addPickerWrap'] {
+  position: relative;
+  z-index: 1;
+}
+
 /** embedded 展开区与下一选项间距；组内最后一项不加底外边距。 */
 .optionCardGroup > :global(*:not(:last-child)) :global([class*='bodyPanel']) {
   margin-bottom: var(--spacing-2);
@@ -136,7 +142,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--spacing-1);
+  gap: var(--spacing-2);
   width: 100%;
   min-width: 0;
 }

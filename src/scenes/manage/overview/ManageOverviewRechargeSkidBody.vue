@@ -261,12 +261,9 @@ async function onCopyAddress(event?: MouseEvent) {
             </EgFlotationMenu>
           </template>
         </EgFlotation>
-        <EgFormSubmission
-          v-if="isGasMode"
-          type="notes"
-          :show-link="false"
-          :text="gasNativeTokenHintText"
-        />
+        <p v-if="isGasMode" :class="styles.fieldHint">
+          {{ gasNativeTokenHintText }}
+        </p>
       </div>
     </div>
 

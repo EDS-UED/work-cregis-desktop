@@ -47,7 +47,7 @@ function compareRows(
 
   if (columnKey === 'transactionTypeTxHash') {
     if (segment === 'secondary') {
-      return compareText(rowA.txHash ?? '', rowB.txHash ?? '');
+      return compareCreatedTime(rowA, rowB);
     }
     return compareText(rowA.transactionTypeKey ?? '', rowB.transactionTypeKey ?? '');
   }

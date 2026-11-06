@@ -3,12 +3,14 @@ import { formatGroupedAmountText } from '@/utils/formatGroupedDisplay';
 import type { PaymentEngineRecordRow } from './paymentEngineRecordConfigs';
 import { resolvePaymentCollectionDetailRecord } from './paymentEngineCollectionDetailData';
 
+export type PaymentEngineCollectionDetailTabKind = 'collection' | 'eip7702' | 'gas-top-up';
+
 export type PaymentEngineCollectionDetailView = {
   headline: {
     eyebrowKey: 'Collected Amount';
     amountText: string;
     status: {
-      labelKey: 'Collecting';
+      labelKey: 'Collecting' | 'Abnormally Stopped';
       kind: TagStatus;
     };
   };
@@ -24,16 +26,25 @@ export type PaymentEngineCollectionDetailView = {
     failedCount: string;
     successCount: string;
   };
-  recordTabs: {
-    labels: readonly ['Collection Record', 'EIP-7702 Upgrading', 'Gas Fee Top-up'];
-  };
-  records: ReturnType<typeof resolvePaymentCollectionDetailRecord>['recordLines'];
+  alert: ReturnType<typeof resolvePaymentCollectionDetailRecord>['alert'];
+  stopped: boolean;
+  recordTabs: Array<{
+    kind: PaymentEngineCollectionDetailTabKind;
+    labelKey: 'Collection Record' | 'EIP-7702 Upgrading' | 'Gas Fee Top-up';
+  }>;
+  recordsByTab: Record<
+    PaymentEngineCollectionDetailTabKind,
+    ReturnType<typeof resolvePaymentCollectionDetailRecord>['recordLines']
+  >;
 };
 
 export function buildPaymentEngineCollectionDetailView(
   row: PaymentEngineRecordRow,
 ): PaymentEngineCollectionDetailView {
   const detail = resolvePaymentCollectionDetailRecord(row);
+  const stopped =
+    detail.alert === 'miner-fee-insufficient'
+    || detail.alert === 'team-account-balance-insufficient';
 
   return {
     headline: {
@@ -42,8 +53,8 @@ export function buildPaymentEngineCollectionDetailView(
         `${detail.collectedAmount} ${detail.collectedSymbol}`.trim(),
       ),
       status: {
-        labelKey: 'Collecting',
-        kind: 'success',
+        labelKey: stopped ? 'Abnormally Stopped' : 'Collecting',
+        kind: stopped ? 'danger' : 'success',
       },
     },
     meta: {
@@ -58,9 +69,19 @@ export function buildPaymentEngineCollectionDetailView(
       failedCount: detail.failedCount,
       successCount: detail.successCount,
     },
-    recordTabs: {
-      labels: ['Collection Record', 'EIP-7702 Upgrading', 'Gas Fee Top-up'],
+    alert: detail.alert,
+    stopped,
+    recordTabs: [
+      { kind: 'collection', labelKey: 'Collection Record' },
+      ...(detail.supportsEip7702
+        ? [{ kind: 'eip7702' as const, labelKey: 'EIP-7702 Upgrading' as const }]
+        : []),
+      { kind: 'gas-top-up', labelKey: 'Gas Fee Top-up' },
+    ],
+    recordsByTab: {
+      collection: detail.recordLines,
+      eip7702: detail.eip7702Lines,
+      'gas-top-up': detail.gasTopUpLines,
     },
-    records: detail.recordLines,
   };
 }

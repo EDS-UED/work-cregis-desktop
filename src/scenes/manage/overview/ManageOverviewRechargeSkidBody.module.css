@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: var(--spacing-5);
   min-width: 0;
-  padding: var(--spacing-2) var(--spacing-4) var(--spacing-4);
+  padding: var(--spacing-1) var(--spacing-4) var(--spacing-4);
   box-sizing: border-box;
 }
 
@@ -19,6 +19,10 @@
 .fieldLabel {
   composes: typography-body-small from global;
   color: var(--text-base-primary);
+}
+
+.fieldHint {
+  composes: fieldHint from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
 }
 
 .networkControlStack {

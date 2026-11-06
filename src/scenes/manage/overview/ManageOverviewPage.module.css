@@ -29,6 +29,30 @@
   width: 100%;
 }
 
+.billFlotationTriggerRoot {
+  composes: batchProTriggerRoot from '../../tasks/TasksDataListPage.module.css';
+}
+
+.billFlotationTriggerExpanded {
+  composes: batchFlotationTriggerExpanded from '../../tasks/TasksDataListPage.module.css';
+}
+
+.billFlotationIconSlot {
+  composes: batchProIconSlot from '../../tasks/TasksDataListPage.module.css';
+}
+
+.billFlotationLabelWrap {
+  composes: batchProLabelWrap from '../../tasks/TasksDataListPage.module.css';
+}
+
+.billFlotationLabelPaint {
+  composes: batchProLabelPaint from '../../tasks/TasksDataListPage.module.css';
+}
+
+.billFlotationLabelSizer {
+  composes: batchProLabelSizer from '../../tasks/TasksDataListPage.module.css';
+}
+
 .skidDismissBackdrop {
   position: absolute;
   inset: 0;
@@ -56,8 +80,7 @@
 }
 
 .assetLabelRow,
-.balanceValueRow,
-.disabledActions {
+.balanceValueRow {
   display: flex;
   align-items: center;
   gap: var(--spacing-1);
@@ -83,8 +106,7 @@
   color: var(--text-base-secondary);
 }
 
-.strategyText,
-.disabledDescription {
+.strategyText {
   margin: 0;
   color: var(--text-base-secondary);
 }
@@ -132,6 +154,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-3);
   margin-top: var(--spacing-2);
+}
+
+.summaryGridSingle {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .summaryCard {
@@ -229,6 +255,7 @@
 }
 
 .gasBalanceRow {
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -276,17 +303,6 @@
   margin: 0;
   padding-left: var(--spacing-3);
   color: var(--text-base-primary);
-}
-
-.disabledCard {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-6);
-  padding: var(--spacing-4);
-  border-radius: var(--radius-md);
-  background: var(--material-card-subtle);
-  box-sizing: border-box;
 }
 
 .gasAccountRow {
@@ -346,12 +362,17 @@
 }
 
 .gasBalanceDetailsStack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  display: grid;
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: end;
   gap: var(--spacing-05);
   min-width: 0;
   box-sizing: border-box;
+}
+
+.gasBalanceDetailsStack > .gasBalanceLinkSubmissionRow {
+  grid-row: 2;
 }
 
 .gasBalanceLinkSubmissionRow {
@@ -382,14 +403,3 @@
   min-width: 0;
 }
 
-.disabledCopy {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
-  min-width: 0;
-}
-
-.disabledTitle {
-  margin: 0;
-  color: var(--text-base-primary);
-}

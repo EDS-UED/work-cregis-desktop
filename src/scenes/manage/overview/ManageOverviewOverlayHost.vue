@@ -40,6 +40,7 @@ const setTransactionPasswordDialogOpen = computed({
 function onVerifyClosed(accepted: boolean) {
   surface.value?.onVerifyClosed(accepted);
 }
+
 </script>
 
 <template>

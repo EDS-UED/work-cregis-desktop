@@ -96,6 +96,11 @@ export function resolveEgDataListDemoRowIndex(row: { id: string }): number {
   const ruleMatch = row.id.match(/^CO1463926806912(\d+)$/);
   if (ruleMatch) return Math.max(0, Number(ruleMatch[1]) - 640);
 
+  const collectionTaskMatch = row.id.match(/^GJ(\d+)$/);
+  if (collectionTaskMatch) {
+    return Math.max(0, Number(collectionTaskMatch[1]) - 1464590243540288);
+  }
+
   const addressBookMatch = row.id.match(/^(?:WL|BL)-(\d+)$/);
   if (addressBookMatch) return Math.max(0, Number(addressBookMatch[1]) - 1);
 

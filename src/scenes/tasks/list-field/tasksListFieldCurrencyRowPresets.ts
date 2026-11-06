@@ -68,8 +68,36 @@ export const CURRENCY_ROW_PRESETS: readonly CurrencyRowPreset[] = [
 /** 首列固定 preset 行数（0-based rowIndex 0–7）；随机池 offset 以此为基准。 */
 export const FIXED_CURRENCY_PRESET_ROW_COUNT = CURRENCY_ROW_PRESETS.length;
 
-/** 指定行币种覆盖（0-based rowIndex；第 19 条 = 18，第 20 条 = 19）。 */
+/** 指定行币种覆盖（0-based rowIndex；矿工费 QA 见 `minerFeeQaSigningRows.ts`）。 */
 const CURRENCY_ROW_PRESET_OVERRIDES: Partial<Record<number, CurrencyRowPreset>> = {
+  /** 第 5 条 · EVM 矿工费 QA（未开启代付 · 地址支付档位列表） */
+  4: {
+    symbol: 'USDT',
+    cryptoName: 'eds-usdt-tether usd',
+    showNetwork: true,
+    networkLabel: 'BNB Smart Chain',
+    addressFamily: 'evm',
+  },
+  /** 第 12 条 · EVM 矿工费 QA（代付 Gas 余额不足） */
+  11: {
+    symbol: 'USDT',
+    cryptoName: 'eds-usdt-tether usd',
+    showNetwork: true,
+    networkLabel: 'BNB Smart Chain',
+    addressFamily: 'evm',
+  },
+  16: {
+    symbol: 'TRX',
+    cryptoName: 'eds-trx-tron',
+    showNetwork: false,
+    addressFamily: 'trx',
+  },
+  17: {
+    symbol: 'TRX',
+    cryptoName: 'eds-trx-tron',
+    showNetwork: false,
+    addressFamily: 'trx',
+  },
   18: {
     symbol: 'TRX',
     cryptoName: 'eds-trx-tron',

@@ -19,6 +19,11 @@ import {
   resolveMinerFeeBatchTransactionCount,
 } from '../shared/minerFeeProfile';
 import { resolveGasFeeNetworkFromProfile } from '../shared/resolveGasFeeNetwork';
+import {
+  resolveAppEvmPaymentDemoQuote,
+  resolveAppEvmSponsoredPaymentEnabled,
+  resolveAppTronMinerFeeQuote,
+} from '../shared/resolveAppMinerFeeQuotes';
 
 const props = withDefaults(
   defineProps<{
@@ -94,6 +99,24 @@ const gasFeeNetwork = computed<GasFeeNetwork | null>(() => {
   const profile = resolvedMinerFeeProfile.value;
   if (!profile || showBatchStubOnly.value) return null;
   return resolveGasFeeNetworkFromProfile(profile);
+});
+
+const gasFeeTronQuote = computed(() => {
+  const profile = resolvedMinerFeeProfile.value;
+  if (!profile || gasFeeNetwork.value !== 'tron') return undefined;
+  return resolveAppTronMinerFeeQuote(profile.rowIndex);
+});
+
+const gasFeeEvmPaymentQuote = computed(() => {
+  const profile = resolvedMinerFeeProfile.value;
+  if (!profile || gasFeeNetwork.value !== 'ethereum') return undefined;
+  return resolveAppEvmPaymentDemoQuote(ui, profile.rowIndex, profile.symbol);
+});
+
+const gasFeeEvmSponsoredPaymentEnabled = computed(() => {
+  const profile = resolvedMinerFeeProfile.value;
+  if (!profile || gasFeeNetwork.value !== 'ethereum') return true;
+  return resolveAppEvmSponsoredPaymentEnabled(profile.rowIndex);
 });
 
 const remarkModel = computed({
@@ -214,6 +237,9 @@ function onRemarkOnlyConfirm() {
     :title="minerFeeTopToolTitle"
     :transaction-count="minerFeeTransactionCount"
     :prefer-batch-total-summary="preferBatchTotalSummary"
+    :tron-quote="gasFeeTronQuote"
+    :evm-payment-quote="gasFeeEvmPaymentQuote"
+    :evm-sponsored-payment-enabled="gasFeeEvmSponsoredPaymentEnabled"
     :boundary-selector="boundarySelector"
     :on-before-open="skipRemarkStep ? onBeforeOpen : undefined"
     @confirm="onGasFeeConfirm"

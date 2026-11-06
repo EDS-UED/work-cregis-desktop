@@ -115,7 +115,7 @@ const RULE_CONFIGURATION_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   },
   {
     key: 'collectionCurrencyRange',
-    labelKey: 'Track Currency',
+    labelKey: 'Collection Currency',
     secondaryLabelKey: 'Amount Range',
     minWidth: RULE_CURRENCY_RANGE_COLUMN_MIN_WIDTH,
     headerKind: 'combo',

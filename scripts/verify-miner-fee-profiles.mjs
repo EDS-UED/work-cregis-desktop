@@ -38,6 +38,9 @@ const REQUIRED_SOURCE_MARKERS = [
       'EgMinerFeeBatchStubPanel',
       'resolveGasFeeNetworkFromProfile',
       ':transaction-count="minerFeeTransactionCount"',
+      ':evm-payment-quote="gasFeeEvmPaymentQuote"',
+      ':evm-sponsored-payment-enabled="gasFeeEvmSponsoredPaymentEnabled"',
+      ':tron-quote="gasFeeTronQuote"',
     ],
   },
   {

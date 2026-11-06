@@ -4,9 +4,13 @@ import {
   resolveEgDataListDemoRowIndex,
   resolveShowcaseThenCompletedStatus,
 } from '@/scenes/shared/egDataListMockData';
-import { resolveVerifiedTxHashForRow } from '@/scenes/tasks/list-field/listFieldCryptoSampleAddresses';
+import {
+  resolveAddressFamily,
+  resolveVerifiedTxHashForRow,
+} from '@/scenes/tasks/list-field/listFieldCryptoSampleAddresses';
 import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
 import type {
+  PaymentEngineCollectionDetailAlert,
   PaymentEngineCollectionDetailLineRecord,
   PaymentEngineCollectionDetailRecord,
   PaymentEngineRecordRow,
@@ -62,10 +66,14 @@ export function resolveTaskRecordCollectedAmountForList(
 function buildCollectionDetailLines(
   row: PaymentEngineRecordRow,
   rowIndex: number,
+  kind: 'collection' | 'eip7702' | 'gas-top-up' = 'collection',
 ): PaymentEngineCollectionDetailLineRecord[] {
   const preset = resolveCurrencyRowPreset(rowIndex);
   const symbol = row.currencySymbol ?? row.orderSymbol;
   const addressFamily = symbol === 'TON' ? 'ton' as const : 'evm';
+  const amountSamples = kind === 'gas-top-up'
+    ? ['888008000.0002', '10000.55567', '76000.33202', '298000.33288']
+    : ['10000.55567', '1137.12', '1274.12', '1411.12'];
 
   return Array.from({ length: 4 }, (_, lineIndex) => {
     const status = resolveShowcaseThenCompletedStatus(
@@ -73,12 +81,10 @@ function buildCollectionDetailLines(
       COLLECTION_DETAIL_LINE_STATUS_SHOWCASE,
       'success',
     );
-    const amountValues = formatGroupedDecimalAmount(
-      lineIndex === 0 ? '10000.55567' : `${1000 + lineIndex * 137}.12`,
-    );
+    const amountValues = formatGroupedDecimalAmount(amountSamples[lineIndex] ?? '0');
 
     return {
-      id: `${row.id}-${lineIndex}`,
+      id: `${row.id}-${kind}-${lineIndex}`,
       amount: amountValues,
       symbol,
       minerFee: lineIndex === 0 ? '0.0003' : '0.0001',
@@ -93,12 +99,20 @@ function buildCollectionDetailLines(
   });
 }
 
+function resolveCollectionDetailAlert(rowIndex: number): PaymentEngineCollectionDetailAlert | undefined {
+  if (rowIndex === 1) return 'account-balance-insufficient';
+  if (rowIndex === 2) return 'miner-fee-insufficient';
+  if (rowIndex === 3) return 'team-account-balance-insufficient';
+  return undefined;
+}
+
 function buildCollectionDetailRecord(
   row: PaymentEngineRecordRow,
   rowIndex: number,
 ): PaymentEngineCollectionDetailRecord {
   const preset = resolveCurrencyRowPreset(rowIndex);
   const symbol = row.currencySymbol ?? row.orderSymbol;
+  const supportsEip7702 = resolveAddressFamily(symbol) === 'evm';
 
   return {
     collectionNumber: buildCollectionNumber(row, rowIndex),
@@ -118,7 +132,11 @@ function buildCollectionDetailRecord(
     pendingCount: rowIndex === 0 ? '300000' : String(12000 + rowIndex * 500),
     failedCount: rowIndex === 0 ? '2' : String(rowIndex % 4),
     successCount: rowIndex === 0 ? '1000000000' : String(1000000 + rowIndex * 10000),
-    recordLines: buildCollectionDetailLines(row, rowIndex),
+    supportsEip7702,
+    alert: resolveCollectionDetailAlert(rowIndex),
+    recordLines: buildCollectionDetailLines(row, rowIndex, 'collection'),
+    eip7702Lines: buildCollectionDetailLines(row, rowIndex, 'eip7702'),
+    gasTopUpLines: buildCollectionDetailLines(row, rowIndex, 'gas-top-up'),
   };
 }
 

@@ -35,6 +35,16 @@ export function registerShellDebugScenarios(items: ShellDebugScenario[]) {
   }
 }
 
+/** 移除已废弃场景 id（HMR 追加注册不会自动删掉旧项）。 */
+export function removeShellDebugScenariosByIds(ids: readonly string[]) {
+  const idSet = new Set(ids);
+  for (let index = scenarios.length - 1; index >= 0; index -= 1) {
+    if (idSet.has(scenarios[index].id)) {
+      scenarios.splice(index, 1);
+    }
+  }
+}
+
 export function listScenariosForPage(pageKey: ShellPageKey): ShellDebugScenario[] {
   return scenarios.filter(
     (item) => item.pageKey === '*' || item.pageKey === pageKey,

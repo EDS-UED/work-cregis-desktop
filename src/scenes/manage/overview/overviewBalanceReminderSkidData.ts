@@ -3,63 +3,123 @@ export type OverviewBalanceReminderAmountKey = 'team' | 'eth' | 'bnb' | 'pol' | 
 export type OverviewBalanceReminderAmountOption = {
   key: OverviewBalanceReminderAmountKey;
   titleKey: string;
-  amountDisplay: string;
+  unit: string;
 };
 
 export type OverviewBalanceReminderRecipientOption = {
   id: string;
-  displayName: string;
+  avatarName: string;
+  name: string;
+  email: string;
 };
-
-/** Mock：团队是否已在线上开启余额提醒（影响提醒金额默认勾选）。 */
-export const MOCK_TEAM_ALREADY_HAS_BALANCE_REMINDER = true;
 
 export const OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS: readonly OverviewBalanceReminderAmountOption[] =
   [
     {
       key: 'team',
       titleKey: 'Team Account',
-      amountDisplay: '$128,430.52',
+      unit: 'USD',
     },
     {
       key: 'eth',
       titleKey: 'ETH Gas Account',
-      amountDisplay: '12.4821 ETH',
+      unit: 'ETH',
     },
     {
       key: 'bnb',
       titleKey: 'BNB Gas Account',
-      amountDisplay: '86.245 BNB',
+      unit: 'BNB',
     },
     {
       key: 'pol',
       titleKey: 'POL Gas Account',
-      amountDisplay: '42,680.00 POL',
+      unit: 'POL',
     },
     {
       key: 'sol',
       titleKey: 'SOL Gas Account',
-      amountDisplay: '1,286.40 SOL',
+      unit: 'SOL',
     },
   ];
 
+/** 提醒对象列表默认展示人数（其余通过「展开全部」显示）。 */
+export const OVERVIEW_BALANCE_REMINDER_RECIPIENT_DEFAULT_VISIBLE = 4;
+
 export const OVERVIEW_BALANCE_REMINDER_RECIPIENT_OPTIONS: readonly OverviewBalanceReminderRecipientOption[] =
   [
-    { id: 'zhang-admin', displayName: '张三（管理员）' },
-    { id: 'li-finance', displayName: '李四（财务）' },
+    {
+      id: 'zhang-admin',
+      avatarName: '张三',
+      name: '张三（管理员）',
+      email: 'zhangsan@cregis.com',
+    },
+    {
+      id: 'li-finance',
+      avatarName: '李四',
+      name: '李四（财务）',
+      email: 'lisi@cregis.com',
+    },
+    {
+      id: 'wang-ops',
+      avatarName: '王五',
+      name: '王五（运营）',
+      email: 'wangwu@cregis.com',
+    },
+    {
+      id: 'zhao-dev',
+      avatarName: '赵六',
+      name: '赵六（开发）',
+      email: 'zhaoliu@cregis.com',
+    },
+    {
+      id: 'qian-audit',
+      avatarName: '钱七',
+      name: '钱七（审计）',
+      email: 'qianqi@cregis.com',
+    },
+    {
+      id: 'sun-compliance',
+      avatarName: '孙八',
+      name: '孙八（合规）',
+      email: 'sunba@cregis.com',
+    },
+    {
+      id: 'zhou-product',
+      avatarName: '周九',
+      name: '周九（产品）',
+      email: 'zhoujiu@cregis.com',
+    },
+    {
+      id: 'wu-support',
+      avatarName: '吴十',
+      name: '吴十（客服）',
+      email: 'wushi@cregis.com',
+    },
   ];
 
 export type OverviewBalanceReminderFormState = {
   featureEnabled: boolean;
   amountByKey: Record<OverviewBalanceReminderAmountKey, boolean>;
+  thresholdByKey: Record<OverviewBalanceReminderAmountKey, string>;
   recipientById: Record<string, boolean>;
 };
 
-function buildDefaultAmountSelection(
-  teamAlreadyHasReminder: boolean,
-): Record<OverviewBalanceReminderAmountKey, boolean> {
+function buildDefaultThresholdByKey(): Record<OverviewBalanceReminderAmountKey, string> {
   return {
-    team: teamAlreadyHasReminder,
+    team: '',
+    eth: '',
+    bnb: '',
+    pol: '',
+    sol: '',
+  };
+}
+
+function buildDefaultAmountSelection(): Record<
+  OverviewBalanceReminderAmountKey,
+  boolean
+> {
+  return {
+    team: false,
     eth: false,
     bnb: false,
     pol: false,
@@ -69,18 +129,15 @@ function buildDefaultAmountSelection(
 
 function buildDefaultRecipientSelection(): Record<string, boolean> {
   return Object.fromEntries(
-    OVERVIEW_BALANCE_REMINDER_RECIPIENT_OPTIONS.map((item) => [item.id, true]),
+    OVERVIEW_BALANCE_REMINDER_RECIPIENT_OPTIONS.map((item) => [item.id, false]),
   );
 }
 
-export function createOverviewBalanceReminderFormState(options?: {
-  teamAlreadyHasReminder?: boolean;
-}): OverviewBalanceReminderFormState {
-  const teamAlreadyHasReminder =
-    options?.teamAlreadyHasReminder ?? MOCK_TEAM_ALREADY_HAS_BALANCE_REMINDER;
+export function createOverviewBalanceReminderFormState(): OverviewBalanceReminderFormState {
   return {
-    featureEnabled: true,
-    amountByKey: buildDefaultAmountSelection(teamAlreadyHasReminder),
+    featureEnabled: false,
+    amountByKey: buildDefaultAmountSelection(),
+    thresholdByKey: buildDefaultThresholdByKey(),
     recipientById: buildDefaultRecipientSelection(),
   };
 }

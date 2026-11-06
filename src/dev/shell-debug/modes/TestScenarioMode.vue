@@ -23,7 +23,8 @@ import {
   listQaCommonScenarios,
 } from '../registry';
 import {
-  shellDebugPopoverContentMaxHeight,
+  SHELL_DEBUG_POPOVER_CHROME_HEIGHT,
+  SHELL_DEBUG_POPOVER_MAX_HEIGHT,
   shellDebugPopoverContentMinHeight,
 } from '../shellDebugPopover.constants';
 import { markShellDebugUiInteraction } from '../shellDebugFloatInteraction';
@@ -88,9 +89,12 @@ const deformContentClass = computed(() => [
   contentDirection.value,
 ]);
 
+/** QA topTool（标题 + 业务态/通用态 Segmented）实测高度，避免仍用 62px 估算导致列表底部被裁切。 */
+const qaTopToolHeight = ref(SHELL_DEBUG_POPOVER_CHROME_HEIGHT);
+
 const scrollViewportMax = computed(() => {
   const metaHeight = metaRef.value?.offsetHeight ?? 0;
-  return Math.max(80, shellDebugPopoverContentMaxHeight - metaHeight);
+  return Math.max(80, SHELL_DEBUG_POPOVER_MAX_HEIGHT - qaTopToolHeight.value - metaHeight);
 });
 
 const activeRawHeight = computed(() =>
@@ -99,10 +103,12 @@ const activeRawHeight = computed(() =>
     : commonRawHeight.value,
 );
 
-/** 仅当测量高度超过 content 区 max 时才启用内层滚动。 */
-const activeNeedsScroll = computed(
-  () => activeRawHeight.value > scrollViewportMax.value,
-);
+/** 测量高度超过可用 viewport，或 clamp 后仍放不下时启用内层滚动。 */
+const activeNeedsScroll = computed(() => {
+  const viewport = scrollViewportMax.value;
+  if (activeRawHeight.value > viewport) return true;
+  return clampDeformShellHeight(activeRawHeight.value) < activeRawHeight.value - 0.5;
+});
 
 /** 换页 morph 期间冻结 scroll 布局，避免 data-qa-needs-scroll 瞬间切换导致外层 adaptive Popover 跳高。 */
 const displayedNeedsScroll = ref(activeNeedsScroll.value);
@@ -145,6 +151,13 @@ function readMeasureHeight(el: HTMLElement | null): number {
   return Math.max(Math.ceil(el.getBoundingClientRect().height), 80);
 }
 
+function measureQaTopToolHeight() {
+  const popover = shellRef.value?.closest('.eds-popover');
+  const topTool = popover?.querySelector<HTMLElement>('[class*="topTool"]');
+  if (!topTool) return;
+  qaTopToolHeight.value = Math.ceil(topTool.getBoundingClientRect().height);
+}
+
 function measurePageSpecs() {
   commonRawHeight.value = readMeasureHeight(commonMeasureRef.value);
   businessRawHeight.value = readMeasureHeight(businessMeasureRef.value);
@@ -153,16 +166,27 @@ function measurePageSpecs() {
   pageSpecs.business.shellHeight = clampDeformShellHeight(businessRawHeight.value);
 }
 
+function reconcileScrollOverflow() {
+  const el = scrollRef.value;
+  if (!el || contentExiting.value || contentEntering.value) return;
+  if (el.scrollHeight <= el.clientHeight + 1) return;
+  displayedNeedsScroll.value = true;
+  shellHeight.value = clampDeformShellHeight(activeRawHeight.value);
+}
+
 function syncPageSpecHeights() {
+  measureQaTopToolHeight();
   measurePageSpecs();
 
   if (!contentExiting.value && !contentEntering.value) {
     shellHeight.value = pageSpecs[activePage.value].shellHeight;
+    displayedNeedsScroll.value = activeNeedsScroll.value;
   }
 
   shellMeasureReady.value = true;
 
   nextTick(() => {
+    reconcileScrollOverflow();
     updateScrollScrim();
   });
 }

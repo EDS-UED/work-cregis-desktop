@@ -6,26 +6,37 @@ import {
   EgDivider,
   EgIcon,
   EgIconButton,
+  EgFlotation,
   EgIconProButton,
   EgLayout,
   EgFieldOvfTooltip,
   EgFormSubmission,
-  EgLinkButton,
   EgOdometer,
   EgSkid,
   EgSwitch,
   EgToolBar,
+  closeAllAnchoredTooltips,
 } from '@eds/desktop-components';
+import { showAppEndFeedback } from '@/composables/appEndFeedback';
+import ManageOverviewBalanceReminderSkidAction from './ManageOverviewBalanceReminderSkidAction.vue';
 import ManageOverviewBalanceReminderSkidBody from './ManageOverviewBalanceReminderSkidBody.vue';
+import ManageOverviewGenerateBillFlotationMenu from './ManageOverviewGenerateBillFlotationMenu.vue';
 import ManageOverviewRechargeSkidBody from './ManageOverviewRechargeSkidBody.vue';
+import {
+  OVERVIEW_GENERATE_BILL_FLOTATION_MAX_HEIGHT,
+  OVERVIEW_GENERATE_BILL_FLOTATION_WIDTH,
+} from './manageOverviewGenerateBill.constants';
 import type { OverviewGasRechargeAccountKey } from './overviewRechargeSkidData';
 import { useManageOverviewBalanceReminderForm } from './useManageOverviewBalanceReminderForm';
-import comboActionStyles from '@eds/desktop-components/molecules/combo/ComboAction.module.css';
 import { registerManageOverviewOverlay } from './manageOverviewOverlayContext';
 import { useManageOverviewGasProxyPaymentFlow } from './useManageOverviewGasProxyPaymentFlow';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
 import styles from './ManageOverviewPage.module.css';
+import {
+  manageOverviewQaApiRegistry,
+  type ManageOverviewQaSnapshot,
+} from './manageOverviewQaApi';
 
 type GasAccountOverviewItem = {
   key: OverviewGasRechargeAccountKey;
@@ -54,8 +65,6 @@ const gasProxyPaymentByKey = ref<Record<string, boolean>>({
   pol: false,
   sol: false,
 });
-/** 全局「开启矿工费代付」模块能力（与单行开关权限独立）。 */
-const canConfigureGasProxy = true;
 /** 「矿工费代付配置」操作权限 · 控制 Gas 账户行内开关。 */
 const canConfigureGasProxyPayment = ref(true);
 /** Mock：是否已设置交易密码（未设置时开启代付引导先设置）。 */
@@ -71,7 +80,7 @@ const rechargeGasAccountKey = ref<OverviewGasRechargeAccountKey>('trx');
 
 const overviewSkidTitleKey = computed(() => {
   if (overviewSkidKind.value === 'balance-reminder') {
-    return 'Overview Balance Reminder';
+    return 'Overview Balance Reminder Settings';
   }
   return rechargeSkidTarget.value === 'team'
     ? 'Overview Team Account Recharge'
@@ -82,10 +91,19 @@ const overviewSkidShowsSave = computed(() => overviewSkidKind.value === 'balance
 
 const {
   form: balanceReminderForm,
-  showValidation: balanceReminderShowValidation,
-  canSave: balanceReminderCanSave,
-  submit: submitBalanceReminder,
+  saveEnabled: balanceReminderSaveEnabled,
+  persistSave: persistBalanceReminderSave,
 } = useManageOverviewBalanceReminderForm();
+
+const balanceReminderSkidContentRevision = ref(0);
+watch(
+  balanceReminderForm,
+  () => {
+    balanceReminderSkidContentRevision.value += 1;
+  },
+  { deep: true },
+);
+
 const odometerPlayKey = ref(0);
 
 const scrollRef = ref<HTMLElement | null>(null);
@@ -111,6 +129,20 @@ const summaryAccounts = [
     amount: '$297,252.25',
   },
 ] as const;
+
+/** 未开通 Gas：摘要区不展示 Gas 账户卡片。 */
+const visibleSummaryAccounts = computed(() =>
+  gasProxyEnabled.value
+    ? summaryAccounts
+    : summaryAccounts.filter((account) => account.key !== 'gas'),
+);
+
+/** 未开通 Gas：Gas 区仅保留 TRX（与团队账户共用）；开通后展示全部链账户。 */
+const visibleGasAccounts = computed(() =>
+  gasProxyEnabled.value
+    ? gasAccounts
+    : gasAccounts.filter((account) => account.key === 'trx'),
+);
 
 const gasAccounts: GasAccountOverviewItem[] = [
   {
@@ -207,10 +239,6 @@ function toggleBalanceAmountVisibility() {
   showBalanceAmount();
 }
 
-function enableGasProxy() {
-  gasProxyEnabled.value = true;
-}
-
 function openRechargeSkid(
   target: OverviewRechargeSkidTarget,
   gasAccountKey?: OverviewGasRechargeAccountKey,
@@ -233,8 +261,11 @@ function closeOverviewSkid() {
 }
 
 function onBalanceReminderSave() {
-  if (!submitBalanceReminder()) return;
+  if (!balanceReminderSaveEnabled.value) return;
+  closeAllAnchoredTooltips();
+  if (!persistBalanceReminderSave()) return;
   closeOverviewSkid();
+  showAppEndFeedback();
 }
 
 watch(canScroll, () => {
@@ -249,6 +280,31 @@ watch(overviewSkidOpen, () => {
   update();
 });
 
+function applyOverviewQaSnapshot(patch: Partial<ManageOverviewQaSnapshot>) {
+  if (patch.gasProxyEnabled !== undefined) {
+    gasProxyEnabled.value = patch.gasProxyEnabled;
+  }
+  if (patch.balanceAmountVisible !== undefined) {
+    balanceAmountVisible.value = patch.balanceAmountVisible;
+  }
+  if (patch.overviewSkidOpen !== undefined) {
+    overviewSkidOpen.value = patch.overviewSkidOpen;
+  }
+  if (patch.canConfigureGasProxyPayment !== undefined) {
+    canConfigureGasProxyPayment.value = patch.canConfigureGasProxyPayment;
+  }
+}
+
+function resetOverviewQaBaseline() {
+  gasProxyEnabled.value = true;
+  balanceAmountVisible.value = true;
+  overviewSkidOpen.value = false;
+  canConfigureGasProxyPayment.value = true;
+  overviewSkidKind.value = 'recharge';
+  rechargeSkidTarget.value = 'team';
+  rechargeGasAccountKey.value = 'trx';
+}
+
 onMounted(() => {
   registerManageOverviewOverlay({
     confirmDialogOpen,
@@ -261,10 +317,18 @@ onMounted(() => {
     submitTradePassword,
     onVerifyClosed,
   });
+  manageOverviewQaApiRegistry.value = {
+    applySnapshot: applyOverviewQaSnapshot,
+    resetOverviewQaBaseline,
+    openRechargeSkid,
+    openBalanceReminderSkid,
+    closeOverviewSkid,
+  };
 });
 
 onBeforeUnmount(() => {
   registerManageOverviewOverlay(null);
+  manageOverviewQaApiRegistry.value = null;
 });
 </script>
 
@@ -279,16 +343,61 @@ onBeforeUnmount(() => {
             :show-divider="toolbarScrimActive"
           >
             <template v-if="!overviewSkidOpen" #functional>
-              <EgIconProButton :label="ui('Overview Generate Bill')">
-                <EgIcon name="eds-bill" size="sm" />
-              </EgIconProButton>
-
               <EgIconProButton
                 :label="ui('Overview Balance Reminder')"
                 @click="openBalanceReminderSkid"
               >
                 <EgIcon name="eds-bell-ringing" size="sm" />
               </EgIconProButton>
+
+              <EgFlotation
+                placement="bottom"
+                align="end"
+                width-mode="fixed"
+                :width="OVERVIEW_GENERATE_BILL_FLOTATION_WIDTH"
+                height-mode="adaptive"
+                :max-height="OVERVIEW_GENERATE_BILL_FLOTATION_MAX_HEIGHT"
+                :show-add="false"
+                :show-menu-divider="false"
+                boundary-selector=".app-preview"
+                flip
+                close-on-scroll
+              >
+                <template #trigger="{ expanded }">
+                  <span
+                    :class="[
+                      styles.billFlotationTriggerRoot,
+                      expanded && styles.billFlotationTriggerExpanded,
+                    ]"
+                  >
+                    <span
+                      data-eds-trigger-metrics
+                      :class="styles.billFlotationIconSlot"
+                      :aria-expanded="expanded"
+                    >
+                      <EgIconButton
+                        as="span"
+                        shape="rectangular"
+                        size="sm"
+                        :label="ui('Overview Generate Bill')"
+                      >
+                        <EgIcon name="eds-bill" size="sm" />
+                      </EgIconButton>
+                    </span>
+                    <span :class="styles.billFlotationLabelWrap">
+                      <span :class="styles.billFlotationLabelPaint" aria-hidden="true">
+                        {{ ui('Overview Generate Bill') }}
+                      </span>
+                      <span :class="styles.billFlotationLabelSizer">
+                        {{ ui('Overview Generate Bill') }}
+                      </span>
+                    </span>
+                  </span>
+                </template>
+                <template #content>
+                  <ManageOverviewGenerateBillFlotationMenu />
+                </template>
+              </EgFlotation>
             </template>
           </EgToolBar>
           <button
@@ -355,9 +464,14 @@ onBeforeUnmount(() => {
               </span>
             </button>
 
-            <div :class="styles.summaryGrid">
+            <div
+              :class="[
+                styles.summaryGrid,
+                visibleSummaryAccounts.length === 1 && styles.summaryGridSingle,
+              ]"
+            >
               <article
-                v-for="account in summaryAccounts"
+                v-for="account in visibleSummaryAccounts"
                 :key="account.key"
                 :class="styles.summaryCard"
               >
@@ -415,9 +529,9 @@ onBeforeUnmount(() => {
               {{ ui('Overview Gas Account Balance') }}
             </h2>
 
-            <div v-if="gasProxyEnabled" :class="styles.gasAccountRows">
+            <div v-if="visibleGasAccounts.length" :class="styles.gasAccountRows">
               <article
-                v-for="account in gasAccounts"
+                v-for="account in visibleGasAccounts"
                 :key="account.key"
                 :class="styles.gasAccountRow"
               >
@@ -456,9 +570,6 @@ onBeforeUnmount(() => {
                   <div :class="styles.gasAccountTrailing">
                     <div :class="styles.gasBalanceDetailsStack">
                       <div :class="styles.gasBalanceRow">
-                        <span class="typography-footnote" :class="styles.gasBalanceLabel">
-                          {{ ui('Overview Balance') }}
-                        </span>
                         <span class="typography-body-medium" :class="styles.gasBalanceValue">
                           {{
                             balanceAmountVisible
@@ -493,31 +604,6 @@ onBeforeUnmount(() => {
                   </div>
               </article>
             </div>
-
-            <article v-else :class="styles.disabledCard">
-              <div :class="styles.disabledCopy">
-                <h3 class="typography-body-large-strong" :class="styles.disabledTitle">
-                  {{ ui('Overview Enable Gas Proxy') }}
-                </h3>
-                <p class="typography-body-medium" :class="styles.disabledDescription">
-                  {{ ui('Overview Enable Gas Proxy Description') }}
-                </p>
-              </div>
-              <div :class="styles.disabledActions">
-                <EgLinkButton size="sm" tone="brand" href="#" @click.prevent>
-                  {{ ui('Overview Learn More') }}
-                </EgLinkButton>
-                <EgButton
-                  v-if="canConfigureGasProxy"
-                  variant="solid"
-                  tone="decor"
-                  size="md"
-                  @click="enableGasProxy"
-                >
-                  {{ ui('Enable') }}
-                </EgButton>
-              </div>
-            </article>
           </section>
         </main>
       </div>
@@ -528,34 +614,25 @@ onBeforeUnmount(() => {
           :show-button="overviewSkidShowsSave"
           action-tone="decor"
           :confirm-label="ui('Save')"
-          @confirm="onBalanceReminderSave"
         >
+          <template v-if="overviewSkidKind === 'balance-reminder'" #action>
+            <ManageOverviewBalanceReminderSkidAction
+              :confirm-label="ui('Save')"
+              tone="decor"
+              :disabled="!balanceReminderSaveEnabled"
+              :content-revision="balanceReminderSkidContentRevision"
+              @confirm="onBalanceReminderSave"
+            />
+          </template>
           <ManageOverviewBalanceReminderSkidBody
             v-if="overviewSkidKind === 'balance-reminder'"
             v-model="balanceReminderForm"
-            :show-validation="balanceReminderShowValidation"
           />
           <ManageOverviewRechargeSkidBody
             v-else
             :mode="rechargeSkidTarget"
             :gas-account-key="rechargeGasAccountKey"
           />
-          <template v-if="overviewSkidKind === 'balance-reminder'" #action>
-            <div :class="comboActionStyles.skidRoot">
-              <div :class="comboActionStyles.skidActions">
-                <EgButton
-                  :class="comboActionStyles.fullWidth"
-                  tone="decor"
-                  variant="solid"
-                  size="md"
-                  :disabled="!balanceReminderCanSave"
-                  @click="onBalanceReminderSave"
-                >
-                  {{ ui('Save') }}
-                </EgButton>
-              </div>
-            </div>
-          </template>
         </EgSkid>
       </template>
     </EgLayout>

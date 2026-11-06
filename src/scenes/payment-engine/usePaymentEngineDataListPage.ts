@@ -58,7 +58,7 @@ export function usePaymentEngineDataListPage<T>(options: {
       label: 'Quick Collection',
       icon: 'eds-gather',
     }),
-    ...iconButtonProItemDefaults('automation', { label: 'Automation', icon: 'eds-clocks' }),
+    ...iconButtonProItemDefaults('automation', { label: 'Automation', icon: 'eds-automatic' }),
     ...iconButtonProItemDefaults('addNew', { label: 'Add New', icon: 'eds-add' }),
     ...paginerPaginationDefaults(),
     loading: false,

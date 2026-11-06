@@ -22,8 +22,9 @@
   display: none;
 }
 
-.layoutChromeDetailHost :global(.eds-detail [class*='headline']) {
+.layoutChromeDetailHost :global(.eds-detail header[class*='headlineSticky']) {
   padding-top: var(--spacing-2);
+  background: transparent;
 }
 
 .layoutChromeDetailHost :global(.eds-detail [class*='scroll']) {

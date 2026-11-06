@@ -1,4 +1,5 @@
 import {
+  MANAGE_OVERVIEW_MENU_ITEM,
   MANAGE_WEBHOOK_CONFIG_MENU_ITEM,
   MANAGE_WEBHOOK_PUSH_RECORDS_MENU_ITEM,
 } from '@/scenes/manage/manageMenuData';
@@ -8,6 +9,9 @@ export const RISK_CONTROL_QUERY_RECORDS_PAGE_KEY = 'Risk Control:Query Records' 
 
 /** Shell Debug QA · 自动规则。 */
 export const RISK_CONTROL_AUTO_RULES_PAGE_KEY = 'Risk Control:Auto Rules' as const;
+
+/** Shell Debug QA · 团队账户总览。 */
+export const MANAGE_OVERVIEW_PAGE_KEY = `Manage:${MANAGE_OVERVIEW_MENU_ITEM}` as const;
 
 /** Shell Debug QA · Webhook 配置。 */
 export const WEBHOOK_CONFIG_PAGE_KEY = `Manage:${MANAGE_WEBHOOK_CONFIG_MENU_ITEM}` as const;

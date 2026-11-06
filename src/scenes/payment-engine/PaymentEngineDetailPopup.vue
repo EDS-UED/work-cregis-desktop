@@ -78,6 +78,9 @@ import {
   isRiskControlAutoRulesMenuItem,
   isRiskControlLogsMenuItem,
 } from '@/scenes/risk-control/riskControlMenuData';
+import { useDetailAmlSearchFlow } from '@/scenes/tasks/shared/useDetailAmlSearchFlow';
+import { applyDetailAmlSearchSectionOverlay } from '@/scenes/tasks/shared/applyDetailAmlSearchSectionOverlay';
+import DetailAmlSearchToastHost from '@/scenes/tasks/shared/DetailAmlSearchToastHost.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -97,6 +100,18 @@ const emit = defineEmits<{
 }>();
 
 const { ui, locale } = useAppI18n();
+
+const {
+  amlSearchActiveItemKey,
+  amlSearchResultsByKey,
+  amlToastText,
+  amlToastKeepMounted,
+  amlToastMotionActive,
+  onItemValueAmlSearchClick,
+} = useDetailAmlSearchFlow({
+  detailId: computed(() => props.detail?.id),
+  ui,
+});
 
 const detailHostRef = ref<HTMLElement | null>(null);
 provide(riskControlAmlDetailHostKey, detailHostRef);
@@ -529,15 +544,19 @@ const sections = computed(() => {
     );
   }
 
-  if (expandedEntriesByKey.size === 0) {
-    return result;
-  }
+  const expanded =
+    expandedEntriesByKey.size === 0
+      ? result
+      : applyDetailCurrencyExpand(
+          result,
+          expandedDetailItemKeys.value,
+          expandedEntriesByKey,
+        );
 
-  return applyDetailCurrencyExpand(
-    result,
-    expandedDetailItemKeys.value,
-    expandedEntriesByKey,
-  );
+  return applyDetailAmlSearchSectionOverlay(expanded, {
+    resultsByKey: amlSearchResultsByKey.value,
+    translate: ui,
+  });
 });
 
 function onItemValueLinkClick(key: string) {
@@ -585,8 +604,10 @@ function onDetailClose() {
         :value-device-type-label="ui('Device Type')"
         :value-device-id-label="ui('Device ID')"
         :value-device-ip-label="ui('IP')"
+        :aml-search-active-item-key="amlSearchActiveItemKey"
         @close="onDetailClose"
         @item-value-link-click="onItemValueLinkClick"
+        @item-value-aml-search-click="onItemValueAmlSearchClick"
       >
         <template v-if="isAmlRecordDetail && amlRecordDetail" #headline-main>
           <RiskControlAmlRecordDetailHeadline :detail="amlRecordDetail" />
@@ -632,5 +653,11 @@ function onDetailClose() {
         :page-key="detailToolbarPageKey"
       />
     </div>
+    <DetailAmlSearchToastHost
+      v-if="popupOpen"
+      :keep-mounted="amlToastKeepMounted"
+      :motion-active="amlToastMotionActive"
+      :text="amlToastText"
+    />
   </EgDetailPopup>
 </template>

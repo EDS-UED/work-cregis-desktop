@@ -65,6 +65,17 @@ const PAYOUT_WALLET_SIGN_TAG_PRESETS: readonly string[] = [
   'Single-Sign',
 ] as const;
 
+/** 指定行出款钱包 Tag 覆盖（0-based；矿工费 QA 须单签详情链，见 `minerFeeQaSigningRows.ts`）。 */
+const PAYOUT_WALLET_SIGN_TAG_OVERRIDES: Partial<
+  Record<number, (typeof PAYOUT_WALLET_SIGN_TAGS)[number]>
+> = {
+  1: 'Single-Sign',
+  4: 'Single-Sign',
+  11: 'Single-Sign',
+  16: 'Single-Sign',
+  17: 'Single-Sign',
+};
+
 export const TRANSFER_TYPES = [
   'Wallet Payout',
   'Sub-Address Payout',
@@ -155,8 +166,9 @@ export function buildPayoutWalletsColumnValues(rowIndex: number): PayoutWalletsC
     };
   }
 
+  const signOverride = PAYOUT_WALLET_SIGN_TAG_OVERRIDES[rowIndex];
   const preset = PAYOUT_WALLET_NAME_PRESETS[rowIndex];
-  const signPreset = PAYOUT_WALLET_SIGN_TAG_PRESETS[rowIndex];
+  const signPreset = signOverride ?? PAYOUT_WALLET_SIGN_TAG_PRESETS[rowIndex];
   return {
     value: preset ?? buildRandomPayoutWalletName(rowIndex),
     rightLabel: signPreset ?? buildRandomSignTagLabel(rowIndex),

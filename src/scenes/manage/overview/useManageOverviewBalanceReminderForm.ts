@@ -1,44 +1,39 @@
 import { computed, ref } from 'vue';
-import { showAppEndFeedback } from '@/composables/appEndFeedback';
+import { createOverviewBalanceReminderFormState } from './overviewBalanceReminderSkidData';
 import {
-  createOverviewBalanceReminderFormState,
-  hasAnyBalanceReminderAmountSelected,
-  hasAnyBalanceReminderRecipientSelected,
-  type OverviewBalanceReminderFormState,
-} from './overviewBalanceReminderSkidData';
+  cloneOverviewBalanceReminderFormState,
+  overviewBalanceReminderReminderSettingsEqual,
+} from './overviewBalanceReminderFormCompare';
 
 export function useManageOverviewBalanceReminderForm() {
-  const form = ref<OverviewBalanceReminderFormState>(createOverviewBalanceReminderFormState());
-  const showValidation = ref(false);
+  const initial = createOverviewBalanceReminderFormState();
+  const form = ref(cloneOverviewBalanceReminderFormState(initial));
+  const savedForm = ref(cloneOverviewBalanceReminderFormState(initial));
 
-  const canSave = computed(() => {
-    if (!form.value.featureEnabled) return true;
-    return (
-      hasAnyBalanceReminderAmountSelected(form.value.amountByKey) &&
-      hasAnyBalanceReminderRecipientSelected(form.value.recipientById)
+  const saveEnabled = computed(() => {
+    if (!form.value.featureEnabled) return false;
+    return !overviewBalanceReminderReminderSettingsEqual(
+      form.value,
+      savedForm.value,
     );
   });
 
-  function submit(): boolean {
-    if (!canSave.value) {
-      showValidation.value = true;
-      return false;
-    }
-    showValidation.value = false;
-    showAppEndFeedback();
+  function persistSave(): boolean {
+    if (!saveEnabled.value) return false;
+    savedForm.value = cloneOverviewBalanceReminderFormState(form.value);
     return true;
   }
 
   function resetForm() {
-    form.value = createOverviewBalanceReminderFormState();
-    showValidation.value = false;
+    const next = createOverviewBalanceReminderFormState();
+    form.value = cloneOverviewBalanceReminderFormState(next);
+    savedForm.value = cloneOverviewBalanceReminderFormState(next);
   }
 
   return {
     form,
-    showValidation,
-    canSave,
-    submit,
+    saveEnabled,
+    persistSave,
     resetForm,
   };
 }

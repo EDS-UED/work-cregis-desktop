@@ -13,16 +13,17 @@ const WAAS_TRANSACTION_HISTORY_AMOUNT_TIME_COLUMN_MIN_WIDTH = '238px';
 const WAAS_TRANSACTION_HISTORY_ADDRESS_COLUMN_MIN_WIDTH = '179px';
 
 /**
- * 标准 WaaS · 历史记录 5 列：交易类型|交易哈希、发送方、接收方、状态、金额|交易时间。
+ * 标准 WaaS · 历史记录 5 列：交易类型|交易时间、发送方、接收方、状态、金额（≈ 法币副行）。
  * 仅首、尾 combo 列 flex；发送方/接收方锁定 min。
  */
 export const WAAS_TRANSACTION_HISTORY_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   {
     key: 'transactionTypeTxHash',
     labelKey: 'Transaction Type',
-    secondaryLabelKey: 'Transaction hash',
+    secondaryLabelKey: 'Transaction Time UTC+08:00',
     minWidth: WAAS_TRANSACTION_HISTORY_TYPE_HASH_COLUMN_MIN_WIDTH,
     headerKind: 'combo',
+    secondarySortable: true,
     flexGrow: true,
     displayOrder: 1,
   },
@@ -49,12 +50,9 @@ export const WAAS_TRANSACTION_HISTORY_COLUMNS: PaymentEngineRecordColumnConfig[]
   {
     key: 'callbackAmountTime',
     labelKey: 'Amount',
-    secondaryLabelKey: 'Transaction Time UTC+08:00',
     minWidth: WAAS_TRANSACTION_HISTORY_AMOUNT_TIME_COLUMN_MIN_WIDTH,
     flexGrow: true,
-    headerKind: 'combo',
     sortable: true,
-    secondarySortable: true,
     align: 'end',
     comboAlignEnd: true,
     displayOrder: 5,

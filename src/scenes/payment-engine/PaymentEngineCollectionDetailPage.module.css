@@ -28,21 +28,38 @@
   padding-bottom: var(--spacing-0);
 }
 
-.headlineRegion {
+/* 组 1–3 同容器；组间 gap spacing-6（24px） */
+.pageLayout {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-3);
+  gap: var(--spacing-6);
   width: 100%;
-  padding: var(--spacing-0) var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-6) var(--spacing-0);
   box-sizing: border-box;
 }
 
-.headlineMetaRow {
-  display: flex;
+.headlineGroup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: var(--spacing-3);
   width: 100%;
+  min-width: 0;
+}
+
+.headlineStack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.headlineAmountRow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1-5);
 }
 
 .headlineMetaItems {
@@ -67,32 +84,52 @@
 .cardsRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--spacing-3);
+  align-items: stretch;
+  gap: var(--spacing-4);
   width: 100%;
-  padding: var(--spacing-3);
-  box-sizing: border-box;
 }
 
 .conditionCard,
 .progressCard {
-  background: var(--box-flotation);
+  min-height: 100%;
+  background: var(--material-card-shallow);
   border-radius: var(--radius-md);
   box-sizing: border-box;
+}
+
+.conditionCard {
+  padding: var(--spacing-6);
+}
+
+/* 内层 EgDetail 仅渲染 apply-item；去掉 scroll / sectionContent 等布局壳 */
+.conditionCard :global(.eds-detail),
+.conditionCard :global(.eds-detail [class*='scroll']),
+.conditionCard :global(.eds-detail [class*='scrollContent']),
+.conditionCard :global(.eds-detail [class*='scrollBody']),
+.conditionCard :global(.eds-detail [class*='scrollPageHost']),
+.conditionCard :global(.eds-detail [class*='motion-layout-content']),
+.conditionCard :global(.eds-detail [class*='sections']),
+.conditionCard :global(.eds-detail [class*='sectionContent']) {
+  display: contents;
+}
+
+.conditionCard :global(.eds-detail header) {
+  display: none;
 }
 
 .conditionCard :global(.eds-detail [class*='sections']) {
   padding: var(--spacing-0);
 }
 
-.conditionCard :global(.eds-detail [class*='sectionContent']) {
-  padding: var(--spacing-2) var(--spacing-3) var(--spacing-3);
+.conditionCard :global(.eds-detail [class*='sectionTitle']) {
+  padding-left: var(--spacing-0);
 }
 
 .progressCard {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
-  padding: var(--spacing-3);
+  gap: var(--spacing-3);
+  padding: var(--spacing-6);
 }
 
 .progressHeader {
@@ -112,26 +149,38 @@
   color: var(--text-secondary);
 }
 
-.progressBar {
-  width: 100%;
-}
-
-.progressPercent {
-  composes: typography-subheadline from global;
-  color: var(--text-primary);
-}
-
 .metricsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--spacing-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
 }
 
 .metricBlock {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: var(--icon-md) minmax(0, 1fr) auto;
+  align-items: center;
   gap: var(--spacing-1);
   min-width: 0;
+}
+
+.metricIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-md);
+  height: var(--icon-md);
+}
+
+.metricIconPending {
+  color: var(--text-brand-primary);
+}
+
+.metricIconFailed {
+  color: var(--status-danger);
+}
+
+.metricIconSuccess {
+  color: var(--status-success);
 }
 
 .metricLabel {
@@ -142,6 +191,7 @@
 .metricValue {
   composes: typography-subheadline from global;
   color: var(--text-primary);
+  text-align: right;
 }
 
 .metricValueFailed {
@@ -152,33 +202,24 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--spacing-5);
+  gap: var(--spacing-0);
   width: 100%;
-  padding: var(--spacing-4) var(--spacing-3) var(--spacing-5);
+  padding: var(--spacing-2) var(--spacing-0) var(--spacing-6);
   box-sizing: border-box;
-}
-
-.recordsDivider {
-  flex-shrink: 0;
-  width: calc(100% - 2 * var(--spacing-3));
-  margin-inline: var(--spacing-3);
-  box-sizing: border-box;
-}
-
-.recordsTab {
-  flex-shrink: 0;
-  width: 100%;
-}
-
-.recordsTable {
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
 }
 
 .recordsPaginer {
   flex-shrink: 0;
+  width: 100%;
+}
+
+.recordsDataList {
+  width: 100%;
+  min-width: 0;
+  background: var(--box-page);
+}
+
+.recordsDataListEip7702,
+.recordsDataListGasTopUp {
   width: 100%;
 }

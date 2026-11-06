@@ -344,10 +344,19 @@ function usesWalletPayoutAddressColumns(menuItem: string): boolean {
   );
 }
 
+function formatWaasTransactionAmountSecondaryLine(row: PaymentEngineRecordRow): string {
+  const fiat = String(row.orderFiat ?? '').trim();
+  if (!fiat) return '';
+  return fiat.startsWith('≈') ? fiat : `≈ ${fiat}`;
+}
+
 function resolveRecordListAmountTimeDatetime(
   row: PaymentEngineRecordRow,
   menuItem: string,
 ): string {
+  if (isWaasTransactionRecordListMenuItem(menuItem)) {
+    return formatWaasTransactionAmountSecondaryLine(row);
+  }
   if (isWaasCollectionRecordListMenuItem(menuItem)) {
     return row.completionTime ?? row.createdAt;
   }
@@ -1197,7 +1206,16 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                 <div :class="columnCellStyles.listFieldCell">
                   <PaymentEngineListFieldTransactionTypeHash
                     :transaction-type-key="recordRow(data).transactionTypeKey ?? 'Deposit'"
-                    :tx-hash="recordRow(data).txHash ?? ''"
+                    :tx-hash="
+                      isWaasTransactionRecordListMenuItem(menuItem)
+                        ? undefined
+                        : (recordRow(data).txHash ?? '')
+                    "
+                    :transaction-time="
+                      isWaasTransactionRecordListMenuItem(menuItem)
+                        ? recordRow(data).createdAt
+                        : undefined
+                    "
                   />
                 </div>
               </template>

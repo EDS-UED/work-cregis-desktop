@@ -90,7 +90,7 @@ export const OVERVIEW_GAS_RECHARGE_ACCOUNT_OPTIONS: readonly OverviewGasRecharge
       cryptoName: 'eds-eth-ethereum',
       symbol: 'ETH',
       addressFamily: 'evm',
-      minimumDisplay: '0.001 ETH',
+      minimumDisplay: '0.00001 ETH',
     },
     {
       key: 'bnb',
@@ -98,7 +98,7 @@ export const OVERVIEW_GAS_RECHARGE_ACCOUNT_OPTIONS: readonly OverviewGasRecharge
       cryptoName: 'eds-bnb-binance coin',
       symbol: 'BNB',
       addressFamily: 'evm',
-      minimumDisplay: '0.001 BNB',
+      minimumDisplay: '0.000001 BNB',
     },
     {
       key: 'pol',
@@ -106,7 +106,7 @@ export const OVERVIEW_GAS_RECHARGE_ACCOUNT_OPTIONS: readonly OverviewGasRecharge
       cryptoName: 'eds-pol-polygon',
       symbol: 'POL',
       addressFamily: 'evm',
-      minimumDisplay: '1 POL',
+      minimumDisplay: '0.001 POL',
     },
     {
       key: 'sol',
@@ -114,7 +114,7 @@ export const OVERVIEW_GAS_RECHARGE_ACCOUNT_OPTIONS: readonly OverviewGasRecharge
       cryptoName: 'eds-sol-solana',
       symbol: 'SOL',
       addressFamily: 'sol',
-      minimumDisplay: '0.01 SOL',
+      minimumDisplay: '0.00001 SOL',
     },
   ];
 

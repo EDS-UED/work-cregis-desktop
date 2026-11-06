@@ -823,6 +823,7 @@ defineExpose({
                       ui('Auto rule exception handler label')
                     }}</span>
                     <RiskControlAutoRuleRecipientPicker
+                      picker-mode="single"
                       :show-title="false"
                       :model-value="localDraft.exceptionHandlerMemberIds"
                       @update:model-value="onExceptionHandlerMembers"

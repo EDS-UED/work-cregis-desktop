@@ -7,6 +7,7 @@ import {
   EgIconButton,
   EgLinkButton,
   EgTag,
+  EgDetailValueActionIcon,
   type DetailItemData,
 } from '@eds/desktop-components';
 import { copyToClipboard } from '@eds/desktop-components/utils/copyToClipboard';
@@ -17,10 +18,12 @@ import DetailValueActionIcon from '../shared/DetailValueActionIcon.vue';
 const props = defineProps<{
   item: DetailItemData;
   itemIndex: number;
+  amlSearchActiveItemKey?: string | null;
 }>();
 
 const emit = defineEmits<{
   'value-link-click': [];
+  'value-aml-search-click': [key: string];
 }>();
 
 const { ui } = useAppI18n();
@@ -204,10 +207,16 @@ function onItemRowCopyClick(item: DetailItemData, itemIndex: number, event?: Mou
           icon="eds-associates"
         />
 
-        <DetailValueActionIcon
+        <EgDetailValueActionIcon
           v-if="item.showValueAmlSearch"
           :label="ui('AML Search')"
           icon="eds-aml-search"
+          :verifying="amlSearchActiveItemKey === itemCopyKey(item, itemIndex)"
+          @click="
+            emit('value-aml-search-click', itemCopyKey(item, itemIndex));
+            $event.stopPropagation();
+            $event.preventDefault();
+          "
         />
 
         <DetailValueActionIcon

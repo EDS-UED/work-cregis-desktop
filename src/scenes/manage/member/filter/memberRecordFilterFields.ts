@@ -9,7 +9,7 @@ import { resolveDataListFilterSourceRowCount } from '@/scenes/shared/buildListDe
 import { PAYMENT_ENGINE_RECORD_ROW_COUNT } from '@/scenes/payment-engine/paymentEngineOrderRecordData';
 import {
   buildMemberRecordEmailFilterOptions,
-  buildMemberRecordNicknameFilterOptions,
+  buildMemberRecordNicknameMemberFilterOptions,
   buildMemberRecordRoleFilterOptions,
   buildMemberRecordStatusFilterOptions,
 } from './buildMemberRecordFilterOptions';
@@ -41,10 +41,11 @@ function buildFieldCatalog(
     memberNickname: {
       id: 'memberNickname',
       label: filterLabel(translate, 'memberNickname'),
-      kind: 'dropdown',
+      kind: 'member',
       selectionMode: 'single',
       placeholder: FILTER_SELECT_PLACEHOLDER,
-      dropdownOptions: buildMemberRecordNicknameFilterOptions(rowCount),
+      memberOptions: buildMemberRecordNicknameMemberFilterOptions(rowCount),
+      showTypeTabs: false,
     },
     memberEmail: {
       id: 'memberEmail',

@@ -16,8 +16,6 @@ import {
   type DetailAmlSearchResultVariant,
 } from './detailAmlSearchResult';
 
-export const DETAIL_RECEIVER_ITEM_KEY = 'receiver';
-
 export function resolveDetailItemValueCopyKey(
   itemKey: string,
   entryIndex: number,
@@ -156,12 +154,12 @@ function buildAmlSearchPendingEntry(
   return next;
 }
 
-function applyReceiverAmlOverlay(
+function applyAmlSearchItemOverlay(
   item: DetailItemData,
   resultsByKey: ReadonlyMap<string, DetailAmlSearchResultVariant>,
   translate: (key: string) => string,
 ): DetailItemData {
-  if (!item.showValueAmlSearch || item.key !== DETAIL_RECEIVER_ITEM_KEY) {
+  if (!item.showValueAmlSearch || !item.key) {
     return item;
   }
 
@@ -182,10 +180,6 @@ function applyReceiverAmlOverlay(
   const copyKey = resolveDetailItemValueCopyKey(itemKey, 0);
   const result = resultsByKey.get(copyKey);
 
-  if (!result) {
-    return item;
-  }
-
   const baseEntry: DetailItemValueEntry = {
     value: item.value,
     tag: item.tag,
@@ -193,7 +187,10 @@ function applyReceiverAmlOverlay(
     valueAddressSideTags: undefined,
   };
 
-  const resultEntry = buildAmlSearchResultEntry(baseEntry, result, translate);
+  const resultEntry = result
+    ? buildAmlSearchResultEntry(baseEntry, result, translate)
+    : buildAmlSearchPendingEntry(baseEntry, translate);
+
   return {
     ...item,
     valueEntries: [resultEntry],
@@ -212,7 +209,7 @@ export function applyDetailAmlSearchSectionOverlay(
   return sections.map((section) => ({
     ...section,
     items: section.items?.map((item) =>
-      applyReceiverAmlOverlay(item, options.resultsByKey, options.translate),
+      applyAmlSearchItemOverlay(item, options.resultsByKey, options.translate),
     ),
   }));
 }

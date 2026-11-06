@@ -118,6 +118,11 @@ export type PaymentEngineCollectionDetailLineRecord = {
   timestamp: string;
 };
 
+export type PaymentEngineCollectionDetailAlert =
+  | 'account-balance-insufficient'
+  | 'miner-fee-insufficient'
+  | 'team-account-balance-insufficient';
+
 export type PaymentEngineCollectionDetailRecord = {
   collectionNumber: string;
   collectionSymbol: string;
@@ -135,7 +140,13 @@ export type PaymentEngineCollectionDetailRecord = {
   pendingCount: string;
   failedCount: string;
   successCount: string;
+  /** 仅 EVM 系列展示 EIP-7702 升级 Tab。 */
+  supportsEip7702: boolean;
+  /** 运行中可预警；矿工费/团队账户余额不足时异常停止。 */
+  alert?: PaymentEngineCollectionDetailAlert;
   recordLines: PaymentEngineCollectionDetailLineRecord[];
+  eip7702Lines: PaymentEngineCollectionDetailLineRecord[];
+  gasTopUpLines: PaymentEngineCollectionDetailLineRecord[];
 };
 
 export type PaymentEngineRecordRow = {
@@ -978,7 +989,7 @@ const WALLET_PAYOUT_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   {
     key: 'callbackAmountTime',
     labelKey: 'Amount',
-    secondaryLabelKey: 'Application Time UTC+08:00',
+    secondaryLabelKey: 'Initiation Time UTC+08:00',
     minWidth: WALLET_PAYOUT_AMOUNT_TIME_COLUMN_MIN_WIDTH,
     flexGrow: true,
     headerKind: 'combo',

@@ -1,0 +1,108 @@
+.formBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4) var(--spacing-4);
+  box-sizing: border-box;
+}
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.fieldLabel {
+  composes: typography-body-small from global;
+  color: var(--text-base-primary);
+}
+
+.scopeFlotationHost {
+  composes: scopeFlotationHost from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+}
+
+.flotationTrigger {
+  composes: networkFlotationTrigger from '../../risk-control/aml-manual-query/RiskControlAmlManualQueryFormPage.module.css';
+}
+
+.generateRow {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.recordsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+  padding: 0 var(--spacing-4) var(--spacing-4);
+  box-sizing: border-box;
+}
+
+.recordsTitle {
+  composes: typography-body-small-strong from global;
+  margin: 0;
+  color: var(--text-base-primary);
+}
+
+.recordsDivider {
+  flex-shrink: 0;
+}
+
+.recordList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  min-width: 0;
+}
+
+.recordRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.recordMain {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.recordTitle {
+  composes: typography-body-medium-strong from global;
+  color: var(--text-base-primary);
+}
+
+.recordMetaLine {
+  composes: typography-footnote from global;
+  color: var(--text-base-secondary);
+}
+
+.recordDetailRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.recordDetailIcon {
+  flex-shrink: 0;
+  color: var(--text-base-tertiary);
+}
+
+.recordDetailText {
+  composes: typography-footnote from global;
+  min-width: 0;
+  color: var(--text-base-secondary);
+}
+
+.recordDownload {
+  flex-shrink: 0;
+  margin-top: var(--spacing-05);
+}

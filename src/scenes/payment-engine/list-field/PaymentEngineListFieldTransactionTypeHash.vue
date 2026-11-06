@@ -6,13 +6,19 @@ import styles from './PaymentEngineListFieldCallbackAmountTime.module.css';
 
 const props = defineProps<{
   transactionTypeKey: string;
-  txHash: string;
+  txHash?: string;
+  /** 与 txHash 二选一：交易历史/处理中列表副行展示交易时间。 */
+  transactionTime?: string;
 }>();
 
 const { ui } = useAppI18n();
 
 const transactionTypeLabel = computed(() => ui(props.transactionTypeKey));
-const hashText = computed(() => props.txHash?.trim() ?? '');
+const secondaryLineText = computed(() => {
+  const time = String(props.transactionTime ?? '').trim();
+  if (time) return time;
+  return props.txHash?.trim() ?? '';
+});
 </script>
 
 <template>
@@ -20,7 +26,7 @@ const hashText = computed(() => props.txHash?.trim() ?? '');
     <span class="hash-like-combo" :class="styles.hashLikeCombo">
       <EgListFieldOverflowText :text="transactionTypeLabel" variant="primary" />
       <EgListFieldHashLikeLine
-        :text="hashText"
+        :text="secondaryLineText"
         variant="secondary"
         tooltip-trigger="hover"
         :copy-on-row-hover="false"

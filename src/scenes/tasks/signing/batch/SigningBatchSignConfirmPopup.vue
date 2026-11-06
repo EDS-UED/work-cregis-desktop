@@ -27,6 +27,11 @@ import {
   resolveMinerFeePopoverTitleKey,
 } from '../../shared/minerFeeProfile';
 import { resolveGasFeeNetworkFromProfile } from '../../shared/resolveGasFeeNetwork';
+import {
+  resolveAppEvmPaymentDemoQuote,
+  resolveAppEvmSponsoredPaymentEnabled,
+  resolveAppTronMinerFeeQuote,
+} from '../../shared/resolveAppMinerFeeQuotes';
 import { formatBreakdownLine, buildBatchSummary } from './buildBatchSummary';
 import { splitDetailAmountHeadline } from '../../shared/splitDetailAmountHeadline';
 import { buildWithdrawalQuotaNoticeText } from '../buildWithdrawalQuotaNoticeText';
@@ -166,6 +171,31 @@ const gasFeeNetwork = computed(() => {
     return null;
   }
   return resolveGasFeeNetworkFromProfile(props.minerFeeProfile);
+});
+
+const gasFeeTronQuote = computed(() => {
+  if (!props.minerFeeProfile || gasFeeNetwork.value !== 'tron') {
+    return undefined;
+  }
+  return resolveAppTronMinerFeeQuote(props.minerFeeProfile.rowIndex);
+});
+
+const gasFeeEvmPaymentQuote = computed(() => {
+  if (!props.minerFeeProfile || gasFeeNetwork.value !== 'ethereum') {
+    return undefined;
+  }
+  return resolveAppEvmPaymentDemoQuote(
+    ui,
+    props.minerFeeProfile.rowIndex,
+    props.minerFeeProfile.symbol,
+  );
+});
+
+const gasFeeEvmSponsoredPaymentEnabled = computed(() => {
+  if (!props.minerFeeProfile || gasFeeNetwork.value !== 'ethereum') {
+    return true;
+  }
+  return resolveAppEvmSponsoredPaymentEnabled(props.minerFeeProfile.rowIndex);
 });
 const subPageTitle = computed(() => {
   if (isDetailPage.value) {
@@ -491,6 +521,9 @@ useBatchSignConfirmEscape({
                         :symbol="minerFeeProfile.symbol"
                         :title="minerFeeSectionTitle"
                         :transaction-count="minerFeeTransactionCount"
+                        :tron-quote="gasFeeTronQuote"
+                        :evm-payment-quote="gasFeeEvmPaymentQuote"
+                        :evm-sponsored-payment-enabled="gasFeeEvmSponsoredPaymentEnabled"
                         boundary-selector=".eds-popup"
                         @confirm="onGasFeeConfirm"
                       >
