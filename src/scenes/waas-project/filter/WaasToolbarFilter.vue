@@ -26,5 +26,9 @@ const logicMode = defineModel<EgFilterLogicMode>('logicMode', { default: 'all' }
     :layout-mode="props.layoutMode"
     v-model="conditions"
     v-model:logic-mode="logicMode"
-  />
+  >
+    <template v-if="$slots.trigger" #trigger="slotProps">
+      <slot name="trigger" v-bind="slotProps" />
+    </template>
+  </AppToolbarEgFilter>
 </template>

@@ -50,6 +50,7 @@ watch(canScroll, () => {
           :title="ui('Subscription')"
           :show-operation="true"
           :show-divider="toolbarScrimActive"
+          :frosted="toolbarScrimActive"
         >
           <template #operation>
             <div :class="styles.toolbarOperation">

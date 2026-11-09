@@ -1,26 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch, withDefaults } from 'vue';
-import {
-  EgButton,
-  EgDetail,
-  EgFormSubmission,
-  EgIcon,
-  EgProgress,
-  EgTabs,
-  EgTag,
-} from '@eds/desktop-components';
+import { EgDetail } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
-import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
-import SigningBatchDataListPaginerBar from '@/scenes/tasks/signing/batch/SigningBatchDataListPaginerBar.vue';
+import LayoutChromeScrollPageChrome from '@/scenes/project/LayoutChromeScrollPageChrome.vue';
 import { formatElapsedDuration } from '@/scenes/tasks/signing/batch/batchSigningTaskStore';
-import {
-  buildPaymentEngineCollectionDetailConditionSections,
-  buildPaymentEngineCollectionDetailInitiatorText,
-  buildPaymentEngineCollectionDetailMinerFeeText,
-  buildPaymentEngineCollectionDetailProgressMetric,
-} from './buildPaymentEngineCollectionDetailSections';
+import { buildPaymentEngineCollectionDetailConditionSections } from './buildPaymentEngineCollectionDetailSections';
 import { buildPaymentEngineCollectionDetailView } from './paymentEngineCollectionDetailView';
-import PaymentEngineCollectionDetailRecordsTable from './PaymentEngineCollectionDetailRecordsTable.vue';
+import SigningBatchDataListPaginerBar from '@/scenes/tasks/signing/batch/SigningBatchDataListPaginerBar.vue';
+import PaymentEngineCollectionDetailPageBody from './PaymentEngineCollectionDetailPageBody.vue';
 import type {
   PaymentEngineCollectionDetailLineRecord,
   PaymentEngineRecordRow,
@@ -32,11 +19,17 @@ const props = withDefaults(
     detail: PaymentEngineRecordRow;
     menuItem: string;
     embeddedInPageStack?: boolean;
+    toolbarTitleKey?: string;
   }>(),
   {
     embeddedInPageStack: false,
+    toolbarTitleKey: 'Collection Details',
   },
 );
+
+const emit = defineEmits<{
+  back: [];
+}>();
 
 const { ui, locale } = useAppI18n();
 const now = ref(Date.now());
@@ -77,10 +70,9 @@ const activeTabKind = computed(
 const activeRecordLines = computed(
   () => detailView.value.recordsByTab[activeTabKind.value],
 );
-const headlineStatusLabel = computed(() => {
-  if (detailView.value.stopped) return ui('Abnormally Stopped');
-  return activeTabKind.value === 'gas-top-up' ? ui('Running') : ui('Collecting');
-});
+const headlineStatusLabel = computed(() =>
+  ui(detailView.value.headline.status.labelKey),
+);
 const headlineAlert = computed(() => {
   if (detailView.value.alert === 'account-balance-insufficient') {
     return {
@@ -97,10 +89,14 @@ const headlineAlert = computed(() => {
   return null;
 });
 
+const scrollContentRevision = computed(
+  () => `${props.detail.id}:${activeTab.value}:${elapsedTime.value}`,
+);
+
 watch(
   activeRecordLines,
   (lines) => {
-    displayRecordLines.value = lines.slice(0, 20);
+    displayRecordLines.value = [...lines];
   },
   { immediate: true },
 );
@@ -111,18 +107,44 @@ watch(
     activeTab.value = 0;
   },
 );
-
-function formatMetricCount(value: string) {
-  return formatGroupedNumber(Number.parseInt(value.replace(/,/g, ''), 10) || 0);
-}
 </script>
 
 <template>
+  <LayoutChromeScrollPageChrome
+    v-if="props.embeddedInPageStack"
+    :title="ui(props.toolbarTitleKey)"
+    :content-revision="scrollContentRevision"
+    :show-paginer="activeRecordLines.length > 0"
+    :scroll-content-class="styles.collectionDetailScrollContent"
+    @back="emit('back')"
+  >
+    <PaymentEngineCollectionDetailPageBody
+      v-model:active-tab="activeTab"
+      in-page-stack
+      :detail-id="detail.id"
+      :detail-view="detailView"
+      :condition-sections="conditionSections"
+      :headline-status-label="headlineStatusLabel"
+      :headline-alert="headlineAlert"
+      :elapsed-time="elapsedTime"
+      :record-tab-labels="recordTabLabels"
+      :active-tab-kind="activeTabKind"
+      :active-record-lines="activeRecordLines"
+      v-model:display-record-lines="displayRecordLines"
+    />
+    <template #paginer>
+      <div :class="styles.collectionDetailPaginerShell">
+        <SigningBatchDataListPaginerBar
+          :key="`${detail.id}-${activeTabKind}`"
+          :items="activeRecordLines"
+          @paginated-change="displayRecordLines = $event"
+        />
+      </div>
+    </template>
+  </LayoutChromeScrollPageChrome>
   <div
-    :class="[
-      styles.pageRoot,
-      props.embeddedInPageStack ? styles.pageRootEmbedded : styles.pageRootStandalone,
-    ]"
+    v-else
+    :class="[styles.pageRoot, styles.pageRootStandalone]"
   >
     <div :class="styles.detailHost">
       <EgDetail
@@ -135,139 +157,19 @@ function formatMetricCount(value: string) {
         headline=""
       >
         <template #body>
-          <div :class="styles.pageLayout">
-            <section :class="styles.headlineGroup">
-              <div :class="styles.headlineStack">
-                <span class="typography-body-small-strong">
-                  {{ ui(detailView.headline.eyebrowKey) }}
-                </span>
-                <div :class="styles.headlineAmountRow">
-                  <h2 class="typography-headline">
-                    {{ detailView.headline.amountText }}
-                  </h2>
-                  <EgTag
-                    family="status"
-                    :status="detailView.headline.status.kind"
-                    size="lg"
-                  >
-                    {{ headlineStatusLabel }}
-                  </EgTag>
-                </div>
-                <EgFormSubmission
-                  v-if="headlineAlert"
-                  :type="headlineAlert.type"
-                  :text="headlineAlert.text"
-                  :link-label="ui('Recharge')"
-                />
-                <div :class="styles.headlineMetaItems">
-                  <span :class="styles.metaItem">
-                    <EgIcon name="eds-wallet" size="sm" />
-                    <span :class="styles.metaItemText">
-                      {{ buildPaymentEngineCollectionDetailMinerFeeText(detailView, ui) }}
-                    </span>
-                  </span>
-                  <span :class="styles.metaItem">
-                    <EgIcon name="eds-user" size="sm" />
-                    <span :class="styles.metaItemText">
-                      {{ buildPaymentEngineCollectionDetailInitiatorText(detailView, ui) }}
-                    </span>
-                  </span>
-                </div>
-              </div>
-              <EgButton
-                v-if="!detailView.stopped"
-                variant="solid"
-                tone="danger"
-                size="md"
-              >
-                {{ ui('Stop Collection') }}
-              </EgButton>
-            </section>
-
-            <section :class="styles.cardsRow">
-              <div :class="styles.conditionCard">
-                <EgDetail
-                  :sections="conditionSections"
-                  :show-toolbar="false"
-                  :show-tabs="false"
-                  :show-eyebrow="false"
-                  headline=""
-                  :show-status-tag="false"
-                />
-              </div>
-
-              <div :class="styles.progressCard">
-                <div :class="styles.progressHeader">
-                  <span :class="styles.progressTitle">{{ ui('Collection Progress') }}</span>
-                  <span :class="styles.progressRuntime">
-                    {{ ui('Running For') }} {{ elapsedTime }}
-                  </span>
-                </div>
-                <EgProgress
-                  :value="detailView.progress.percent"
-                  :aria-label="ui('Collection Progress')"
-                />
-                <div :class="styles.metricsGrid">
-                  <div :class="styles.metricBlock">
-                    <span :class="[styles.metricIcon, styles.metricIconPending]">
-                      <EgIcon name="eds-time-wait-fill" fit />
-                    </span>
-                    <span :class="styles.metricLabel">{{ ui('To Be Collected') }}</span>
-                    <span :class="styles.metricValue">
-                      {{ buildPaymentEngineCollectionDetailProgressMetric(
-                        formatMetricCount(detailView.progress.pendingCount),
-                        ui,
-                      ) }}
-                    </span>
-                  </div>
-                  <div :class="styles.metricBlock">
-                    <span :class="[styles.metricIcon, styles.metricIconFailed]">
-                      <EgIcon name="eds-warning-fill" fit />
-                    </span>
-                    <span :class="styles.metricLabel">{{ ui('Failed') }}</span>
-                    <span :class="[styles.metricValue, styles.metricValueFailed]">
-                      {{ buildPaymentEngineCollectionDetailProgressMetric(
-                        formatMetricCount(detailView.progress.failedCount),
-                        ui,
-                      ) }}
-                    </span>
-                  </div>
-                  <div :class="styles.metricBlock">
-                    <span :class="[styles.metricIcon, styles.metricIconSuccess]">
-                      <EgIcon name="eds-enable-fill" fit />
-                    </span>
-                    <span :class="styles.metricLabel">{{ ui('Success') }}</span>
-                    <span :class="styles.metricValue">
-                      {{ buildPaymentEngineCollectionDetailProgressMetric(
-                        formatMetricCount(detailView.progress.successCount),
-                        ui,
-                      ) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section :class="styles.recordsRegion">
-              <EgTabs
-                v-model="activeTab"
-                :labels="recordTabLabels"
-                horizontal-gap="xl"
-                vertical-gap="xl"
-              />
-              <PaymentEngineCollectionDetailRecordsTable
-                :lines="displayRecordLines"
-                :table-kind="activeTabKind"
-              />
-              <div v-if="activeRecordLines.length > 20" :class="styles.recordsPaginer">
-                <SigningBatchDataListPaginerBar
-                  :key="`${detail.id}-${activeTabKind}`"
-                  :items="activeRecordLines"
-                  @paginated-change="displayRecordLines = $event"
-                />
-              </div>
-            </section>
-          </div>
+          <PaymentEngineCollectionDetailPageBody
+            v-model:active-tab="activeTab"
+            :detail-id="detail.id"
+            :detail-view="detailView"
+            :condition-sections="conditionSections"
+            :headline-status-label="headlineStatusLabel"
+            :headline-alert="headlineAlert"
+            :elapsed-time="elapsedTime"
+            :record-tab-labels="recordTabLabels"
+            :active-tab-kind="activeTabKind"
+            :active-record-lines="activeRecordLines"
+            v-model:display-record-lines="displayRecordLines"
+          />
         </template>
       </EgDetail>
     </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watch } from 'vue';
 import {
   MOTION_PAGE_CONTENT,
   useMotionPageTransition,
@@ -16,6 +17,19 @@ const emit = defineEmits<{
   'page-settled': [];
 }>();
 
+function resolveLayoutChromePageStackDirection(
+  from: string,
+  to: string,
+): MotionPageDirection {
+  if (from === 'list' && (to === 'detail' || to === 'create')) {
+    return 'forward';
+  }
+  if ((from === 'detail' || from === 'create') && to === 'list') {
+    return 'backward';
+  }
+  return 'none';
+}
+
 const {
   direction,
   isAnimating,
@@ -26,6 +40,18 @@ const {
 function setDirection(next: MotionPageDirection) {
   setMotionDirection(next);
 }
+
+/** pageKey 与 data-page-direction 须同 tick 更新，Transition 才走 motion-page 曲线。 */
+watch(
+  () => props.pageKey,
+  (next, previous) => {
+    if (!props.enabled || previous === undefined || next === previous) {
+      return;
+    }
+    setMotionDirection(resolveLayoutChromePageStackDirection(previous, next));
+  },
+  { flush: 'sync' },
+);
 
 function settleMotionPage() {
   if (!isAnimating.value) {
@@ -66,6 +92,7 @@ defineExpose({
       <div :key="pageKey" class="motion-page">
         <div :class="[MOTION_PAGE_CONTENT, styles.pageContent]">
           <!-- v-if 须在 keyed motion-page 内，避免父级 slot 先切内容吃掉 Pop leave。 -->
+          <!-- 详情 ToolBar 在 slot 内 EgLayout overlay；toolbar 行结构与 create 一致以共用 motion-page。 -->
           <div v-if="props.pageKey === 'detail'" :class="styles.pageChrome">
             <div :class="styles.pageChromeToolbar">
               <slot name="detail-toolbar" />

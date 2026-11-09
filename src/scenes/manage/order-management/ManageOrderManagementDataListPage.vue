@@ -159,6 +159,7 @@ function onRowClick(data: DataListItem) {
           :title="ui('Order Management')"
           :show-operation="true"
           :show-divider="true"
+          frosted
         >
           <template #functional>
             <TasksToolbarFilter

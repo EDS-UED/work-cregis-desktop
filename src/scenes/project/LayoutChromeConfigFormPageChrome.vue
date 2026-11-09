@@ -28,11 +28,12 @@ const { ui } = useAppI18n();
 const scrollRef = ref<HTMLElement | null>(null);
 const contentRef = ref<HTMLElement | null>(null);
 
-const { canScroll, topScrim, update } = useScrollChromeScrim(scrollRef, {
+const { canScroll, topScrim, bottomScrim, update } = useScrollChromeScrim(scrollRef, {
   contentRef,
 });
 
 const toolbarScrimActive = computed(() => canScroll.value && topScrim.value);
+const paginerScrimActive = computed(() => canScroll.value && bottomScrim.value);
 
 function onConfirm() {
   if (!props.canSubmit) return;
@@ -66,6 +67,7 @@ watch(canScroll, () => {
             :show-back="true"
             :show-operation="false"
             :show-divider="toolbarScrimActive"
+            :frosted="toolbarScrimActive"
             @back="emit('back')"
           />
         </template>
@@ -81,6 +83,7 @@ watch(canScroll, () => {
             tone="decor"
             direction="left"
             page-chrome
+            :frosted="paginerScrimActive"
             divider
             :confirm-disabled="!canSubmit"
             :confirm-label="confirmLabel"

@@ -37,12 +37,15 @@ export function buildPaymentEngineCollectionDetailConditionSections(
         title: translate('Collection Amount Range'),
         value: amountRangeLabel,
       }),
-      createDetailApplyItemRow('receiver', {
-        key: 'collection-detail-receiving-address',
-        title: translate('Arrival Address'),
-        value: conditions.receivingAddress,
-        tag: conditions.receivingAlias ?? '',
-      }),
+      {
+        ...createDetailApplyItemRow('receiver', {
+          key: 'collection-detail-receiving-address',
+          title: translate('Arrival Address'),
+          value: conditions.receivingAddress,
+          tag: conditions.receivingAlias ?? '',
+        }),
+        showTitleIcon: false,
+      },
     ],
   }];
 }

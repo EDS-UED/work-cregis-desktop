@@ -1,17 +1,34 @@
 <script setup lang="ts">
-import { EgListFieldOverflowText } from '@eds/desktop-components';
+import { EgListFieldOverflowText, EgTag } from '@eds/desktop-components';
 import styles from './PaymentEngineListField.shared.module.css';
 
-defineProps<{
-  primary: string;
-  secondary: string;
-  alignEnd?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    primary: string;
+    secondary?: string;
+    /** 地址前的别名 pill（如 Mr. Wang）。 */
+    receiverTag?: string;
+    alignEnd?: boolean;
+  }>(),
+  {
+    secondary: '',
+  },
+);
 </script>
 
 <template>
-  <div :class="[styles.host, alignEnd && styles.hostAlignEnd]">
-    <EgListFieldOverflowText :text="primary" variant="primary" tabular />
-    <EgListFieldOverflowText :text="secondary" variant="secondary" tabular />
+  <div :class="[styles.host, props.alignEnd && styles.hostAlignEnd]">
+    <div v-if="props.receiverTag?.trim()" :class="styles.receiverLeadRow">
+      <EgTag family="system" system-type="solid-brand" size="sm">
+        {{ props.receiverTag.trim() }}
+      </EgTag>
+    </div>
+    <EgListFieldOverflowText :text="props.primary" variant="primary" tabular />
+    <EgListFieldOverflowText
+      v-if="props.secondary?.trim()"
+      :text="props.secondary"
+      variant="secondary"
+      tabular
+    />
   </div>
 </template>

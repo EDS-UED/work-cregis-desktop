@@ -12,9 +12,9 @@ import {
   EgSwitch,
   EgTabs,
   EgToolBar,
-  useMotionLayoutContentSwitch,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useTabContentMotionSwitch } from '@/composables/useTabContentMotionSwitch';
 import type { WaasProjectDepositMode } from '@/scenes/project/types';
 import ProjectSettingsItem from '@/scenes/project/components/ProjectSettingsItem.vue';
 import ProjectSettingsCallbackPanel from '@/scenes/project/components/ProjectSettingsCallbackPanel.vue';
@@ -87,29 +87,24 @@ const showGenerateSubAddressInterface = computed(
 );
 
 const tabIndex = ref(0);
-const displayedTabIndex = ref(0);
 const scrollBodyRef = ref<HTMLElement | null>(null);
 const projectEnabled = ref(false);
 
 const {
+  displayedTabIndex,
   contentExiting,
   contentEntering,
-  switchContent,
-} = useMotionLayoutContentSwitch();
-
-watch(tabIndex, (next, prev) => {
-  if (next === prev) return;
-  switchContent(() => {
-    displayedTabIndex.value = next;
-  });
-  scrollBodyRef.value?.scrollTo({ top: 0, behavior: 'instant' });
+  syncDisplayedTab,
+} = useTabContentMotionSwitch(tabIndex, {
+  mode: 'reset',
+  scrollRef: scrollBodyRef,
 });
 
 watch(
   () => props.tabPreset,
   () => {
     tabIndex.value = 0;
-    displayedTabIndex.value = 0;
+    syncDisplayedTab();
   },
 );
 

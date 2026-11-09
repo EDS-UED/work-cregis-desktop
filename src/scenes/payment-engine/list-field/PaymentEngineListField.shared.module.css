@@ -9,6 +9,15 @@
   box-sizing: border-box;
 }
 
+.receiverLeadRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-1);
+  width: 100%;
+  min-width: 0;
+}
+
 .hostCenter {
   display: flex;
   align-items: center;

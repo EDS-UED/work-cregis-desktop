@@ -192,6 +192,7 @@ function onRowClick(data: DataListItem) {
           :title="ui('Gas Proxy Payment Records')"
           :show-operation="true"
           :show-divider="true"
+          frosted
         >
           <template #functional>
             <TasksToolbarFilter

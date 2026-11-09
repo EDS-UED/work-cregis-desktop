@@ -1,0 +1,388 @@
+---
+description: work-cregis-desktop 动效方法真源 — EDS motion 体系总表、通用页面→动效映射、motion-page、Tab 内容 crossfade、motion-flotation、Popup motion-layout、Skid shift、hover motion-ease、deform、DataList 内置动效；持续补充
+alwaysApply: true
+---
+
+# 动效方法（motion）
+
+`work.mdc` 管边界与硬约束；`general.mdc` 管通用页面模板；**本文件只管「动效怎么接」**（分工见 `work.mdc` §0.1）。新增动效方法 → 追加 §N，勿散落到业务注释。EDS 真源：`../eds-desktop/packages/components/src/styles/motionPageTransition.css`（头注释）、`atoms/motion-page/motionPage.ts`、`components/docs/layout-deform-page-switch.md`、`tokens/spec/motion/semantic.json`（**禁改**，缺口按 `work.mdc` 先报）。
+
+## 0. 速查
+
+### 0.1 场景 → 用法
+
+| 场景 | 用 | 禁 |
+|---|---|---|
+| 模块内整页 A→B / B→A（列表↔创建/编辑/详情） | `LayoutChromePageStack` · `pageKey`（§1） | 业务手写 `<Transition name="motion-page">`、v-if 硬切、自造 slide CSS |
+| B 页壳（表单） | `LayoutChromeConfigFormPageChrome` | B 页再挂外层 `#*-toolbar` |
+| B 页壳（只读/详情） | `LayoutChromeScrollPageChrome` | `pageChrome` 外层 ToolBar + `EgDetail` 全高 scroll |
+| Tab 切换下属内容（同壳 crossfade） | `useTabContentMotionSwitch` · `EgMotionLayoutContent` · 内容跟 `displayedTabIndex`（§2） | 业务手写 `useMotionLayoutContentSwitch` + watch、内容跟 `activeTab`、事后 `scrollTo` 补跳顶 |
+| 浮层进出场（Tooltip / Popover / 自建 Toast / 菜单） | EDS 浮层自带；自建 → 宿主 `is-active` + 子层 `.motion-flotation` + `useEdsToastMotion`（§3） | 覆盖 `.motion-flotation` transform/opacity、同帧 mount+active、`v-if` 直接卸载、写死离场时长 |
+| Popup / Dialog 进出场（大位移 + scrim） | `EgPopup` 族自带 `.motion-layout` + `usePopupShellLifecycle`（§4） | 业务给 Popup 加 transition、`v-if` 直接卸 shell、visibility 假藏 |
+| Popup 内多页（摘要↔明细） | 手动 `.motion-page-stack` + `data-page-direction`（参考 `TransactionRecordDetailPopup.vue`） | 用 `LayoutChromePageStack` 套 Popup |
+| 浮层内多页尺寸 morph | `useMotionLayoutDeformPageSwitch` · `.motion-layout-deform`（§7.2） | 手写 height 动画 |
+| 侧滑面板 EgSkid | `EgLayout v-model:show-skid`，EDS 内置 `--motion-recipe-shift`（§5） | 自写 Skid 滑入、transform 覆盖 |
+| hover / click 微交互 | `.motion-ease.is-paint` 或 `transition: var(--motion-recipe-hover)`；click/focus/selected **无 transition**（§6） | 自写 duration/easing |
+| Tab 滑块 / Toggle 形变 | EDS 内置 `.motion-deform`（§7.1） | 覆盖滑块 transform / transition |
+| DataList 行 hover / 批选 / loading / 批处理浮条 | EDS 内置（§8）；单页改行背景时补 `--motion-recipe-hover` | 改 EDS 批选动画、`v-if` 卸勾选列 |
+
+### 0.2 EDS motion 体系（`tokens/spec/motion/*.json` · 禁改）
+
+三层：**base**（`--eds-motion-N` 时长阶梯 / `--eds-motion-ease-N` 曲线 / offset·scale·opacity 原子）→ **recipe**（`--motion-recipe-*` = 时长 + 曲线 + 属性）→ **semantic**（场景 class）。业务**只选 semantic class 或 recipe**，不碰 base、不写数值。
+
+| semantic class | 场景 | 参数（recipe / 值） | 谁挂 | 本文件 |
+|---|---|---|---|---|
+| `.motion-ease.is-paint` | hover 对称入出（paint 属性） | `--motion-recipe-hover` · 300ms ease-in-out | Button / Paginer / DataList 行 / 业务 hover 块 | §6 |
+| `.motion-ease.is-paint-fade` | paint + 透明度 | `--motion-recipe-hover` + `--motion-recipe-fade`（150ms） | hover tooltip trigger focus | §6 |
+| `.motion-ease.is-enter-only` | 仅 hover 入场（600ms），离开 / 点按 / focus 无过渡 | `--motion-recipe-hover-asym` | `EgMotionHoverEnter` | §6 |
+| `.motion-ease.is-asym` | 悬浮非对称入出 | `--motion-recipe-hover-asym` · 600ms | Detail 关闭按钮等 | §6 |
+| `.motion-layout` | 大位移面板进出场：自下 8px + 淡入 | `--motion-recipe-enter`（200ms）；Popup 组件侧 300ms | EgPopup（Detail / Dialog / Verify / custom） | §4 |
+| `.motion-flotation` | 浮层微位移：自上 -10px + 0.96 缩放 | `--motion-recipe-flotation-enter`（opacity 200ms + transform 400ms spring） | Tooltip / Popover / Flotation / 自建 Toast | §3 |
+| `.motion-deform` | 控件形变（非进出场） | `--motion-recipe-control` · 250ms Material | Tab 滑块 / Toggle | §7.1 |
+| `.motion-page` | 整页 Push / Pop | `--motion-recipe-page-*`（Push 460ms / Pop 400ms，内容 parallax 420 / 360ms） | `LayoutChromePageStack` | §1 |
+| `.motion-layout-deform` | 浮层容器宽高 morph | `--motion-recipe-layout-deform-shell` · 350ms ease-8 | 浮层多页 shell | §7.2 |
+| `.motion-layout-content` | 同壳换内容 crossfade | `--motion-recipe-layout-deform-content`（opacity 180ms + transform 350ms）· 120ms mid-swap | Tab 内容 / Popover 内页 / motion-page 内层 | §2 |
+| `.motion-none` | 无过渡 | `transition: none` | focus / selected | §6 |
+
+非 class 的 recipe（组件内部已用，业务定制同类样式时复用）：
+
+| recipe | 用途 |
+|---|---|
+| `--motion-recipe-shift` | Layout / Skid 宽度、DataList loading 行（300ms ease-in-out，geometry 属性） |
+| `--motion-recipe-float` | DataList 批处理浮条进出（300ms opacity + transform） |
+| `--motion-recipe-fade` | 纯透明度（150ms） |
+| `--motion-recipe-scroll-fade` / `-background` | 滚动遮罩 / Tab 溢出渐隐（500ms decelerate） |
+| `--motion-duration-feedback` | EndFeedback 圆环（350ms，组件内置） |
+
+`prefers-reduced-motion`：EDS 已把全部 duration 置 0；业务**勿**另写 reduced-motion 分支。
+
+### 0.3 通用页面 → 动效方案（对应 `general.mdc`）
+
+| `general.mdc` | 用到的动效 |
+|---|---|
+| §1 页面 chrome | 顶 / 底栏毛玻璃与分割线随 scrim **瞬切、无过渡**（EDS 未定义 transition，业务勿补）；按钮 hover → §6 |
+| §2 创建 / 编辑页 | 进出：§1 motion-page（list↔create）；表单内 Tab / 分段切换：§2；字段内浮层（下拉、Popover）：§3；hover：§6 |
+| §3 数据列表页 | 列表↔详情 / 创建：§1；行 hover、批选列、loading、批处理浮条：§8；ToolBar 筛选 / 批处理浮层：§3；Tab 滑块：§7.1 |
+| §4.1 Popup 详情 | 进出场 + scrim：§4；Popup 内多页：§0.1「Popup 内多页」；详情 Tab 内容：§2；行 hover：§6 |
+| §4.2 整页详情 | 进出：§1（list↔detail）；页内 Tab 内容：§2（`sticky-anchor`）；Tab 滑块：§7.1 |
+| §5 EgSkid | 开合：§5（shift）；Skid 内浮层：§3；保存成功反馈：EndFeedback（`work.mdc` §7.2） |
+| §6 EgDialog | 进出场 + scrim：§4（与 Detail 同一套 `.motion-layout`）；上层 Dialog 开时下层 Detail `suspended` 瞬卸 |
+| §7 / §8 数据展示、mock | 无动效 |
+
+---
+
+## 1. 页面切换 motion-page（A→B · B→A）
+
+### 1.1 契约（EDS）
+
+- `.motion-page-stack[data-page-direction="forward|backward"]` → `<Transition name="motion-page">` → `.motion-page`（`:key=pageKey`）→ `.motion-layout-content`
+- **forward（Push）**：新页 `translateX(100%)→0`，旧页左移淡出；内容 `translateY` crossfade
+- **backward（Pop）**：当前页右移出，上一页自左回位；内容仅 opacity
+- 时长/曲线全来自 token `--motion-recipe-page-*`，业务**不写**
+
+### 1.2 接入（唯一做法）
+
+```vue
+<!-- 宿主：PaymentEngineDataListPage（或同类列表宿主） -->
+<LayoutChromePageStack
+  ref="layoutDetailPageMotionRef"
+  :enabled="true"
+  :page-key="integratedPageKey"   <!-- 'list' | 'create' | 'detail' -->
+  @page-settled="onIntegratedLayoutPageSettled"
+>
+  <template #list-toolbar>…列表 EgToolBar…</template>
+  <template #list>…EgDataList…</template>
+  <template #list-paginer>…</template>
+  <template #create><LayoutChromeConfigFormPageChrome …/></template>
+  <template #detail><XxxDetailPage embedded-in-page-stack @back="close…" /></template>
+</LayoutChromePageStack>
+```
+
+1. **只改业务 flow 布尔**（`configFormOpen` / `collectionDetailOpen` …）→ `pageKey` 计算属性随之变。
+2. **方向自动**：`LayoutChromePageStack` 内 `watch(pageKey, { flush: 'sync' })`：`list→create|detail` = forward；`create|detail→list` = backward。业务**不要**再 `setDirection('forward'|'backward')`。
+3. **B→A**：B 页 `EgToolBar @back` → emit → 宿主关 flow（如 `detailFlow.closeCollectionDetail()`）。
+4. **清会话**：在 `@page-settled` 里（动画结束后）清 row / draft；**禁**在关 flow 同步清 row（leave 页会瞬间空白）。
+5. **瞬切（切菜单等）**：先关 flow，再 `setDirection('none')`。
+6. B 页 ToolBar **在壳内**（EgLayout chrome overlay）；stack 的 `#detail-toolbar` / `#create-toolbar` 留空。
+
+### 1.3 嵌套栈（WaaS 等）与 DOM 结构——必读
+
+EDS glue 的方向规则只作用于**本层栈的直接子页**：`.motion-page-stack[data-page-direction=…] > .motion-page-*`。嵌套栈（如 WaaS 外壳 `WaasProjectShell` + 列表↔详情）时，外层方向（含 `none` 的 `transition: none`）不会误伤内层。
+
+- 栈上常驻 `:data-page-direction="direction"`（`forward | backward | none`），按 EDS 契约输出即可。
+- **`.motion-page` 必须是 `.motion-page-stack` 的直接子节点**：只允许 `stack > <Transition name="motion-page"> > .motion-page`（`<Transition>` 不渲染 DOM）。**禁**在两者之间插 wrapper div，否则方向规则不命中，等于无动画。
+- 历史：EDS 曾为后代选择器，外层 `none` 把内层 0.4s 压成 0s；EDS 已修，本仓「空闲不输出方向属性」的绕行已撤，勿再加回。
+
+### 1.4 CSS 禁忌
+
+- **禁**给 `.motion-page-stack` 设 `display:flex` / `align-content:start` 等破坏 grid 叠层（两页需 `grid-area:1/1` 叠放）。
+- **禁**给 `.motion-page` / `.motion-layout-content` 加 `transform`、`will-change` 覆盖或 `transition`。
+- 栈须有确定高度（`height:100%` + `min-height:0` 链），否则 Pop 时塌高。
+
+### 1.5 排查顺序（「动效不对」时）
+
+1. 切换瞬间 `pageKey` 是否真的变了（`.motion-page` 是否出现两份）。
+2. 本层栈 `data-page-direction` 在切换瞬间是否为 `forward/backward`；`.motion-page` 是否为栈的**直接子节点**（中间多一层 div 即失效）。
+3. 进出页 `getComputedStyle(page).transitionDuration` 是否非 `0s`。
+4. 栈是否 grid、是否有高度；B 页内是否残留独立 ToolBar 行或 Popup systemBar（`EgDetail > div:first-child`）。
+
+参考实现：Webhook 创建（`WebhookModuleHost` → `WebhookCreateEditPage` embedded）· 任务记录归集明细（`PaymentEngineCollectionDetailPage` → `LayoutChromeScrollPageChrome`）。
+
+---
+
+## 2. Tab 切换下属内容 motion-layout-content（同壳 crossfade）
+
+### 2.1 契约（EDS）
+
+- `useMotionLayoutContentSwitch()` → `contentExiting` / `contentEntering` → `<EgMotionLayoutContent>`（根 `.motion-layout-content` + `.is-exiting` / `.is-entering`）→ 内容按 `displayedTabIndex` 渲染
+- **时序**：点 Tab → `is-exiting`（淡出）→ `MOTION_LAYOUT_CONTENT_SWAP_MS`（120ms，= `--motion-delay-layout-deform-content-swap`）后换内容 → `is-entering` → 下一帧回静止
+- **两个 index**：`activeTab`（EgTabs 选中态，立即变）≠ `displayedTabIndex`（实际渲染的内容，交换时才变）；内容/表格 `:key` 一律跟 **displayed**
+- 时长/曲线全来自 token（`motionLayoutContentTransition.css`），业务**不写**；壳不动，只换内容（与 §1 整页 Push/Pop 区分）
+
+### 2.2 接入（唯一做法）
+
+```vue
+<script setup lang="ts">
+import { useTabContentMotionSwitch } from '@/composables/useTabContentMotionSwitch';
+
+const activeTab = ref(0);                       // 或 defineModel('activeTab')
+const { displayedTabIndex, contentExiting, contentEntering, bodyStyle, syncDisplayedTab }
+  = useTabContentMotionSwitch(activeTab, { mode: 'sticky-anchor', anchorRef, bodyRef }); // 见 §2.3
+watch(() => props.detailId, syncDisplayedTab);  // 外部重置：无动画同步
+</script>
+
+<template>
+  <section ref="anchorRef">                     <!-- Tab 栏 + 内容区共同容器 -->
+    <div class="tabsBar"><EgTabs v-model="activeTab" :labels="labels" /></div>
+    <div ref="bodyRef" :style="bodyStyle">
+      <EgMotionLayoutContent :content-exiting="contentExiting" :content-entering="contentEntering">
+        <XxxPanel :key="`${id}-${tabs[displayedTabIndex].kind}`" … />
+      </EgMotionLayoutContent>
+    </div>
+  </section>
+</template>
+```
+
+1. **只改 `activeTab`**（EgTabs `v-model`）；composable 内 `watch(activeTab, { flush: 'sync' })` 自动 `switchContent`。业务**不要**再手写 `useMotionLayoutContentSwitch` + watch。
+2. **内容一律按 `displayedTabIndex` 取**（kind / 数据 / `:key`）；用 `activeTab` 渲染内容 = 淡出前就换，动效失效。
+3. **外部重置**（换详情 id、换 preset）：先改 `activeTab`，再 `syncDisplayedTab()`。
+4. 切换后需重算的（scrim `contentRevision`、Paginer 数据）挂在 **displayed** 变化上，不挂 `activeTab`。
+
+### 2.3 滚动模式——必选其一
+
+| `mode` | 场景 | 行为 | 参考 |
+|---|---|---|---|
+| `reset` | Tab 栏在滚动区**外**（固定），内容区自滚 | 切换即 `scrollRef.scrollTo({ top: 0 })` | `ProjectSettingsPageContent.vue` |
+| `sticky-anchor` | Tab 栏在**整页滚动内** `position: sticky` 吸顶 | ① 切换期间锁 `bodyRef` 的 `min-height`（`bodyStyle`，`whenIdle` 后释放）② Tab 栏已吸顶时把滚动对齐到 `anchorRef` 顶边（Tab 栏留在吸顶位、内容区从栏下开始）；未吸顶不动 | `PaymentEngineCollectionDetailPageBody.vue` |
+| `none` | 内容等高 / 无滚动 | 只 crossfade | — |
+
+- **为何要锁高**：`:key` 换内容的瞬间内容区会塌，滚动高度骤减，浏览器把 `scrollTop` 钳到 0——表现为「点 Tab 跳回页顶」。**禁**用 `scrollTo` 事后补救。
+- 滚动宿主由 `anchorRef` 向上找首个 `overflow-y: auto|scroll` 祖先；吸顶线 = 宿主顶 + `padding-top`（Layout chrome overlay 的 inset）。
+
+### 2.4 CSS 禁忌
+
+- **禁**给 `.motion-layout-content` 加 `transform` / `transition` / `will-change` 覆盖；需 `overflow` 放行（sticky、hover 圆角外溢）只写 `overflow: visible`。
+- `sticky-anchor`：Tab 栏 sticky 用 `top: 0`（宿主 padding 已含 ToolBar inset，勿再加 `--eds-layout-chrome-inset-top`）；Tab 栏与吸顶线之间的祖先**禁** `overflow: auto|hidden`（会成为滚动容器、sticky 失效），裁圆角用 `overflow: clip`。
+- 内容区内的 EgDataList 若随整页滚（`tableContent overflow: visible`），EDS 表头自带 sticky 会挂到整页上；不吸顶时显式 `position: static`（仅本页 scope）。
+
+### 2.5 排查顺序（「Tab 动效不对」时）
+
+1. 点 Tab 瞬间 `.motion-layout-content` 是否出现 `is-exiting` → `is-entering`。
+2. 内容 `:key` / 数据是否跟 `displayedTabIndex`（跟了 `activeTab` = 淡出前就换）。
+3. 跳页顶：`bodyRef` 切换中是否有 inline `min-height`；`mode` 是否选成 `sticky-anchor`。
+4. 吸顶后未对齐：`anchorRef` 是否为 Tab 栏 + 内容的**共同容器**（不是 Tab 栏本身）；宿主是否被中间 `overflow` 祖先截胡。
+
+参考实现：项目设置（`ProjectSettingsPageContent` · `reset`）· 任务记录归集明细三 Tab（`PaymentEngineCollectionDetailPageBody` · `sticky-anchor`）。
+
+---
+
+## 3. 浮层进出场 motion-flotation（微位移 · Tooltip / Popover / Toast / 菜单）
+
+### 3.1 契约（EDS）
+
+- 宿主 `.is-active`（或 `.glassMicroFloatHostActive`）→ 子层 `.motion-flotation`（glass / shape 面板本身）
+- **隐藏态（无 active）**：`opacity: var(--motion-opacity-hidden)` · `translateY(var(--motion-offset-flotation-y))`（-10px，自上而下落入）· `scale(var(--motion-scale-flotation-enter))`（0.96）
+- **active**：`opacity: 1` · `translateY(0) scale(1)`
+- 过渡 `--motion-recipe-flotation-enter`：opacity 200ms standard + transform 400ms spring；离场同一元素去掉 active 即反向
+- 真源 `tokens/spec/motion/semantic.json`「3 · Flotation」· `base.json` / `recipe.json`；业务**不写** duration / easing / offset / scale
+
+### 3.2 接入（唯一做法）
+
+**A. EDS 浮层（EgTooltip / EgAnchoredPopover / EgFlotation / Eg*Popover）**——组件自带，业务**零接线**：
+
+```vue
+<EgTooltipPanel panel-kind="flotation" panel-micro-float …>   <!-- Tooltip 面板 -->
+<EgPopover micro-float …>                                       <!-- Popover -->
+```
+
+自定义菜单根（放进上述浮层 `#content`）只挂类，active 由外层浮层宿主驱动：
+
+```vue
+<div class="desktopTokens effect-flotation-box motion-flotation eds-flotation-inner-backdrop">…</div>
+```
+
+**B. 业务自建 Toast / 浮标（非锚定，Teleport 到 `.app-preview` 或 `.app-popup-overlay-root`）**：
+
+```vue
+<script setup lang="ts">
+import { useEdsToastMotion } from '@/scenes/tasks/shared/useEdsToastMotion';
+const { text, keepMounted, motionActive, show } = useEdsToastMotion();
+</script>
+
+<template>
+  <Teleport to=".app-preview">
+    <div v-if="keepMounted" :class="['xxxToastHost', motionActive && 'is-active']">  <!-- 宿主：仅定位 -->
+      <div class="motion-flotation desktopTokens"><EgToast type="result" :text="text" /></div>
+    </div>
+  </Teleport>
+</template>
+```
+
+1. **两层结构**：宿主（定位 + `is-active`）≠ 动效层（`.motion-flotation`）。**禁**把 `.motion-flotation` 与定位 `transform`（如 `translateX(-50%)` 居中）挂同一元素——transform 互相覆盖。
+2. **入场**：先 mount（`keepMounted=true`、无 active）→ `nextTick` + `rAF` → 加 `is-active`；同帧 mount+active 无过渡。`useEdsToastMotion.show()` 已含此时序。
+3. **离场**：先去 `is-active` → 等 `readEdsFlotationLeaveMs()`（probe 读 `.motion-flotation` 的 **最长** transitionDuration）→ 再卸载。**禁**直接 `v-if=false`（无离场）、**禁**写死 300ms。
+4. 操作**成功反馈**不走本节，一律 `showAppEndFeedback`（`work.mdc` §7.2）；本节 Toast 仅限检索结果、范围提示等非「操作成功」类。
+
+### 3.3 与其它 motion 的边界
+
+| 场景 | 用 | 不用 |
+|---|---|---|
+| 锚定浮层 / Toast / 小浮标（微位移） | `.motion-flotation` | `.motion-layout` |
+| EgPopup Detail 等大面板（大位移） | `.motion-layout`（`panel-layout-motion`，EDS 内置） | `.motion-flotation` |
+| 整页 Push/Pop | §1 `.motion-page` | — |
+| 同壳换内容 | §2 `.motion-layout-content` | — |
+
+### 3.4 CSS 禁忌
+
+- **禁**在业务 CSS 覆盖 `.motion-flotation` 的 `opacity` / `transform` / `transition`（含 `:not(.is-active) .motion-flotation { translateY(+8px) scale(.98) }` 一类自定隐藏态——与 token 的 -10px / 0.96 方向相反）。（存量已清：`global.css` `.detail-aml-toast-host`、`MultiSignInvitationFloatHost.module.css` `.toastHost`；勿再加回。）
+- **禁**在 `.motion-flotation` 祖先上加 `overflow: hidden` 裁掉 spring 过冲 / 阴影；宿主 `pointer-events: none`，交互在面板内恢复。
+- 宿主只管定位（`position` / `top` / `left` / `z-index` / `translateX(-50%)`），**禁**给宿主加 transition。
+
+### 3.5 排查顺序（「浮层没动效 / 闪现」时）
+
+1. `.motion-flotation` 的**直接或祖先**是否在切换后出现 `.is-active`（或 `.glassMicroFloatHostActive`）。
+2. mount 与 active 是否同帧（DevTools 看是否先有无 active 的一帧）。
+3. `getComputedStyle(el).transitionDuration` 是否非 `0s`；`transform` 是否被业务 CSS 或同元素定位 transform 覆盖。
+4. 离场：去 active 后是否等满 leaveMs 再卸载；是否被 `closeAllAnchoredTooltips()` 同步卸掉（锚定浮层走 EDS 自带离场，勿业务侧 `v-if`）。
+
+参考实现：检索结果 Toast（`DetailAmlSearchToastHost` + `useDetailAmlSearchFlow` → `useEdsToastMotion`）· 自定义网络选择菜单（`SigningBatchNetworkPickerMenu` 根类）· 自动规则范围 Toast（`RiskControlAutoRuleOutflowCurrencyField` · `.autoRuleScopeToastHost`）。
+
+---
+
+## 4. 大位移面板 motion-layout（EgPopup · Detail / Dialog / Verify）
+
+### 4.1 契约（EDS）
+
+- 面板：`.effect-popup-box.motion-layout`；隐藏态 `opacity 0` + `translateY(var(--motion-offset-small))`（自下 8px）；宿主 `.glassMicroFloatHostActive`（或 `.is-active`）→ 归位。
+- 时长：Popup 组件侧 `--eds-popup-detail-motion-ms: 300ms`（`Popup.module.css`，略长于 `--motion-recipe-enter` 200ms），曲线 `--motion-easing-enter`。
+- scrim：`.stageScrimOverlay` opacity 300ms `--motion-easing-standard`，与面板同步。
+- 全部 uses（detail / alert / verify / custom）走同一套；`microFloat` 默认 `true`，业务**勿**关。
+
+### 4.2 接入（唯一做法）
+
+1. Popup 族只挂 `AppPopupOverlayHost`（`work.mdc` §3）；可见性由 flow `*Open` → `usePopupShellLifecycle` 驱动（`work.mdc` §7.1）。
+2. 入场：`open && !suspended` → mount → rAF → `popupOpen = true`（EDS 加 active 类，触发过渡）。**禁**同帧 mount + 打开。
+3. 出场：`open = false` → 组件播完离场 → `onClosed` 清会话；**禁**在关 flow 同步清 row（离场帧空白）。
+4. 叠层：上层 Dialog / Verify 打开时下层 Detail `suspended` → **瞬卸**（无离场，属设计行为）；上层关后下层重新入场。
+5. 成功反馈在 Verify `@closed` 后 → `showAppEndFeedbackAfterOverlay`（离场播完再出反馈）。
+
+### 4.3 CSS 禁忌
+
+- **禁**业务覆盖 `.effect-popup-box` / `.motion-layout` / scrim 的 `opacity` / `transform` / `transition`；**禁**改 `--eds-popup-detail-motion-ms`。
+- **禁** `v-if` 直接卸 shell、`visibility` 假藏代替关闭。
+- Popup 内大面板（Detail）**禁**换用 `.motion-flotation`（§3.3）。
+
+### 4.4 排查
+
+1. 面板入场瞬间是否先有一帧无 `glassMicroFloatHostActive`（mount 与 active 同帧 → 无动效）。
+2. 关闭时 shell 是否被 `v-if` / 父级卸载抢先移除（看 `popupOpen` 与 `props.open` 的时序）。
+3. `getComputedStyle(shell).transitionDuration` 是否 `0.3s`；为 `0s` 时查 reduced-motion 或业务覆盖。
+
+参考实现：`ApprovalFlowHost` · `ManageWebhookOverlayHost`（Detail + Dialog 叠层 suspended）。
+
+---
+
+## 5. 侧滑面板 EgSkid（shift）
+
+### 5.1 契约（EDS）
+
+- `EgLayout` 内 `.main` 与 `.skid` 均 `transition: var(--motion-recipe-shift)`（300ms ease-in-out，作用于 width / flex 等 geometry）。
+- 打开：`.skid` `width 0 → --eds-skid-panel-width`，主区同步收窄；关闭反向。`.skidInner` 定宽，内容不随宽度重排。
+
+### 5.2 接入
+
+1. 只用 `EgLayout v-model:show-skid`；内容放 `#skid` slot（`general.mdc` §5）。参考：团队账户充值 `ManageOverviewPage.vue`。
+2. 打开同时隐藏页面操作、挂 `skidDismissBackdrop`；点前页 → 关 Skid（背景遮罩**无**动效，随开关瞬切）。
+3. 关闭后清 Skid 会话：等 shift 结束（300ms，读 `--motion-duration-shift`）或 `transitionend` 再清，**禁**同步清空导致收起时内容先空。
+
+### 5.3 禁忌 / 排查
+
+- **禁**给 Skid 或主区加 `transform` 滑入、自写 width transition、改 `--eds-skid-panel-width` 做动画。
+- 无动效 → 查是否用 `v-if` 挂 Skid 内容在外层（应常驻 EgLayout slot）；查主区是否被业务 `flex: none` / 固定宽锁死。
+
+---
+
+## 6. 微交互 motion-ease / motion-none（hover · click · focus · selected）
+
+### 6.1 契约（EDS）
+
+| 交互 | 规则 |
+|---|---|
+| hover（背景 / 颜色 / 边框等 paint 属性） | `.motion-ease.is-paint` 或 `transition: var(--motion-recipe-hover)` |
+| hover + 透明度 | `.motion-ease.is-paint-fade` |
+| 只要 hover 入场慢显、离开立即消失 | `.motion-ease.is-enter-only`（`EgMotionHoverEnter`） |
+| 悬浮非对称入出（关闭按钮等） | `.motion-ease.is-asym` |
+| click / active / focus / selected | **无 transition**（`.motion-none`） |
+
+Eg* 按钮、Paginer、DataList 行、Detail itemRow 已内置，**业务零接线**。
+
+### 6.2 接入（业务自定义 hover 块时）
+
+1. 模板挂 `class="motion-ease is-paint"`，或 CSS `composes: motion-ease is-paint from global;`。
+2. 若 hover 背景落在子元素（如单页自定义表格 `td`）→ 子元素写 `transition: var(--motion-recipe-hover)`，背景用 `--event-hover`。
+3. selected / 选中态切换不加过渡；同元素既有 hover 又有 selected → selected 选择器内 `transition: none`。
+
+### 6.3 禁忌
+
+- **禁**自写 `transition: background 0.2s`、`ease` 等数值；**禁**给 `transform` / `width` 用 hover recipe（geometry 用 §5 shift 或 §7 deform）。
+- **禁**给 focus ring、click 反馈加过渡（`work.mdc` §6）。
+
+参考实现：任务记录归集明细表格 `td` hover（`PaymentEngineCollectionDetailPage.module.css`）。
+
+---
+
+## 7. 控件形变 motion-deform · 浮层尺寸 motion-layout-deform
+
+### 7.1 motion-deform（Tab 滑块 / Toggle）
+
+- EDS：`Tab.module.css` 滑块 `composes: motion-deform`（`--motion-recipe-control` 250ms）；溢出渐隐 `--motion-recipe-scroll-fade`。
+- 接入：直接用 `EgTabs` / `EgToggle`，`v-model` 切换即可；Tab **下属内容**的切换另走 §2。
+- **禁**覆盖滑块 `transform` / `transition`、用 `left` / `width` 自写指示条动画。
+
+### 7.2 motion-layout-deform（浮层多页 shell morph）
+
+- 场景：同一 Popover / Tooltip / custom Popup 面板内换页，**外壳宽高**平滑过渡（350ms ease-8），内页走 `.motion-layout-content`（§2 同参数）。
+- 接入：`useMotionLayoutDeformPageSwitch`（EDS `components/docs/layout-deform-page-switch.md`）；壳挂 `.motion-layout-deform`，内容挂 `.motion-layout-content`。
+- 与 §1 区别：有方向的 Push / Pop 用 motion-page；无方向、仅尺寸变化用 layout-deform。
+- **禁**手写 `height` / `max-height` 动画、`ResizeObserver` + 自定义 transition。
+- 参考：`SigningCustomPopupPanel.vue`。
+
+---
+
+## 8. DataList 内置动效（EDS · 业务只控状态）
+
+| 子场景 | EDS 实现 | 业务做法 |
+|---|---|---|
+| 行 hover | `tr` 挂 `motion-ease is-paint`，hover `--event-hover` | 零接线；单页把背景移到 `td`（圆角等）时按 §6.2 补 recipe |
+| 批选列展开 / 收起 | `.layoutColumn` width + 勾选内容 opacity / translateX，`--motion-duration-shift`（300ms）+ standard | 只调 `setSelectMode(true/false)`；settle 320ms；**禁** `v-if` 卸列、改动画（`general.mdc` §3.3） |
+| loading 行 | `.loadingSlot` max-height `--motion-recipe-shift`；离场 `--motion-recipe-fade` | 只切 `loading` prop |
+| 批处理浮条 | `operationBar` 进出 `--motion-recipe-float`（自下 `spacing-4` + 淡入） | 只控选中数 / 显隐 |
+| 翻页 | Paginer 按钮 `motion-ease is-paint`；数据替换无过渡 | 换数据即可，**禁**给列表加 fade |
+
+排查：批选无动画 → 查 `data-eds-data-list-layout-animating` 是否出现、列是否被 v-if；行 hover 无渐变 → 查业务是否覆盖 `tr` / `td` 背景却未补 recipe。
+
+---
+
+## 9.（待补充）
+
+新方法按「场景 / 用 / 禁 / 接入步骤 / 排查」格式追加，并同步更新 §0.1 速查与 §0.3 页面映射。

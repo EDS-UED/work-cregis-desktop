@@ -96,13 +96,3 @@
   bottom: calc(var(--spacing-20) + var(--spacing-12));
   pointer-events: none;
 }
-
-.toastHost.is-active :global(.motion-flotation) {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-.toastHost:not(.is-active) :global(.motion-flotation) {
-  opacity: 0;
-  transform: translateY(var(--spacing-2)) scale(0.98);
-}

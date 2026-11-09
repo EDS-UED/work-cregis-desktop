@@ -35,6 +35,7 @@ function renderAddNewSlot(button: ToolbarButton) {
     :title="title"
     :show-operation="true"
     :show-divider="true"
+    frosted
     :show-section="showToolbarSection"
   >
     <template v-if="$slots.title" #title>

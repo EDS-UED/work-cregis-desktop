@@ -111,16 +111,6 @@ body::after {
   pointer-events: none;
 }
 
-.app-popup-overlay-root > .detail-aml-toast-host.is-active .motion-flotation {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-.app-popup-overlay-root > .detail-aml-toast-host:not(.is-active) .motion-flotation {
-  opacity: 0;
-  transform: translateY(var(--spacing-2)) scale(0.98);
-}
-
 /* 顶栏 Toast：仅定位；进出场走 EDS `.is-active .motion-flotation`（负 Y 自上而下）。勿用 +translateY 覆盖。 */
 .app-preview > .autoRuleScopeToastHost {
   position: absolute;

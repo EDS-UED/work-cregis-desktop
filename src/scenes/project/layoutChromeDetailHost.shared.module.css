@@ -10,9 +10,12 @@
   min-width: 0;
 }
 
-.layoutChromeDetailHost :global(.eds-detail) {
+.layoutChromeDetailHost :global(.eds-detail),
+.layoutChromeDetailHost :global(.eds-detail.eds-popup-inner-backdrop) {
   height: auto;
   min-height: 0;
+  max-height: none;
+  flex: 0 0 auto;
   border-radius: 0;
   overflow: visible;
 }

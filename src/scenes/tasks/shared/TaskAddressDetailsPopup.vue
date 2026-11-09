@@ -222,6 +222,7 @@ const displayPaginerResults = computed(() => ui(DATA_LIST_FIGMA_PAGINER.dataVolu
             :show-back="false"
             :show-operation="true"
             :show-divider="true"
+            frosted
           >
             <template #functional>
               <EgIconProButton :label="ui('Export')" @click="onExport">

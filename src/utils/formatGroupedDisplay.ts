@@ -33,6 +33,17 @@ export function formatGroupedDecimalAmount(raw: string): string {
   return fraction ? `${groupedWhole}.${fraction}` : groupedWhole;
 }
 
+/**
+ * 展示用数值：千分位 + 去掉小数末尾 0（`888888.88` → `888,888.88`，`88.8000000` → `88.8`，`5.000` → `5`）。
+ * 字符串运算、不经 Number，大数与长小数不丢精度。支持 `$` / `±` 前缀。
+ */
+export function formatGroupedTrimmedAmount(raw: string | number): string {
+  const text = String(raw).trim();
+  if (!text) return text;
+  const trimmed = text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
+  return formatGroupedDecimalAmount(trimmed);
+}
+
 /** 文案中的数字 token（含可选 `$`）统一千分位；不用于倒计时等 `:` 时间格式。 */
 export function formatGroupedAmountText(text: string): string {
   return text.replace(/(\$?)([\d,]+(?:\.\d+)?)/g, (match, dollar: string, num: string) => {

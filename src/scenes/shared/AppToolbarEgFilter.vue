@@ -48,5 +48,9 @@ const presetBind = computed(() => resolveAppEgFilterPresetBind(props.layoutMode)
     :fields="props.fields"
     :translate="filterTranslate"
     :disabled="props.disabled"
-  />
+  >
+    <template v-if="$slots.trigger" #trigger="slotProps">
+      <slot name="trigger" v-bind="slotProps" />
+    </template>
+  </EgFilter>
 </template>

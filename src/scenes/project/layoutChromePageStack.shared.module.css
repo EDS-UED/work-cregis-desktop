@@ -45,8 +45,15 @@
 }
 
 .pageChromeToolbar {
+  flex: 0 0 auto;
   flex-shrink: 0;
   width: 100%;
+  box-sizing: border-box;
+}
+
+/** 空 slot 不占高（如 WaaS 外层 stack 无 list-toolbar）；有 ToolBar 时保留行高。 */
+.pageChromeToolbar:has(:global(.eds-tool-bar)) {
+  min-height: var(--scale-15);
 }
 
 .pageChromeBody {

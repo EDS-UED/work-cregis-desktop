@@ -116,6 +116,7 @@ import {
 import type { BatchCurrencyGroup } from './signing/batch/types';
 import { registerRecordDetailFlow } from './shared/recordDetailFlowContext';
 import { useRecordDetailFlow } from './shared/useRecordDetailFlow';
+import { readEdsFlotationLeaveMs } from './shared/useEdsToastMotion';
 import { registerApprovalFlow } from './approval/approvalFlowContext';
 import {
   APPROVAL_BATCH_MAX,
@@ -419,15 +420,6 @@ const listToastMotionActive = ref(false);
 let listToastTimer: ReturnType<typeof setTimeout> | undefined;
 let listToastLeaveTimer: ReturnType<typeof setTimeout> | undefined;
 
-function readListToastLeaveMs(el: HTMLElement): number {
-  const probe = document.createElement('div');
-  probe.className = 'motion-flotation';
-  el.appendChild(probe);
-  const seconds = Number.parseFloat(getComputedStyle(probe).transitionDuration);
-  el.removeChild(probe);
-  return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1000) : 300;
-}
-
 function clearListToastLeaveTimer() {
   if (listToastLeaveTimer !== undefined) {
     clearTimeout(listToastLeaveTimer);
@@ -450,8 +442,7 @@ function syncListToastMotionEnter() {
 
 function hideListToast() {
   listToastMotionActive.value = false;
-  const anchor = document.querySelector('.app-preview') ?? document.documentElement;
-  const leaveMs = readListToastLeaveMs(anchor as HTMLElement);
+  const leaveMs = readEdsFlotationLeaveMs();
   clearListToastLeaveTimer();
   listToastLeaveTimer = window.setTimeout(() => {
     listToastKeepMounted.value = false;
@@ -1093,6 +1084,7 @@ const displayBatchActions = computed(() => {
           :show-back="showBack"
           :show-operation="showToolBarOperation"
           :show-divider="DATA_LIST_FIGMA_TOOLBAR.showDivider"
+          frosted
           :show-section="showToolBarSectionForMenu"
         >
           <template v-if="showBatchButton" #functional>

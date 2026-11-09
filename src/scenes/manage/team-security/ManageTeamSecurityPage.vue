@@ -68,6 +68,7 @@ const checklistItems = computed(() => {
           :title="ui('Team Security')"
           :show-operation="true"
           :show-divider="true"
+          frosted
         >
           <template #operation>
             <EgFlotation

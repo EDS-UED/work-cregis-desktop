@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { EgToolBar } from '@eds/desktop-components';
-import { useAppI18n } from '@/composables/useAppI18n';
+import { computed } from 'vue';
 import LayoutChromePageStack from '@/scenes/project/LayoutChromePageStack.vue';
 import { useWaasProjectStore } from '@/scenes/project/waasProjectStore';
 import {
@@ -28,12 +26,7 @@ const {
   hasProjects,
   shellView,
   selectedProject,
-  cancelCreateProject,
 } = useWaasProjectStore();
-
-const { ui } = useAppI18n();
-
-const pageStackRef = ref<InstanceType<typeof LayoutChromePageStack> | null>(null);
 
 const shellPageKey = computed(() => (shellView.value === 'create' ? 'create' : 'list'));
 
@@ -77,21 +70,10 @@ const showWaasStandardContent = computed(
     !showWaasOrderModeList.value &&
     !showWaasStandardDataList.value,
 );
-
-watch(shellView, (next, previous) => {
-  if (next === 'create' && previous !== 'create') {
-    pageStackRef.value?.setDirection('forward');
-    return;
-  }
-  if (next !== 'create' && previous === 'create') {
-    pageStackRef.value?.setDirection('backward');
-  }
-});
 </script>
 
 <template>
   <LayoutChromePageStack
-    ref="pageStackRef"
     :enabled="true"
     :page-key="shellPageKey"
     :class="styles.pageStackHost"
@@ -121,17 +103,8 @@ watch(shellView, (next, previous) => {
       </div>
     </template>
 
-    <template #create-toolbar>
-      <EgToolBar
-        :title="ui('Create Project')"
-        :show-back="true"
-        :show-operation="false"
-        @back="cancelCreateProject"
-      />
-    </template>
-
     <template #create>
-      <WaasProjectCreatePage embedded-in-page-stack />
+      <WaasProjectCreatePage />
     </template>
   </LayoutChromePageStack>
 </template>

@@ -341,6 +341,7 @@ onBeforeUnmount(() => {
             :title="ui('Overview Asset')"
             :show-operation="!overviewSkidOpen"
             :show-divider="toolbarScrimActive"
+            :frosted="toolbarScrimActive"
           >
             <template v-if="!overviewSkidOpen" #functional>
               <EgIconProButton

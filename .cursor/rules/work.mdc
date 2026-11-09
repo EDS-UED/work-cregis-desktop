@@ -1,5 +1,5 @@
 ---
-description: work-cregis-desktop Agent 入口与业务规范 — Desktop 客户端、EDS 边界、Popup、i18n、场景定稿
+description: work-cregis-desktop Agent 入口与边界 — 规则分工、硬约束、EDS 边界、工程与推送、DOM 挂载、组件契约、i18n、Token、全局场景机制、模块定稿、校验
 globs: **/*
 alwaysApply: true
 ---
@@ -16,45 +16,82 @@ Desktop 客户端（非 Showcase / Website 壳）。EDS 真源：`../eds-desktop
 
 ## 0. 速查
 
-### 0.1 硬约束（违反即错）
+### 0.1 规则文件分工（先看这里）
 
-| # | 约束 | § |
+| 文件 | 管什么 | 何时查 |
+|---|---|---|
+| **`work.mdc`**（本文件） | 边界、硬约束、工程 / 推送、DOM 挂载、组件选型、i18n、Token、全局机制（Popup 生命周期、成功反馈）、模块定稿、校验 | 任何改动先扫 §0.2 |
+| **`general.mdc`** | 通用页面怎么做：页面 chrome 毛玻璃、创建 / 编辑页、数据列表页（批选、列宽）、详情（Popup / 整页）、EgSkid、EgDialog、数据展示（千分位、网络名）、DataList mock | 新建 / 改造页面、选模板 |
+| **`motion.mdc`** | 动效怎么接：EDS motion 总表、页面→动效映射、motion-page、Tab 内容 crossfade、浮层 flotation、Popup layout、Skid shift、hover ease、deform、DataList 内置、排查 | 任何切换 / 进出场动效 |
+| `../eds-desktop/.cursor/rules/work.mdc` | EDS 完整约定 | 组件行为与 Showcase 不一致时 |
+
+同一件事只在一个文件写真源，其它文件只写指向。
+
+### 0.2 硬约束（违反即错）
+
+| # | 约束 | 真源 |
 |---|------|---|
-| 1 | 仅用 `@eds/desktop-tokens`、`animations`、`components` | 1.1 |
-| 2 | 禁 `@eds/website-*` | 1.1 |
-| 3 | 禁抄 `eds-desktop/apps/showcase/**` | 1.1、2.1 |
-| 4 | `.typography-*`；`--eds-*` 单轴；禁 spec 外 token | 1.1 |
-| 5 | dev/build alias EDS 源码；禁 `@import '@eds/desktop-components/style.css'` | 1.1、2.3 |
-| 6 | sync 仅 Desktop packages（不含 showcase/Website） | 2.1 |
-| 7 | 禁复制（guard、OverflowText、clipboard 等） | 1.2 |
-| 8 | UI 用 `pnpm dev` HMR；禁只 build 不 dev | 2.3 |
-| 9 | mock→`egDataListMockData.ts`（§7.8 规则） | 7.8 |
-| 10 | 用户说推/推送：Agent 预检后 **自行双仓 push**（禁 force）；未要求不 push | 2.5 |
-| 11 | 禁改 EDS；Eg* + 文档化扩展点 | 1.3 |
-| 12 | click 锚定浮层 **默认互斥**；**hover/focus 与任意 click 可同屏**（hover 不得关 click）；**特别声明**可多层 click 共存 | 1.4 |
-| 13 | EgPopup 同屏一层 shell；上层 Verify/Dialog→下层 `suspended` | 3、7.1 |
-| 14 | 成功反馈仅 `AppEndFeedbackHost` · `EgEndFeedbackCard` | 7.9 |
-| 15 | Eg* 按 Showcase/EDS 资产直接集成；禁平行包壳 Vue、仿 Eg* CSS、单场景新 registry | 1.3、4.1 |
-| 16 | 模块创建/编辑整页 → `LayoutChromeConfigFormPageChrome` + `EgToolBar` / `EgComboPageButton`（§6.7） | 6.7 |
+| 1 | 仅用 `@eds/desktop-tokens`、`animations`、`components` | §1.1 |
+| 2 | 禁 `@eds/website-*` | §1.1 |
+| 3 | 禁抄 `eds-desktop/apps/showcase/**` | §1.1、§2.1 |
+| 4 | `.typography-*`；`--eds-*` 单轴；禁 spec 外 token | §1.1 |
+| 5 | dev/build alias EDS 源码；禁 `@import '@eds/desktop-components/style.css'` | §1.1、§2.2 |
+| 6 | sync 仅 Desktop packages（不含 showcase/Website） | §2.1 |
+| 7 | 禁复制（guard、OverflowText、clipboard 等） | §1.2 |
+| 8 | UI 用 `pnpm dev` HMR；禁只 build 不 dev | §2.2 |
+| 9 | mock→`egDataListMockData.ts` | general §8 |
+| 10 | 用户说推/推送：Agent 预检后 **自行双仓 push**（禁 force）；未要求不 push | §2.4 |
+| 11 | 禁改 EDS；Eg* + 文档化扩展点 | §1.3 |
+| 12 | click 锚定浮层 **默认互斥**；**hover/focus 与任意 click 可同屏**（hover 不得关 click）；**特别声明**可多层 click 共存 | §1.4 |
+| 13 | EgPopup 同屏一层 shell；上层 Verify/Dialog→下层 `suspended` | §3、§7.1 |
+| 14 | 成功反馈仅 `AppEndFeedbackHost` · `EgEndFeedbackCard` | §7.2 |
+| 15 | Eg* 按 Showcase/EDS 资产直接集成；禁平行包壳 Vue、仿 Eg* CSS、单场景新 registry | §1.3、§4.1 |
+| 16 | 模块创建/编辑整页 → `LayoutChromeConfigFormPageChrome` + `EgToolBar` / `EgComboPageButton` | general §2 |
+| 17 | 页面顶/底栏毛玻璃 **默认不开、滚动溢出（正文滚入栏下）时开**；默认常开仅限用户特别声明并登记 | general §1 |
+| 18 | 展示数字千分位 + 去尾 0；禁 `toLocaleString` | general §7 |
+| 19 | 模块内整页 A→B / B→A 只用 `LayoutChromePageStack` · `pageKey`；方向自动，禁手设 forward/backward | motion §1 |
+| 20 | Tab 切换下属内容只用 `useTabContentMotionSwitch`；内容跟 `displayedTabIndex` | motion §2 |
+| 21 | 浮层进出场走 `.motion-flotation`；禁覆盖其 transform/opacity/transition | motion §3 |
+| 22 | 动效只用 EDS semantic class / `--motion-recipe-*`（motion §0.2）；禁自写 duration/easing；Popup / Skid / Tab 滑块 / DataList 内置动效禁覆盖 | motion §4–§8 |
 
-### 0.2 路径锚点
+### 0.3 路径锚点
 
 | § | 主题 | 关键路径 |
 |---|------|----------|
 | 1 | Desktop-only、复制、EDS、锚定浮层 | `anchoredTooltipLayerScope.ts`、`installAnchoredTooltipCoexistGuard.ts`、`dev/shell-debug/shim/anchoredTooltipManager.ts`、`vite.config.ts`（aliasEdsAnchoredShims） |
 | 2 | 工程、dev、list-field、Git/Pages | `listFieldCryptoSampleAddresses.ts` |
 | 3 | DOM、Popup 挂载 | `AppPopupOverlayHost`、`usePopupShellLifecycle.ts` |
-| 4 | Eg* 契约、场景组件、Showcase usage | EDS §17、`showcase/.../*DocCustomize.ts` |
+| 4 | Eg* 契约、场景组件、Showcase usage、模块菜单 | EDS §17、`showcase/.../*DocCustomize.ts`、`moduleMenuBranchToggleNavigation.ts` |
 | 5 | i18n | `uiTextZhCN.ts` |
-| 6 | Token、scrim、整页详情、配置表单页、Apply_Item | `layoutChromeConfigFormPageChrome.vue`、`layoutChromeConfigFormPage.shared.module.css` |
-| 7 | 场景（Popup、批签、DataList、成功反馈、列表↔创建 motion） | `appEndFeedback.ts`、`LayoutChromePageStack.vue`、`PaymentEngineDataListPage.vue` |
-| 8 | 校验 PR | `verify-*.mjs` |
+| 6 | Token | `scale/semantic.json`、`typography/semantic.json` |
+| 7 | 全局场景机制（Popup 生命周期、成功反馈） | `usePopupShellLifecycle.ts`、`appEndFeedback.ts`、`AppEndFeedbackHost.vue` |
+| 8 | 模块定稿（批签、多签、付款钱包列、Shell Debug） | `SigningBatchPopupSlotChrome`、`inspectNamingRules.ts` |
+| 9 | 校验 PR | `verify-*.mjs` |
+| general | 页面模板 | `LayoutChromeConfigFormPageChrome.vue`、`LayoutChromeScrollPageChrome.vue`、`PaymentEngineDataListPage.vue`、`formatGroupedDisplay.ts`、`egDataListMockData.ts` |
+| motion | 动效 | `LayoutChromePageStack.vue`、`useTabContentMotionSwitch.ts`、`useEdsToastMotion.ts` |
 
-### 0.3 Showcase 陷阱
+### 0.4 Showcase 陷阱
 
 Showcase 有 **Website token 壳**，无效 token 仍「凑合能看」。本仓**无壳**，无效 token 直接失效——须在 Desktop spec 找正确 token 名。
 
-改组件与 Showcase 不一致时：**先读** `../eds-desktop/packages/{tokens,animations,components}` **再改业务**；Eg* props/slot/尺寸对齐 Showcase 组件文档页 usage snippet 与 `../eds-desktop/apps/showcase/src/views/components/previews/*DocCustomize.ts`；list-field 对齐 `ListFieldPreviewPanel.vue`；`listFieldCryptoSampleAddresses.ts` 禁整文件覆盖（§2.4）。
+改组件与 Showcase 不一致时：**先读** `../eds-desktop/packages/{tokens,animations,components}` **再改业务**；Eg* props/slot/尺寸对齐 Showcase 组件文档页 usage snippet 与 `../eds-desktop/apps/showcase/src/views/components/previews/*DocCustomize.ts`；list-field 对齐 `ListFieldPreviewPanel.vue`；`listFieldCryptoSampleAddresses.ts` 禁整文件覆盖（§2.3）。
+
+### 0.5 旧章节 → 新位置
+
+代码注释 / 历史 PR 里出现旧编号时按此查：
+
+| 旧 | 新 |
+|---|---|
+| §2.3 dev · §2.4 list-field · §2.5 Git 推送 | §2.2 · §2.3 · §2.4 |
+| §6.2 千分位 · §6.4 网络名 | general §7 |
+| §6.3 / §6.3.1 顶底 scrim · 毛玻璃 | general §1 |
+| §6.5 列表↔整页详情 | general §3.2、§4.2 |
+| §6.6 Apply_Item | general §4.1 |
+| §6.7 配置表单页 | general §2（动效 motion §1） |
+| §7.2 批签 · §7.3 多签 · §7.4 付款钱包列 · §7.5 Shell Debug | §8.1 · §8.2 · §8.3 · §8.4 |
+| §7.6 批选 · §7.7 min-width · §7.8 mock | general §3.3 · §3.4 · §8 |
+| §7.9 成功反馈 | §7.2 |
+| §8 校验 | §9 |
 
 ---
 
@@ -84,7 +121,7 @@ Showcase 有 **Website token 壳**，无效 token 仍「凑合能看」。本仓
 
 与 §2.1「禁业务手搓平行实现」、§4.1「禁手搓 Tooltip+Popover」同义；落地规则如下。
 
-**【必须】** 在场景页（或已有 scene 壳）**直接组合** `@eds/desktop-components` 导出的 Eg*；props 用 Showcase 文档 kebab-case（如 `EgTooltip` 的 `align`、`width-mode`、`height-mode`、`:width`）。样式用组件 + token + EDS **已文档化**扩展（`.typography-*`、`ComboAction.module.css` 等）。Toolbar/DataList 等差异用 **slot 透传**（如列表页 `#toolbar-add-new`），不把 Eg* 再包进仅用于「换皮/定位」的新 `.vue`。
+**【必须】** 在场景页（或已有 scene 壳）**直接组合** `@eds/desktop-components` 导出的 Eg*；props 用 Showcase 文档 kebab-case（如 `EgTooltip` 的 `align`、`width-mode`、`height-mode`、`:width`）。样式用组件 + token + EDS **已文档化**扩展（`.typography-*`、`ComboAction.module.css` 等）。Toolbar/DataList 等差异用 **slot 透传**（如列表页 `#toolbar-add-new`、筛选 `#trigger`），不把 Eg* 再包进仅用于「换皮/定位」的新 `.vue`。
 
 **【禁止】** 仿 Eg* 视觉或锚点的手搓壳（CSS 复刻 `EgIconProButton`、fixed 透明 proxy trigger、在 `EgTooltip` 里堆 Popover 式 topTool 替代 `EgAnchoredPopover` 等）；为单功能新增 **全局** registry / 模块级 singleton / 面板尺寸「魔法常量文件」（沿用既有 flow + `AppPopupOverlayHost`、overlay surface 除外）；Showcase 与 `components/docs` 未覆盖的私家 API。
 
@@ -146,15 +183,15 @@ eds-desktop 改→本 App 跟；本 App 改→不写回。Showcase 仅集成参�
 
 **同步**（仅用户要求）：eds build→`pnpm install`→重启 dev。
 
-### 2.3 dev
+### 2.2 dev
 
-UI 改后 `pnpm dev` HMR；**禁**只 build 不 dev。EDS 走 alias，勿改 dist。
+UI 改后 `pnpm dev` HMR；**禁**只 build 不 dev。EDS 走 alias，勿改 dist。HMR 卡在中间态编译错误时，刷新浏览器页重新进入。
 
-### 2.4 list-field 本地扩展
+### 2.3 list-field 本地扩展
 
 `listFieldCryptoSampleAddresses.ts` 含业务扩展；sync skip；**禁** showcase 整文件替换；跑 `verify-list-field-crypto.mjs`。
 
-### 2.5 Git 推送（双仓 + Pages）
+### 2.4 Git 推送（双仓 + Pages）
 
 Pages CI pin 远程 eds-desktop HEAD。
 
@@ -185,7 +222,7 @@ Pages CI pin 远程 eds-desktop HEAD。
 
 **EgPopup 互斥**（与 §1.4 锚定浮层不同）：同屏仅一层 Popup shell；Verify/Dialog 开时下层 Detail `suspended`（flow `*Open` 仍可 true）；`popupOpen` vs `props.open`/`detailOpen`；详 §7.1。
 
-业务成功反馈只用 §7.9；**禁**模块自建 `EgEndFeedbackCard`/Toast。
+业务成功反馈只用 §7.2；**禁**模块自建 `EgEndFeedbackCard`/Toast。
 
 `EgDetail @close`→仅 `popupOpen=false`；清 session 在 EgPopup `@close`/`onClosed`。样式：`desktop-components-scope.css`。
 
@@ -193,7 +230,7 @@ Pages CI pin 远程 eds-desktop HEAD。
 
 ## 4. 组件契约
 
-**禁**手搓菜单代 `EgFlotation`；禁改 Eg* DOM。maxWidth：OverflowText 360；DataListCell 240/480。
+**禁**手搓菜单代 `EgFlotation`；禁改 Eg* DOM。单元格 maxWidth 见 general §3.4。
 
 ### 4.1 场景组件（EDS §17）
 
@@ -204,7 +241,7 @@ Pages CI pin 远程 eds-desktop HEAD。
 | 矿工费 | `EgGasFeePopover` | 直接 MinerFee*Panel |
 | Tag | `EgStatus/Colorful/BusinessTag` | `EgTag family=…` |
 | Popup | `EgDetail/Dialog/VerifyPopup` | 旧 `EgPopup uses=*` |
-| Dialog | `EgSymbol/BusinessDialog` | 旧 `EgDialog type=symbol/compose` |
+| Dialog | `EgSymbol/BusinessDialog`；警告 / 提醒用 standard（general §6） | 旧 `EgDialog type=symbol/compose` |
 | 校验 | `Eg*Verify` | 旧 `EgVerify type=*` |
 
 例外：`EgPopup uses=custom`、`EgDialog type=standard`、`EgMinerFeeBatchStubPanel`。Nav/Menu `:translate=ui`。
@@ -230,116 +267,21 @@ Pages CI pin 远程 eds-desktop HEAD。
 
 ## 5. i18n
 
-zh-cn 真源 `uiTextZhCN.ts`；en/zh-TW Excel+overrides；Agent 禁自译。UI→`ui()`；**字段 value 禁 ui()**。en 标签 Title Case。Alert→standard dialog popup。`python3 scripts/sync-i18n-from-excel.py` 不写 zhCN。
+zh-cn 真源 `uiTextZhCN.ts`；en/zh-TW Excel+overrides；Agent 禁自译。UI→`ui()`；**字段 value 禁 ui()**。en 标签 Title Case。`python3 scripts/sync-i18n-from-excel.py` 不写 zhCN。
 
 ---
 
-## 6. 样式与展示
+## 6. Token
 
-### 6.1 Token
-
-`scale/semantic.json`、`typography/semantic.json`；hover `--motion-recipe-hover`；click/focus/selected 禁 transition。
-
-### 6.2 千分位
-
-展示→`formatGroupedNumber` / `formatGroupedDisplay.ts`；禁 `toLocaleString`（除输入、倒计时、SIG-*）。
-
-### 6.3 顶底 scrim
-
-`useScrollChromeScrim.ts`、`EgSkid`；单滚动；禁 fixed 顶栏盖 Skid。
-
-### 6.4 网络名
-
-链 Tag 全名；币种在金额列。禁 BSC、USDT-Ethereum 等缩写链名。
-
-### 6.5 Layout 列表↔整页详情
-
-非 `EgDetailPopup` 整页详情：`layoutChromePage*`、`layoutChromeDetailHost*`。同 Layout+#toolbar+`motion-page`；禁详情再套 Layout/EgPopup。`:show-paginer` 仅列表；Popup 内列表 `fill=true` 才全高，否则 `fill=false`+`computeBatchDataListHeight`。模块内 **创建/编辑配置表单** → §6.7（与详情共用 `LayoutChromePageStack`，`pageKey` 不同）。
-
-### 6.7 模块配置表单页（列表↔创建/编辑 · motion-page）
-
-**【必须】** 新建/编辑类整页（Webhook、AML 自动规则等）共用 **`LayoutChromeConfigFormPageChrome.vue`** + **`layoutChromeConfigFormPage.shared.module.css`**；EDS 顶/底用 **`EgToolBar`** + **`EgComboPageButton`**（Showcase Combo Page / `page-chrome` 文档），禁手写 `pageFooterActions`、禁 **`EgPaginer` 仅包确认/取消**、禁手搓 `eds-frosted-page-chrome`。
-
-#### DOM 栈（create · 典型）
-
-```
-LayoutChromePageStack（motion-page-stack · pageKey list|create|detail）
-└ pageChrome
-   ├ pageChromeToolbar — 配置表单 **勿** 再挂 EgToolBar（slot 留空）
-   ├ pageChromeBody
-   │  └ LayoutChromeConfigFormPageChrome（desktopTokens · pageEmbedded）
-   │     └ EgLayout type=empty · eds-layout-chrome-overlay
-   │        ├ show-toolbar → #toolbar · EgToolBar
-   │        ├ configFormScrollHost（layoutChromeScroll + inset）→ configFormScrollContent → **业务表单 slot**
-   │        └ show-paginer=canScroll → #paginer · EgComboPageButton（page-chrome）
-   │           或 !canScroll → pageFooter · EgComboPageButton（无 page-chrome）
-   └ pageChromePaginer / #create-footer — 通常空；底栏在壳内，不在 stack 外挂 Paginer
-```
-
-#### 列表宿主与动效
-
-| 项 | 真源 |
-|----|------|
-| 栈组件 | `LayoutChromePageStack.vue` · `layoutChromePageStack.shared.module.css` |
-| 列表壳 | `PaymentEngineDataListPage` `:module-layout-page-stack="true"`；`usesModuleConfigFormPageStack` 时 **`hidesEgLayoutChrome`**（列表 EgLayout 顶/底 chrome 让位给 stack） |
-| pageKey | 表单开 → `integratedPageKey === 'create'`；关 → `'list'` |
-| 方向 | 开表单 `layoutDetailPageMotionRef.setDirection('forward')`；关 `backward`；切菜单 `none` 并 `closeConfigForm` |
-| settled | `@page-settled` → `onIntegratedLayoutPageSettled` → 各模块 `onConfigFormPageSettled`（对齐 Webhook / AML `configFormOpen` flow） |
-| 模块 slot | `#module-stack-create` 放壳或「壳 + 表单」；**禁** `#module-stack-create-toolbar`（ToolBar 只在壳内 EgLayout overlay） |
-
-模块 thin shell 示例：`RiskControlAutoRuleCreatePageShell.vue`（透传 title / confirm / canSubmit / contentRevision → 壳）。
-
-#### EgToolBar（壳内 #toolbar）
-
-| prop | 配置表单约定 |
-|------|----------------|
-| `show-back` | `true`；`@back` → 关表单（同 cancel 语义由业务定） |
-| `show-operation` | `false` |
-| `show-divider` | **`canScroll && topScrim`**（`useScrollChromeScrim`）；默认可滚区贴顶 **无** module 线，滚离顶再出（与列表 ToolBar 一致） |
-
-#### EgComboPageButton（底栏 · 组件名 EgComboPageButton / Combo Page）
-
-| 场景 | 用法 |
-|------|------|
-| 通用 | `tone="decor"` · `direction="left"` · **`divider` 常驻 true**（module 顶部分割线；与 DS 对齐，勿跟 bottomScrim 联动） |
-| 正文可滚 | `page-chrome` · 放 EgLayout **`#paginer`** · `show-paginer="canScroll"` |
-| 正文不可滚 | 无 `page-chrome` · 放 **`pageFooter`** 容器（仅圆角壳；按钮样式由组件提供） |
-| 文案 | `confirm-label` / `cancel-label`（catalog + `ui()`）；`@confirm` / `@cancel` |
-| 提交门禁 | **`:confirm-disabled="!canSubmit"`**；壳内 `onConfirm` 仍二次校验 |
-
-Showcase：`ButtonComboPreview` · `comboPreviewData.ts`（`page-chrome` + EgLayout `show-paginer` + `#paginer`）。
-
-#### 正文边距与表单 rhythm
-
-| 层 | token / 类 |
-|----|------------|
-| 滚动区 inset | `configFormScrollHost` composes **`layoutChromeScroll`**；EgLayout 写入 **`--eds-layout-chrome-inset-top/bottom`** |
-| 内容 padding | **`configFormScrollContent`**：`padding` **`spacing-2`** · **`spacing-6`** · **`spacing-5`**（上 8 / 左右 24 / 下 20） |
-| 表单纵块 | **`.formStack`**：`gap` **`spacing-6`** · `max-width: 560px` · **`margin-left: 28px`**（与 Combo Page `actionsLeadingInset` 视觉对齐；Webhook / AML 同规） |
-| 字段块 | **`.fieldBlock`**：`gap` **`spacing-1-5`**；标签 **`.typography-body-small-strong`** |
-
-正文变高（切 tab、展开块）→ 壳 prop **`contentRevision`** 触发 scrim 重算。
-
-#### 业务接入 checklist
-
-1. Flow：`configFormOpen` + `closeConfigForm` + `onConfigFormPageSettled`（参考 Webhook flow / `riskControlAutoRulePageStackKey`）。
-2. Host：`PaymentEngineDataListPage` + `#module-stack-create`；embedded 表单 **`LayoutChromeConfigFormPageChrome`**（参考 `WebhookCreateEditPage` `embeddedInPageStack`）。
-3. 仅 slot 内写字段；不复制 pageShell / EgLayout / 底栏 DOM。
-4. 成功反馈 §7.9；Verify/Dialog 链不变。
-
-**【禁止】** `pageChromeToolbar` 与壳内 **双 ToolBar**；sticky/absolute 自拼毛玻璃；`createFormPaginer*` 手搓底栏（`layoutChromePageStack.shared.module.css` 内遗留类勿新用）。
-
-### 6.6 Apply_Item
-
-`createDetailApplyItemRow`；禁 `showValueCopy`。
+`scale/semantic.json`、`typography/semantic.json`；hover `--motion-recipe-hover`；click/focus/selected 禁 transition（动效接法见 `motion.mdc`）。
 
 ---
 
-## 7. 场景定稿
+## 7. 全局场景机制
 
-### 7.1 EgPopup
+### 7.1 EgPopup 生命周期
 
-真源 `usePopupShellLifecycle.ts`（`immediate: true`）。flow `*Open`（逻辑）vs `popupOpen`（视觉）。
+真源 `usePopupShellLifecycle.ts`（`immediate: true`）。flow `*Open`（逻辑）vs `popupOpen`（视觉）。详情、Dialog、Verify 都依赖它（general §4.1、§6）。
 
 | 阶段 | 行为 |
 |------|------|
@@ -352,40 +294,7 @@ Showcase：`ButtonComboPreview` · `comboPreviewData.ts`（`page-chrome` + EgLay
 
 尺寸：verify 328×416；detail 880×620；custom md/lg/sm 780×560/880×620/656×516；Remark 336。
 
-### 7.2 批签
-
-mock `111111`；780×560+`SigningBatchPopupSlotChrome`；NetworkPicker 410×440+scrim。密码取消只关 verifyOpen；成功 `createBatchSigningTask`；切菜单 dismiss+exitSelectMode。
-
-### 7.3 多签
-
-joined/pending/offline Tag；`joinedCount=max(1,required-1)`；click-toggle=false；离页 v-if 卸。
-
-### 7.4 付款钱包列
-
-rowIndex=2：`titleTextSlot`+OverflowText，Tag 紧跟。
-
-### 7.5 Shell Debug
-
-仅 `dev/shell-debug/**`。Inspect R1–R5：`inspectNamingRules.ts`；改后 `verify-shell-debug-inspect-*.mjs`。
-
-**Shell Debug QA 场景 `label`（`scenarios/qa/**/pack.ts`）**：
-- **一级场景**：`模块（简述）` 全角括号、无 `·`（如 `查询记录（列表基线）`、`自动规则（出款详情）`）。
-- **二级/三级路径**：`模块 · 路径（细节）` — 模块与路径段用半角间隔 `·`；**仅最末段**用全角括号包裹变体/细节（如 `查询记录 · 重新查询（放行/驳回后变更状态）`、`查询记录 · 异常已处置（放行）`、`自动规则 · 编辑（启用中拦截）`）。**禁**连续嵌套全角括号（如 `查询记录（异常已处置（放行））`）。
-- 非 QA 的 scenario pack（详情演示等）可沿用既有 `·` 命名，除非用户要求统一。
-
-### 7.6 DataList 批选
-
-业务只控 selectMode/选中；**禁**改 EDS 动画/DOM。勾选列常驻；300ms `SELECT_COLUMN_ANIM_MS`；settle 320ms；`data-eds-data-list-layout-animating`。禁 v-if 卸列。退出→`setSelectMode(false)`。
-
-### 7.7 DataList min-width
-
-prop=硬下限；Σ min 超（容器−尾列−80px）→横滚；批选列宽=idle。
-
-### 7.8 EgDataList mock
-
-入口 `egDataListMockData.ts`。币种 0–7 固定 preset；状态前 N 行 showcase 全集→其后单一完成态；提币/API 7 态+`completed`；归集历史 3 态+`success`；Tag→`paymentEngineRecordStatusCustomize.ts`；地址/hash 用验证池。
-
-### 7.9 业务成功反馈
+### 7.2 业务成功反馈
 
 操作已成功→全局 **`EgEndFeedbackCard`**（catalog **`Success`**）。
 
@@ -399,11 +308,40 @@ prop=硬下限；Σ min 超（容器−尾列−80px）→横滚；批选列宽=
 
 Verify/Popup 仍挡 scrim→**`showAppEndFeedbackAfterOverlay`**（Verify **`@closed`** 后再调）。二次确认：未保存等→**`EgConfirmPopover`**（非叠第二层 Popup shell）；删除等→**`EgDialog`+`EgDialogPopup`**（OverlayHost；Detail `suspended`）。敏感链：**Dialog/ConfirmPopover（若需）→ Google 验证 → mock/落库 → `showAppEndFeedbackAfterOverlay`**。
 
+非「操作成功」类提示（检索结果、范围提示）用自建 Toast，动效见 motion §3。
+
 **【禁止】** 模块第二套 Host/Toast/success composable。
 
 ---
 
-## 8. 校验与 PR
+## 8. 模块定稿
+
+具体业务模块的已定实现；不属于通用页面，也不属于全局约束。条目多了再拆按模块的规则文件。
+
+### 8.1 批签
+
+mock `111111`；780×560+`SigningBatchPopupSlotChrome`；NetworkPicker 410×440+scrim。密码取消只关 verifyOpen；成功 `createBatchSigningTask`；切菜单 dismiss+exitSelectMode。
+
+### 8.2 多签
+
+joined/pending/offline Tag；`joinedCount=max(1,required-1)`；click-toggle=false；离页 v-if 卸。
+
+### 8.3 付款钱包列
+
+rowIndex=2：`titleTextSlot`+OverflowText，Tag 紧跟。
+
+### 8.4 Shell Debug
+
+仅 `dev/shell-debug/**`。Inspect R1–R5：`inspectNamingRules.ts`；改后 `verify-shell-debug-inspect-*.mjs`。
+
+**Shell Debug QA 场景 `label`（`scenarios/qa/**/pack.ts`）**：
+- **一级场景**：`模块（简述）` 全角括号、无 `·`（如 `查询记录（列表基线）`、`自动规则（出款详情）`）。
+- **二级/三级路径**：`模块 · 路径（细节）` — 模块与路径段用半角间隔 `·`；**仅最末段**用全角括号包裹变体/细节（如 `查询记录 · 重新查询（放行/驳回后变更状态）`、`查询记录 · 异常已处置（放行）`、`自动规则 · 编辑（启用中拦截）`）。**禁**连续嵌套全角括号（如 `查询记录（异常已处置（放行））`）。
+- 非 QA 的 scenario pack（详情演示等）可沿用既有 `·` 命名，除非用户要求统一。
+
+---
+
+## 9. 校验与 PR
 
 ```shell
 pnpm typecheck && pnpm build
@@ -413,4 +351,4 @@ node scripts/verify-app-end-feedback.mjs
 node scripts/verify-shell-debug-inspect-{naming,catalog,effect}.mjs
 ```
 
-PR 须满足 §1–§7、§2.5 pin、§6.7 配置表单壳、§7.9 全局成功反馈；无 showcase 复制、无 Eg* 根覆盖、无模块重复 Host。
+PR 须满足本文件 §1–§8、§2.4 pin、`general.mdc`（页面模板）、`motion.mdc`（动效）；无 showcase 复制、无 Eg* 根覆盖、无模块重复 Host。

@@ -110,9 +110,15 @@ export type PaymentEngineCollectionDetailLineRecord = {
   id: string;
   amount: string;
   symbol: string;
+  /** 与任务记录列表 EgCrypto / 链 Tag 同源。 */
+  cryptoName?: string;
+  networkLabel?: string;
+  fiatAmount?: string;
   minerFee: string;
   minerFeeSymbol: string;
   address: string;
+  /** 到账地址展示用别名 Tag（与设计稿一致）。 */
+  receivingAlias?: string;
   txHash?: string;
   status: 'pending-confirmation' | 'confirming' | 'send-failed' | 'success';
   timestamp: string;

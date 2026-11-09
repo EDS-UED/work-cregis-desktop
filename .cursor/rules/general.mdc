@@ -1,0 +1,298 @@
+---
+description: work-cregis-desktop 通用页面 / 方法 / 交互真源 — 页面 chrome 毛玻璃、创建/编辑页、数据列表页、详情（Popup / 整页）、EgSkid、EgDialog、数据展示（千分位 · 网络名）、DataList mock；持续补充
+alwaysApply: true
+---
+
+# 通用页面 · 方法 · 交互（general）
+
+`work.mdc` 管边界与硬约束；`motion.mdc` 管动效接法；**本文件管「通用页面长什么样、用什么组件、怎么交互」**（分工见 `work.mdc` §0.1）。新建同类页面 → 先按本文件选模板，**只替换内容区**，壳 / 顶栏 / 底栏 / 动效不重做。新增通用规则 → 追加 §N 并更新 §0。
+
+## 0. 速查
+
+| 场景 | 用（模板） | 动效（`motion.mdc`） | 参考实现 | 禁 |
+|---|---|---|---|---|
+| 页面顶 / 底栏 | `useScrollChromeScrim` · `frosted` / `show-divider` 随滚动（§1） | 毛玻璃 / 分割线瞬切；按钮 hover §6 | `LayoutChromeConfigFormPageChrome` | 写死 `:frosted="true"`、CSS 覆盖 `.eds-frosted-page-chrome` |
+| 创建 / 编辑页 | `LayoutChromeConfigFormPageChrome`（EgToolBar + 滚动容器 + EgComboPageButton）（§2） | 进出 §1 motion-page；表单内 Tab §2；字段浮层 §3 | 风控 · 自动规则「创建出款规则」 | 自拼顶栏 / 底栏 / 滚动容器、Popup 承载表单 |
+| 数据列表页 | EgLayout chrome overlay + EgToolBar + EgDataList + EgPaginer（§3） | 行 hover / 批选 / loading / 浮条 §8；筛选浮层 §3；进详情 §1 | 任务记录 · API 归集 | 自拼表格、自写分页、改 EDS 批选动画 |
+| 详情（Popup） | `EgDetailPopup` / `EgDetail` + `createDetailApplyItemRow`（§4.1） | 进出场 + scrim §4 motion-layout；内 Tab §2 | 交易记录详情 | 自拼行、自配 icon |
+| 详情（整页） | `LayoutChromePageStack` `pageKey='detail'` + `LayoutChromeScrollPageChrome`（§4.2） | 进出 §1；页内 Tab §2 `sticky-anchor`；滑块 §7.1 | 任务记录 · 归集明细 | 详情再套 Layout / EgPopup |
+| 侧滑面板 | `EgLayout #skid` + `EgSkid`（§5） | 开合 §5 shift；backdrop 瞬切 | 管理 · 概览「团队账户充值」 | Skid 打开时前置页仍可操作 |
+| 警告 / 提醒弹窗 | `EgDialogPopup` + `EgDialog type="standard"`（§6） | 进出场 + scrim §4（同 Detail） | 概览「温馨提示」 | Toast / 自拼 Modal 代替 |
+| 数据展示 | `formatGroupedTrimmedAmount` 等 · 链名全称（§7） | 无 | `formatGroupedDisplay.ts` | `toLocaleString`、裸数字、末尾补 0、缩写链名 |
+| DataList mock | `src/scenes/shared/egDataListMockData.ts`（§8） | 无 | — | 页面内散写 mock |
+
+页面 → 动效完整映射见 `motion.mdc` §0.3；任何页面**不自写** duration / easing / transition，缺口先报 EDS。
+
+---
+
+## 1. 页面 chrome（顶 / 底栏 · scrim · 毛玻璃）
+
+适用于所有整页：创建 / 编辑页、整页详情、列表页、概览等。
+
+### 1.1 结构
+
+```
+EgLayout（eds-layout-chrome-overlay）
+├ #toolbar  EgToolBar                       :show-divider / :frosted = canScroll && topScrim
+├ 正文滚动容器（layoutChromeScroll，inset 由 EgLayout 写入 --eds-layout-chrome-inset-top/bottom）
+└ #paginer  EgComboPageButton page-chrome   :frosted = canScroll && bottomScrim
+```
+
+### 1.2 规则
+
+1. **单滚动**：正文只有一个滚动容器；滚动状态一律来自 `useScrollChromeScrim(scrollRef, { contentRef })`。正文高度会变（切 Tab、展开块、校验文案）时用 `contentRevision` 或等价手段触发 `update()`。
+2. **毛玻璃默认不开，滚动溢出（正文滚入栏下）时开**：
+
+| 栏 | 绑定 |
+|---|---|
+| 顶栏 `EgToolBar` | `:frosted="canScroll && topScrim"`（与 `:show-divider` 同值） |
+| 底栏 `EgComboPageButton page-chrome` | `:frosted="canScroll && bottomScrim"` |
+
+3. 整页壳优先复用 `LayoutChromeConfigFormPageChrome`（表单）/ `LayoutChromeScrollPageChrome`（只读），已内置以上绑定。
+4. **默认常开须用户特别声明**（未登记一律按默认不开）：
+
+| 范围 | 声明 |
+|---|---|
+| EgDataList 列表页 ToolBar（`show-divider` 常驻：任务记录、交易记录、订单管理、手续费、Gas 代付、支付引擎记录列表、WaaS 模块页、任务地址详情、团队安全） | 用户 2026-11-06 选「保持现状」 |
+
+**动效**：`frosted` / `show-divider` 随 scrim **瞬切**（EDS 未定义过渡，业务勿补 transition）；栏内按钮 hover → `motion.mdc` §6。
+
+**禁**：直接写死 `frosted` / `:frosted="true"`；CSS 覆盖 `.eds-frosted-page-chrome` 或 ToolBar 内部背景；sticky / absolute 自拼毛玻璃；fixed 顶栏盖住 Skid。
+
+---
+
+## 2. 创建 / 编辑页（列表 → 创建 → 返回）
+
+### 2.1 结构（只换表单内容）
+
+```
+LayoutChromePageStack（motion-page-stack · pageKey list|create|detail）   ← motion.mdc §1 A→B / B→A
+└ pageChrome
+   ├ pageChromeToolbar — 配置表单 **勿** 再挂 EgToolBar（slot 留空）
+   ├ pageChromeBody
+   │  └ LayoutChromeConfigFormPageChrome（desktopTokens · pageEmbedded）
+   │     └ EgLayout type=empty · eds-layout-chrome-overlay
+   │        ├ show-toolbar → #toolbar · EgToolBar（标题「创建××」· show-back）
+   │        ├ configFormScrollHost（layoutChromeScroll + inset）→ configFormScrollContent
+   │        │   └ .formStack                         ← 新页面只替换这里的字段
+   │        └ show-paginer=canScroll → #paginer · EgComboPageButton（page-chrome）
+   │           或 !canScroll → pageFooter · EgComboPageButton（无 page-chrome）
+   └ pageChromePaginer / #create-footer — 通常空；底栏在壳内，不在 stack 外挂 Paginer
+```
+
+### 2.2 壳与真源
+
+| 项 | 真源 |
+|---|---|
+| 表单壳 | `LayoutChromeConfigFormPageChrome.vue` + `layoutChromeConfigFormPage.shared.module.css` |
+| 栈组件 | `LayoutChromePageStack.vue` · `layoutChromePageStack.shared.module.css` |
+| 列表宿主 | `PaymentEngineDataListPage` `:module-layout-page-stack="true"`；`usesModuleConfigFormPageStack` 时 **`hidesEgLayoutChrome`**（列表 EgLayout 顶 / 底 chrome 让位给 stack） |
+| 模块 slot | `#module-stack-create` 放壳或「壳 + 表单」；**禁** `#module-stack-create-toolbar` |
+| thin shell | 如 `RiskControlAutoRuleCreatePageShell.vue`：只透传 `title` / `confirm` / `canSubmit` / `contentRevision` |
+| pageKey | 表单开 → `'create'`；关 → `'list'` |
+| 方向 | **自动**（`motion.mdc` §1.2）；业务不手动设 forward / backward；切菜单瞬切：先 `closeConfigForm` 再 `setDirection('none')` |
+| settled | `@page-settled` → `onIntegratedLayoutPageSettled` → 各模块 `onConfigFormPageSettled`（清 draft 放这里） |
+
+### 2.3 EgToolBar（壳内 #toolbar）
+
+| prop | 约定 |
+|---|---|
+| `show-back` | `true`；`@back` → 关表单（同 cancel 语义由业务定） |
+| `show-operation` | `false` |
+| `show-divider` | `canScroll && topScrim`；可滚区贴顶时无 module 线，滚离顶再出 |
+| `frosted` | 同 `show-divider`（§1） |
+
+### 2.4 EgComboPageButton（提交栏）
+
+| 场景 | 用法 |
+|---|---|
+| 通用 | `tone="decor"` · `direction="left"` · **`divider` 常驻 true**（与 DS 对齐，勿跟 bottomScrim 联动） |
+| 正文可滚 | `page-chrome` · `:frosted="canScroll && bottomScrim"` · 放 EgLayout `#paginer` · `show-paginer="canScroll"` |
+| 正文不可滚 | 无 `page-chrome` · 放 `pageFooter` 容器（仅圆角壳；按钮样式由组件提供） |
+| 文案 | `confirm-label` / `cancel-label`（catalog + `ui()`）；`@confirm` / `@cancel` |
+| 提交门禁 | `:confirm-disabled="!canSubmit"`；壳内 `onConfirm` 仍二次校验 |
+
+Showcase 参考：`ButtonComboPreview` · `comboPreviewData.ts`（`page-chrome` + EgLayout `show-paginer` + `#paginer`）。
+
+### 2.5 内容承载容器（边距与表单节奏）
+
+| 层 | token / 类 |
+|---|---|
+| 滚动区 inset | `configFormScrollHost` composes `layoutChromeScroll`；EgLayout 写入 `--eds-layout-chrome-inset-top/bottom` |
+| 内容 padding | `configFormScrollContent`：`spacing-2` · `spacing-6` · `spacing-5`（上 8 / 左右 24 / 下 20） |
+| 表单纵块 | `.formStack`：`gap` `spacing-6` · `max-width: 560px` · `margin-left: 28px`（与 Combo Page `actionsLeadingInset` 视觉对齐） |
+| 字段块 | `.fieldBlock`：`gap` `spacing-1-5`；标签 `.typography-body-small-strong` |
+
+正文变高 → 壳 prop `contentRevision` 触发 scrim 重算。
+
+### 2.6 接入 checklist
+
+1. Flow：`configFormOpen` + `closeConfigForm` + `onConfigFormPageSettled`（参考 Webhook flow / `riskControlAutoRulePageStackKey`）。
+2. Host：`PaymentEngineDataListPage` + `#module-stack-create`；embedded 表单用 `LayoutChromeConfigFormPageChrome`（参考 `WebhookCreateEditPage` `embeddedInPageStack`）。
+3. 只在 `formStack` slot 内写字段；不复制 pageShell / EgLayout / 底栏 DOM。
+4. 提交成功 → `showAppEndFeedback`（`work.mdc` §7.2）；有未保存内容返回 → `EgConfirmPopover`；Verify / Dialog 链不变。
+
+**动效**：列表↔创建 → `motion.mdc` §1（Push 进 / Pop 回，方向自动）；表单内 Tab / 分段切换内容 → §2；下拉 / Popover / 自建 Toast → §3；按钮与字段 hover → §6；提交成功反馈由 `EgEndFeedbackCard` 内置。
+
+**禁**：Popup / Skid 承载创建表单；`pageChromeToolbar` 与壳内**双 ToolBar**；手写 `pageFooterActions`；`EgPaginer` 仅包确认 / 取消；`createFormPaginer*` 手搓底栏（`layoutChromePageStack.shared.module.css` 内遗留类勿新用）；表单正文自建滚动容器。
+
+---
+
+## 3. 数据列表页（EgDataList）
+
+### 3.1 结构
+
+```
+EgLayout（eds-layout-chrome-overlay）
+├ #toolbar  EgToolBar      标题 · 批处理 / 筛选 / 刷新（EgIconProButton）· show-divider 常驻（§1.2 例外）
+├ listRegion → EgDataList  表头 / 行 / 批选 / 横滚由组件提供
+└ #paginer  EgPaginer      页码 · 共 N 条 · 每页条数 · eds-frosted-page-chrome
+```
+
+### 3.2 规则
+
+1. **模板**：新列表页对齐 `PaymentEngineDataListPage`（`:module-layout-page-stack` 承载列表 ↔ 详情 / 创建）或 `TasksDataListPage`；只配列（`EgDataListColumn`）、筛选字段、mock 数据（§8）。
+2. **只读字段**用 `EgListField*`，`copyOnRowHover=false`，**禁**复制能力（`work.mdc` §1.2）。
+3. `:show-paginer` 仅列表页开；Popup 内列表 `fill=true` 才全高，否则 `fill=false` + `computeBatchDataListHeight`。
+4. **单页定制 EgDataList**（背景、padding、hover、表头）→ 只在该页 CSS module 用 `.xxx :global(.eds-data-list [class*='…'])` 覆盖，**禁**改 EDS、**禁**影响其它页面。
+5. 行点击 → 详情：Popup（§4.1）或整页详情（§4.2）。
+
+### 3.3 批选
+
+- 业务只控 `selectMode` / 选中项；**禁**改 EDS 动画 / DOM。
+- 勾选列常驻（隐藏态 0 宽，**禁** `v-if` 卸列）；动画 300ms `SELECT_COLUMN_ANIM_MS`，settle 320ms，期间 `data-eds-data-list-layout-animating`。
+- 退出批选 → `setSelectMode(false)`；切菜单 → dismiss + exitSelectMode。
+
+### 3.4 列宽（min-width）
+
+- 列 `min-width` prop = 硬下限；Σ min 超过（容器 − 尾列 − 80px）→ 横滚。
+- 批选列宽 = idle 列宽。
+- 单元格 maxWidth：OverflowText 360；DataListCell 240 / 480。
+
+### 3.5 动效
+
+- 行 hover、批选列展开 / 收起、loading 行、批处理浮条、翻页 → `motion.mdc` §8（EDS 内置，业务只控状态）。
+- 单页把 hover 背景改到 `td`（圆角等）→ 按 `motion.mdc` §6.2 补 `transition: var(--motion-recipe-hover)`。
+- ToolBar 筛选 / 批处理 / 引导浮层 → §3；列表 → 详情 / 创建 → §1；页内 Tab 滑块 → §7.1。
+
+---
+
+## 4. 详情
+
+### 4.1 Popup 详情（EgDetailPopup）
+
+```
+AppPopupOverlayHost → EgPopup（scrim · motion-layout · glassMicroFloatHost）
+└ EgDetail
+  └ section → itemList → item → itemRow（title icon + 标题 + 值）
+```
+
+1. **组件与挂载**：样式、交互、动效全部用 `EgDetailPopup` / `EgDetail` 原样（880×620、scrim、进出场）；只挂 `AppPopupOverlayHost`，生命周期用 `usePopupShellLifecycle`（`work.mdc` §3、§7.1）。
+2. **数据源对齐设计系统**：每一行先在 EDS `createDetailApplyItemRow(variantId, {...})` 里找**相同或相近**的变体——`crypto` · `amount` · `fee` · `status` · `sender` · `receiver` · `txid` · `memo` · `remark` · `ip` · `ip-whitelist` · `time` · `type` · `reason` · `initiated-by` · `brand-number` · `tripartite-number` · `text`。变体自带标题 icon、值的展示形态（地址 / 哈希 / Tag / 金额）与交互；**禁**自拼 `DetailSectionData` 行、**禁** `showValueCopy`。
+3. **icon 对齐设计系统**：变体自带 icon 的不另配；需要自定 icon 时从 EDS `iconRegistry`（`eds-*`）选同义 icon。EDS 无相近 icon → 按设计系统规则（尺寸 token、fill / stroke 规范、`EgIcon` 承载）在业务侧自行组合；**禁**引外部 svg 或手调 viewBox / stroke。
+4. 区块文案用 `ui()`；字段值**禁** `ui()`（`work.mdc` §5）。参考：`buildPaymentEngineWalletPayoutDetailSections.ts`。
+5. **动效**：进出场 + scrim → `motion.mdc` §4（`.motion-layout` 300ms）；Popup 内摘要↔明细多页 → `motion.mdc` §0.1「Popup 内多页」；内 Tab 内容 → §2；itemRow hover → §6；关闭按钮 `is-asym` 由 EgDetail 内置。
+
+### 4.2 整页详情（列表 ↔ 详情 · motion-page）
+
+1. 与创建页共用 `LayoutChromePageStack`，`pageKey='detail'`；动效见 `motion.mdc` §1。
+2. 只读壳用 `LayoutChromeScrollPageChrome`（EgToolBar 在壳内 chrome overlay，`#detail-toolbar` 留空）；类名 `layoutChromePage*`、`layoutChromeDetailHost*`。
+3. 详情页内 Tab 切换内容 → `motion.mdc` §2（`useTabContentMotionSwitch`）。
+4. **动效**：列表↔详情 → `motion.mdc` §1；页内 Tab 内容 → §2（有吸顶 Tab 用 `sticky-anchor`，否则 `reset`）；Tab 滑块 → §7.1；表格 hover → §6 / §8。
+5. 参考：`PaymentEngineCollectionDetailPage` → `LayoutChromeScrollPageChrome`。
+
+**禁**：整页详情再套 Layout / EgPopup；`pageChrome` 外层 ToolBar + `EgDetail` 全高滚动。
+
+---
+
+## 5. 侧滑面板（EgSkid）
+
+### 5.1 结构
+
+```
+EgLayout v-model:show-skid="skidOpen"
+├ #toolbar  EgToolBar  :show-operation="!skidOpen"  · #functional v-if="!skidOpen"
+│           + skidDismissBackdrop（v-if="skidOpen"）
+├ 正文  + skidDismissBackdrop（v-if="skidOpen"）
+└ #skid  EgSkid（title · show-button · action-tone="decor" · confirm-label）
+```
+
+### 5.2 规则
+
+1. **样式交互**对齐 `ManageOverviewPage.vue`「团队账户充值」：标题区、正文滚动、底部操作均由 `EgSkid` 提供。
+2. **Skid 打开时前置页不可操作**：ToolBar 操作区（`show-operation`、`#functional`）与正文内操作按钮全部 `v-if="!skidOpen"` 隐藏。
+3. **点前置页关闭 Skid**：ToolBar 与正文各覆盖一层透明 `skidDismissBackdrop`（`<button type="button" aria-label="关闭">`，`position:absolute; inset:0`，无背景），`@click` 关 Skid。
+4. Skid 内保存成功 → 先关 Skid 再 `showAppEndFeedback`；开 Skid 前 `closeAllAnchoredTooltips()`。
+5. **动效**：开合 → `motion.mdc` §5（EgLayout 内置 `--motion-recipe-shift` 300ms，主区同步收窄）；`skidDismissBackdrop` 与 ToolBar 操作区显隐**瞬切**；关闭后清 Skid 会话须等 shift 结束；Skid 内浮层 → §3。
+
+**禁**：Skid 打开时前置页按钮仍可点；用 Popup scrim 代替 dismiss backdrop；Skid 内再套 EgLayout；fixed 顶栏盖 Skid。
+
+---
+
+## 6. 警告 / 提醒弹窗（EgDialog）
+
+### 6.1 结构
+
+```
+AppPopupOverlayHost / 模块 OverlayHost
+└ EgDialogPopup dialog-type="standard" alert-vertical-align="offset-top"
+  └ EgDialog type="standard" :title :secondary-text :show-secondary-text
+    └ #actions  ComboAction.module.css（flotationRoot / flotationBar…）+ EgButton
+```
+
+### 6.2 规则
+
+1. 用于**警告、提醒、无权限、确认删除**等需要用户确认的阻断信息（Alert 一律 standard dialog popup）；参考 `ManageOverviewGasProxyAlertDialog.vue`（「温馨提示」+「确定」）。
+2. 方法：`usePopupShellLifecycle({ open, onClosed })` → `popupMounted` / `popupOpen` / `onPopupClosed`；确认按钮只置 `popupOpen=false`，真关在 `@close`（`work.mdc` §7.1）。
+3. 底栏按钮只用 EDS 已文档化的 `ComboAction.module.css` 组合；文案 catalog key + `ui()`。
+4. 叠在 Detail 之上时下层 `suspended`（`work.mdc` §7.1）；删除类敏感链见 `work.mdc` §7.2。
+5. **动效**：与 Detail 同一套 `.motion-layout` + scrim → `motion.mdc` §4；下层 Detail `suspended` 瞬卸（设计行为，非缺陷）；按钮 hover → §6。
+
+**禁**：Toast / `EgEndFeedbackCard` 代替警告；旧 `EgDialog type=symbol/compose`；自拼 Modal / 底栏。
+
+---
+
+## 7. 数据展示（千分位 · 去尾 0 · 网络名）
+
+### 7.1 数字
+
+1. **所有展示数字千分位**：`888888.88` → `888,888.88`。
+2. **小数末尾 0 不显示**：`88.8000000` → `88.8`；`5.000` → `5`。
+3. 工具（`src/utils/formatGroupedDisplay.ts`）：
+
+| 函数 | 用途 |
+|---|---|
+| `formatGroupedTrimmedAmount(raw)` | **默认首选**：千分位 + 去尾 0；字符串运算不丢精度；支持 `$` / `±` |
+| `formatGroupedNumber(v)` | 整数 / 计数（EDS 导出） |
+| `formatGroupedDecimalAmount(raw)` | 小数位须原样保留（如固定精度报价）时才用 |
+| `formatGroupedAmountText(text)` | 文案内嵌数字 token |
+
+4. 例外（不做千分位）：输入框内值、倒计时、`SIG-*` 编号、地址 / 哈希 / ID。
+
+**禁**：`toLocaleString`、`Intl` 直出、模板里裸插数值、业务补齐小数位尾 0。
+
+### 7.2 网络名
+
+链 Tag 用全名；币种放金额列。**禁** BSC、USDT-Ethereum 等缩写或拼接链名。
+
+---
+
+## 8. EgDataList mock 数据
+
+入口 **`src/scenes/shared/egDataListMockData.ts`**（各模块 DataList mock 统一从此取，禁页面内散写）。
+
+| 项 | 规则 |
+|---|---|
+| 币种 | 行 0–7 固定 preset（覆盖多链 / 多币种展示形态） |
+| 状态 | 前 N 行覆盖 Showcase 状态全集 → 其后统一单一完成态 |
+| 提币 / API | 7 态 + `completed` |
+| 归集历史 | 3 态 + `success` |
+| Tag | 状态 Tag 配置走 `paymentEngineRecordStatusCustomize.ts` |
+| 地址 / hash | 只用验证池（`listFieldCryptoSampleAddresses.ts`，禁整文件覆盖，`work.mdc` §2.3） |
+| 数值 | 展示前过 §7.1 千分位 / 去尾 0 |
+
+---
+
+## 9.（待补充）
+
+新规则按「场景 / 结构 / 规则 / 禁 / 参考实现」格式追加，并更新 §0 速查表。

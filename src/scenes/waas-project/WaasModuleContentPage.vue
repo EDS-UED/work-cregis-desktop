@@ -14,7 +14,7 @@ const { ui } = useAppI18n();
   <div :class="styles.page">
     <EgLayout type="empty" show-toolbar>
       <template #toolbar>
-        <EgToolBar :title="ui(menuItem)" :show-operation="false" :show-divider="true" />
+        <EgToolBar :title="ui(menuItem)" :show-operation="false" :show-divider="true" frosted />
       </template>
       <div :class="styles.body">
         <p :class="styles.hint">{{ ui('Main content area') }}</p>

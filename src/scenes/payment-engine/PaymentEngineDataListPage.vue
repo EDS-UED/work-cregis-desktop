@@ -837,14 +837,10 @@ function onRowClick(data: DataListItem) {
     ? props.canOpenDetailOnRowClick(row, props.menuItem)
     : props.openDetailOnRowClick;
   if (!canOpen) return;
-  if (usesLayoutDetailPageStack.value) {
-    layoutDetailPageMotionRef.value?.setDirection('forward');
-  }
   detailFlow.openDetailForRow(row, props.menuItem);
 }
 
 function onLayoutDetailBack() {
-  layoutDetailPageMotionRef.value?.setDirection('backward');
   if (isPaymentBulkTransferRecordMenuItem(props.menuItem)) {
     detailFlow.closeBulkTransferDetail();
     return;
@@ -886,24 +882,9 @@ function onIntegratedLayoutPageSettled() {
 }
 
 watch(
-  () => moduleConfigFormOpen.value,
-  (next, previous) => {
-    if (!usesModuleConfigFormPageStack.value) return;
-    if (next && !previous) {
-      layoutDetailPageMotionRef.value?.setDirection('forward');
-      return;
-    }
-    if (!next && previous) {
-      layoutDetailPageMotionRef.value?.setDirection('backward');
-    }
-  },
-);
-
-watch(
   () => props.menuItem,
   () => {
     if (!usesModuleConfigFormPageStack.value || !moduleConfigFormOpen.value) return;
-    layoutDetailPageMotionRef.value?.setDirection('none');
     if (webhookFlow?.configFormOpen.value) {
       webhookFlow.closeConfigForm();
     }
@@ -919,17 +900,18 @@ watch(
     if (teamApiFlow?.configFormOpen.value) {
       teamApiFlow.closeConfigForm();
     }
+    layoutDetailPageMotionRef.value?.setDirection('none');
   },
 );
 
 function dismissLayoutDetail(instant = false) {
-  if (instant) {
-    layoutDetailPageMotionRef.value?.setDirection('none');
-  }
   detailFlow.closeBulkTransferDetail();
   detailFlow.clearBulkTransferDetailRow();
   detailFlow.closeCollectionDetail();
   detailFlow.clearCollectionDetailRow();
+  if (instant) {
+    layoutDetailPageMotionRef.value?.setDirection('none');
+  }
 }
 
 watch(
@@ -989,7 +971,12 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
 </script>
 
 <template>
-  <div :class="styles.dataListNest">
+  <div
+    :class="[
+      styles.dataListNest,
+      usesIntegratedLayoutPageStack && styles.dataListNestIntegrated,
+    ]"
+  >
     <EgLayout
       type="empty"
       :show-toolbar="!hidesEgLayoutChrome"
@@ -1112,27 +1099,22 @@ function recordRow(data: DataListItem): PaymentEngineRecordRow {
           </PaymentEngineRecordListToolbar>
         </template>
 
-        <template #detail-toolbar>
-          <EgToolBar
-            :title="ui(layoutDetailToolbarTitleKey)"
-            :show-back="true"
-            :show-operation="false"
-            @back="onLayoutDetailBack"
-          />
-        </template>
-
         <template #detail>
           <PaymentEngineBulkTransferDetailPage
             v-if="bulkTransferDetailRow && isPaymentBulkTransferRecordMenuItem(props.menuItem)"
             embedded-in-page-stack
+            :toolbar-title-key="layoutDetailToolbarTitleKey"
             :detail="bulkTransferDetailRow"
             :menu-item="props.menuItem"
+            @back="onLayoutDetailBack"
           />
           <PaymentEngineCollectionDetailPage
             v-else-if="collectionDetailRow && isPaymentCollectionDetailMenuItem(props.menuItem)"
             embedded-in-page-stack
+            :toolbar-title-key="layoutDetailToolbarTitleKey"
             :detail="collectionDetailRow"
             :menu-item="props.menuItem"
+            @back="onLayoutDetailBack"
           />
         </template>
 

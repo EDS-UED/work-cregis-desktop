@@ -8,10 +8,30 @@
   overflow: hidden;
 }
 
+.dataListNestIntegrated {
+  /* 标记：内嵌 LayoutChromePageStack（list↔详情/配置页） */
+}
+
 .dataListNest :deep(.eds-layout) {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
+  height: 100%;
+}
+
+/** 仅任务记录等内嵌 list↔详情 stack；勿作用于普通列表 EgLayout（避免顶栏空白）。 */
+.dataListNestIntegrated :deep(.eds-layout [class*='_main_'] [class*='_body_']) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 须保留 EDS grid 叠层（勿 align-content:start）；Fill 高度见 layoutChromePageStack.pageStack。 */
+.dataListNestIntegrated :deep(.motion-page-stack[class*='pageStack']) {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
   height: 100%;
 }
 

@@ -175,6 +175,7 @@ function onRowClick(data: DataListItem) {
         <EgToolBar
           :show-operation="true"
           :show-divider="true"
+          frosted
         >
           <template #title>
             <span :class="styles.toolbarTitleCluster">

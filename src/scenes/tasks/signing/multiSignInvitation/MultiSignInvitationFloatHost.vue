@@ -9,6 +9,7 @@ import {
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { clientPopupActive } from '@/scenes/tasks/shared/clientPopupActive';
+import { readEdsFlotationLeaveMs } from '@/scenes/tasks/shared/useEdsToastMotion';
 import { signingBatchSelectModeActive } from '@/scenes/tasks/signing/batch/signingBatchFlowContext';
 import MultiSignInvitationPanel from './MultiSignInvitationPanel.vue';
 import { signingFlowRegistry } from '@/scenes/tasks/signing/signingFlowContext';
@@ -161,16 +162,6 @@ function onPanelClose() {
   panelExpanded.value = false;
 }
 
-function readToastLeaveMs(): number {
-  const probe = document.createElement('div');
-  probe.className = 'motion-flotation';
-  const anchor = document.querySelector('.app-preview') ?? document.documentElement;
-  anchor.appendChild(probe);
-  const seconds = Number.parseFloat(getComputedStyle(probe).transitionDuration);
-  anchor.removeChild(probe);
-  return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1000) : 300;
-}
-
 function clearToastLeaveTimer() {
   if (toastLeaveTimer !== undefined) {
     clearTimeout(toastLeaveTimer);
@@ -193,7 +184,7 @@ function syncToastEnter() {
 
 function hideToast() {
   toastMotionActive.value = false;
-  const leaveMs = readToastLeaveMs();
+  const leaveMs = readEdsFlotationLeaveMs();
   clearToastLeaveTimer();
   toastLeaveTimer = window.setTimeout(() => {
     toastKeepMounted.value = false;

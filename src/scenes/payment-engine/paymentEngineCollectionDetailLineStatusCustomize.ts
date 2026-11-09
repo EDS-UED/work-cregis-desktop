@@ -13,11 +13,10 @@ const COLLECTION_DETAIL_LINE_STATUS_MAP: Record<
 
 export function buildPaymentEngineCollectionDetailLineStatusCustomize(
   line: PaymentEngineCollectionDetailLineRecord,
-  translate: (key: string) => string,
 ): Record<string, unknown> {
   const item = COLLECTION_DETAIL_LINE_STATUS_MAP[line.status];
   return {
     status: item.status,
-    label: translate(item.labelKey),
+    label: item.labelKey,
   };
 }

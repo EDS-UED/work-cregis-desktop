@@ -75,20 +75,26 @@ function buildCollectionDetailLines(
     ? ['888008000.0002', '10000.55567', '76000.33202', '298000.33288']
     : ['10000.55567', '1137.12', '1274.12', '1411.12'];
 
-  return Array.from({ length: 4 }, (_, lineIndex) => {
+  return Array.from({ length: 28 }, (_, lineIndex) => {
     const status = resolveShowcaseThenCompletedStatus(
       lineIndex,
       COLLECTION_DETAIL_LINE_STATUS_SHOWCASE,
       'success',
     );
-    const amountValues = formatGroupedDecimalAmount(amountSamples[lineIndex] ?? '0');
+    const amountValues = formatGroupedDecimalAmount(
+      amountSamples[lineIndex % amountSamples.length] ?? '0',
+    );
 
     return {
       id: `${row.id}-${kind}-${lineIndex}`,
       amount: amountValues,
       symbol,
+      cryptoName: row.currencyCryptoName,
+      networkLabel: String(row.currencyNetwork ?? preset.networkLabel ?? '').trim(),
+      fiatAmount: String(row.orderFiat ?? '').trim(),
       minerFee: lineIndex === 0 ? '0.0003' : '0.0001',
       minerFeeSymbol: symbol,
+      receivingAlias: RECEIVING_ALIAS_SAMPLES[lineIndex % RECEIVING_ALIAS_SAMPLES.length],
       address: resolveDemoWalletAddress(rowIndex + lineIndex + 2, preset, 'to'),
       txHash: status === 'success' || status === 'confirming'
         ? resolveVerifiedTxHashForRow(rowIndex * 11 + lineIndex + 90, addressFamily)

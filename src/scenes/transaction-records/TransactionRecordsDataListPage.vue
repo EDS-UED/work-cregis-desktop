@@ -234,6 +234,7 @@ const displayToolbarActionButtons = computed(() =>
           :title="ui('Report')"
           :show-operation="true"
           :show-divider="true"
+          frosted
         >
           <template #functional>
             <TasksToolbarFilter

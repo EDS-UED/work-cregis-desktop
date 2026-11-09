@@ -7,18 +7,17 @@
   background: var(--box-page);
 }
 
-.pageRootEmbedded {
-  composes: layoutChromeBodyScroll from '../project/layoutChromePage.shared.module.css';
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
 .pageRootStandalone {
   composes: layoutChromeScroll from '../project/layoutChromePage.shared.module.css';
 }
 
 .detailHost {
   composes: layoutChromeDetailHost from '../project/layoutChromeDetailHost.shared.module.css';
+  width: 100%;
+  min-width: 0;
+}
+
+.collectionDetailPaginerShell {
   width: 100%;
   min-width: 0;
 }
@@ -38,47 +37,176 @@
   box-sizing: border-box;
 }
 
+/** motion-page + LayoutChromeScrollPageChrome：边距由 configFormScrollContent 承担。 */
+.pageLayoutInPageStack {
+  padding: var(--spacing-0);
+}
+
+/** 归集详情 embedded：壳内 configFormScrollContent 左右 12px（覆盖共享 spacing-6）。 */
+.collectionDetailScrollContent.collectionDetailScrollContent {
+  padding-top: var(--spacing-2);
+  padding-right: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
+  padding-left: var(--spacing-3);
+}
+
+/** 与 scrollContent 左右 padding-3 叠成 24px 页边；仅 motion-page 内嵌。 */
+.pageLayoutInPageStack .headlineStack,
+.pageLayoutInPageStack .cardsRow,
+.pageLayoutInPageStack .recordsTabsBar {
+  margin-right: var(--spacing-3);
+  margin-left: var(--spacing-3);
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+.pageLayoutInPageStack .cardsRow,
+.pageLayoutInPageStack .recordsTabsBar {
+  width: auto;
+  min-width: 0;
+}
+
+.pageLayoutInPageStack .recordsStickyBar > :global(.eds-divider) {
+  margin-right: var(--spacing-3);
+  margin-left: var(--spacing-3);
+  align-self: stretch;
+  width: auto;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .headlineGroup {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-0);
+  width: 100%;
+  min-width: 0;
+}
+
+.headlineMainRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: var(--spacing-3);
   width: 100%;
   min-width: 0;
+  margin-top: var(--spacing-1);
 }
 
 .headlineStack {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--spacing-1);
+  gap: var(--spacing-0);
   min-width: 0;
+}
+
+.headlineEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1-5);
+  min-width: 0;
+}
+
+.headlineEyebrowDot {
+  flex-shrink: 0;
+  width: var(--scale-2);
+  height: var(--scale-2);
+  border-radius: 50%;
+  background: var(--material-brand-primary);
 }
 
 .headlineAmountRow {
   display: inline-flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--spacing-1-5);
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.headlineAmount {
+  margin: 0;
+}
+
+/** 「归集中」：品牌描边 + EgGear（非 EgTag status success） */
+.headlineCollectingStatus {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-1);
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 3px var(--spacing-2) 3px var(--spacing-1-5);
+  border: var(--stroke-xs) solid var(--material-brand-quaternary);
+  border-radius: var(--radius-full);
+  background: var(--box-page);
+}
+
+.headlineCollectingStatus:hover {
+  border-color: var(--material-brand-tertiary);
+}
+
+.headlineCollectingGear {
+  flex-shrink: 0;
+  --gear-size: var(--icon-md);
+  --gear-color: var(--text-brand-primary);
+}
+
+.headlineCollectingStatusLabel {
+  color: var(--text-brand-primary);
+}
+
+.headlineAlertWrap {
+  width: 100%;
+  min-width: 0;
+  margin-top: var(--spacing-1);
 }
 
 .headlineMetaItems {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--spacing-4);
+  gap: var(--spacing-3);
   min-width: 0;
+  margin-top: var(--spacing-4);
 }
 
 .metaItem {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-1);
-  color: var(--text-secondary);
+  gap: var(--spacing-1-5);
+  min-width: 0;
+  color: var(--text-base-secondary);
+}
+
+/* EgIcon 线稿：stroke 语义 60% + --eds-icon-stroke-screen；EDS 无 secondary fillTone → .eds-i-f */
+.metaItemIcon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: var(--stroke-base-secondary);
+  --eds-icon-stroke-screen: var(--stroke-md);
+}
+
+.metaItemIcon :global(.eds-i-f) {
+  fill: var(--stroke-base-secondary);
 }
 
 .metaItemText {
-  composes: typography-footnote from global;
+  composes: typography-body-small from global;
+  color: var(--text-base-secondary);
+}
+
+.metaDivider {
+  align-self: center;
+  flex-shrink: 0;
+  height: var(--scale-2-5);
+  min-height: var(--scale-2-5);
+  max-height: var(--scale-2-5);
 }
 
 .cardsRow {
@@ -95,10 +223,16 @@
   background: var(--material-card-shallow);
   border-radius: var(--radius-md);
   box-sizing: border-box;
+  height: 100%;
 }
 
 .conditionCard {
-  padding: var(--spacing-6);
+  padding: var(--spacing-2);
+}
+
+/* 内层 EgDetail 仅渲染 apply-item；整页关闭由 EgToolBar 承担，勿露出 Popup systemBar。 */
+.conditionCard :global(.eds-detail > div:first-child) {
+  display: none;
 }
 
 /* 内层 EgDetail 仅渲染 apply-item；去掉 scroll / sectionContent 等布局壳 */
@@ -121,15 +255,164 @@
   padding: var(--spacing-0);
 }
 
+.conditionCard :global(.eds-detail [class*='sectionTitleRow']) {
+  /* 左右 12px（--spacing-3）、上下 8px（--spacing-2）外边距 */
+  margin: var(--spacing-2) var(--spacing-3);
+  box-sizing: border-box;
+}
+
 .conditionCard :global(.eds-detail [class*='sectionTitle']) {
-  padding-left: var(--spacing-0);
+  padding: var(--spacing-0);
+  box-sizing: border-box;
+  color: var(--text-primary);
+  font-size: var(--eds-body-small-strong-size);
+  font-weight: var(--eds-body-small-strong-weight);
+  line-height: var(--eds-body-small-strong-line-height);
+}
+
+.conditionCard :global(.eds-detail [class*='itemTitleIcon']) {
+  display: none;
+}
+
+.conditionCard :global(.eds-detail [class*='itemList']) {
+  gap: var(--spacing-0);
+}
+
+/**
+ * 币种行（第 2 条）：符号 / Tag / 主值之间保留 spacing-1-5；
+ * 归集编号等单行值：itemValue 内 gap 0，与币种行区分开。
+ */
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(1) [class*='itemValue']),
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(3) [class*='itemValue']) {
+  gap: var(--spacing-0);
+}
+
+/* 到账地址行：别名 Tag 与地址文案之间 spacing-1 */
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='itemValue']) {
+  gap: var(--spacing-1);
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(2) [class*='itemValue']) {
+  gap: var(--spacing-1-5);
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(1) [class*='itemValueAddressMainLine']),
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(3) [class*='itemValueAddressMainLine']) {
+  gap: var(--spacing-0);
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='itemValueAddressMainLine']) {
+  gap: var(--spacing-1);
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(2) [class*='itemValueAddressMainLine']) {
+  gap: var(--spacing-1-5);
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(1) [class*='itemValueAddressInlineCluster']),
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(3) [class*='itemValueAddressInlineCluster']) {
+  gap: var(--spacing-0);
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(2) [class*='itemValueAddressInlineCluster']) {
+  gap: var(--spacing-1-5);
+}
+
+.conditionCard :global(.eds-detail [class*='itemValueTrailing']:empty) {
+  display: none;
+}
+
+.conditionCard :global(.eds-detail [class*='itemValueTrailing']) {
+  gap: var(--spacing-0);
+}
+
+/**
+ * 归集条件行 ↔ 归集进度指标行：共用行壳（与 EgDetail Apply_Item `.itemRow` 默认一致）。
+ */
+.conditionCard :global(.eds-detail [class*='itemRow']) {
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  cursor: default;
+  transition: var(--motion-recipe-hover);
+}
+
+.conditionCard :global(.eds-detail [class*='itemRow']:hover) {
+  background-color: var(--event-hover);
+}
+
+/* 可复制行（归集编号、到账地址等）：手型保留 */
+.conditionCard :global(.eds-detail [class*='itemRowCopyable']) {
+  cursor: pointer;
+}
+
+.conditionCard :global(.eds-detail [class*='itemRowCopyable']:focus-visible) {
+  outline: none;
+}
+
+.conditionCard :global(.eds-detail [class*='itemTitleText']) {
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-secondary);
+}
+
+.conditionCard :global(.eds-detail [class*='itemValueText']:not([class*='Secondary'])) {
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-primary);
+  text-align: right;
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(1) [class*='itemValue']),
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(2) [class*='itemValue']),
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(3) [class*='itemValue']),
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='itemValue']) {
+  justify-content: flex-end;
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='itemValueTextNowrap']) {
+  white-space: normal;
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='itemValueAddressInlineCluster']) {
+  gap: var(--spacing-1);
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* 到账地址：Tag + 地址 + 尾部图标为同一段行内文本流，地址折行后图标紧跟末行 */
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='_itemValue_']) {
+  display: block;
+  text-align: right;
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='_itemValue_'] > .eds-tag) {
+  display: inline-flex;
+  margin-right: var(--spacing-1);
+  vertical-align: middle;
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='itemValueText']) {
+  display: inline;
+  white-space: normal;
+  word-break: break-all;
+  vertical-align: middle;
+}
+
+.conditionCard :global(.eds-detail [class*='itemList'] > [class*='item']:nth-of-type(4) [class*='itemValueTrailing']:not(:empty)) {
+  display: inline-flex;
+  margin-left: var(--spacing-1);
+  vertical-align: middle;
 }
 
 .progressCard {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
-  padding: var(--spacing-6);
+  /* 与 .conditionCard 一致 */
+  padding: var(--spacing-2);
 }
 
 .progressHeader {
@@ -137,30 +420,89 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-2);
+  /* 与 sectionTitleRow 一致：左右 12px、上下 8px 外边距 */
+  margin: var(--spacing-2) var(--spacing-3);
+  box-sizing: border-box;
+}
+
+.cardSectionTitle {
+  /* 与 EgDetail sectionTitle（归集条件）一致 */
+  color: var(--text-primary);
+  font-size: var(--eds-body-small-strong-size);
+  font-weight: var(--eds-body-small-strong-weight);
+  line-height: var(--eds-body-small-strong-line-height);
 }
 
 .progressTitle {
-  composes: typography-subheadline from global;
+  /* 与 .cardSectionTitle / EgDetail sectionTitle 一致（预留） */
   color: var(--text-primary);
+  font-size: var(--eds-body-small-strong-size);
+  font-weight: var(--eds-body-small-strong-weight);
+  line-height: var(--eds-body-small-strong-line-height);
 }
 
 .progressRuntime {
-  composes: typography-footnote from global;
-  color: var(--text-secondary);
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.progressRuntimeLabel {
+  flex: 0 0 auto;
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--eds-footnote-weight);
+  line-height: var(--eds-footnote-line-height);
+  color: var(--text-base-secondary);
+}
+
+.progressRuntimeDuration {
+  /* 固定 46px（scale-11 + scale-05）；11px footnote */
+  flex: 0 0 calc(var(--scale-11) + var(--scale-05));
+  width: calc(var(--scale-11) + var(--scale-05));
+  min-width: calc(var(--scale-11) + var(--scale-05));
+  display: inline-block;
+  box-sizing: border-box;
+  text-align: right;
+  font-size: var(--eds-footnote-size);
+  font-weight: var(--weight-medium);
+  line-height: var(--eds-footnote-line-height);
+  color: var(--status-danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.progressTrackShell {
+  /* 进度条轨道相对卡片内容区左右各 12px（与 EgProgress 根等宽，margin 作用于外壳） */
+  margin-left: var(--spacing-3);
+  margin-right: var(--spacing-3);
+}
+
+.progressTrackShell :global(.eds-progress) {
+  width: 100%;
 }
 
 .metricsGrid {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-2);
+  gap: var(--spacing-0);
 }
 
 .metricBlock {
   display: grid;
   grid-template-columns: var(--icon-md) minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--spacing-1);
+  gap: var(--spacing-2);
   min-width: 0;
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  cursor: default;
+  transition: var(--motion-recipe-hover);
+}
+
+.metricBlock:hover {
+  background-color: var(--event-hover);
 }
 
 .metricIcon {
@@ -172,7 +514,7 @@
 }
 
 .metricIconPending {
-  color: var(--text-brand-primary);
+  color: var(--material-match-primary);
 }
 
 .metricIconFailed {
@@ -184,13 +526,17 @@
 }
 
 .metricLabel {
-  composes: typography-footnote from global;
-  color: var(--text-secondary);
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-secondary);
 }
 
 .metricValue {
-  composes: typography-subheadline from global;
-  color: var(--text-primary);
+  font-size: var(--eds-body-small-size);
+  font-weight: var(--eds-body-small-weight);
+  line-height: var(--eds-body-small-line-height);
+  color: var(--text-base-primary);
   text-align: right;
 }
 
@@ -204,19 +550,200 @@
   align-items: stretch;
   gap: var(--spacing-0);
   width: 100%;
-  padding: var(--spacing-2) var(--spacing-0) var(--spacing-6);
+  min-width: 0;
   box-sizing: border-box;
+}
+
+/* 页面滚动时吸附在 ToolBar 下缘（gap 0）：sticky 偏移从滚动区 padding（= ToolBar inset）内侧起算。固定高度供表头叠加偏移。 */
+.recordsStickyBar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: var(--scale-10);
+  box-sizing: border-box;
+  background: var(--box-page);
+}
+
+.recordsTabsBar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.recordsTabsBar :global(.eds-tabs) {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.recordsTableMotion {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.recordsTableMotion :global(.motion-layout-content) {
+  overflow: visible;
 }
 
 .recordsPaginer {
   flex-shrink: 0;
   width: 100%;
+  margin-top: var(--spacing-2);
 }
 
+/* 可见高度 = 表头 + 行。overflow: clip 只裁圆角、不成为滚动容器，表头 sticky 才能跟随页面滚动。 */
+.recordsTableClip {
+  width: 100%;
+  min-width: 0;
+  border-radius: var(--radius-sm);
+  overflow: clip;
+}
+
+/* 测量高度比可见高度多出行距估算，多出部分被 recordsTableClip 裁掉。 */
 .recordsDataList {
   width: 100%;
   min-width: 0;
-  background: var(--box-page);
+  background: var(--material-hide);
+}
+
+/* 归集详情记录表：仅本页 wrapper 内 EgDataList，不改 EDS 与其他列表。 */
+.recordsDataList :global(.eds-data-list) {
+  --eds-data-list-row-gap: var(--spacing-0);
+  --data-table-head: var(--box-page);
+}
+
+.recordsDataList :global(.eds-data-list [class*='tableContent']) {
+  overflow: visible;
+  /* 正文随页滚：不叠加 EgLayout inset，表头 sticky 仍用祖先 --eds-layout-chrome-inset-top */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* 仅 Tab 栏吸顶；tableContent 已 overflow:visible，EDS 表头自带 sticky 会挂到整页滚动上，须还原为静态。 */
+.recordsDataList :global(.eds-data-list [class*='headerCell']) {
+  position: static;
+  background-color: var(--box-page);
+}
+
+.recordsDataList :global(.eds-data-list [class*='headerBackdrop']) {
+  position: static;
+  background-color: var(--box-page);
+  backdrop-filter: none;
+}
+
+.recordsDataList :global(.eds-data-list [class*='table']) {
+  background-color: var(--material-hide);
+  min-width: 704px;
+}
+
+.recordsDataList :global(.list-field-general-structure) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.recordsDataList :global(.hash-like-combo) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.recordsDataList :global([class*='addressTooltipHost']) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.recordsDataList :global([class*='tooltipTriggerBody']) {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* EgListFieldAddressLine 默认 Tag 在地址后；归集详情要求 Tag 在地址前（仅首行有 Tag）。 */
+.recordsDataList :global([class*='cellLineMain']) {
+  flex-direction: row;
+  align-items: center;
+}
+
+.recordsDataList :global([class*='rowTag']) {
+  order: -1;
+  flex-shrink: 0;
+}
+
+.recordsDataList :global([class*='addressLineCluster']) {
+  order: 0;
+  min-width: 0;
+}
+
+.recordsDataList :global(.eds-data-list [class*='body'] tr:not([class*='loadingRow']):not([class*='blankRow'])) {
+  background-color: var(--material-hide);
+  transition: var(--motion-recipe-hover);
+}
+
+.recordsDataList :global(.eds-data-list [class*='body'] tr:not([class*='loadingRow']):not([class*='blankRow']):nth-child(2n)),
+.recordsDataList :global(.eds-data-list [class*='body'] tr:not([class*='loadingRow']):not([class*='blankRow']):nth-child(2n + 1)) {
+  background-color: var(--material-hide);
+}
+
+.recordsDataList :global(.eds-data-list [class*='body'] tr:not([class*='loadingRow']):not([class*='blankRow']) > td) {
+  transition: var(--motion-recipe-hover);
+}
+
+.recordsDataList :global(.eds-data-list [class*='body'] tr:not([class*='loadingRow']):not([class*='blankRow']):hover > td) {
+  background-color: var(--event-hover);
+}
+
+/* 首格为 0 宽隐藏勾选列，左圆角落在其后的首个可见列。 */
+.recordsDataList :global(.eds-data-list [class*='body'] tr:not([class*='loadingRow']):not([class*='blankRow']) > td[class*='columnSelect'] + td),
+.recordsDataList :global(.eds-data-list [class*='body'] tr:not([class*='loadingRow']):not([class*='blankRow']) > td:first-child:not([class*='columnSelect'])) {
+  border-top-left-radius: var(--radius-sm);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.recordsDataList :global(.eds-data-list [class*='body'] tr:not([class*='loadingRow']):not([class*='blankRow']) > td:last-child) {
+  border-top-right-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.recordsDataList :global([class*='headerContent']) {
+  padding-right: var(--spacing-3);
+  padding-left: var(--spacing-3);
+}
+
+.recordsDataList :global([class*='cellContent']) {
+  align-items: flex-start;
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+.recordsDataList :global(thead tr th:nth-child(3) [class*='headerContent']) {
+  justify-content: center;
+}
+
+.recordsDataList :global(thead tr th:nth-child(4) [class*='headerContent']) {
+  justify-content: flex-end;
+}
+
+.recordsDataList :global(tr td:nth-child(3) [class*='cellContent']) {
+  justify-content: center;
+}
+
+.recordsDataList :global(tr td:nth-child(4) [class*='cellContent']) {
+  justify-content: flex-end;
+}
+
+.recordsDataList :global([class*='cellText']) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .recordsDataListEip7702,
