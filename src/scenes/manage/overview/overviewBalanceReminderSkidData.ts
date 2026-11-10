@@ -1,5 +1,13 @@
 export type OverviewBalanceReminderAmountKey = 'team' | 'eth' | 'bnb' | 'pol' | 'sol';
 
+/** 未开通 Gas 时余额提醒不展示的多链 Gas 账户（与概览 `visibleGasAccounts` 一致）。 */
+export const OVERVIEW_BALANCE_REMINDER_GAS_MULTICHAIN_KEYS = [
+  'eth',
+  'bnb',
+  'pol',
+  'sol',
+] as const satisfies readonly OverviewBalanceReminderAmountKey[];
+
 export type OverviewBalanceReminderAmountOption = {
   key: OverviewBalanceReminderAmountKey;
   titleKey: string;
@@ -41,6 +49,16 @@ export const OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS: readonly OverviewBalanceR
       unit: 'SOL',
     },
   ];
+
+export function listOverviewBalanceReminderAmountOptions(
+  gasProxyEnabled: boolean,
+): readonly OverviewBalanceReminderAmountOption[] {
+  if (gasProxyEnabled) {
+    return OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS;
+  }
+  const hidden = new Set<string>(OVERVIEW_BALANCE_REMINDER_GAS_MULTICHAIN_KEYS);
+  return OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS.filter((item) => !hidden.has(item.key));
+}
 
 /** 提醒对象列表默认展示人数（其余通过「展开全部」显示）。 */
 export const OVERVIEW_BALANCE_REMINDER_RECIPIENT_DEFAULT_VISIBLE = 4;

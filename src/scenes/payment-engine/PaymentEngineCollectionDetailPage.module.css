@@ -554,10 +554,10 @@
   box-sizing: border-box;
 }
 
-/* 页面滚动时吸附在 ToolBar 下缘（gap 0）：sticky 偏移从滚动区 padding（= ToolBar inset）内侧起算。固定高度供表头叠加偏移。 */
+/* 页面滚动时吸附在 ToolBar 下缘（上叠 1px）：sticky 偏移从滚动区 padding（= ToolBar inset）内侧起算。固定高度供表头叠加偏移。 */
 .recordsStickyBar {
   position: sticky;
-  top: 0;
+  top: calc(-1 * var(--stroke-sm));
   z-index: 1;
   display: flex;
   flex-direction: column;

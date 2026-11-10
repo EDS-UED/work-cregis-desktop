@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import {
   EgButton,
   EgCrypto,
@@ -21,14 +21,18 @@ import { showAppEndFeedback } from '@/composables/appEndFeedback';
 import ManageOverviewBalanceReminderSkidAction from './ManageOverviewBalanceReminderSkidAction.vue';
 import ManageOverviewBalanceReminderSkidBody from './ManageOverviewBalanceReminderSkidBody.vue';
 import ManageOverviewGenerateBillFlotationMenu from './ManageOverviewGenerateBillFlotationMenu.vue';
+import ManageOverviewAccountTransferSkidAction from './ManageOverviewAccountTransferSkidAction.vue';
+import ManageOverviewAccountTransferSkidBody from './ManageOverviewAccountTransferSkidBody.vue';
 import ManageOverviewRechargeSkidBody from './ManageOverviewRechargeSkidBody.vue';
 import {
   OVERVIEW_GENERATE_BILL_FLOTATION_MAX_HEIGHT,
   OVERVIEW_GENERATE_BILL_FLOTATION_WIDTH,
 } from './manageOverviewGenerateBill.constants';
+import { OVERVIEW_BALANCE_REMINDER_GAS_MULTICHAIN_KEYS } from './overviewBalanceReminderSkidData';
 import type { OverviewGasRechargeAccountKey } from './overviewRechargeSkidData';
 import { useManageOverviewBalanceReminderForm } from './useManageOverviewBalanceReminderForm';
 import { registerManageOverviewOverlay } from './manageOverviewOverlayContext';
+import { useManageOverviewAccountTransferFlow } from './useManageOverviewAccountTransferFlow';
 import { useManageOverviewGasProxyPaymentFlow } from './useManageOverviewGasProxyPaymentFlow';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
@@ -71,7 +75,7 @@ const canConfigureGasProxyPayment = ref(true);
 const transactionPasswordSet = ref(true);
 const balanceAmountVisible = ref(true);
 type OverviewRechargeSkidTarget = 'team' | 'gas';
-type OverviewSkidKind = 'recharge' | 'balance-reminder';
+type OverviewSkidKind = 'recharge' | 'balance-reminder' | 'account-transfer';
 
 const overviewSkidOpen = ref(false);
 const overviewSkidKind = ref<OverviewSkidKind>('recharge');
@@ -82,12 +86,26 @@ const overviewSkidTitleKey = computed(() => {
   if (overviewSkidKind.value === 'balance-reminder') {
     return 'Overview Balance Reminder Settings';
   }
+  if (overviewSkidKind.value === 'account-transfer') {
+    return 'Overview Account Transfer';
+  }
   return rechargeSkidTarget.value === 'team'
     ? 'Overview Team Account Recharge'
     : 'Overview Gas Account Recharge';
 });
 
-const overviewSkidShowsSave = computed(() => overviewSkidKind.value === 'balance-reminder');
+const overviewSkidShowsSave = computed(
+  () =>
+    overviewSkidKind.value === 'balance-reminder' ||
+    overviewSkidKind.value === 'account-transfer',
+);
+
+const verifyPurpose = ref<'gas-proxy' | 'account-transfer' | null>(null);
+const accountTransferSkidBodyRef = ref<InstanceType<
+  typeof ManageOverviewAccountTransferSkidBody
+> | null>(null);
+const accountTransferSkidContentRevision = ref(0);
+const accountTransferCanSubmit = ref(false);
 
 const {
   form: balanceReminderForm,
@@ -206,11 +224,44 @@ const {
   cancelToggleDialog,
   submitTradePassword,
   onVerifyClosed,
-} = useManageOverviewGasProxyPaymentFlow({
-  canConfigureGasProxyPayment,
+} = useManageOverviewGasProxyPaymentFlow(
+  {
+    canConfigureGasProxyPayment,
+    transactionPasswordSet,
+    gasProxyPaymentByKey,
+  },
+  { verifyPurpose },
+);
+
+const accountTransferFlow = useManageOverviewAccountTransferFlow({
+  verifyOpen,
+  verifyPurpose,
+  closeSkid: () => {
+    overviewSkidOpen.value = false;
+  },
   transactionPasswordSet,
-  gasProxyPaymentByKey,
+  setTransactionPasswordDialogOpen,
 });
+
+function submitTradePasswordForOverlay(code: string): boolean {
+  if (verifyPurpose.value === 'account-transfer') {
+    return accountTransferFlow.submitTradePassword(code);
+  }
+  return submitTradePassword(code);
+}
+
+function onVerifyClosedForOverlay(accepted: boolean) {
+  if (verifyPurpose.value === 'account-transfer') {
+    verifyOpen.value = false;
+    accountTransferFlow.completeVerify(accepted);
+    return;
+  }
+  onVerifyClosed(accepted);
+}
+
+function onAccountTransferValidityChange(ok: boolean) {
+  accountTransferCanSubmit.value = ok;
+}
 
 function onGasProxyPaymentSwitch(account: GasAccountOverviewItem, next: boolean) {
   requestGasProxyPaymentToggle(account.key, next, account.gasProxyPaymentLockedOn);
@@ -237,6 +288,28 @@ function toggleBalanceAmountVisibility() {
     return;
   }
   showBalanceAmount();
+}
+
+function openAccountTransferSkid() {
+  overviewSkidKind.value = 'account-transfer';
+  overviewSkidOpen.value = true;
+}
+
+function onSummaryAccountTransfer() {
+  if (!gasProxyEnabled.value) return;
+  closeAllAnchoredTooltips();
+  openAccountTransferSkid();
+}
+
+function onAccountTransferSubmit(payload: {
+  amountRaw: string;
+  target: import('./overviewAccountTransferSkidData').OverviewAccountTransferTargetOption;
+}) {
+  accountTransferFlow.requestConfirm(payload.amountRaw, payload.target);
+}
+
+function onAccountTransferConfirmClick() {
+  accountTransferSkidBodyRef.value?.trySubmit();
 }
 
 function openRechargeSkid(
@@ -272,12 +345,35 @@ watch(canScroll, () => {
   update();
 });
 
-watch(gasProxyEnabled, () => {
+watch(gasProxyEnabled, (enabled) => {
   update();
+  if (!enabled && overviewSkidKind.value === 'account-transfer' && overviewSkidOpen.value) {
+    overviewSkidOpen.value = false;
+  }
+  if (enabled) return;
+  const amountByKey = { ...balanceReminderForm.value.amountByKey };
+  const thresholdByKey = { ...balanceReminderForm.value.thresholdByKey };
+  for (const key of OVERVIEW_BALANCE_REMINDER_GAS_MULTICHAIN_KEYS) {
+    amountByKey[key] = false;
+    thresholdByKey[key] = '';
+  }
+  balanceReminderForm.value = {
+    ...balanceReminderForm.value,
+    amountByKey,
+    thresholdByKey,
+  };
 });
 
 watch(overviewSkidOpen, () => {
   update();
+});
+
+watch([overviewSkidOpen, overviewSkidKind], ([open, kind]) => {
+  if (!open || kind !== 'account-transfer') return;
+  nextTick(() => {
+    accountTransferSkidBodyRef.value?.resetForm();
+    accountTransferSkidContentRevision.value += 1;
+  });
 });
 
 function applyOverviewQaSnapshot(patch: Partial<ManageOverviewQaSnapshot>) {
@@ -303,6 +399,7 @@ function resetOverviewQaBaseline() {
   overviewSkidKind.value = 'recharge';
   rechargeSkidTarget.value = 'team';
   rechargeGasAccountKey.value = 'trx';
+  verifyPurpose.value = null;
 }
 
 onMounted(() => {
@@ -314,8 +411,8 @@ onMounted(() => {
     setTransactionPasswordDialogOpen,
     confirmToggleDialog,
     cancelToggleDialog,
-    submitTradePassword,
-    onVerifyClosed,
+    submitTradePassword: submitTradePasswordForOverlay,
+    onVerifyClosed: onVerifyClosedForOverlay,
   });
   manageOverviewQaApiRegistry.value = {
     applySnapshot: applyOverviewQaSnapshot,
@@ -443,29 +540,45 @@ onBeforeUnmount(() => {
               </EgIconButton>
             </div>
 
-            <button
-              type="button"
-              :class="styles.totalBalanceButton"
-              :aria-label="
-                ui(
-                  balanceAmountVisible
-                    ? 'Overview Hide Asset Valuation'
-                    : 'Overview Show Asset Valuation',
-                )
-              "
-              @click="toggleBalanceAmountVisibility"
-            >
-              <EgOdometer
-                v-if="balanceAmountVisible"
-                :key="odometerPlayKey"
-                :value="TOTAL_BALANCE_DISPLAY"
-              />
-              <span v-else class="typography-display" :class="styles.totalBalanceMask">
-                {{ BALANCE_MASK }}
+            <div :class="styles.totalBalanceRow">
+              <button
+                type="button"
+                :class="styles.totalBalanceButton"
+                :aria-label="
+                  ui(
+                    balanceAmountVisible
+                      ? 'Overview Hide Asset Valuation'
+                      : 'Overview Show Asset Valuation',
+                  )
+                "
+                @click="toggleBalanceAmountVisibility"
+              >
+                <EgOdometer
+                  v-if="balanceAmountVisible"
+                  :key="odometerPlayKey"
+                  :value="TOTAL_BALANCE_DISPLAY"
+                />
+                <span v-else class="typography-display" :class="styles.totalBalanceMask">
+                  {{ BALANCE_MASK }}
+                </span>
+              </button>
+              <span
+                v-if="!gasProxyEnabled && !overviewSkidOpen"
+                :class="styles.summaryCardAction"
+              >
+                <EgButton
+                  variant="solid"
+                  tone="decor"
+                  size="md"
+                  @click="openRechargeSkid('team')"
+                >
+                  {{ ui('Recharge') }}
+                </EgButton>
               </span>
-            </button>
+            </div>
 
             <div
+              v-if="gasProxyEnabled"
               :class="[
                 styles.summaryGrid,
                 visibleSummaryAccounts.length === 1 && styles.summaryGridSingle,
@@ -508,6 +621,15 @@ onBeforeUnmount(() => {
                   </span>
                 </div>
                 <span v-if="!overviewSkidOpen" :class="styles.summaryCardAction">
+                  <EgButton
+                    v-if="account.key === 'team'"
+                    variant="outline"
+                    tone="subtle"
+                    size="md"
+                    @click="onSummaryAccountTransfer"
+                  >
+                    {{ ui('Account Transfer') }}
+                  </EgButton>
                   <EgButton
                     variant="solid"
                     tone="decor"
@@ -625,9 +747,26 @@ onBeforeUnmount(() => {
               @confirm="onBalanceReminderSave"
             />
           </template>
+          <template v-else-if="overviewSkidKind === 'account-transfer'" #action>
+            <ManageOverviewAccountTransferSkidAction
+              :confirm-label="ui('Confirm')"
+              tone="decor"
+              :disabled="!accountTransferCanSubmit"
+              :content-revision="accountTransferSkidContentRevision"
+              @confirm="onAccountTransferConfirmClick"
+            />
+          </template>
           <ManageOverviewBalanceReminderSkidBody
             v-if="overviewSkidKind === 'balance-reminder'"
             v-model="balanceReminderForm"
+            :gas-proxy-enabled="gasProxyEnabled"
+          />
+          <ManageOverviewAccountTransferSkidBody
+            v-else-if="overviewSkidKind === 'account-transfer'"
+            ref="accountTransferSkidBodyRef"
+            :gas-proxy-enabled="gasProxyEnabled"
+            @submit="onAccountTransferSubmit"
+            @validity-change="onAccountTransferValidityChange"
           />
           <ManageOverviewRechargeSkidBody
             v-else

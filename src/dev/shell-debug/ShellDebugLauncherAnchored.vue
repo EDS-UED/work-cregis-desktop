@@ -11,7 +11,10 @@ import {
   registerShellDebugLauncherPopoverExceptRoot,
   unregisterShellDebugLauncherPopoverExceptRoot,
 } from './shellDebugPopoverExcept';
-import { registerShellDebugLauncherPopover } from './shellDebugLauncherPopovers';
+import {
+  openShellDebugLauncherPopoverExclusive,
+  registerShellDebugLauncherPopover,
+} from './shellDebugLauncherPopovers';
 import type { ShellDebugLauncherPopoverId } from './shellDebugLauncherPopovers';
 import {
   SHELL_DEBUG_POPOVER_CHROME_HEIGHT,
@@ -95,6 +98,9 @@ function onTriggerClick(event: MouseEvent, active: boolean, open: () => void) {
   if (active) {
     anchoredRef.value?.close?.();
     return;
+  }
+  if (props.launcherPopoverId) {
+    openShellDebugLauncherPopoverExclusive(props.launcherPopoverId);
   }
   syncPopoverAlign();
   open();

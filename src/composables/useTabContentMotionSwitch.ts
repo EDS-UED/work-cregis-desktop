@@ -32,8 +32,14 @@ function findScrollParent(el: HTMLElement): HTMLElement | null {
 function alignScrollToAnchorIfStuck(anchor: HTMLElement) {
   const host = findScrollParent(anchor);
   if (!host) return;
+  const stickyBar = anchor.firstElementChild;
+  const stickyBarStyle = stickyBar ? getComputedStyle(stickyBar) : null;
+  const stickyTop = stickyBarStyle?.position === 'sticky'
+    ? Number.parseFloat(stickyBarStyle.top || '0') || 0
+    : 0;
   const stickLine = host.getBoundingClientRect().top
-    + Number.parseFloat(getComputedStyle(host).paddingTop || '0');
+    + Number.parseFloat(getComputedStyle(host).paddingTop || '0')
+    + stickyTop;
   const anchorTop = anchor.getBoundingClientRect().top;
   if (anchorTop >= stickLine) return;
   host.scrollTop += anchorTop - stickLine;

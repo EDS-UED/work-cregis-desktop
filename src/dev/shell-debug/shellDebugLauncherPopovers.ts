@@ -15,6 +15,16 @@ export function registerShellDebugLauncherPopover(
   };
 }
 
+/**
+ * 打开某一壳层 Popover 前调用：关闭其它已登记的 Model / Wnd / QA。
+ * 不调用 `closeAllAnchoredTooltips`（业务 click 浮层保持）。
+ */
+export function openShellDebugLauncherPopoverExclusive(
+  opening: ShellDebugLauncherPopoverId,
+): void {
+  closeShellDebugLauncherPopovers(opening);
+}
+
 /** 关闭已登记的壳层 Popover；不触碰业务区 AnchoredTooltip / Popover。 */
 export function closeShellDebugLauncherPopovers(
   except?: ShellDebugLauncherPopoverId,

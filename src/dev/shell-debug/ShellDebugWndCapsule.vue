@@ -7,7 +7,10 @@ import {
 } from '@eds/desktop-components';
 import styles from './ShellDebugWndCapsule.module.css';
 import { markShellDebugUiInteraction } from './installShellDebugFloatLayerGuard';
-import { registerShellDebugLauncherPopover } from './shellDebugLauncherPopovers';
+import {
+  openShellDebugLauncherPopoverExclusive,
+  registerShellDebugLauncherPopover,
+} from './shellDebugLauncherPopovers';
 import { SHELL_DEBUG_POPOVER_CHROME_HEIGHT } from './shellDebugPopover.constants';
 import {
   SHELL_DEBUG_WINDOW_MODE_OPTIONS,

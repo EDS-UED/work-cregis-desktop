@@ -5,6 +5,7 @@ const FEE_RECORD_INCOME_OPERATION_KEYS = new Set<FeeRecordOperationTypeKey>([
   'System Recharge',
   'System Refund',
   'Listing Application Rejection Refund',
+  'Account Transfer In',
 ]);
 
 /** 费用记录 · 充值/退款类为收入，其余为支出。 */

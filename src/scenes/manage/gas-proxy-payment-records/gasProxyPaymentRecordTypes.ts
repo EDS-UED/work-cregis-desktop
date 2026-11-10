@@ -37,6 +37,8 @@ export type GasProxyPaymentRecordRow = {
   deductedAmountUsd: number;
   /** Tron 详情 · 扣费金额展示（$xxx）。 */
   deductedAmountFiatDisplay: string;
+  /** 列表扣费 · Gas 账户行主行原生币数量（字段 value）。 */
+  deductedAmountGasNative: string;
   accountKey: GasProxyPaymentAccountKey;
   isTronNetwork: boolean;
   tronProxyResources?: GasProxyTronProxyResources;

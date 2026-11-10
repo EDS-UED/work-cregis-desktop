@@ -16,9 +16,45 @@ import {
 import type { CryptoAddressFamily } from '@/scenes/tasks/list-field/listFieldCryptoSampleAddresses';
 import type { FeeRecordAccountKey, FeeRecordRow } from './feeRecordTypes';
 
-export const FEE_RECORDS_DEMO_TOTAL = 28;
+/** 列表 demo 总量：2 条账户划出状态示范 + 原 28 条。 */
+export const FEE_RECORDS_DEMO_TOTAL = 30;
 
-const ACCOUNT_KEYS: readonly FeeRecordAccountKey[] = ['Team Account', 'Gas Account'];
+const FEE_RECORD_LEGACY_OFFSET = 2;
+
+function resolveLegacyRowIndex(index: number): number | null {
+  if (index < FEE_RECORD_LEGACY_OFFSET) return null;
+  return index - FEE_RECORD_LEGACY_OFFSET;
+}
+
+/** 列表前三条演示 · 指定 Gas 子账户 + 主行币种金额。 */
+const FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES = {
+  1: {
+    accountDisplayKey: 'ETH Gas Account',
+    listAmountCryptoSymbol: 'ETH',
+    listAmountCryptoName: 'eds-eth-ethereum',
+    amount: '8.88',
+  },
+  2: {
+    accountDisplayKey: 'BNB Gas Account',
+    listAmountCryptoSymbol: 'BNB',
+    listAmountCryptoName: 'eds-bnb-binance coin',
+    amount: '24.06',
+  },
+  3: {
+    accountDisplayKey: 'POL Gas Account',
+    listAmountCryptoSymbol: 'POL',
+    listAmountCryptoName: 'eds-pol-polygon',
+    amount: '32114197.25',
+  },
+} as const satisfies Record<
+  number,
+  {
+    accountDisplayKey: string;
+    listAmountCryptoSymbol: string;
+    listAmountCryptoName: string;
+    amount: string;
+  }
+>;
 
 const OPERATOR_NAMES = [
   'Alex Chen',
@@ -46,7 +82,14 @@ function resolveOperationType(index: number) {
 }
 
 function resolveAccountKey(index: number): FeeRecordAccountKey {
-  return ACCOUNT_KEYS[index % ACCOUNT_KEYS.length]!;
+  if (index in FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES) return 'Gas Account';
+  return 'Team Account';
+}
+
+function resolveListGasAccountOverride(index: number) {
+  return FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES[
+    index as keyof typeof FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES
+  ];
 }
 
 function formatAmount(index: number): string {
@@ -137,21 +180,51 @@ function resolveDetailCurrency(operationTypeKey: FeeRecordRow['operationTypeKey'
   };
 }
 
+function buildIntroAccountTransferOutRow(
+  index: 0 | 1,
+  recordStatusKey: FeeRecordRow['recordStatusKey'],
+): FeeRecordRow {
+  const amount = index === 0 ? '5,000' : '100.77';
+  return {
+    id: `fee-${index + 1}`,
+    operationTypeKey: 'Account Transfer Out',
+    recordStatusKey,
+    operatorName: 'Alex Chen',
+    transactionTime: formatTransactionTime(index),
+    txHash: '',
+    amount,
+    accountKey: 'Team Account',
+  };
+}
+
 export function buildFeeRecordRow(index: number): FeeRecordRow {
-  const operationTypeKey = resolveOperationType(index);
+  if (index === 0) {
+    return buildIntroAccountTransferOutRow(0, 'Processing');
+  }
+  if (index === 1) {
+    return buildIntroAccountTransferOutRow(1, 'Failed');
+  }
+
+  const legacyIndex = resolveLegacyRowIndex(index)!;
+  const operationTypeKey = resolveOperationType(legacyIndex);
   const currency = resolveDetailCurrency(operationTypeKey);
+  const gasListOverride = resolveListGasAccountOverride(legacyIndex);
   return {
     id: `fee-${index + 1}`,
     operationTypeKey,
-    operatorName: resolveOperatorName(index),
-    transactionTime: formatTransactionTime(index),
-    txHash: resolveTxHash(index, operationTypeKey),
-    amount: formatAmount(index),
-    accountKey: resolveAccountKey(index),
-    planTransition: resolvePlanTransition(index, operationTypeKey),
-    orderNumber: resolveOrderNumber(index, operationTypeKey),
+    recordStatusKey: 'Completed',
+    operatorName: resolveOperatorName(legacyIndex),
+    transactionTime: formatTransactionTime(legacyIndex),
+    txHash: resolveTxHash(legacyIndex, operationTypeKey),
+    amount: gasListOverride?.amount ?? formatAmount(legacyIndex),
+    accountKey: resolveAccountKey(legacyIndex),
+    accountDisplayKey: gasListOverride?.accountDisplayKey,
+    listAmountCryptoSymbol: gasListOverride?.listAmountCryptoSymbol,
+    listAmountCryptoName: gasListOverride?.listAmountCryptoName,
+    planTransition: resolvePlanTransition(legacyIndex, operationTypeKey),
+    orderNumber: resolveOrderNumber(legacyIndex, operationTypeKey),
     amlServiceProvider: resolveAmlServiceProvider(operationTypeKey),
-    cryptoCardLabel: resolveCryptoCardLabel(index, operationTypeKey),
+    cryptoCardLabel: resolveCryptoCardLabel(legacyIndex, operationTypeKey),
     ...currency,
   };
 }

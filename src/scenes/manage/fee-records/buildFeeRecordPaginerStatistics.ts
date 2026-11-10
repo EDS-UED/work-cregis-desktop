@@ -1,7 +1,7 @@
 import type { PaginerStatisticsItem } from '@eds/desktop-components';
 import { parseAmountSortValue } from '@/scenes/tasks/tasksDataListSort';
 import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
-import { buildFeeRecordRow } from './feeRecordData';
+import { FEE_RECORDS_DEMO_TOTAL, buildFeeRecordRow } from './feeRecordData';
 import { isFeeRecordIncomeOperation } from './feeRecordOperationDirection';
 
 function formatSignedFiatTotal(total: number, sign: '+' | '-'): string {
@@ -12,26 +12,33 @@ function formatSignedFiatTotal(total: number, sign: '+' | '-'): string {
   return `${sign}$${formatGroupedDecimalAmount(whole)}.${fraction}`;
 }
 
-/** 费用记录 Paginer · 收入 / 支出汇总（全量数据，非当前页）。 */
+/** 费用记录 Paginer · 本月 / 上月支出（mock：前半索引为本月、后半为上月）。 */
 export function buildFeeRecordPaginerStatistics(
   indices: readonly number[],
   translate: (catalogKey: string) => string,
 ): PaginerStatisticsItem[] {
-  let incomeTotal = 0;
-  let expenseTotal = 0;
+  let thisMonthExpenseTotal = 0;
+  let lastMonthExpenseTotal = 0;
 
   for (const index of indices) {
     const row = buildFeeRecordRow(index);
+    if (isFeeRecordIncomeOperation(row.operationTypeKey)) continue;
     const amount = parseAmountSortValue(row.amount);
-    if (isFeeRecordIncomeOperation(row.operationTypeKey)) {
-      incomeTotal += amount;
+    if (index < FEE_RECORDS_DEMO_TOTAL / 2) {
+      thisMonthExpenseTotal += amount;
     } else {
-      expenseTotal += amount;
+      lastMonthExpenseTotal += amount;
     }
   }
 
   return [
-    { text: translate('Monthly Income'), number: formatSignedFiatTotal(incomeTotal, '+') },
-    { text: translate('Monthly Expense'), number: formatSignedFiatTotal(expenseTotal, '-') },
+    {
+      text: translate('Monthly Expense'),
+      number: formatSignedFiatTotal(thisMonthExpenseTotal, '-'),
+    },
+    {
+      text: translate('Last Month Expense'),
+      number: formatSignedFiatTotal(lastMonthExpenseTotal, '-'),
+    },
   ];
 }

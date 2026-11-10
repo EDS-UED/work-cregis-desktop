@@ -1,0 +1,145 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-1) var(--spacing-4) var(--spacing-4);
+  box-sizing: border-box;
+}
+
+.accountTransferRow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  padding: var(--spacing-3);
+  padding-left: var(--spacing-5);
+  border-radius: var(--radius-sm);
+  border: var(--stroke-xs) solid var(--stroke-divider-page);
+  background: var(--material-hide);
+  box-sizing: border-box;
+  transition: var(--motion-recipe-hover);
+}
+
+.accountTransferRow:hover {
+  border-color: var(--stroke-outline-shallow);
+}
+
+.accountTransferField {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.accountTransferArrow {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--scale-3);
+  height: var(--scale-3);
+  align-self: flex-start;
+  color: color-mix(in srgb, var(--text-base-primary) 40%, transparent);
+  transform: rotate(90deg);
+}
+
+.accountTransferArrow > :global(span[role='img']) {
+  --eds-icon-stroke-screen: var(--stroke-md);
+}
+
+.accountTransferArrow :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1);
+  width: 100%;
+  min-width: 0;
+}
+
+.fieldRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.fieldLabel {
+  composes: typography-body-small from global;
+  flex: 0 0 auto;
+  min-width: var(--scale-18);
+  color: var(--text-base-primary);
+}
+
+.accountTransferFieldLabel {
+  composes: typography-body-small-strong from global;
+  flex: 0 0 calc(var(--scale-13) - var(--scale-5));
+  min-width: calc(var(--scale-13) - var(--scale-5));
+  width: calc(var(--scale-13) - var(--scale-5));
+  color: var(--text-base-primary);
+}
+
+.fieldControl {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.accountTransferTriggerControl {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.accountTransferScopeFlotationHost {
+  composes: scopeFlotationHost from '../../risk-control/auto-rule/RiskControlAutoRuleFormPage.module.css';
+  width: auto;
+  max-width: 100%;
+}
+
+.accountTransferScopeFlotationHost :global(> span) {
+  width: auto;
+  max-width: 100%;
+}
+
+.accountTransferFlotationTrigger {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.networkTriggerSymbol {
+  composes: networkTriggerSymbol from '../../risk-control/aml-manual-query/RiskControlAmlManualQueryFormPage.module.css';
+}
+
+.amountInput {
+  width: 100%;
+  min-width: 0;
+}
+
+.estimatedRow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.estimatedLabel {
+  composes: typography-body-small from global;
+  color: var(--text-base-primary);
+  white-space: nowrap;
+}
+
+.estimatedValue {
+  composes: typography-body-medium from global;
+  color: var(--text-base-primary);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}

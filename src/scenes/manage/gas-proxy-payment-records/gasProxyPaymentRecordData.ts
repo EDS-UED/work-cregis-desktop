@@ -1,4 +1,4 @@
-import { formatGroupedDecimalAmount } from '@/utils/formatGroupedDisplay';
+import { formatGroupedDecimalAmount, formatGroupedTrimmedAmount } from '@/utils/formatGroupedDisplay';
 import {
   resolveCurrencyRowPreset,
   resolveDemoAmountRowValues,
@@ -12,6 +12,20 @@ import type {
   GasProxyPaymentTransactionTypeKey,
   GasProxyTronProxyResources,
 } from './gasProxyPaymentRecordTypes';
+
+const GAS_NATIVE_USD_RATES: Record<string, number> = {
+  ETH: 3_200,
+  BNB: 600,
+  POL: 0.45,
+  SOL: 180,
+};
+
+const INTRO_GAS_NATIVE_AMOUNTS: Partial<Record<GasProxyPaymentAccountKey, string>> = {
+  'ETH Gas Account': '8.88',
+  'BNB Gas Account': '24.06',
+  'POL Gas Account': '32114197.25',
+  'SOL Gas Account': '1286.4',
+};
 
 export const GAS_PROXY_PAYMENT_RECORDS_DEMO_TOTAL = 28;
 
@@ -72,6 +86,29 @@ function formatDeductedAmountFiatDisplay(index: number): string {
   return `$${formatGroupedDecimalAmount(whole)}.${fraction}`;
 }
 
+function resolveGasNativeDeductedAmount(
+  index: number,
+  accountKey: GasProxyPaymentAccountKey,
+): string {
+  const preset = INTRO_GAS_NATIVE_AMOUNTS[accountKey];
+  if (preset) return formatGroupedTrimmedAmount(preset);
+
+  const symbol =
+    accountKey === 'ETH Gas Account'
+      ? 'ETH'
+      : accountKey === 'BNB Gas Account'
+        ? 'BNB'
+        : accountKey === 'POL Gas Account'
+          ? 'POL'
+          : accountKey === 'SOL Gas Account'
+            ? 'SOL'
+            : 'ETH';
+  const usd = resolveDeductedAmountUsd(index);
+  const rate = GAS_NATIVE_USD_RATES[symbol] ?? 1;
+  const native = usd / rate;
+  return formatGroupedTrimmedAmount(String(native));
+}
+
 function resolveAddressFamily(symbol: string): CryptoAddressFamily {
   if (symbol === 'BTC') return 'btc';
   if (symbol === 'TRX') return 'trx';
@@ -110,6 +147,7 @@ export function buildGasProxyPaymentRecordRow(index: number): GasProxyPaymentRec
   const preset = resolveCurrencyRowPreset(index);
   const addressFamily = resolveAddressFamily(preset.symbol);
   const isTronNetwork = preset.symbol === 'TRX';
+  const accountKey = resolveAccountKey(index);
 
   return {
     id: `gas-proxy-${index + 1}`,
@@ -123,7 +161,8 @@ export function buildGasProxyPaymentRecordRow(index: number): GasProxyPaymentRec
     deductedAmount: formatDeductedAmount(index),
     deductedAmountUsd: resolveDeductedAmountUsd(index),
     deductedAmountFiatDisplay: formatDeductedAmountFiatDisplay(index),
-    accountKey: resolveAccountKey(index),
+    deductedAmountGasNative: resolveGasNativeDeductedAmount(index, accountKey),
+    accountKey,
     isTronNetwork,
     tronProxyResources: isTronNetwork ? resolveTronProxyResources(index) : undefined,
   };

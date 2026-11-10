@@ -8,6 +8,8 @@ const FEE_RECORD_DETAIL_HIDE_OPERATOR: ReadonlySet<FeeRecordOperationTypeKey> = 
   'Listing Application Rejection Refund',
   'Card Issuance Fee',
   'Account Transfer',
+  'Account Transfer Out',
+  'Account Transfer In',
 ]);
 
 /** 详情展示币种（crypto Apply_Item）。 */
@@ -45,6 +47,8 @@ export const FEE_RECORD_DETAIL_SHOW_ORDER_NUMBER: ReadonlySet<FeeRecordOperation
     'Acquiring Service Fee',
     'Card Issuance Fee',
     'Account Transfer',
+    'Account Transfer Out',
+    'Account Transfer In',
   ]);
 
 /** Tron 三类费用 · 详情展示交易哈希（其余订单号类仍隐藏）。 */
@@ -64,6 +68,8 @@ export const FEE_RECORD_DETAIL_SHOW_AML_PLAN: ReadonlySet<FeeRecordOperationType
 export const FEE_RECORD_DETAIL_SHOW_CRYPTO_CARD: ReadonlySet<FeeRecordOperationTypeKey> = new Set([
   'Card Issuance Fee',
   'Account Transfer',
+  'Account Transfer Out',
+  'Account Transfer In',
 ]);
 
 /** 详情不展示交易哈希。 */

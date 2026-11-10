@@ -125,9 +125,19 @@
   font-weight: var(--weight-medium);
 }
 
+.totalBalanceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
 .totalBalanceButton {
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
+  min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
@@ -185,7 +195,10 @@
 }
 
 .summaryCardAction {
+  display: inline-flex;
   flex-shrink: 0;
+  align-items: center;
+  gap: var(--spacing-2);
 }
 
 .visibilityButton {

@@ -11,7 +11,12 @@ type GasProxyPaymentToggleContext = {
   gasProxyPaymentByKey: Ref<Record<string, boolean>>;
 };
 
-export function useManageOverviewGasProxyPaymentFlow(context: GasProxyPaymentToggleContext) {
+export function useManageOverviewGasProxyPaymentFlow(
+  context: GasProxyPaymentToggleContext,
+  options?: {
+    verifyPurpose?: Ref<'gas-proxy' | 'account-transfer' | null>;
+  },
+) {
   const confirmDialogOpen = ref(false);
   const confirmEnabling = ref(true);
   const verifyOpen = ref(false);
@@ -53,6 +58,9 @@ export function useManageOverviewGasProxyPaymentFlow(context: GasProxyPaymentTog
 
   function confirmToggleDialog() {
     confirmDialogOpen.value = false;
+    if (options?.verifyPurpose) {
+      options.verifyPurpose.value = 'gas-proxy';
+    }
     verifyOpen.value = true;
   }
 

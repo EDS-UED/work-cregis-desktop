@@ -10,16 +10,25 @@ import {
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import {
-  OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS,
+  listOverviewBalanceReminderAmountOptions,
   OVERVIEW_BALANCE_REMINDER_RECIPIENT_DEFAULT_VISIBLE,
   OVERVIEW_BALANCE_REMINDER_RECIPIENT_OPTIONS,
+  type OverviewBalanceReminderAmountKey,
   type OverviewBalanceReminderFormState,
 } from './overviewBalanceReminderSkidData';
 import styles from './ManageOverviewBalanceReminderSkidBody.module.css';
 
+const props = defineProps<{
+  gasProxyEnabled: boolean;
+}>();
+
 const form = defineModel<OverviewBalanceReminderFormState>({ required: true });
 
 const { ui } = useAppI18n();
+
+const visibleAmountOptions = computed(() =>
+  listOverviewBalanceReminderAmountOptions(props.gasProxyEnabled),
+);
 
 const showExpandedSections = computed(() => form.value.featureEnabled);
 
@@ -49,7 +58,7 @@ function collapseRecipients() {
   recipientsExpanded.value = false;
 }
 
-function toggleAmount(key: (typeof OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS)[number]['key']) {
+function toggleAmount(key: OverviewBalanceReminderAmountKey) {
   form.value = {
     ...form.value,
     amountByKey: {
@@ -69,10 +78,7 @@ function toggleRecipient(id: string) {
   };
 }
 
-function setAmountChecked(
-  key: (typeof OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS)[number]['key'],
-  checked: boolean,
-) {
+function setAmountChecked(key: OverviewBalanceReminderAmountKey, checked: boolean) {
   form.value = {
     ...form.value,
     amountByKey: {
@@ -82,17 +88,12 @@ function setAmountChecked(
   };
 }
 
-function ensureAmountChecked(
-  key: (typeof OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS)[number]['key'],
-) {
+function ensureAmountChecked(key: OverviewBalanceReminderAmountKey) {
   if (form.value.amountByKey[key]) return;
   setAmountChecked(key, true);
 }
 
-function setAmountThreshold(
-  key: (typeof OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS)[number]['key'],
-  value: string,
-) {
+function setAmountThreshold(key: OverviewBalanceReminderAmountKey, value: string) {
   ensureAmountChecked(key);
   form.value = {
     ...form.value,
@@ -103,9 +104,7 @@ function setAmountThreshold(
   };
 }
 
-function onAmountInputFocus(
-  key: (typeof OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS)[number]['key'],
-) {
+function onAmountInputFocus(key: OverviewBalanceReminderAmountKey) {
   ensureAmountChecked(key);
 }
 
@@ -119,10 +118,7 @@ function setRecipientChecked(id: string, checked: boolean) {
   };
 }
 
-function onAmountRowClick(
-  key: (typeof OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS)[number]['key'],
-  event: MouseEvent,
-) {
+function onAmountRowClick(key: OverviewBalanceReminderAmountKey, event: MouseEvent) {
   const target = event.target;
   if (
     target instanceof Element
@@ -177,7 +173,7 @@ function onRecipientRowClick(id: string, event: MouseEvent) {
         </h3>
         <div :class="styles.checkboxList">
           <div
-            v-for="option in OVERVIEW_BALANCE_REMINDER_AMOUNT_OPTIONS"
+            v-for="option in visibleAmountOptions"
             :key="option.key"
             :class="styles.checkboxRow"
             role="button"

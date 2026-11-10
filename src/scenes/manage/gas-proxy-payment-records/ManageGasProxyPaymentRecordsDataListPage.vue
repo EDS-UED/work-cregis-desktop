@@ -27,17 +27,20 @@ import { useAppI18n } from '@/composables/useAppI18n';
 import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import DataListHeaderSortTrigger from '@/scenes/tasks/DataListHeaderSortTrigger.vue';
 import TasksListFieldAmount from '@/scenes/tasks/list-field/TasksListFieldAmount.vue';
+import TasksListFieldCurrency from '@/scenes/tasks/list-field/TasksListFieldCurrency.vue';
 import TasksListFieldTime from '@/scenes/tasks/list-field/TasksListFieldTime.vue';
 import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
 import { dataListTimeColumnLabelKey } from '@/scenes/shared/dataListTimeLabelKeys';
 import {
   buildGasProxyDeductedAmountAccountCustomize,
   buildGasProxyTimeCustomize,
+  buildGasProxyTransactionCurrencyCustomize,
 } from './gasProxyPaymentRecordListFieldCustomize';
 import type { GasProxyPaymentRecordRow } from './gasProxyPaymentRecordTypes';
 import {
   GAS_PROXY_DEDUCTED_AMOUNT_ACCOUNT_COLUMN_MIN_WIDTH,
   GAS_PROXY_TIME_COLUMN_MIN_WIDTH,
+  GAS_PROXY_TRANSACTION_CURRENCY_COLUMN_MIN_WIDTH,
   GAS_PROXY_TYPE_HASH_COLUMN_MIN_WIDTH,
 } from './gasProxyPaymentRecordColumnLayout';
 import ManageGasProxyTypeHash from './list-field/ManageGasProxyTypeHash.vue';
@@ -228,11 +231,26 @@ function onRowClick(data: DataListItem) {
           @row-click="onRowClick"
         >
           <EgDataListColumn
+            prop="symbol"
+            :label="ui('Transaction Currency')"
+            :min-width="GAS_PROXY_TRANSACTION_CURRENCY_COLUMN_MIN_WIDTH"
+            align="left"
+            :display-order="1"
+            :sortable="false"
+          >
+            <template #default="{ data }">
+              <TasksListFieldCurrency
+                :customize="buildGasProxyTransactionCurrencyCustomize(recordRow(data))"
+              />
+            </template>
+          </EgDataListColumn>
+
+          <EgDataListColumn
             prop="transactionTypeKey"
             :label="ui('Gas Proxy Transaction Type')"
             :min-width="GAS_PROXY_TYPE_HASH_COLUMN_MIN_WIDTH"
             align="left"
-            :display-order="1"
+            :display-order="2"
             :sortable="false"
           >
             <template #header>
@@ -270,7 +288,7 @@ function onRowClick(data: DataListItem) {
             :label="ui(timeColumnLabelKey)"
             :min-width="GAS_PROXY_TIME_COLUMN_MIN_WIDTH"
             :flex-grow="true"
-            :display-order="2"
+            :display-order="3"
             :sortable="false"
           >
             <template #header>
@@ -304,7 +322,7 @@ function onRowClick(data: DataListItem) {
             :min-width="GAS_PROXY_DEDUCTED_AMOUNT_ACCOUNT_COLUMN_MIN_WIDTH"
             align="right"
             :flex-grow="true"
-            :display-order="3"
+            :display-order="4"
             :sortable="false"
           >
             <template #header>

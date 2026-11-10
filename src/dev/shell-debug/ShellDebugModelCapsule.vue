@@ -13,7 +13,10 @@ import {
 } from '@/composables/useAppLocale';
 import styles from './ShellDebugModelCapsule.module.css';
 import { markShellDebugUiInteraction } from './installShellDebugFloatLayerGuard';
-import { registerShellDebugLauncherPopover } from './shellDebugLauncherPopovers';
+import {
+  openShellDebugLauncherPopoverExclusive,
+  registerShellDebugLauncherPopover,
+} from './shellDebugLauncherPopovers';
 import { SHELL_DEBUG_POPOVER_CHROME_HEIGHT } from './shellDebugPopover.constants';
 
 const MODEL_POPOVER_WIDTH = 240;

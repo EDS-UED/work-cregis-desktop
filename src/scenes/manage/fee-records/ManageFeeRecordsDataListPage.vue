@@ -34,10 +34,12 @@ import {
   buildFeeRecordTimeCustomize,
 } from './feeRecordListFieldCustomize';
 import ManageFeeRecordOperationType from './list-field/ManageFeeRecordOperationType.vue';
+import ManageFeeRecordStatus from './list-field/ManageFeeRecordStatus.vue';
 import type { FeeRecordRow } from './feeRecordTypes';
 import {
   FEE_RECORD_AMOUNT_ACCOUNT_COLUMN_MIN_WIDTH,
   FEE_RECORD_OPERATION_TYPE_COLUMN_MIN_WIDTH,
+  FEE_RECORD_STATUS_COLUMN_MIN_WIDTH,
   FEE_RECORD_TIME_COLUMN_MIN_WIDTH,
 } from './feeRecordColumnLayout';
 import { buildFeeRecordPaginerStatistics } from './buildFeeRecordPaginerStatistics';
@@ -47,6 +49,7 @@ import {
   buildFeeRecordFilterFields,
 } from './filter/feeRecordFilterFields';
 import { FEE_RECORDS_DEMO_TOTAL, buildFeeRecordRow } from './feeRecordData';
+import { feeRecordSessionRows } from './feeRecordSessionStore';
 import {
   FEE_RECORDS_COLUMN_HEIGHT,
   FEE_RECORDS_HEADER_HEIGHT,
@@ -155,7 +158,11 @@ const displayToolbarActionButtons = computed(() =>
 const { contentReady } = useDeferredContentMount();
 
 const listIniting = computed(() => !contentReady.value);
-const displayRows = computed(() => (contentReady.value ? paginatedRows.value : []));
+const displayRows = computed(() => {
+  if (!contentReady.value) return [];
+  if (currentPage.value !== 1) return paginatedRows.value;
+  return [...feeRecordSessionRows.value, ...paginatedRows.value];
+});
 
 const isHeaderSortDisabled = computed(() => Boolean(customize.value.loading));
 
@@ -222,6 +229,7 @@ function onRowClick(data: DataListItem) {
             :label="ui('Fee Operation Type')"
             :min-width="FEE_RECORD_OPERATION_TYPE_COLUMN_MIN_WIDTH"
             align="left"
+            :flex-grow="true"
             :display-order="1"
             :sortable="false"
           >
@@ -231,11 +239,24 @@ function onRowClick(data: DataListItem) {
           </EgDataListColumn>
 
           <EgDataListColumn
+            prop="recordStatusKey"
+            :label="ui('Status')"
+            :min-width="FEE_RECORD_STATUS_COLUMN_MIN_WIDTH"
+            align="center"
+            :flex-grow="true"
+            :display-order="2"
+            :sortable="false"
+          >
+            <template #default="{ data }">
+              <ManageFeeRecordStatus :row="recordRow(data)" />
+            </template>
+          </EgDataListColumn>
+
+          <EgDataListColumn
             prop="transactionTime"
             :label="ui(timeColumnLabelKey)"
             :min-width="FEE_RECORD_TIME_COLUMN_MIN_WIDTH"
-            :flex-grow="true"
-            :display-order="2"
+            :display-order="3"
             :sortable="false"
           >
             <template #header>
@@ -269,7 +290,7 @@ function onRowClick(data: DataListItem) {
             :min-width="FEE_RECORD_AMOUNT_ACCOUNT_COLUMN_MIN_WIDTH"
             align="right"
             :flex-grow="true"
-            :display-order="3"
+            :display-order="4"
             :sortable="false"
           >
             <template #header>

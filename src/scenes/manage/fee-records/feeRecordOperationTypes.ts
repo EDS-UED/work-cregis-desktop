@@ -20,6 +20,8 @@ export const FEE_RECORD_OPERATION_TYPE_KEYS = [
   'Acquiring Service Fee',
   'Card Issuance Fee',
   'Account Transfer',
+  'Account Transfer Out',
+  'Account Transfer In',
   'Card Replacement Fee',
 ] as const;
 

@@ -84,6 +84,20 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Overview Recharge Skid Description':
     '转入 USDT，可支付 Cregis 账单和 Tron 网络矿工费',
   'Overview Team Account Recharge': '团队账户充值',
+  'Overview Account Transfer': '账户划转',
+  'Overview Account Transfer From Field': '从',
+  'Overview Account Transfer To Field': '到',
+  'Overview Account Transfer Target Field': '选择账户',
+  'Overview Account Transfer Amount Field': '划转金额',
+  'Overview Account Transfer Estimated Arrival': '预估到账',
+  'Overview Account Transfer Arrival Delay Hint':
+    '到账时间可能会有延迟，请耐心等待。',
+  'Overview Account Transfer Insufficient Balance': '账户余额不足',
+  'Overview Account Transfer Amount Range':
+    '单笔划转金额必须在$100 - $150000 之间',
+  'Account Transfer Out': '账户划出',
+  'Account Transfer In': '账户划入',
+  'Fee Record Status Completed': '已完成',
   'Overview Gas Account Recharge': 'Gas 账户充值',
   'Overview Gas Recharge Native Token Hint':
     '转入该网络原生代币，仅可支付对应网络交易矿工费',
@@ -132,7 +146,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Overview Gas Proxy Payment': '矿工费代付',
   'Overview Gas Proxy Configuration': '矿工费代付配置',
   'Overview Gas Proxy Enable Confirm Message':
-    '开启后，由 Gas 账户统一支付交易矿工费， 请确保 Gas 账户余额充足。',
+    '开启后，自动化任务执行时，矿工费将优先从 Gas 账户扣除，Gas 账户余额≤ xxx 时，系统将自动切换为从发送方地址支付矿工费。请确保 Gas 账户余额充足，以免影响交易正常执行。',
   'Overview Gas Proxy Enable Confirm Hint': '多签钱包暂不支持矿工费代付',
   'Overview Gas Proxy Enable Confirm Hint With Label':
     '提示：多签钱包暂不支持矿工费代付',
@@ -234,6 +248,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Gas Account': 'Gas 账户',
   Account: '账户',
   'Gas Proxy Transaction Type': '交易类型',
+  'Transaction Currency': '交易币种',
   'Deducted Amount': '扣费金额',
   'API Wallet Payout': 'API钱包提币',
   'EIP-7702 Upgrade': 'EIP-7702升级',
@@ -1175,6 +1190,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   Expense: '支出',
   'Monthly Income': '本月收入',
   'Monthly Expense': '本月支出',
+  'Last Month Expense': '上月支出',
   'Affiliated wallet column hint':
     '您仅可查看自己有查看权限的团队钱包。基于您当前的权限，可查看的钱包如下：',
   'Sort Transaction Time UTC+08:00': '排序交易时间 UTC+08:00',

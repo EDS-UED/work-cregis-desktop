@@ -12,7 +12,7 @@ export const MANAGE_OVERVIEW_QA_SCENARIOS: ShellDebugScenario[] = [
     pageKey: MANAGE_OVERVIEW_PAGE_KEY,
     label: '总览 · 未开通 Gas 账户（仅 TRX）',
     description:
-      '未开通 Gas：隐藏 Gas 摘要卡片与 ETH/BNB/POL/SOL 行；仅保留 TRX Gas 行。',
+      '未开通 Gas：隐藏 Gas 摘要卡片与 ETH/BNB/POL/SOL 行；仅保留 TRX Gas 行；余额提醒侧栏不展示 ETH/BNB/POL/SOL 提醒项。',
     apply: () => {
       void applyManageOverviewGasNotEnabledQa();
     },
