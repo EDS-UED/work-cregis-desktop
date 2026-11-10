@@ -2,6 +2,7 @@ import { ref, type Ref } from 'vue';
 import { closeAllAnchoredTooltips } from '@eds/desktop-components';
 import { showAppEndFeedbackAfterOverlay } from '@/composables/appEndFeedback';
 import { formatGroupedTrimmedAmount } from '@/utils/formatGroupedDisplay';
+import { resolveVerifiedTxHashForRow } from '@/scenes/shared/egDataListMockData';
 import { prependFeeRecordSessionRows, patchFeeRecordSessionRow } from '../fee-records/feeRecordSessionStore';
 import type { FeeRecordRow } from '../fee-records/feeRecordTypes';
 import {
@@ -22,6 +23,10 @@ let sessionId = 0;
 function nextFeeRecordId(): string {
   sessionId += 1;
   return `fee-session-transfer-${sessionId}`;
+}
+
+function mockAccountTransferTxHash(seed: number): string {
+  return resolveVerifiedTxHashForRow(seed, 'evm');
 }
 
 function formatTransferTime(): string {
@@ -132,19 +137,23 @@ export function useManageOverviewAccountTransferFlow(options: {
     }
 
     const inRowId = nextFeeRecordId();
+    const settledTxHash = mockAccountTransferTxHash(sessionId);
     window.setTimeout(() => {
       if (mockFail) {
         patchFeeRecordSessionRow(pending.outRowId, { recordStatusKey: 'Failed' });
         return;
       }
-      patchFeeRecordSessionRow(pending.outRowId, { recordStatusKey: 'Completed' });
+      patchFeeRecordSessionRow(pending.outRowId, {
+        recordStatusKey: 'Completed',
+        txHash: settledTxHash,
+      });
       const inRow: FeeRecordRow = {
         id: inRowId,
         operationTypeKey: 'Account Transfer In',
         recordStatusKey: 'Completed',
         operatorName: 'Treasury',
         transactionTime: formatTransferTime(),
-        txHash: '',
+        txHash: settledTxHash,
         amount: amountText,
         accountKey: 'Gas Account',
         accountDisplayKey: pending.target.titleKey,

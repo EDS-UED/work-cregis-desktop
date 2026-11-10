@@ -46,9 +46,6 @@ export const FEE_RECORD_DETAIL_SHOW_ORDER_NUMBER: ReadonlySet<FeeRecordOperation
     'AML Query',
     'Acquiring Service Fee',
     'Card Issuance Fee',
-    'Account Transfer',
-    'Account Transfer Out',
-    'Account Transfer In',
   ]);
 
 /** Tron 三类费用 · 详情展示交易哈希（其余订单号类仍隐藏）。 */

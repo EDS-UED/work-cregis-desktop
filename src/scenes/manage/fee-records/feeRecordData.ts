@@ -191,7 +191,7 @@ function buildIntroAccountTransferOutRow(
     recordStatusKey,
     operatorName: 'Alex Chen',
     transactionTime: formatTransactionTime(index),
-    txHash: '',
+    txHash: resolveTxHash(index, 'Account Transfer Out'),
     amount,
     accountKey: 'Team Account',
   };

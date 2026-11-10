@@ -133,6 +133,17 @@ export function buildFeeRecordDetailSections(
     });
   }
 
+  const accountCatalogKey = row.accountDisplayKey?.trim() || row.accountKey;
+
+  items.push({
+    ...createDetailApplyItemRow('text', {
+      key: 'fee-account',
+      title: translate('Account'),
+      value: translate(accountCatalogKey),
+    }),
+    titleIcon: 'eds-fiat-currency',
+  });
+
   items.push(
     createDetailApplyItemRow('time', {
       key: 'fee-time',
@@ -150,15 +161,6 @@ export function buildFeeRecordDetailSections(
       }),
     );
   }
-
-  items.push({
-    ...createDetailApplyItemRow('text', {
-      key: 'fee-account',
-      title: translate('Account'),
-      value: translate(row.accountKey),
-    }),
-    titleIcon: 'eds-fiat-currency',
-  });
 
   return [{ items }];
 }

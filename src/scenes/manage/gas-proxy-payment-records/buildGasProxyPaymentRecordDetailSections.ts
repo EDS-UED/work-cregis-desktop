@@ -90,7 +90,7 @@ export function buildGasProxyPaymentRecordDetailSections(
   items.push(
     createDetailApplyItemRow('crypto', {
       key: 'gas-proxy-transaction-currency',
-      title: translate('Token'),
+      title: translate('Transaction Currency'),
       value: row.symbol,
       valueSymbolCrypto: row.cryptoName,
       valueIcon: row.cryptoName,
