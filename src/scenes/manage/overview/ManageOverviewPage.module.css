@@ -29,30 +29,6 @@
   width: 100%;
 }
 
-.billFlotationTriggerRoot {
-  composes: batchProTriggerRoot from '../../tasks/TasksDataListPage.module.css';
-}
-
-.billFlotationTriggerExpanded {
-  composes: batchFlotationTriggerExpanded from '../../tasks/TasksDataListPage.module.css';
-}
-
-.billFlotationIconSlot {
-  composes: batchProIconSlot from '../../tasks/TasksDataListPage.module.css';
-}
-
-.billFlotationLabelWrap {
-  composes: batchProLabelWrap from '../../tasks/TasksDataListPage.module.css';
-}
-
-.billFlotationLabelPaint {
-  composes: batchProLabelPaint from '../../tasks/TasksDataListPage.module.css';
-}
-
-.billFlotationLabelSizer {
-  composes: batchProLabelSizer from '../../tasks/TasksDataListPage.module.css';
-}
-
 .skidDismissBackdrop {
   position: absolute;
   inset: 0;

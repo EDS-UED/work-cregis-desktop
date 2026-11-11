@@ -19,6 +19,8 @@ import {
   type EgFilterLogicMode,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDataListUserTimeColumnTitle } from '@/composables/useDataListUserTimeColumnTitle';
+import { useAppUserTimezoneSelection } from '@/scenes/shared/appUserTimezoneSession';
 import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import {
   applyEgFilterConditions,
@@ -71,6 +73,9 @@ import { useTransactionRecordDetailFlow } from './useTransactionRecordDetailFlow
 import styles from './TransactionRecordsDataListPage.module.css';
 
 const { ui } = useAppI18n();
+const transactionTimeColumnTitle = useDataListUserTimeColumnTitle('Transaction Time');
+const { selectedIndex: userTimezoneIndex } = useAppUserTimezoneSelection();
+const transactionTimeSortLabelKey = 'Transaction Time';
 
 const filterConditions = ref<EgFilterCondition[]>([]);
 const filterLogicMode = ref<EgFilterLogicMode>('all');
@@ -270,8 +275,9 @@ const displayToolbarActionButtons = computed(() =>
           @row-click="onRowClick"
         >
           <EgDataListColumn
+            :key="`report-time-col-${userTimezoneIndex}`"
             prop="transactionTime"
-            :label="ui('Transaction Time UTC+08:00')"
+            :label="transactionTimeColumnTitle"
             :min-width="TRANSACTION_RECORD_TIME_COLUMN_MIN_WIDTH"
             :width="TRANSACTION_RECORD_TIME_COLUMN_WIDTH"
             :display-order="1"
@@ -285,11 +291,11 @@ const displayToolbarActionButtons = computed(() =>
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui('Transaction Time UTC+08:00') }}
+                      {{ transactionTimeColumnTitle }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
-                    label="Transaction Time UTC+08:00"
+                    :label="transactionTimeSortLabelKey"
                     :active-order="timeSortOrder"
                     :disabled="isHeaderSortDisabled"
                     @sort-change="setTimeSort"

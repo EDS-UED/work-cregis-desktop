@@ -17,6 +17,8 @@ import {
   type EgFilterLogicMode,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDataListUserTimeColumnTitle } from '@/composables/useDataListUserTimeColumnTitle';
+import { useAppUserTimezoneSelection } from '@/scenes/shared/appUserTimezoneSession';
 import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import {
   applyEgFilterConditions,
@@ -55,6 +57,9 @@ const emit = defineEmits<{
 }>();
 
 const { ui } = useAppI18n();
+const orderPlacedTimeColumnTitle = useDataListUserTimeColumnTitle('Order Placed Time');
+const { selectedIndex: userTimezoneIndex } = useAppUserTimezoneSelection();
+const orderPlacedTimeSortLabelKey = 'Order Placed Time';
 
 const filterConditions = ref<EgFilterCondition[]>([]);
 const filterLogicMode = ref<EgFilterLogicMode>('all');
@@ -232,6 +237,7 @@ function onRowClick(data: DataListItem) {
           </EgDataListColumn>
 
           <EgDataListColumn
+            :key="`order-placed-time-col-${userTimezoneIndex}`"
             prop="amountDisplay"
             :label="ui('Amount')"
             :min-width="ORDER_MANAGEMENT_AMOUNT_TIME_COLUMN_MIN_WIDTH"
@@ -264,11 +270,11 @@ function onRowClick(data: DataListItem) {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui('Order Placed Time UTC+08:00') }}
+                      {{ orderPlacedTimeColumnTitle }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
-                    label="Order Placed Time UTC+08:00"
+                    :label="orderPlacedTimeSortLabelKey"
                     :active-order="orderPlacedTimeSortOrder"
                     :disabled="isHeaderSortDisabled"
                     @sort-change="setOrderPlacedTimeSort"

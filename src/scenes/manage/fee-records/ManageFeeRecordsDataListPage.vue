@@ -29,6 +29,8 @@ import DataListHeaderSortTrigger from '@/scenes/tasks/DataListHeaderSortTrigger.
 import TasksListFieldAmount from '@/scenes/tasks/list-field/TasksListFieldAmount.vue';
 import TasksListFieldTime from '@/scenes/tasks/list-field/TasksListFieldTime.vue';
 import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
+import { useDataListTeamTimeColumnTitle } from '@/composables/useDataListTeamTimeColumnTitle';
+import { useTeamAccountTimezoneSelection } from '@/scenes/shared/teamAccountTimezoneSession';
 import {
   buildFeeRecordAmountAccountCustomize,
   buildFeeRecordTimeCustomize,
@@ -55,8 +57,6 @@ import {
   FEE_RECORDS_HEADER_HEIGHT,
   useManageFeeRecordsDataListPage,
 } from './useManageFeeRecordsDataListPage';
-import ManageFeeRecordsToolbarTimezoneHint from './ManageFeeRecordsToolbarTimezoneHint.vue';
-import ManageFeeRecordsToolbarTimezonePicker from './ManageFeeRecordsToolbarTimezonePicker.vue';
 import styles from './ManageFeeRecordsDataListPage.module.css';
 
 const emit = defineEmits<{
@@ -65,7 +65,9 @@ const emit = defineEmits<{
 
 const { ui } = useAppI18n();
 
-const timeColumnLabelKey = 'Time';
+const timeColumnTitle = useDataListTeamTimeColumnTitle('Time');
+const { selectedIndex: teamTimezoneIndex } = useTeamAccountTimezoneSelection();
+const timeSortLabelKey = 'Time';
 
 const filterConditions = ref<EgFilterCondition[]>([]);
 const filterLogicMode = ref<EgFilterLogicMode>('all');
@@ -180,17 +182,11 @@ function onRowClick(data: DataListItem) {
     <EgLayout type="empty" show-toolbar show-paginer>
       <template #toolbar>
         <EgToolBar
+          :title="ui('Fee Records')"
           :show-operation="true"
           :show-divider="true"
           frosted
         >
-          <template #title>
-            <span :class="styles.toolbarTitleCluster">
-              <span :class="styles.toolbarTitleText">{{ ui('Fee Records') }}</span>
-              <ManageFeeRecordsToolbarTimezoneHint />
-              <ManageFeeRecordsToolbarTimezonePicker />
-            </span>
-          </template>
           <template #functional>
             <TasksToolbarFilter
               v-model="filterConditions"
@@ -253,8 +249,9 @@ function onRowClick(data: DataListItem) {
           </EgDataListColumn>
 
           <EgDataListColumn
+            :key="`fee-time-col-${teamTimezoneIndex}`"
             prop="transactionTime"
-            :label="ui(timeColumnLabelKey)"
+            :label="timeColumnTitle"
             :min-width="FEE_RECORD_TIME_COLUMN_MIN_WIDTH"
             :display-order="3"
             :sortable="false"
@@ -267,11 +264,11 @@ function onRowClick(data: DataListItem) {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(timeColumnLabelKey) }}
+                      {{ timeColumnTitle }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
-                    :label="timeColumnLabelKey"
+                    :label="timeSortLabelKey"
                     :active-order="timeSortOrder"
                     :disabled="isHeaderSortDisabled"
                     @sort-change="setTimeSort"

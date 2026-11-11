@@ -81,3 +81,25 @@ export function convertOverviewTransferUsdToNative(
   const usdPerNative = TRANSFER_MOCK_USD_PER_NATIVE[targetKey];
   return amountUsd / usdPerNative;
 }
+
+/** 费用记录列表 · 划转入账主行币种（与 Gas 子账户一致）。 */
+export function resolveOverviewTransferTargetListAmountMeta(
+  targetKey: OverviewAccountTransferTargetKey,
+): { listAmountCryptoSymbol: string; listAmountCryptoName: CryptoName } {
+  const option = [...TRANSFER_TARGETS_FULL, ...TRANSFER_TARGET_GAS_OFF].find(
+    (item) => item.key === targetKey,
+  );
+  if (!option) {
+    return { listAmountCryptoSymbol: 'ETH', listAmountCryptoName: 'eds-eth-ethereum' };
+  }
+  const symbolByKey: Record<OverviewAccountTransferTargetKey, string> = {
+    eth: 'ETH',
+    bnb: 'BNB',
+    pol: 'POL',
+    trx: 'TRX',
+  };
+  return {
+    listAmountCryptoSymbol: symbolByKey[targetKey],
+    listAmountCryptoName: option.cryptoName,
+  };
+}

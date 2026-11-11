@@ -78,13 +78,14 @@ export function buildGasProxyPaymentRecordDetailSections(
       : '';
 
   if (proxyResourcesText.trim()) {
-    items.push(
-      createDetailApplyItemRow('text', {
+    items.push({
+      ...createDetailApplyItemRow('text', {
         key: 'gas-proxy-resources',
         title: translate('Gas Proxy Payment Resources'),
         value: proxyResourcesText,
       }),
-    );
+      titleIcon: 'eds-gas-fee',
+    });
   }
 
   items.push(

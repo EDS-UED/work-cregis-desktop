@@ -15,6 +15,10 @@ import {
 } from './feeRecordDetailFieldPolicy';
 import type { CryptoAddressFamily } from '@/scenes/tasks/list-field/listFieldCryptoSampleAddresses';
 import type { FeeRecordAccountKey, FeeRecordRow } from './feeRecordTypes';
+import {
+  pickFeeRecordGasAccountListSlot,
+  type FeeRecordGasAccountListSlot,
+} from './feeRecordGasAccountListShape';
 
 /** 列表 demo 总量：2 条账户划出状态示范 + 原 28 条。 */
 export const FEE_RECORDS_DEMO_TOTAL = 30;
@@ -26,35 +30,12 @@ function resolveLegacyRowIndex(index: number): number | null {
   return index - FEE_RECORD_LEGACY_OFFSET;
 }
 
-/** 列表前三条演示 · 指定 Gas 子账户 + 主行币种金额。 */
-const FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES = {
-  1: {
-    accountDisplayKey: 'ETH Gas Account',
-    listAmountCryptoSymbol: 'ETH',
-    listAmountCryptoName: 'eds-eth-ethereum',
-    amount: '8.88',
-  },
-  2: {
-    accountDisplayKey: 'BNB Gas Account',
-    listAmountCryptoSymbol: 'BNB',
-    listAmountCryptoName: 'eds-bnb-binance coin',
-    amount: '24.06',
-  },
-  3: {
-    accountDisplayKey: 'POL Gas Account',
-    listAmountCryptoSymbol: 'POL',
-    listAmountCryptoName: 'eds-pol-polygon',
-    amount: '32114197.25',
-  },
-} as const satisfies Record<
-  number,
-  {
-    accountDisplayKey: string;
-    listAmountCryptoSymbol: string;
-    listAmountCryptoName: string;
-    amount: string;
-  }
->;
+/** 列表 legacy 1–3 · 非划转型演示仍可挂 Gas 子账户 + 币种主行。 */
+const FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES: Record<number, FeeRecordGasAccountListSlot> = {
+  1: pickFeeRecordGasAccountListSlot(0),
+  2: pickFeeRecordGasAccountListSlot(1),
+  3: pickFeeRecordGasAccountListSlot(2),
+};
 
 const OPERATOR_NAMES = [
   'Alex Chen',
@@ -86,10 +67,45 @@ function resolveAccountKey(index: number): FeeRecordAccountKey {
   return 'Team Account';
 }
 
-function resolveListGasAccountOverride(index: number) {
-  return FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES[
-    index as keyof typeof FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES
-  ];
+function resolveListGasAccountOverride(index: number): FeeRecordGasAccountListSlot | undefined {
+  return FEE_RECORD_LIST_GAS_ACCOUNT_OVERRIDES[index];
+}
+
+function resolveListAmountAccountFields(
+  legacyIndex: number,
+  operationTypeKey: FeeRecordRow['operationTypeKey'],
+): Pick<
+  FeeRecordRow,
+  | 'accountKey'
+  | 'accountDisplayKey'
+  | 'amount'
+  | 'listAmountCryptoSymbol'
+  | 'listAmountCryptoName'
+> {
+  if (operationTypeKey === 'Account Transfer In') {
+    const slot = pickFeeRecordGasAccountListSlot(legacyIndex);
+    return {
+      accountKey: 'Gas Account',
+      accountDisplayKey: slot.accountDisplayKey,
+      amount: slot.demoNativeAmount,
+      listAmountCryptoSymbol: slot.listAmountCryptoSymbol,
+      listAmountCryptoName: slot.listAmountCryptoName,
+    };
+  }
+  if (operationTypeKey === 'Account Transfer Out') {
+    return {
+      accountKey: 'Team Account',
+      amount: formatAmount(legacyIndex),
+    };
+  }
+  const gasListOverride = resolveListGasAccountOverride(legacyIndex);
+  return {
+    accountKey: resolveAccountKey(legacyIndex),
+    accountDisplayKey: gasListOverride?.accountDisplayKey,
+    amount: gasListOverride?.demoNativeAmount ?? formatAmount(legacyIndex),
+    listAmountCryptoSymbol: gasListOverride?.listAmountCryptoSymbol,
+    listAmountCryptoName: gasListOverride?.listAmountCryptoName,
+  };
 }
 
 function formatAmount(index: number): string {
@@ -208,7 +224,7 @@ export function buildFeeRecordRow(index: number): FeeRecordRow {
   const legacyIndex = resolveLegacyRowIndex(index)!;
   const operationTypeKey = resolveOperationType(legacyIndex);
   const currency = resolveDetailCurrency(operationTypeKey);
-  const gasListOverride = resolveListGasAccountOverride(legacyIndex);
+  const listAmountAccount = resolveListAmountAccountFields(legacyIndex, operationTypeKey);
   return {
     id: `fee-${index + 1}`,
     operationTypeKey,
@@ -216,11 +232,7 @@ export function buildFeeRecordRow(index: number): FeeRecordRow {
     operatorName: resolveOperatorName(legacyIndex),
     transactionTime: formatTransactionTime(legacyIndex),
     txHash: resolveTxHash(legacyIndex, operationTypeKey),
-    amount: gasListOverride?.amount ?? formatAmount(legacyIndex),
-    accountKey: resolveAccountKey(legacyIndex),
-    accountDisplayKey: gasListOverride?.accountDisplayKey,
-    listAmountCryptoSymbol: gasListOverride?.listAmountCryptoSymbol,
-    listAmountCryptoName: gasListOverride?.listAmountCryptoName,
+    ...listAmountAccount,
     planTransition: resolvePlanTransition(legacyIndex, operationTypeKey),
     orderNumber: resolveOrderNumber(legacyIndex, operationTypeKey),
     amlServiceProvider: resolveAmlServiceProvider(operationTypeKey),

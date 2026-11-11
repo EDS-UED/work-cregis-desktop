@@ -10,6 +10,7 @@ import {
   type DataListItem,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDataListColumnLabel } from '@/composables/useDataListColumnLabel';
 import DataListHeaderSortTrigger from '@/scenes/tasks/DataListHeaderSortTrigger.vue';
 import TasksListFieldCurrency from '@/scenes/tasks/list-field/TasksListFieldCurrency.vue';
 import TasksListFieldStatus from '@/scenes/tasks/list-field/TasksListFieldStatus.vue';
@@ -195,6 +196,7 @@ useDataListSelectAllShortcut({
 });
 
 const { ui, locale } = useAppI18n();
+const { dataListColumnLabel, timezoneRevision } = useDataListColumnLabel('user');
 
 function recordRow(data: DataListItem): PaymentEngineRecordRow {
   return data as PaymentEngineRecordRow;
@@ -499,9 +501,9 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
         >
           <EgDataListColumn
             v-for="column in columns"
-            :key="column.key"
+            :key="`${column.key}-tz-${timezoneRevision}`"
             :prop="columnProp(column)"
-            :label="ui(column.labelKey)"
+            :label="dataListColumnLabel(column.labelKey)"
             :min-width="column.minWidth"
             :width="column.width"
             :flex-grow="resolveColumnFlexGrow(column)"
@@ -524,7 +526,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(column.labelKey) }}
+                      {{ dataListColumnLabel(column.labelKey) }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
@@ -543,7 +545,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(column.secondaryLabelKey ?? '') }}
+                      {{ dataListColumnLabel(column.secondaryLabelKey) }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
@@ -571,7 +573,7 @@ function resolveColumnFlexGrow(column: PaymentEngineRecordColumnConfig): boolean
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(column.labelKey) }}
+                      {{ dataListColumnLabel(column.labelKey) }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger

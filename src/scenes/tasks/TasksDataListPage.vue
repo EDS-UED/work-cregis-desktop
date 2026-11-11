@@ -95,6 +95,7 @@ import {
 } from './tasksDataListPageData';
 import { showAppEndFeedback } from '@/composables/appEndFeedback';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDataListColumnLabel } from '@/composables/useDataListColumnLabel';
 import { useDeferredContentMount } from '@/composables/useDeferredContentMount';
 import { useListRegionInteractionBlock } from '@/composables/useListRegionInteractionBlock';
 import { formatGroupedNumber } from '@/utils/formatGroupedDisplay';
@@ -167,6 +168,7 @@ const props = defineProps<{
 }>();
 
 const { ui, locale } = useAppI18n();
+const { dataListColumnLabel, timezoneRevision } = useDataListColumnLabel('user');
 
 /** 模块菜单英文 key（兼容 ToolBar / 菜单展示文案反向解析）。 */
 const menuItem = computed((): TasksDataListMenuItemLabel | string => {
@@ -1043,7 +1045,7 @@ const displayPrimaryActionLabel = computed(() => {
 });
 const displayStatusColumnLabel = computed(() => ui(statusColumnLabel.value));
 const displayBusinessTypeSecondaryLabel = computed(() =>
-  ui(businessTypeColumnSecondaryLabel.value),
+  dataListColumnLabel(businessTypeColumnSecondaryLabel.value),
 );
 const displayPaginerTotal = computed(() => ui(DATA_LIST_FIGMA_PAGINER.dataVolumeTotal));
 const displayPaginerResults = computed(() => ui(DATA_LIST_FIGMA_PAGINER.dataVolumeResults));
@@ -1253,7 +1255,7 @@ const displayBatchActions = computed(() => {
         />
         <EgDataList
           ref="dataListRef"
-          :key="`tasks-datalist-${menuItem}-${dataListRemountKey}`"
+          :key="`tasks-datalist-${menuItem}-${dataListRemountKey}-tz-${timezoneRevision}`"
           v-model:select-mode="customize.selectMode"
           :data-list="displayDataList"
           :header-height="DATA_LIST_FIGMA_HEADER_HEIGHT"
@@ -1360,7 +1362,7 @@ const displayBatchActions = computed(() => {
               key="sent-request-created-time"
               :hidden="!isSentRequestMenu"
               prop="createdTime"
-              :label="ui('Created Time')"
+              :label="dataListColumnLabel('Created Time')"
               :min-width="createdTimeColumnMinWidth"
               :flex-grow="true"
               align="left"
@@ -1374,7 +1376,7 @@ const displayBatchActions = computed(() => {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui('Created Time') }}
+                      {{ dataListColumnLabel('Created Time') }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
@@ -1458,7 +1460,7 @@ const displayBatchActions = computed(() => {
           <EgDataListColumn
             v-if="showGeneralStructureColumn"
             prop="submitter"
-            :label="ui(previewColumnSettings[0].label)"
+            :label="dataListColumnLabel(previewColumnSettings[0].label)"
             :min-width="generalStructureColumnMinWidth"
             :align="previewColumnSettings[0].align"
             :sortable="false"
@@ -1471,7 +1473,7 @@ const displayBatchActions = computed(() => {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(previewColumnSettings[0].label) }}
+                      {{ dataListColumnLabel(previewColumnSettings[0].label) }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
@@ -1487,7 +1489,7 @@ const displayBatchActions = computed(() => {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(previewColumnSettings[0].secondaryLabel ?? '') }}
+                      {{ dataListColumnLabel(previewColumnSettings[0].secondaryLabel) }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
@@ -1512,7 +1514,7 @@ const displayBatchActions = computed(() => {
           <EgDataListColumn
             v-if="!isSentRequestMenu"
             prop="amount"
-            :label="ui(previewColumnSettings[1].label)"
+            :label="dataListColumnLabel(previewColumnSettings[1].label)"
             :min-width="amountColumnMinWidth"
             :flex-grow="amountColumnFlexGrow"
             :align="amountColumnAlign"
@@ -1532,7 +1534,7 @@ const displayBatchActions = computed(() => {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(previewColumnSettings[1].label) }}
+                      {{ dataListColumnLabel(previewColumnSettings[1].label) }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
@@ -1549,7 +1551,7 @@ const displayBatchActions = computed(() => {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(previewColumnSettings[1].secondaryLabel ?? '') }}
+                      {{ dataListColumnLabel(previewColumnSettings[1].secondaryLabel) }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger

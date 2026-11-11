@@ -9,6 +9,7 @@ import {
   type DataListItem,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDataListUserTimeColumnTitle } from '@/composables/useDataListUserTimeColumnTitle';
 import PaymentEngineListFieldAmount from './list-field/PaymentEngineListFieldAmount.vue';
 import PaymentEngineListFieldMeta from './list-field/PaymentEngineListFieldMeta.vue';
 import TasksListFieldStatus from '@/scenes/tasks/list-field/TasksListFieldStatus.vue';
@@ -39,6 +40,7 @@ const props = withDefaults(
 );
 
 const { ui } = useAppI18n();
+const onchainTimeColumnTitle = useDataListUserTimeColumnTitle('Transfer On-chain Transaction Time');
 
 const listHeightPx = computed(() => computeBulkTransferDataListHeight(props.lines.length));
 
@@ -173,7 +175,7 @@ function lineFromData(data: DataListItem): PaymentEngineBulkTransferLineRecord {
 
       <EgDataListColumn
         prop="blockTimestamp"
-        :label="ui('Transfer On-chain Transaction Time')"
+        :label="onchainTimeColumnTitle"
         :min-width="BULK_TRANSFER_DETAIL_ONCHAIN_TIME_COLUMN_MIN_WIDTH"
         align="left"
         :sortable="false"

@@ -13,6 +13,7 @@ import {
   type TagStatus,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDataListUserTimeColumnTitle } from '@/composables/useDataListUserTimeColumnTitle';
 import DataListHeaderSortTrigger from '../../DataListHeaderSortTrigger.vue';
 import type { TasksDataListSortOrder } from '../../tasksDataListSort';
 import TasksDataListColumnCell from '../../list-field/TasksDataListColumnCell.vue';
@@ -52,6 +53,7 @@ const props = withDefaults(
 );
 
 const { ui } = useAppI18n();
+const createdTimeColumnTitle = useDataListUserTimeColumnTitle('Created Time');
 
 const createdTimeSortOrder = ref<TasksDataListSortOrder | ''>('');
 
@@ -244,7 +246,7 @@ function rowIndexFromData(data: DataListItem) {
 
       <EgDataListColumn
         prop="createdTime"
-        :label="ui('Created Time')"
+        :label="createdTimeColumnTitle"
         :min-width="PROGRESS_CREATED_TIME_COLUMN_MIN_WIDTH"
         :display-order="3"
         align="left"
@@ -256,10 +258,10 @@ function rowIndexFromData(data: DataListItem) {
               :content-class="dataListStyles.headerText"
               context="header"
             >
-              {{ ui('Created Time') }}
+              {{ createdTimeColumnTitle }}
             </EgDataListCellOverflow>
             <DataListHeaderSortTrigger
-              :label="ui('Created Time')"
+              :label="createdTimeColumnTitle"
               :active-order="createdTimeSortOrder"
               @sort-change="onCreatedTimeSort"
             />

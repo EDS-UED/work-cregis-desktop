@@ -4,12 +4,15 @@ import { useThemeProvider, type ThemeMode } from '@eds/desktop-components';
 import AppShellPreferenceSelect from '@/components/AppShellPreferenceSelect.vue';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { APP_LOCALE_OPTIONS, useAppLocale } from '@/composables/useAppLocale';
+import AppToolbarTimezonePickerField from '@/scenes/shared/AppToolbarTimezonePickerField.vue';
+import { useAppUserTimezoneSelection } from '@/scenes/shared/appUserTimezoneSession';
 import styles from './PreferencePage.module.css';
 
 const { locale, setLocale } = useAppLocale();
-const { messages } = useAppI18n();
+const { messages, ui } = useAppI18n();
 const { theme, setTheme } = useThemeProvider();
 const themeValue = computed(() => theme.value);
+const { selectedIndex } = useAppUserTimezoneSelection();
 
 const themeOptions = computed(() => [
   { value: 'light', label: messages.value.preferenceLight },
@@ -44,6 +47,12 @@ function onThemeChange(value: string) {
         :aria-label="messages.preferenceTheme"
         @update:model-value="onThemeChange"
       />
+      <div :class="styles.timezoneBlock">
+        <AppToolbarTimezonePickerField v-model="selectedIndex" variant="md-full" />
+        <p :class="['typography-body-small', styles.timezoneHint]">
+          {{ ui('Preference Timezone Hint') }}
+        </p>
+      </div>
     </div>
   </div>
 </template>

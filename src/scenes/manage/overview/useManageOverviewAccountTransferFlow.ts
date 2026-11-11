@@ -13,6 +13,7 @@ import {
   type OverviewAccountTransferTargetKey,
   type OverviewAccountTransferTargetOption,
   convertOverviewTransferUsdToNative,
+  resolveOverviewTransferTargetListAmountMeta,
 } from './overviewAccountTransferSkidData';
 
 const MOCK_TRADE_PASSWORD = '111111';
@@ -118,7 +119,13 @@ export function useManageOverviewAccountTransferFlow(options: {
     if (!accepted || !pending) return;
 
     const mockFail = shouldMockOverviewAccountTransferFail(pending.amountUsd);
-    const amountText = formatGroupedTrimmedAmount(pending.amountUsd);
+    const amountUsdText = formatGroupedTrimmedAmount(pending.amountUsd);
+    const nativeAmount = convertOverviewTransferUsdToNative(
+      pending.amountUsd,
+      pending.target.key,
+    );
+    const amountNativeText = formatGroupedTrimmedAmount(nativeAmount);
+    const inListAmountMeta = resolveOverviewTransferTargetListAmountMeta(pending.target.key);
     const time = formatTransferTime();
     const outRow: FeeRecordRow = {
       id: pending.outRowId,
@@ -127,7 +134,7 @@ export function useManageOverviewAccountTransferFlow(options: {
       operatorName: 'Alex Chen',
       transactionTime: time,
       txHash: '',
-      amount: amountText,
+      amount: amountUsdText,
       accountKey: 'Team Account',
     };
     prependFeeRecordSessionRows([outRow]);
@@ -154,9 +161,11 @@ export function useManageOverviewAccountTransferFlow(options: {
         operatorName: 'Treasury',
         transactionTime: formatTransferTime(),
         txHash: settledTxHash,
-        amount: amountText,
+        amount: amountNativeText,
         accountKey: 'Gas Account',
         accountDisplayKey: pending.target.titleKey,
+        listAmountCryptoSymbol: inListAmountMeta.listAmountCryptoSymbol,
+        listAmountCryptoName: inListAmountMeta.listAmountCryptoName,
       };
       prependFeeRecordSessionRows([inRow]);
     }, MOCK_CHAIN_SETTLE_MS);

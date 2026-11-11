@@ -21,6 +21,7 @@ import { showAppEndFeedback } from '@/composables/appEndFeedback';
 import ManageOverviewBalanceReminderSkidAction from './ManageOverviewBalanceReminderSkidAction.vue';
 import ManageOverviewBalanceReminderSkidBody from './ManageOverviewBalanceReminderSkidBody.vue';
 import ManageOverviewGenerateBillFlotationMenu from './ManageOverviewGenerateBillFlotationMenu.vue';
+import ManageOverviewToolbarTimezonePicker from './ManageOverviewToolbarTimezonePicker.vue';
 import ManageOverviewAccountTransferSkidAction from './ManageOverviewAccountTransferSkidAction.vue';
 import ManageOverviewAccountTransferSkidBody from './ManageOverviewAccountTransferSkidBody.vue';
 import ManageOverviewRechargeSkidBody from './ManageOverviewRechargeSkidBody.vue';
@@ -435,7 +436,7 @@ onBeforeUnmount(() => {
       <template #toolbar>
         <div :class="styles.toolbarSlotHost">
           <EgToolBar
-            :title="ui('Overview Asset')"
+            :title="ui('Overview')"
             :show-operation="!overviewSkidOpen"
             :show-divider="toolbarScrimActive"
             :frosted="toolbarScrimActive"
@@ -462,40 +463,20 @@ onBeforeUnmount(() => {
                 close-on-scroll
               >
                 <template #trigger="{ expanded }">
-                  <span
-                    :class="[
-                      styles.billFlotationTriggerRoot,
-                      expanded && styles.billFlotationTriggerExpanded,
-                    ]"
+                  <EgIconProButton
+                    :label="ui('Overview Generate Bill')"
+                    :active="expanded"
+                    :aria-expanded="expanded"
                   >
-                    <span
-                      data-eds-trigger-metrics
-                      :class="styles.billFlotationIconSlot"
-                      :aria-expanded="expanded"
-                    >
-                      <EgIconButton
-                        as="span"
-                        shape="rectangular"
-                        size="sm"
-                        :label="ui('Overview Generate Bill')"
-                      >
-                        <EgIcon name="eds-bill" size="sm" />
-                      </EgIconButton>
-                    </span>
-                    <span :class="styles.billFlotationLabelWrap">
-                      <span :class="styles.billFlotationLabelPaint" aria-hidden="true">
-                        {{ ui('Overview Generate Bill') }}
-                      </span>
-                      <span :class="styles.billFlotationLabelSizer">
-                        {{ ui('Overview Generate Bill') }}
-                      </span>
-                    </span>
-                  </span>
+                    <EgIcon name="eds-bill" size="sm" />
+                  </EgIconProButton>
                 </template>
                 <template #content>
                   <ManageOverviewGenerateBillFlotationMenu />
                 </template>
               </EgFlotation>
+
+              <ManageOverviewToolbarTimezonePicker />
             </template>
           </EgToolBar>
           <button

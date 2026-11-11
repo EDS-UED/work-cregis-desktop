@@ -18,6 +18,7 @@ export function useAppI18n() {
   const messages = computed(() => ({
     preferenceLanguage: translateAppMessage(locale.value, 'preference.language'),
     preferenceTheme: translateAppMessage(locale.value, 'preference.theme'),
+    preferenceTimezone: translateAppMessage(locale.value, 'preference.timezone'),
     preferenceLight: translateAppMessage(locale.value, 'preference.light'),
     preferenceDark: translateAppMessage(locale.value, 'preference.dark'),
     appShellMainHint: translateAppMessage(locale.value, 'appShell.mainHint'),

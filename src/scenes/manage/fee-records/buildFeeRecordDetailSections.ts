@@ -3,6 +3,7 @@ import {
   type DetailItemData,
   type DetailSectionData,
 } from '@eds/desktop-components';
+import { formatGroupedTrimmedAmount } from '@/utils/formatGroupedDisplay';
 import { buildDetailCurrencyAmountItems } from '@/scenes/tasks/shared/buildDetailCurrencyAmountItems';
 import { isFeeRecordIncomeOperation } from './feeRecordOperationDirection';
 import {
@@ -17,22 +18,29 @@ import {
   feeRecordDetailUsesBulkTransferOrderNumber,
 } from './feeRecordDetailFieldPolicy';
 import type { FeeRecordRow } from './feeRecordTypes';
+import { normalizeFeeRecordAccountTransferInRow } from './feeRecordGasAccountListShape';
 
 /** 收单服务费 · 批量转账单号行 key（`itemValueLinkClick`）。 */
 export const FEE_RECORD_BULK_TRANSFER_ORDER_ITEM_KEY = 'fee-bulk-transfer-order-number';
 
 export function formatFeeRecordSignedFiatAmount(row: FeeRecordRow): string {
-  const sign = isFeeRecordIncomeOperation(row.operationTypeKey) ? '+' : '-';
-  return `${sign}$${row.amount}`;
+  const normalized = normalizeFeeRecordAccountTransferInRow(row);
+  const sign = isFeeRecordIncomeOperation(normalized.operationTypeKey) ? '+' : '-';
+  const amount = formatGroupedTrimmedAmount(normalized.amount);
+  if (normalized.listAmountCryptoSymbol?.trim()) {
+    return `${sign}${amount} ${normalized.listAmountCryptoSymbol.trim()}`;
+  }
+  return `${sign}$${amount}`;
 }
 
 export function buildFeeRecordDetailSections(
   row: FeeRecordRow,
   translate: (catalogKey: string) => string,
 ): DetailSectionData[] {
+  const normalizedRow = normalizeFeeRecordAccountTransferInRow(row);
   const items: DetailItemData[] = [];
 
-  if (feeRecordDetailShowsOperator(row.operationTypeKey)) {
+  if (feeRecordDetailShowsOperator(normalizedRow.operationTypeKey)) {
     items.push({
       ...createDetailApplyItemRow('initiated-by', {
         key: 'fee-operator',
@@ -133,7 +141,7 @@ export function buildFeeRecordDetailSections(
     });
   }
 
-  const accountCatalogKey = row.accountDisplayKey?.trim() || row.accountKey;
+  const accountCatalogKey = normalizedRow.accountDisplayKey?.trim() || normalizedRow.accountKey;
 
   items.push({
     ...createDetailApplyItemRow('text', {

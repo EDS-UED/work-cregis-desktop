@@ -3,9 +3,12 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   // Preference & shell
   Language: '语言',
   Theme: '主题',
+  Timezone: '时区',
   Light: '浅色',
   Dark: '深色',
   'Main content area': '主内容区',
+  'Preference Timezone Hint':
+    '影响全局数据列表的时间列显示；团队账户「费用记录」「Gas 代付记录」遵循团队时区设置。',
 
   // Nav & module titles
   Wallet: '钱包',
@@ -120,6 +123,8 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Overview Show Asset Valuation': '显示资产估值',
   'Overview Account': '账户',
   'Overview Balance': '余额',
+  'Overview Timezone Settings': '时区设置',
+  'Overview Team Timezone Settings': '团队账户时区',
   'Overview Generate Bill': '账单',
   'Overview Bill Month Field': '月份',
   'Overview Bill Language Field': '账单语言',
@@ -187,7 +192,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Fee Record Crypto Card': '加密卡',
   'Fee Record View Bulk Transfer Records': '查看转账记录',
   'Fee Record Team Timezone Hint':
-    '以下显示之时区为全体团队成员统一标准，不受个人设置之时区影响。',
+    '团队账户页面的时间显示统一采用团队标准时区，不受个人本地时区影响。',
   Recharge: '充值',
   'System Recharge': '系统充值',
   'System Refund': '系统退款',

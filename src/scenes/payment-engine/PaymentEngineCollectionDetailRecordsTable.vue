@@ -10,6 +10,8 @@ import {
   type DataListItem,
 } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
+import { useDataListUserTimeColumnTitle } from '@/composables/useDataListUserTimeColumnTitle';
+import { useAppUserTimezoneSelection } from '@/scenes/shared/appUserTimezoneSession';
 import PaymentEngineListFieldAmount from './list-field/PaymentEngineListFieldAmount.vue';
 import TasksListFieldStatus from '@/scenes/tasks/list-field/TasksListFieldStatus.vue';
 import TasksListFieldTime from '@/scenes/tasks/list-field/TasksListFieldTime.vue';
@@ -43,6 +45,8 @@ const props = withDefaults(
 );
 
 const { ui } = useAppI18n();
+const detailTimeColumnTitle = useDataListUserTimeColumnTitle('Time');
+const { selectedIndex: userTimezoneIndex } = useAppUserTimezoneSelection();
 
 const visibleHeightPx = computed(() => computeCollectionDetailTableVisibleHeight(props.lines.length));
 const measureHeightPx = computed(() => computeCollectionDetailTableMeasureHeight(props.lines.length));
@@ -185,8 +189,9 @@ function lineIndexFromData(data: DataListItem): number {
         </EgDataListColumn>
 
         <EgDataListColumn
+          :key="`collection-detail-time-${userTimezoneIndex}`"
           prop="time"
-          :label="ui('Time')"
+          :label="detailTimeColumnTitle"
           :min-width="COLLECTION_DETAIL_TIME_COLUMN_MIN_WIDTH"
           align="right"
           :sortable="false"

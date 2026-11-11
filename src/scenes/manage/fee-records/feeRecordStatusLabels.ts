@@ -27,3 +27,14 @@ export function resolveFeeRecordStatusLabelKey(statusKey: FeeRecordStatusKey): s
 export function resolveFeeRecordStatusTagStatus(statusKey: FeeRecordStatusKey): TagStatus {
   return STATUS_TAG[statusKey];
 }
+
+export function resolveFeeRecordDetailHeadlineStatus(
+  row: FeeRecordRow,
+  translate: (catalogKey: string) => string,
+): { label: string; status: TagStatus } {
+  const statusKey = resolveFeeRecordRowStatusKey(row);
+  return {
+    label: translate(resolveFeeRecordStatusLabelKey(statusKey)),
+    status: resolveFeeRecordStatusTagStatus(statusKey),
+  };
+}

@@ -30,7 +30,8 @@ import TasksListFieldAmount from '@/scenes/tasks/list-field/TasksListFieldAmount
 import TasksListFieldCurrency from '@/scenes/tasks/list-field/TasksListFieldCurrency.vue';
 import TasksListFieldTime from '@/scenes/tasks/list-field/TasksListFieldTime.vue';
 import pageStyles from '@/scenes/tasks/TasksDataListPage.module.css';
-import { dataListTimeColumnLabelKey } from '@/scenes/shared/dataListTimeLabelKeys';
+import { useDataListTeamTimeColumnTitle } from '@/composables/useDataListTeamTimeColumnTitle';
+import { useTeamAccountTimezoneSelection } from '@/scenes/shared/teamAccountTimezoneSession';
 import {
   buildGasProxyDeductedAmountAccountCustomize,
   buildGasProxyTimeCustomize,
@@ -112,7 +113,9 @@ const filterBadge = computed(
   () => filterConditions.value.filter(isActiveEgFilterCondition).length,
 );
 
-const timeColumnLabelKey = dataListTimeColumnLabelKey('Time');
+const timeColumnTitle = useDataListTeamTimeColumnTitle('Time');
+const { selectedIndex: teamTimezoneIndex } = useTeamAccountTimezoneSelection();
+const timeSortLabelKey = 'Time';
 
 const {
   DATA_LIST_FIGMA_PAGINER,
@@ -284,8 +287,9 @@ function onRowClick(data: DataListItem) {
           </EgDataListColumn>
 
           <EgDataListColumn
+            :key="`gas-time-col-${teamTimezoneIndex}`"
             prop="transactionTime"
-            :label="ui(timeColumnLabelKey)"
+            :label="timeColumnTitle"
             :min-width="GAS_PROXY_TIME_COLUMN_MIN_WIDTH"
             :flex-grow="true"
             :display-order="3"
@@ -299,11 +303,11 @@ function onRowClick(data: DataListItem) {
                       :content-class="pageStyles.comboHeaderSegmentText"
                       context="header"
                     >
-                      {{ ui(timeColumnLabelKey) }}
+                      {{ timeColumnTitle }}
                     </EgDataListCellOverflow>
                   </div>
                   <DataListHeaderSortTrigger
-                    :label="timeColumnLabelKey"
+                    :label="timeSortLabelKey"
                     :active-order="timeSortOrder"
                     :disabled="isHeaderSortDisabled"
                     @sort-change="setTimeSort"

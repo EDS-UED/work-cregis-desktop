@@ -9,6 +9,7 @@ import {
   FEE_RECORD_BULK_TRANSFER_ORDER_ITEM_KEY,
   formatFeeRecordSignedFiatAmount,
 } from './buildFeeRecordDetailSections';
+import { resolveFeeRecordDetailHeadlineStatus } from './feeRecordStatusLabels';
 import type { FeeRecordRow } from './feeRecordTypes';
 
 const props = defineProps<{
@@ -45,6 +46,11 @@ const headline = computed(() => {
   return formatFeeRecordSignedFiatAmount(props.row);
 });
 
+const headlineStatus = computed(() => {
+  if (!props.row) return null;
+  return resolveFeeRecordDetailHeadlineStatus(props.row, ui);
+});
+
 const detailToolbarPageKey = computed(() => props.row?.id ?? 'fee-record-detail');
 
 function onDetailClose() {
@@ -69,7 +75,10 @@ function onItemValueLinkClick(key: string) {
         :eyebrow="detailEyebrow"
         :headline="headline"
         :show-eyebrow="true"
-        :show-status-tag="false"
+        :show-status-tag="Boolean(headlineStatus)"
+        :status-tag="headlineStatus?.label ?? ''"
+        status-tag-size="lg"
+        :status-tag-status="headlineStatus?.status ?? 'success'"
         :show-tabs="false"
         :sections="sections"
         :show-toolbar="false"
