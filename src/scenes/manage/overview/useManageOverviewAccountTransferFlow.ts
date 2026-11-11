@@ -8,13 +8,13 @@ import type { FeeRecordRow } from '../fee-records/feeRecordTypes';
 import {
   OVERVIEW_ACCOUNT_TRANSFER_MAX_USD,
   OVERVIEW_ACCOUNT_TRANSFER_MIN_USD,
-  OVERVIEW_ACCOUNT_TRANSFER_TEAM_AVAILABLE_USD,
   shouldMockOverviewAccountTransferFail,
   type OverviewAccountTransferTargetKey,
   type OverviewAccountTransferTargetOption,
   convertOverviewTransferUsdToNative,
   resolveOverviewTransferTargetListAmountMeta,
 } from './overviewAccountTransferSkidData';
+import { overviewTeamAvailableUsd } from './overviewSummaryBalanceSession';
 
 const MOCK_TRADE_PASSWORD = '111111';
 const MOCK_CHAIN_SETTLE_MS = 2500;
@@ -52,7 +52,7 @@ export function validateOverviewAccountTransferAmount(raw: string): AccountTrans
   if (amountUsd == null || amountUsd <= 0) {
     return { ok: false, messageKey: 'Overview Account Transfer Amount Range' };
   }
-  if (amountUsd > OVERVIEW_ACCOUNT_TRANSFER_TEAM_AVAILABLE_USD) {
+  if (amountUsd > overviewTeamAvailableUsd()) {
     return { ok: false, messageKey: 'Overview Account Transfer Insufficient Balance' };
   }
   if (amountUsd < OVERVIEW_ACCOUNT_TRANSFER_MIN_USD || amountUsd > OVERVIEW_ACCOUNT_TRANSFER_MAX_USD) {
@@ -81,6 +81,7 @@ export function useManageOverviewAccountTransferFlow(options: {
   closeSkid: () => void;
   transactionPasswordSet: Ref<boolean>;
   setTransactionPasswordDialogOpen: Ref<boolean>;
+  onTransferSettled?: (amountUsd: number) => void;
 }) {
   const pendingTransfer = ref<PendingTransfer | null>(null);
 
@@ -140,6 +141,7 @@ export function useManageOverviewAccountTransferFlow(options: {
     prependFeeRecordSessionRows([outRow]);
     options.closeSkid();
     if (!mockFail) {
+      options.onTransferSettled?.(pending.amountUsd);
       showAppEndFeedbackAfterOverlay();
     }
 

@@ -4,7 +4,7 @@ import type { OverviewGasRechargeAccountKey } from './overviewRechargeSkidData';
 export const OVERVIEW_ACCOUNT_TRANSFER_MIN_USD = 100;
 export const OVERVIEW_ACCOUNT_TRANSFER_MAX_USD = 150_000;
 
-/** Mock：团队账户可用余额（USD）。 */
+/** Mock：团队账户初始可用余额（USD）；运行时以 `overviewSummaryBalanceSession` 为准。 */
 export const OVERVIEW_ACCOUNT_TRANSFER_TEAM_AVAILABLE_USD = 128_430.52;
 
 /** Mock：划转金额美分尾数为该值时模拟链上失败（如 $100.77）。 */

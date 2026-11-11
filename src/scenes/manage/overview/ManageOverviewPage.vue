@@ -34,6 +34,7 @@ import type { OverviewGasRechargeAccountKey } from './overviewRechargeSkidData';
 import { useManageOverviewBalanceReminderForm } from './useManageOverviewBalanceReminderForm';
 import { registerManageOverviewOverlay } from './manageOverviewOverlayContext';
 import { useManageOverviewAccountTransferFlow } from './useManageOverviewAccountTransferFlow';
+import { useOverviewSummaryBalanceDisplay } from './overviewSummaryBalanceSession';
 import { useManageOverviewGasProxyPaymentFlow } from './useManageOverviewGasProxyPaymentFlow';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { useScrollChromeScrim } from '@/scenes/tasks/shared/useScrollChromeScrim';
@@ -134,26 +135,29 @@ const { canScroll, topScrim, update } = useScrollChromeScrim(scrollRef, {
 
 const toolbarScrimActive = computed(() => canScroll.value && topScrim.value);
 
-const summaryAccounts = [
+const { teamSummaryAmount, gasSummaryAmount, applyOverviewAccountTransferSettled } =
+  useOverviewSummaryBalanceDisplay();
+
+const summaryAccounts = computed(() => [
   {
     key: 'team',
     titleKey: 'Team Account',
     descriptionKey: 'Overview Team Account Description',
-    amount: '$128,430.52',
+    amount: teamSummaryAmount.value,
   },
   {
     key: 'gas',
     titleKey: 'Gas Account',
     descriptionKey: 'Overview Gas Account Description',
-    amount: '$297,252.25',
+    amount: gasSummaryAmount.value,
   },
-] as const;
+] as const);
 
 /** 未开通 Gas：摘要区不展示 Gas 账户卡片。 */
 const visibleSummaryAccounts = computed(() =>
   gasProxyEnabled.value
-    ? summaryAccounts
-    : summaryAccounts.filter((account) => account.key !== 'gas'),
+    ? summaryAccounts.value
+    : summaryAccounts.value.filter((account) => account.key !== 'gas'),
 );
 
 /** 未开通 Gas：Gas 区仅保留 TRX（与团队账户共用）；开通后展示全部链账户。 */
@@ -242,6 +246,10 @@ const accountTransferFlow = useManageOverviewAccountTransferFlow({
   },
   transactionPasswordSet,
   setTransactionPasswordDialogOpen,
+  onTransferSettled: (amountUsd) => {
+    applyOverviewAccountTransferSettled(amountUsd);
+    replayOdometer();
+  },
 });
 
 function submitTradePasswordForOverlay(code: string): boolean {

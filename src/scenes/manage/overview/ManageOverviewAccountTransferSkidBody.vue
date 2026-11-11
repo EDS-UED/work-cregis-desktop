@@ -21,10 +21,10 @@ import {
 } from './useManageOverviewAccountTransferFlow';
 import {
   listOverviewAccountTransferTargets,
-  OVERVIEW_ACCOUNT_TRANSFER_TEAM_AVAILABLE_USD,
   resolveOverviewAccountTransferDefaultTarget,
   type OverviewAccountTransferTargetKey,
 } from './overviewAccountTransferSkidData';
+import { overviewTeamAvailableUsd } from './overviewSummaryBalanceSession';
 import styles from './ManageOverviewAccountTransferSkidBody.module.css';
 
 /** 划转 Skid 从/到账户触发器宽（相对当前 adaptive 宽约 +40px）。 */
@@ -88,7 +88,7 @@ function selectTarget(key: OverviewAccountTransferTargetKey, close: () => void) 
 }
 
 function fillAllAmount() {
-  amountRaw.value = String(OVERVIEW_ACCOUNT_TRANSFER_TEAM_AVAILABLE_USD);
+  amountRaw.value = String(overviewTeamAvailableUsd());
 }
 
 const emit = defineEmits<{
