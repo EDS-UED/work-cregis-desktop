@@ -5,14 +5,19 @@ import {
   pickFeeRecordGasAccountListSlot,
   resolveFeeRecordGasListMetaFromDisplayKey,
 } from './feeRecordGasAccountListShape';
+import { isFeeRecordIncomeOperation } from './feeRecordOperationDirection';
+
+function feeRecordListAmountSign(row: FeeRecordRow): '+' | '-' {
+  return isFeeRecordIncomeOperation(row.operationTypeKey) ? '+' : '-';
+}
 
 function formatFeeRecordFiatAmount(row: FeeRecordRow): string {
   const amount = formatGroupedTrimmedAmount(row.amount);
-  return `$${amount}`;
+  return `${feeRecordListAmountSign(row)}$${amount}`;
 }
 
 function formatFeeRecordCryptoAmount(row: FeeRecordRow): string {
-  return formatGroupedTrimmedAmount(row.amount);
+  return `${feeRecordListAmountSign(row)}${formatGroupedTrimmedAmount(row.amount)}`;
 }
 
 export function buildFeeRecordTimeCustomize(row: FeeRecordRow): Record<string, unknown> {
