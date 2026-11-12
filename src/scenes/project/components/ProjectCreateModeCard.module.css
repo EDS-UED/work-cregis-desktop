@@ -296,22 +296,18 @@
 }
 
 .modeTitle {
-  composes: typography-body-medium from global;
   color: var(--text-base-primary);
 }
 
 .modeDescription {
-  composes: typography-footnote from global;
   color: var(--text-base-secondary);
 }
 
 .modeDescriptionBodySmall {
-  composes: typography-body-small from global;
   color: var(--text-base-secondary);
 }
 
 .modeDescriptionFootnotePrimary {
-  composes: typography-footnote from global;
   color: var(--text-base-primary);
 }
 

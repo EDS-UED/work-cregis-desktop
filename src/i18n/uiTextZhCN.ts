@@ -1441,6 +1441,8 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Multi-Sign': '多签',
   'Manual Transfer': '人工转账',
   'Auto rule manual withdrawal title': '人工转账',
+  'Auto rule manual withdrawal description': '通过客户端转出',
+  'Auto rule API payout description': '包括钱包提币和子地址提币',
   'Sub-Address Transfer': '子地址发送',
   Swap: 'Swap',
   Remittance: '汇款',

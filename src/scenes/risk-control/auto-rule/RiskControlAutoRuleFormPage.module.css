@@ -78,9 +78,7 @@
 
 /** 组内标题：与 option 行同属 `optionCardGroup` 边框内。 */
 .outflowRuleTypeLabel {
-  font-size: var(--eds-body-small-size);
-  font-weight: var(--eds-body-small-strong-weight);
-  line-height: var(--eds-body-small-line-height);
+  composes: typography-body-small-strong from global;
   color: var(--text-base-secondary);
   margin: var(--spacing-1) var(--spacing-2);
 }

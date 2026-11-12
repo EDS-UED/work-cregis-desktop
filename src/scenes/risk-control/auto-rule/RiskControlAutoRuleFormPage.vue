@@ -465,7 +465,7 @@ defineExpose({
                     radio-name="auto-rule-withdrawal-type"
                     radio-value="manual"
                     :title="ui('Auto rule manual withdrawal title')"
-                    :description="''"
+                    :description="ui('Auto rule manual withdrawal description')"
                     :selected="isManualOutflowSelected"
                     @select="onWithdrawalTypeSelect(WITHDRAWAL_TYPE_MANUAL)"
                   >
@@ -509,7 +509,7 @@ defineExpose({
                     radio-name="auto-rule-withdrawal-type"
                     radio-value="api"
                     :title="ui('API Payout')"
-                    :description="''"
+                    :description="ui('Auto rule API payout description')"
                     :selected="isApiOutflowSelected"
                     @select="onWithdrawalTypeSelect(WITHDRAWAL_TYPE_API)"
                   >

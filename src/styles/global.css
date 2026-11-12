@@ -71,6 +71,18 @@ body::after {
   margin: 0;
 }
 
+/**
+ * EDS spec/typography/global.json — geometricPrecision + 灰度抗锯齿。
+ * @eds/desktop-tokens 已挂在 body / input / textarea / button；业务 subtree 在 .desktopTokens 下再显式铺开，
+ * 避免 WebKit 对部分 typography 叶子不体现继承（与 EgInput 内联 text-rendering 同类）。
+ */
+.desktopTokens,
+.desktopTokens * {
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* ── 容器层：EgTooltipPanel → effect-container-box ── */
 #app > .app-preview {
   position: relative;

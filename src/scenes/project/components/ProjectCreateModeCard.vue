@@ -147,6 +147,13 @@ const descriptionClass = computed(() => {
   return styles.modeDescription;
 });
 
+const descriptionTypographyClass = computed(() => {
+  if (props.descriptionTypography === 'body-small') {
+    return 'typography-body-small';
+  }
+  return 'typography-footnote';
+});
+
 const emit = defineEmits<{
   select: [];
 }>();
@@ -196,8 +203,11 @@ function onRowActivate(event: MouseEvent | KeyboardEvent) {
             <slot name="media" />
           </div>
           <div :class="itemValueStackClass">
-            <span :class="styles.modeTitle">{{ title }}</span>
-            <span v-if="description || $slots.description" :class="descriptionClass">
+            <span :class="['typography-body-medium', styles.modeTitle]">{{ title }}</span>
+            <span
+              v-if="description || $slots.description"
+              :class="[descriptionTypographyClass, descriptionClass]"
+            >
               <template v-if="description">{{ description }}</template>
               <slot v-else name="description" />
             </span>
@@ -243,8 +253,11 @@ function onRowActivate(event: MouseEvent | KeyboardEvent) {
           <slot name="media" />
         </div>
         <div :class="itemValueStackClass">
-          <span :class="styles.modeTitle">{{ title }}</span>
-          <span v-if="description || $slots.description" :class="descriptionClass">
+          <span :class="['typography-body-medium', styles.modeTitle]">{{ title }}</span>
+          <span
+            v-if="description || $slots.description"
+            :class="[descriptionTypographyClass, descriptionClass]"
+          >
             <template v-if="description">{{ description }}</template>
             <slot v-else name="description" />
           </span>
