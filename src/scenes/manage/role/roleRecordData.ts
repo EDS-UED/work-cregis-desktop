@@ -1,5 +1,6 @@
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { formatWebhookCreatorDisplay } from '@/scenes/manage/webhook/webhookMockData';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 import { MANAGE_ROLE_MENU_ITEM } from '../manageMenuData';
 import { isManageRoleRecordDeleted } from './manageRoleDeletedRecordIds';
 
@@ -15,6 +16,7 @@ const ROLE_NAME_FIXED = [
 
 const ROLE_NAME_TEST_PREFIX = 'Test_';
 
+/** email-display-seed */
 const CREATOR_POOL = [
   { name: 'Alex Chen', email: 'alex.chen@cregis.com' },
   { name: 'Dana Wu', email: 'dana.wu@cregis.com' },
@@ -78,7 +80,7 @@ function buildRoleRow(rowIndex: number): PaymentEngineRecordRow {
     receivedSymbol: 'USDT',
     ruleName: roleName,
     logOperatorName: creator.name,
-    webhookCreatorEmail: creator.email,
+    webhookCreatorEmail: maskDisplayEmail(creator.email),
     webhookCreatorDisplay: formatWebhookCreatorDisplay(creator.name, creator.email),
   };
 }

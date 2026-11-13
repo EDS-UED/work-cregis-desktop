@@ -1,5 +1,6 @@
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { formatWebhookCreatorDisplay } from '@/scenes/manage/webhook/webhookMockData';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 import { MANAGE_MEMBER_MENU_ITEM, MANAGE_ROLE_MENU_ITEM } from '../manageMenuData';
 import { buildManageRoleRecordRows } from '../role/roleRecordData';
 import { isManageMemberRecordDeleted } from './manageMemberDeletedRecordIds';
@@ -12,6 +13,7 @@ const MEMBER_NICKNAME_FIXED = [
   'Treasury',
 ] as const;
 
+/** email-display-seed — 出仓前经 maskDisplayEmail */
 const MEMBER_EMAIL_FIXED = [
   'scofeild806@gmail.com',
   'alex.chen@cregis.com',
@@ -28,6 +30,7 @@ const MEMBER_NICKNAME_POOL = [
   'Jordan Park',
 ] as const;
 
+/** email-display-seed */
 const MEMBER_EMAIL_POOL = [
   'ben@cregis.com',
   'chris@proton.me',
@@ -98,7 +101,7 @@ function buildMemberRow(rowIndex: number, roleRow: PaymentEngineRecordRow): Paym
     manageMemberStatusKey: resolveMemberStatusKey(rowIndex),
     manageMemberShowCreatorTag: rowIndex === 0,
     logOperatorName: nickname,
-    webhookCreatorEmail: email,
+    webhookCreatorEmail: maskDisplayEmail(email),
     webhookCreatorDisplay: formatWebhookCreatorDisplay(nickname, email),
   };
 }

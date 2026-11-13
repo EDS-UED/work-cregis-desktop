@@ -2,16 +2,40 @@ import {
   createDetailApplyItemRow,
   type DetailItemData,
 } from '@eds/desktop-components';
+import { buildGeneralStructureRowValues } from '../list-field/tasksListFieldGeneralStructureRowData';
 import {
   resolveInitiationSourceForRow,
-  type InitiationSourceKind,
 } from './resolveInitiationSourceForRow';
+import { resolveSwapAppEntryForRow } from './swapAppEntries';
+import { resolveWaasProjectNameForRow } from './waasProjectNames';
 
-const INITIATION_SOURCE_TYPE_LABEL_KEYS: Record<InitiationSourceKind, string> = {
-  wallet: 'Wallet',
-  application: 'App',
-  'waas-project': 'WaaS',
+const MEMBER_INITIATOR_DEVICE_INFO = {
+  deviceType: 'MacOS(v3.6.0)',
+  deviceId: 'AXSMJSAXJQ',
+  ip: '192.168.2.1',
 };
+
+function buildInitiationSourcePlainTextRow(
+  title: string,
+  value: string,
+): DetailItemData {
+  return {
+    ...createDetailApplyItemRow('text', {
+      key: 'initiation-source',
+      title,
+      value,
+    }),
+    titleIcon: 'eds-arrow-launch-circle',
+  };
+}
+
+function parseInitiatorListPrimaryValue(value: string): { name: string; email?: string } {
+  const match = value.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (match) {
+    return { name: match[1]!.trim(), email: match[2]!.trim() };
+  }
+  return { name: value.trim() };
+}
 
 export function buildDetailInitiationSourceItem(
   rowIndex: number,
@@ -19,16 +43,36 @@ export function buildDetailInitiationSourceItem(
 ): DetailItemData {
   const source = resolveInitiationSourceForRow(rowIndex);
   const title = translate('Initiation Source');
-  const typeLabel = translate(INITIATION_SOURCE_TYPE_LABEL_KEYS[source.kind]);
+
+  if (source.kind === 'application') {
+    return buildInitiationSourcePlainTextRow(
+      title,
+      resolveSwapAppEntryForRow(rowIndex).label,
+    );
+  }
+
+  if (source.kind === 'waas-project') {
+    return buildInitiationSourcePlainTextRow(
+      title,
+      resolveWaasProjectNameForRow(rowIndex),
+    );
+  }
+
+  const { name, email } = parseInitiatorListPrimaryValue(
+    buildGeneralStructureRowValues(rowIndex).value,
+  );
 
   return {
     ...createDetailApplyItemRow('initiated-by', {
       key: 'initiation-source',
       title,
-      value: typeLabel,
+      value: name,
+      ...(email ? { valueSecondary: email } : {}),
     }),
-    // initiated-by 默认 valueType=user 会渲染头像；显式关掉 value 侧 symbol，保留标题 eds-arrow-launch-circle。
+    valueType: 'user',
+    valueSymbolAvatarName: name,
     showValueSymbol: true,
-    valueSymbolKind: undefined,
+    valueSymbolKind: 'avatar',
+    valueDeviceInfo: { ...MEMBER_INITIATOR_DEVICE_INFO },
   };
 }

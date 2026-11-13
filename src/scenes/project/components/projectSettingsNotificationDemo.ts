@@ -1,3 +1,5 @@
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
+
 export type ProjectSettingsNotificationMember = {
   id: string;
   name: string;
@@ -18,7 +20,14 @@ export type ProjectSettingsNotificationItem = {
   overflowCount?: number;
 };
 
-const CALLBACK_FAILED_ALL_MEMBERS: ProjectSettingsNotificationMember[] = [
+function withMaskedMemberEmail(
+  member: ProjectSettingsNotificationMember,
+): ProjectSettingsNotificationMember {
+  return { ...member, email: maskDisplayEmail(member.email) };
+}
+
+/** email-display-seed */
+const CALLBACK_FAILED_ALL_MEMBERS_RAW: ProjectSettingsNotificationMember[] = [
   { id: 'mariano', name: 'Mariano', email: 'Mariano@x.com', colorIndex: 0 },
   { id: 'erika', name: 'Erika Mateo', email: 'erike@cregis.com', colorIndex: 1 },
   { id: 'azar', name: 'Azar Hosseini', email: 'hosseini@htomail.com', colorIndex: 9 },
@@ -30,19 +39,33 @@ const CALLBACK_FAILED_ALL_MEMBERS: ProjectSettingsNotificationMember[] = [
   { id: 'ivan', name: 'Ivan Petrov', email: 'ivan@x.com', colorIndex: 16 },
 ];
 
+const CALLBACK_FAILED_ALL_MEMBERS =
+  CALLBACK_FAILED_ALL_MEMBERS_RAW.map(withMaskedMemberEmail);
+
 export const NOTIFICATION_MEMBER_PREVIEW_LIMIT = 5;
 
 export type ProjectSettingsNotificationPreset = 'waas' | 'waas-order' | 'payment-engine';
 
 const INSUFFICIENT_BALANCE_ITEM_ID = 'insufficient-balance';
 
-export function resolveNotificationDemoItems(preset: ProjectSettingsNotificationPreset) {
-  if (preset === 'waas-order') {
-    return NOTIFICATION_DEMO_ITEMS;
-  }
-  return NOTIFICATION_DEMO_ITEMS.filter((item) => item.id !== INSUFFICIENT_BALANCE_ITEM_ID);
+function maskNotificationItemMembers(
+  item: ProjectSettingsNotificationItem,
+): ProjectSettingsNotificationItem {
+  return {
+    ...item,
+    members: item.members?.map(withMaskedMemberEmail),
+    allMembers: item.allMembers?.map(withMaskedMemberEmail),
+  };
 }
 
+export function resolveNotificationDemoItems(preset: ProjectSettingsNotificationPreset) {
+  const items = preset === 'waas-order'
+    ? NOTIFICATION_DEMO_ITEMS
+    : NOTIFICATION_DEMO_ITEMS.filter((item) => item.id !== INSUFFICIENT_BALANCE_ITEM_ID);
+  return items.map(maskNotificationItemMembers);
+}
+
+/** email-display-seed — 经 resolveNotificationDemoItems 脱敏后展示 */
 export const NOTIFICATION_DEMO_ITEMS: ProjectSettingsNotificationItem[] = [
   {
     id: 'callback-failed',

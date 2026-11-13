@@ -11,7 +11,7 @@ const props = defineProps<{
 
 const customize = computed(() => {
   const name = props.row.logOperatorName?.trim() || 'Treasury';
-  const email = props.row.webhookCreatorEmail?.trim() || 'treasury@cregis.com';
+  const email = props.row.webhookCreatorEmail?.trim() || 't******y@cregis.com';
   const display =
     props.row.webhookCreatorDisplay?.trim()
     || formatWebhookCreatorDisplay(name, email);

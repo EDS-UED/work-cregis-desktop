@@ -45,7 +45,7 @@ export const OVERVIEW_BILL_GENERATION_RECORDS: readonly OverviewBillGenerationRe
     timezoneLabel: 'UTC+8',
     languageLabel: 'English',
     operatorName: 'Minki',
-    operatorEmailMasked: 'm*******@cregis.io',
+    operatorEmailMasked: 'm******i@cregis.io',
     generatedAt: '2026-11-05 09:55:52',
   },
   {
@@ -54,7 +54,7 @@ export const OVERVIEW_BILL_GENERATION_RECORDS: readonly OverviewBillGenerationRe
     timezoneLabel: 'UTC+8',
     languageLabel: 'English',
     operatorName: 'Minki',
-    operatorEmailMasked: 'm*******@cregis.io',
+    operatorEmailMasked: 'm******i@cregis.io',
     generatedAt: '2026-02-01 09:12:08',
   },
   {
@@ -63,7 +63,7 @@ export const OVERVIEW_BILL_GENERATION_RECORDS: readonly OverviewBillGenerationRe
     timezoneLabel: 'UTC+8',
     languageLabel: 'English',
     operatorName: 'Minki',
-    operatorEmailMasked: 'm*******@cregis.io',
+    operatorEmailMasked: 'm******i@cregis.io',
     generatedAt: '2025-12-28 16:40:11',
   },
 ];

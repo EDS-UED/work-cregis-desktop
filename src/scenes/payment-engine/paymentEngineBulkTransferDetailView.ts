@@ -47,7 +47,7 @@ export function buildPaymentEngineBulkTransferDetailView(
   const detail = resolvePaymentBulkTransferDetailRecord(row);
   const currencySymbol = row.currencySymbol ?? row.orderSymbol;
   const cryptoName =
-    resolveCryptoNameFromSymbol(currencySymbol) ?? 'eds-usdt-tether';
+    resolveCryptoNameFromSymbol(currencySymbol) ?? 'eds-usdt-tether usd';
 
   return {
     headline: {

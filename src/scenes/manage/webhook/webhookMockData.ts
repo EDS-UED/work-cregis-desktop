@@ -1,3 +1,5 @@
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
+
 export type WebhookPushStatus = 'success' | 'failed';
 
 export const WEBHOOK_MOCK_ROW_COUNT = 28;
@@ -58,6 +60,7 @@ const WEBHOOK_NAME_POOL = [
   'Ops Incident Notifier',
 ] as const;
 
+/** email-display-seed */
 const CREATOR_POOL = [
   { name: 'Alex Chen', email: 'alex.chen@cregis.com' },
   { name: 'Dana Wu', email: 'dana.wu@cregis.com' },
@@ -83,11 +86,7 @@ function padRecordTime(baseDay: number, hour: number, minute: number, second: nu
 }
 
 export function maskWebhookCreatorEmail(email: string): string {
-  const [local, domain] = email.split('@');
-  if (!local || !domain) return email;
-  if (local.length === 1) return `${local}***@${domain}`;
-  if (local.length <= 4) return `${local[0]}***${local.at(-1) ?? ''}@${domain}`;
-  return `${local[0]}******${local.at(-1) ?? ''}@${domain}`;
+  return maskDisplayEmail(email);
 }
 
 export function formatWebhookCreatorDisplay(name: string, email: string): string {
@@ -116,7 +115,7 @@ export function buildInitialWebhookConfigs(): WebhookConfigRecord[] {
       name: index < 3 ? name : `${name} ${index + 1}`,
       eventKey: 'Dangerous transaction',
       creatorName: creator.name,
-      creatorEmail: creator.email,
+      creatorEmail: maskDisplayEmail(creator.email),
       createdAt: padRecordTime(Math.max(1, day), Math.max(0, hour), minute % 60, index % 60),
       enabled,
       endpointUrl: `https://hooks.example.com/aml/${index + 1}`,

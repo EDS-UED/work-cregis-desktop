@@ -6,6 +6,7 @@ import {
   buildBusinessTypeSecondaryLabel,
 } from './businessTypeDisplay';
 import type { AppLocale } from '@/composables/useAppLocale';
+import { formatInitiatorValue } from './tasksListFieldGeneralStructureRowData';
 
 const COUNTDOWN_SUPPRESSED_STATUS_LABELS = new Set([
   'Signature Passed',
@@ -19,7 +20,7 @@ export function shouldShowListBusinessTypeCountdown(rowIndex: number, menuItem?:
 
 /** Showcase list-field-general-structure customizeDefaults — Data List 通用结构列。 */
 export const tasksListFieldGeneralStructureDefaults: Record<string, unknown> = {
-  value: 'Name (t******c@gmail.com)',
+  value: formatInitiatorValue('Name', 'testabc@gmail.com'),
   secondaryValue: 'Wallet｜Transfer',
   lineLayout: 'double',
   minWidth: '',

@@ -19,6 +19,7 @@ import {
   isWaasPayoutTransferType,
   resolveWaasProjectNameForRow,
 } from './waasProjectNames';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 
 export type DetailProgressScenario =
   | 'approval-workflow'
@@ -31,14 +32,6 @@ export function buildTaskCollaborationNumber(rowIndex: number): string {
 }
 
 type ProgressMemberSeed = ApprovalProgressMember;
-
-function maskEmail(email: string): string {
-  const [local, domain] = email.split('@');
-  if (!local || !domain) return email;
-  const visible = local.slice(0, 1);
-  const tail = local.slice(-1);
-  return `${visible}******${tail}@${domain}`;
-}
 
 function formatUtcTimestamp(date: Date, offsetHours: number): string {
   const sign = offsetHours >= 0 ? '+' : '-';
@@ -59,7 +52,7 @@ function member(
   const acted = Boolean(options.atDisplay);
   return {
     name,
-    emailMasked: maskEmail(email),
+    emailMasked: maskDisplayEmail(email),
     avatarName,
     atDisplay: options.atDisplay,
     deviceInfo: acted ? options.deviceInfo : undefined,
@@ -72,20 +65,21 @@ const defaultDeviceInfo = {
   ip: '192.168.2.1',
 };
 
+/** email-display-seed — member() 内 maskDisplayEmail */
 function buildBaseMembers() {
   const appliedAt = new Date(Date.UTC(2027, 11, 23, 2, 23, 0));
-  const initiator = member('Alex Mah.', 't******g@gmail.com', 'Alex Mah', {
+  const initiator = member('Alex Mah.', 'alexmah@gmail.com', 'Alex Mah', {
     atDisplay: '2027-12-23 02:23:00',
     deviceInfo: defaultDeviceInfo,
   });
-  const emily = member('Emily Stone', 'e******e@gmail.com', 'Emily Stone', {
+  const emily = member('Emily Stone', 'emilystone@gmail.com', 'Emily Stone', {
     atDisplay: '2027-12-23 10:25:00',
     deviceInfo: defaultDeviceInfo,
   });
-  const frank = member('Frank', 'f******k@gmail.com');
-  const ethan = member('Ethan Chen', 'e******n@gmail.com', 'Ethan Chen');
-  const jordan = member('Jordan', 'j******n@gmail.com', 'Jordan');
-  const taylor = member('Taylor Lee', 't******e@gmail.com', 'Taylor Lee');
+  const frank = member('Frank', 'frankk@gmail.com');
+  const ethan = member('Ethan Chen', 'ethanchen@gmail.com', 'Ethan Chen');
+  const jordan = member('Jordan', 'jordann@gmail.com', 'Jordan');
+  const taylor = member('Taylor Lee', 'taylorlee@gmail.com', 'Taylor Lee');
 
   return {
     appliedAt,
@@ -112,9 +106,9 @@ function buildApacNode(
     atDisplay: '2027-12-23 10:23:00',
     members: [
       { ...initiator, atDisplay: '2027-12-23 10:23:00', deviceInfo: defaultDeviceInfo },
-      member('Emily Stone', 'e******e@gmail.com', 'Emily Stone'),
-      member('Frank', 'f******k@gmail.com'),
-      member('Sophia Smith', 's******h@gmail.com', 'Cooper'),
+      member('Emily Stone', 'emilystone@gmail.com', 'Emily Stone'),
+      member('Frank', 'frankk@gmail.com'),
+      member('Sophia Smith', 'sophiasmith@gmail.com', 'Cooper'),
     ],
   };
 }

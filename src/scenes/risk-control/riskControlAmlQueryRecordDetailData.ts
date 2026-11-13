@@ -7,6 +7,7 @@ import type {
 } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { resolveCurrencyRowPreset } from '@/scenes/shared/egDataListMockData';
 import { resolveRiskControlDemoPolicyName } from './riskControlDemoPolicyNames';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 import { resolveAmlQueryNetworkCryptoName } from './riskControlAmlQueryOptions';
 import type {
   RiskControlAmlCategoryShare,
@@ -189,14 +190,18 @@ function resolveDemoWaasProject(rowIndex: number): string {
   return projects[rowIndex % projects.length] ?? projects[0]!;
 }
 
+/** email-display-seed */
+const DEMO_REQUESTER_EMAIL_SEEDS = [
+  'testz@gmail.com',
+  'alexn@cregis.com',
+  'casey@example.com',
+  'morganb@company.io',
+] as const;
+
 function resolveDemoRequesterEmailMasked(rowIndex: number): string {
-  const emails = [
-    't******z@gmail.com',
-    'a******n@cregis.com',
-    'c******e@example.com',
-    'm******b@company.io',
-  ];
-  return emails[rowIndex % emails.length] ?? emails[0]!;
+  const raw = DEMO_REQUESTER_EMAIL_SEEDS[rowIndex % DEMO_REQUESTER_EMAIL_SEEDS.length]
+    ?? DEMO_REQUESTER_EMAIL_SEEDS[0]!;
+  return maskDisplayEmail(raw);
 }
 
 type AmlRiskCustomStyle = RiskControlAmlQueryRecordDetail['riskCustomStyle'];

@@ -81,6 +81,8 @@ import {
 import { useDetailAmlSearchFlow } from '@/scenes/tasks/shared/useDetailAmlSearchFlow';
 import { applyDetailAmlSearchSectionOverlay } from '@/scenes/tasks/shared/applyDetailAmlSearchSectionOverlay';
 import DetailAmlSearchToastHost from '@/scenes/tasks/shared/DetailAmlSearchToastHost.vue';
+import { applyPaymentEngineDetailSectionsPolicy } from './applyPaymentEngineDetailItemPolicy';
+import { applyRiskControlAmlDetailSectionsPolicy } from '@/scenes/risk-control/applyRiskControlAmlDetailItemPolicy';
 
 const props = withDefaults(
   defineProps<{
@@ -178,6 +180,22 @@ onBeforeUnmount(() => {
 });
 const isAutoRuleRecordDetail = computed(() => isRiskControlAutoRulesMenuItem(props.menuItem));
 const isLogsRecordDetail = computed(() => isRiskControlLogsMenuItem(props.menuItem));
+
+/** 支付引擎业务详情：去掉设备信息 / 地址簿·AML / 矿工费代付 tag。 */
+const applyPaymentEngineDetailChromePolicy = computed(
+  () =>
+    !isAmlRecordDetail.value
+    && !isAutoRuleRecordDetail.value
+    && !isLogsRecordDetail.value,
+);
+
+/** AML 分支（查询记录 / 自动规则 / 日志）：仅隐藏行内 AML 筛查，其它挂件保留。 */
+const applyRiskControlAmlDetailChromePolicy = computed(
+  () =>
+    isAmlRecordDetail.value
+    || isAutoRuleRecordDetail.value
+    || isLogsRecordDetail.value,
+);
 
 const orderRecordTabLabels = computed(() => {
   void locale.value;
@@ -515,48 +533,59 @@ const baseSections = computed(() => {
 });
 
 const sections = computed(() => {
-  const result = baseSections.value;
-  if (!props.detail || expandedDetailItemKeys.value.size === 0) {
-    return result;
+  if (!props.detail) return [];
+
+  let result = baseSections.value;
+
+  if (expandedDetailItemKeys.value.size > 0) {
+    const expandedEntriesByKey = new Map<
+      string,
+      ReturnType<typeof buildAutoRuleExpandedCurrencyValueEntries>
+    >();
+
+    if (
+      isAutoRuleRecordDetail.value
+      && expandedDetailItemKeys.value.has(AUTO_RULE_CURRENCIES_ITEM_KEY)
+    ) {
+      const detail = resolveRiskControlAutoRuleRecordDetail(props.detail);
+      expandedEntriesByKey.set(
+        AUTO_RULE_CURRENCIES_ITEM_KEY,
+        buildAutoRuleExpandedCurrencyValueEntries(detail, ui),
+      );
+    }
+
+    if (
+      isLogsRecordDetail.value
+      && expandedDetailItemKeys.value.has(LOG_CURRENCIES_ITEM_KEY)
+    ) {
+      const detail = resolveRiskControlLogRecordDetail(props.detail);
+      expandedEntriesByKey.set(
+        LOG_CURRENCIES_ITEM_KEY,
+        buildLogExpandedCurrencyValueEntries(detail, ui),
+      );
+    }
+
+    if (expandedEntriesByKey.size > 0) {
+      result = applyDetailCurrencyExpand(
+        result,
+        expandedDetailItemKeys.value,
+        expandedEntriesByKey,
+      );
+    }
   }
 
-  const expandedEntriesByKey = new Map<string, ReturnType<typeof buildAutoRuleExpandedCurrencyValueEntries>>();
-
-  if (
-    isAutoRuleRecordDetail.value
-    && expandedDetailItemKeys.value.has(AUTO_RULE_CURRENCIES_ITEM_KEY)
-  ) {
-    const detail = resolveRiskControlAutoRuleRecordDetail(props.detail);
-    expandedEntriesByKey.set(
-      AUTO_RULE_CURRENCIES_ITEM_KEY,
-      buildAutoRuleExpandedCurrencyValueEntries(detail, ui),
-    );
-  }
-
-  if (
-    isLogsRecordDetail.value
-    && expandedDetailItemKeys.value.has(LOG_CURRENCIES_ITEM_KEY)
-  ) {
-    const detail = resolveRiskControlLogRecordDetail(props.detail);
-    expandedEntriesByKey.set(
-      LOG_CURRENCIES_ITEM_KEY,
-      buildLogExpandedCurrencyValueEntries(detail, ui),
-    );
-  }
-
-  const expanded =
-    expandedEntriesByKey.size === 0
-      ? result
-      : applyDetailCurrencyExpand(
-          result,
-          expandedDetailItemKeys.value,
-          expandedEntriesByKey,
-        );
-
-  return applyDetailAmlSearchSectionOverlay(expanded, {
+  result = applyDetailAmlSearchSectionOverlay(result, {
     resultsByKey: amlSearchResultsByKey.value,
     translate: ui,
   });
+
+  if (applyPaymentEngineDetailChromePolicy.value) {
+    result = applyPaymentEngineDetailSectionsPolicy(result);
+  } else if (applyRiskControlAmlDetailChromePolicy.value) {
+    result = applyRiskControlAmlDetailSectionsPolicy(result);
+  }
+
+  return result;
 });
 
 function onItemValueLinkClick(key: string) {

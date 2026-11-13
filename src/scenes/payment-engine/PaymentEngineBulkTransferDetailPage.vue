@@ -4,6 +4,7 @@ import { EgDetail, EgDivider, EgTabs } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import LayoutChromeScrollPageChrome from '@/scenes/project/LayoutChromeScrollPageChrome.vue';
 import SigningBatchDataListPaginerBar from '@/scenes/tasks/signing/batch/SigningBatchDataListPaginerBar.vue';
+import { applyPaymentEngineDetailSectionsPolicy } from './applyPaymentEngineDetailItemPolicy';
 import { buildPaymentEngineBulkTransferDetailSections } from './buildPaymentEngineBulkTransferDetailSections';
 import { buildPaymentEngineBulkTransferDetailView } from './paymentEngineBulkTransferDetailView';
 import PaymentEngineBulkTransferTransferRecordsTable from './PaymentEngineBulkTransferTransferRecordsTable.vue';
@@ -45,7 +46,9 @@ const detailView = computed(() => {
 });
 
 const detailSections = computed(() =>
-  buildPaymentEngineBulkTransferDetailSections(detailView.value, ui),
+  applyPaymentEngineDetailSectionsPolicy(
+    buildPaymentEngineBulkTransferDetailSections(detailView.value, ui),
+  ),
 );
 
 const transferRecordTabLabels = computed(() => [

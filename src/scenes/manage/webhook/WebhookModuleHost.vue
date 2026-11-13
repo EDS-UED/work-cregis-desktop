@@ -92,7 +92,7 @@ const WEBHOOK_QA_CREATED_KEY_DIALOG_RECORD: WebhookConfigRecord = {
   name: 'QA Preview Hook',
   eventKey: 'Dangerous transaction',
   creatorName: 'Alex Chen',
-  creatorEmail: 'alex.chen@cregis.com',
+  creatorEmail: 'a******n@cregis.com',
   createdAt: '2026-10-19 12:00:00',
   enabled: true,
   endpointUrl: 'https://hooks.example.com/qa-created',

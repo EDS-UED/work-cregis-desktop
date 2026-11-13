@@ -4,16 +4,24 @@ import {
   resolveEgDataListDemoRowIndex,
 } from '@/scenes/shared/egDataListMockData';
 import type { DetailProgressMemberDeviceInfo } from '@/scenes/tasks/shared/detailProgressMemberDeviceInfo.types';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 import type {
   PaymentEngineRecordRow,
   PaymentEngineRuleConfigurationDetailRecord,
 } from './paymentEngineRecordConfigs';
 
-const CREATOR_SAMPLES = [
-  { name: 'Alex Mah.', avatarName: 'Alex Mah', emailMasked: 't******z@gmail.com' },
-  { name: 'Emily Stone', avatarName: 'Emily Stone', emailMasked: 'e******k@gmail.com' },
-  { name: 'Ethan Chen', avatarName: 'Ethan Chen', emailMasked: 'a******n@cregis.com' },
+/** email-display-seed */
+const CREATOR_RAW = [
+  { name: 'Alex Mah.', avatarName: 'Alex Mah', email: 'testz@gmail.com' },
+  { name: 'Emily Stone', avatarName: 'Emily Stone', email: 'emilyk@gmail.com' },
+  { name: 'Ethan Chen', avatarName: 'Ethan Chen', email: 'alexn@cregis.com' },
 ] as const;
+
+const CREATOR_SAMPLES = CREATOR_RAW.map((creator) => ({
+  name: creator.name,
+  avatarName: creator.avatarName,
+  emailMasked: maskDisplayEmail(creator.email),
+}));
 
 /** 列表 / 详情 · 创建人 mock（同 rowIndex 同源）。 */
 export function resolveRuleConfigurationCreatorFields(rowIndex: number) {

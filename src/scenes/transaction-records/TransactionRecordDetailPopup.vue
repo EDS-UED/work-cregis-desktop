@@ -21,6 +21,7 @@ import type { TransactionRecordRow } from './transactionRecordTypes';
 import { useDetailAmlSearchFlow } from '@/scenes/tasks/shared/useDetailAmlSearchFlow';
 import { applyDetailAmlSearchSectionOverlay } from '@/scenes/tasks/shared/applyDetailAmlSearchSectionOverlay';
 import DetailAmlSearchToastHost from '@/scenes/tasks/shared/DetailAmlSearchToastHost.vue';
+import { applyTransactionRecordDetailSectionsPolicy } from './applyTransactionRecordDetailItemPolicy';
 
 const props = defineProps<{
   open: boolean;
@@ -76,10 +77,11 @@ const sections = computed(() => {
   void locale.value;
   if (!props.detail) return [];
   const base = buildTransactionRecordDetailSections(props.detail, ui);
-  return applyDetailAmlSearchSectionOverlay(base, {
+  const withAml = applyDetailAmlSearchSectionOverlay(base, {
     resultsByKey: amlSearchResultsByKey.value,
     translate: ui,
   });
+  return applyTransactionRecordDetailSectionsPolicy(withAml);
 });
 
 const parallelOutDetailLines = computed(() => {

@@ -37,7 +37,7 @@ export function addTeamApiConfig(
     permissionsKey: draft.permissionsKey,
     ipWhitelist: draft.ipWhitelist.trim(),
     creatorName: 'Alex Chen',
-    creatorEmail: 'alex.chen@cregis.com',
+    creatorEmail: 'a******n@cregis.com',
     createdAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
     enabled: true,
   };

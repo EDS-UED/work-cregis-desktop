@@ -48,7 +48,7 @@ function buildPaymentExceptionDetailItems(
   translate: (key: string) => string,
 ): DetailItemData[] {
   const cryptoName =
-    resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether';
+    resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether usd';
   const networkTag = detail.networkLabel?.trim() ?? row.currencyNetwork ?? '';
 
   const items: DetailItemData[] = [

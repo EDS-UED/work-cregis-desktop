@@ -4,6 +4,7 @@ import TasksListFieldGeneralStructure from '@/scenes/tasks/list-field/TasksListF
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
 import { resolveWebhookConfigCreatorAvatarColorSeed } from '@/scenes/manage/webhook/filter/buildWebhookConfigCreatorFilterOptions';
 import { formatWebhookCreatorDisplay } from '@/scenes/manage/webhook/webhookMockData';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 
 const props = defineProps<{
   row: PaymentEngineRecordRow;
@@ -20,7 +21,7 @@ const customize = computed(() => {
 
   return {
     value: name,
-    secondaryValue: email || display,
+    secondaryValue: email ? maskDisplayEmail(email) : display,
     initiatorIconKind: 'avatar',
     lineLayout: 'double',
     tooltipTrigger: 'hover',

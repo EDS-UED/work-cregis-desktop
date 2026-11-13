@@ -1387,7 +1387,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   'Miner fee evm payment address title': '地址支付',
   'Miner fee evm payment address description': '由发送方地址支付交易矿工费',
   'Miner fee evm payment gas balance line': '账户余额：{eth} ETH',
-  'Miner fee evm payment balance insufficient text': '余额不足，请',
+  'Miner fee evm payment balance insufficient text': 'Gas 账户余额不足，请',
   'Miner fee evm payment balance recharge link': '充值',
   'Miner fee network stub ton xrp': 'TON / XRP 矿工费界面待接入。',
   'Miner fee network stub evm': '以太坊矿工费界面',

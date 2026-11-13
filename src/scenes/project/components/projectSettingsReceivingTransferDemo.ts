@@ -38,7 +38,7 @@ export const RECEIVING_TRANSFER_DEMO_GROUPS: ProjectSettingsReceivingTransferTok
   {
     id: 'usdt',
     symbol: 'USDT',
-    cryptoName: 'eds-usdt-tether',
+    cryptoName: 'eds-usdt-tether usd',
     multichain: true,
     networks: [
       {

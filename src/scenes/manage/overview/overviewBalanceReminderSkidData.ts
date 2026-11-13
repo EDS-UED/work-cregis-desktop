@@ -14,6 +14,8 @@ export type OverviewBalanceReminderAmountOption = {
   unit: string;
 };
 
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
+
 export type OverviewBalanceReminderRecipientOption = {
   id: string;
   avatarName: string;
@@ -63,57 +65,23 @@ export function listOverviewBalanceReminderAmountOptions(
 /** 提醒对象列表默认展示人数（其余通过「展开全部」显示）。 */
 export const OVERVIEW_BALANCE_REMINDER_RECIPIENT_DEFAULT_VISIBLE = 4;
 
+/** email-display-seed */
+const OVERVIEW_BALANCE_REMINDER_RECIPIENT_RAW = [
+  { id: 'zhang-admin', avatarName: '张三', name: '张三（管理员）', email: 'zhangsan@cregis.com' },
+  { id: 'li-finance', avatarName: '李四', name: '李四（财务）', email: 'lisi@cregis.com' },
+  { id: 'wang-ops', avatarName: '王五', name: '王五（运营）', email: 'wangwu@cregis.com' },
+  { id: 'zhao-dev', avatarName: '赵六', name: '赵六（开发）', email: 'zhaoliu@cregis.com' },
+  { id: 'qian-audit', avatarName: '钱七', name: '钱七（审计）', email: 'qianqi@cregis.com' },
+  { id: 'sun-compliance', avatarName: '孙八', name: '孙八（合规）', email: 'sunba@cregis.com' },
+  { id: 'zhou-product', avatarName: '周九', name: '周九（产品）', email: 'zhoujiu@cregis.com' },
+  { id: 'wu-support', avatarName: '吴十', name: '吴十（客服）', email: 'wushi@cregis.com' },
+] as const;
+
 export const OVERVIEW_BALANCE_REMINDER_RECIPIENT_OPTIONS: readonly OverviewBalanceReminderRecipientOption[] =
-  [
-    {
-      id: 'zhang-admin',
-      avatarName: '张三',
-      name: '张三（管理员）',
-      email: 'zhangsan@cregis.com',
-    },
-    {
-      id: 'li-finance',
-      avatarName: '李四',
-      name: '李四（财务）',
-      email: 'lisi@cregis.com',
-    },
-    {
-      id: 'wang-ops',
-      avatarName: '王五',
-      name: '王五（运营）',
-      email: 'wangwu@cregis.com',
-    },
-    {
-      id: 'zhao-dev',
-      avatarName: '赵六',
-      name: '赵六（开发）',
-      email: 'zhaoliu@cregis.com',
-    },
-    {
-      id: 'qian-audit',
-      avatarName: '钱七',
-      name: '钱七（审计）',
-      email: 'qianqi@cregis.com',
-    },
-    {
-      id: 'sun-compliance',
-      avatarName: '孙八',
-      name: '孙八（合规）',
-      email: 'sunba@cregis.com',
-    },
-    {
-      id: 'zhou-product',
-      avatarName: '周九',
-      name: '周九（产品）',
-      email: 'zhoujiu@cregis.com',
-    },
-    {
-      id: 'wu-support',
-      avatarName: '吴十',
-      name: '吴十（客服）',
-      email: 'wushi@cregis.com',
-    },
-  ];
+  OVERVIEW_BALANCE_REMINDER_RECIPIENT_RAW.map((recipient) => ({
+    ...recipient,
+    email: maskDisplayEmail(recipient.email),
+  }));
 
 export type OverviewBalanceReminderFormState = {
   featureEnabled: boolean;

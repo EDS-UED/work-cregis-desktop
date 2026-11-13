@@ -1,4 +1,5 @@
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 import type { DetailProgressMemberDeviceInfo } from '@/scenes/tasks/shared/detailProgressMemberDeviceInfo.types';
 
 export type RiskControlLogMemberDemo = {
@@ -14,7 +15,7 @@ export type RiskControlLogMemberDemo = {
 export const RISK_CONTROL_LOG_TRIGGER_MEMBER: RiskControlLogMemberDemo = {
   name: 'Alex Mah.',
   avatarName: 'Alex Mah',
-  emailMasked: 't******z@gmail.com',
+  emailMasked: maskDisplayEmail('testz@gmail.com'),
   deviceLabel: 'MacBook Pro (M79D144YL4)',
   deviceInfo: {
     deviceType: 'MacBook Pro',
@@ -28,7 +29,7 @@ export const RISK_CONTROL_LOG_TRIGGER_MEMBER: RiskControlLogMemberDemo = {
 export const RISK_CONTROL_LOG_TEAM_API_MEMBER: RiskControlLogMemberDemo = {
   name: 'Ethan Davis',
   avatarName: 'Ethan Davis',
-  emailMasked: 'e******s@gmail.com',
+  emailMasked: maskDisplayEmail('ethands@gmail.com'),
   deviceLabel: 'MacBook Pro (M79D144YL4)',
   deviceInfo: {
     deviceType: 'MacBook Pro',

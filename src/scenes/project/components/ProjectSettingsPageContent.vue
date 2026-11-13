@@ -26,6 +26,7 @@ import ProjectSettingsReceivingTransferPanel from '@/scenes/project/components/P
 import ProjectSettingsPolicyWalletRow from '@/scenes/project/components/ProjectSettingsPolicyWalletRow.vue';
 import ProjectSettingsSection from '@/scenes/project/components/ProjectSettingsSection.vue';
 import sharedStyles from '@/scenes/waas-project/settings/waasSettings.shared.module.css';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 import styles from '@/scenes/waas-project/WaasProjectSettingsPage.module.css';
 
 export type ProjectSettingsTabPreset = 'waas' | 'waas-order' | 'payment-engine';
@@ -219,7 +220,7 @@ const comboPageConfirmLabel = computed(() =>
                     <span :class="sharedStyles.creatorCluster">
                       <EgAvatar name="N" size="xs" />
                       <span :class="sharedStyles.creatorText">
-                        Binance. Hot Wallet_4 (binance@x.com)
+                        Binance. Hot Wallet_4 ({{ maskDisplayEmail('binance@x.com') }})
                       </span>
                     </span>
                   </template>

@@ -1,4 +1,5 @@
 import { formatWebhookCreatorDisplay } from '@/scenes/manage/webhook/webhookMockData';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 
 export const TEAM_API_MOCK_ROW_COUNT = 28;
 
@@ -22,6 +23,7 @@ export function formatTeamApiCreatorDisplay(name: string, email: string): string
   return formatWebhookCreatorDisplay(name, email);
 }
 
+/** email-display-seed */
 const CREATOR_POOL = [
   { name: 'Alex Chen', email: 'alex.chen@cregis.com' },
   { name: 'Dana Wu', email: 'dana.wu@cregis.com' },
@@ -128,7 +130,7 @@ export function buildInitialTeamApiConfigs(): TeamApiConfigRecord[] {
       permissionsKey: PERMISSION_KEYS[index % PERMISSION_KEYS.length]!,
       ipWhitelist: IP_WHITELIST_DEMO,
       creatorName: creator.name,
-      creatorEmail: creator.email,
+      creatorEmail: maskDisplayEmail(creator.email),
       createdAt: padRecordTime(Math.max(1, day), Math.max(0, hour), minute % 60, index % 60),
       enabled,
     };

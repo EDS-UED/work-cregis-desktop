@@ -34,7 +34,7 @@ export const TASKS_MINER_FEE_QA_SCENARIOS: ShellDebugScenario[] = [
     id: 'tasks-miner-fee-evm-gas-insufficient',
     pageKey: TASKS_SIGNING_PAGE_KEY,
     label: '矿工费 · EVM（余额不足）',
-    description: `${MINER_FEE_QA_OPEN_HINT} · 第 12 条 USDT → 支付方式 → 代付 Gas 下应显示「余额不足，请充值」。`,
+    description: `${MINER_FEE_QA_OPEN_HINT} · 第 12 条 USDT → 支付方式 → 代付 Gas 下应显示「Gas 账户余额不足，请充值」。`,
     apply: applyTaskMinerFeeEvmGasInsufficientSigningQa,
   },
   {

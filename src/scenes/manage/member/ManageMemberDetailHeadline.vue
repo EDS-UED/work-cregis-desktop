@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 import { EgAvatar, EgTag } from '@eds/desktop-components';
 import { useAppI18n } from '@/composables/useAppI18n';
 import type { PaymentEngineRecordRow } from '@/scenes/payment-engine/paymentEngineRecordConfigs';
@@ -14,7 +15,10 @@ const { ui } = useAppI18n();
 
 const nickname = computed(() => props.row.logOperatorName?.trim() || props.row.id);
 
-const email = computed(() => props.row.webhookCreatorEmail?.trim() || '');
+const email = computed(() => {
+  const raw = props.row.webhookCreatorEmail?.trim() || '';
+  return raw ? maskDisplayEmail(raw) : '';
+});
 
 const roleName = computed(() => props.row.ruleName?.trim() || '');
 

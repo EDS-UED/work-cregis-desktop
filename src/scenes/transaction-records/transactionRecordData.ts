@@ -16,6 +16,7 @@ import {
 } from '@/scenes/shared/egDataListMockData';
 import type { CurrencyRowPreset } from '@/scenes/tasks/list-field/tasksListFieldCurrencyRowPresets';
 import type { TransactionRecordDirection, TransactionRecordRow } from './transactionRecordTypes';
+import { formatInitiatorValue } from '@/scenes/tasks/list-field/tasksListFieldGeneralStructureRowData';
 
 /** 交易记录演示数据条数（与 EgDataList 首屏可见行数一致，避免空白占位行）。 */
 export const TRANSACTION_RECORDS_DEMO_TOTAL = 28;
@@ -139,20 +140,27 @@ function resolveTransactionCount(transactionType: string, symbol: string): strin
   return formatGroupedNumber(1);
 }
 
+/** email-display-seed */
 const INITIATOR_DISPLAYS = [
-  'Treasury (t******y@cregis.com)',
-  'Name (t******c@gmail.com)',
-  'Ops Team (o******s@cregis.com)',
+  formatInitiatorValue('Treasury', 'treasury@cregis.com'),
+  formatInitiatorValue('Name', 'testabc@gmail.com'),
+  formatInitiatorValue('Ops Team', 'ops@cregis.com'),
 ] as const;
 
-const SIGNER_DISPLAYS = ['Ethan Davis', 'Jordan Lee', 'Taylor Reed'] as const;
+/** email-display-seed */
+const SIGNER_DISPLAY_SEEDS = [
+  { name: 'Ethan Davis', email: 'ethan.davis@cregis.com' },
+  { name: 'Jordan Lee', email: 'jordan.lee@cregis.com' },
+  { name: 'Taylor Reed', email: 'taylor.reed@cregis.com' },
+] as const;
 
 function resolveInitiatorDisplay(index: number): string {
   return INITIATOR_DISPLAYS[index % INITIATOR_DISPLAYS.length]!;
 }
 
 function resolveSignerDisplay(index: number): string {
-  return SIGNER_DISPLAYS[index % SIGNER_DISPLAYS.length]!;
+  const signer = SIGNER_DISPLAY_SEEDS[index % SIGNER_DISPLAY_SEEDS.length]!;
+  return formatInitiatorValue(signer.name, signer.email);
 }
 
 function resolveCollectionNumber(index: number): string {

@@ -152,7 +152,7 @@ function buildDraft(): TeamApiConfigRecord {
     permissionsKey: 'Wallet',
     ipWhitelist: ipWhitelist.value.trim(),
     creatorName: base?.creatorName ?? 'Alex Chen',
-    creatorEmail: base?.creatorEmail ?? 'alex.chen@cregis.com',
+    creatorEmail: base?.creatorEmail ?? 'a******n@cregis.com',
     createdAt: base?.createdAt ?? new Date().toISOString().replace('T', ' ').slice(0, 19),
     enabled: base?.enabled ?? true,
   };

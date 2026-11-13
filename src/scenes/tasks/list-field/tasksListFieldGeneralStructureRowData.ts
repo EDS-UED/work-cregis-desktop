@@ -4,6 +4,7 @@ import {
   isWaasPayoutTransferType,
   resolveWaasProjectNameForRow,
 } from '../shared/waasProjectNames';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 
 export type GeneralStructureRowValues = {
   value: string;
@@ -18,28 +19,15 @@ export type GeneralStructureRowValues = {
   initiatorAppIcon?: string;
 };
 
-/** 当前登录用户（Me Tag 行统一展示同一发起人）。 */
+/** 当前登录用户（Me Tag 行统一展示同一发起人）。email-display-seed */
 const CURRENT_USER_INITIATOR = {
   displayName: 'Name',
   email: 'testabc@gmail.com',
 } as const;
 
-function maskEmailLocalPart(local: string): string {
-  const trimmed = local.trim();
-  if (!trimmed) return trimmed;
-  if (trimmed.length === 1) return trimmed;
-  if (trimmed.length <= 4) return `${trimmed[0]}***${trimmed.at(-1) ?? ''}`;
-  return `${trimmed[0]}******${trimmed.at(-1) ?? ''}`;
-}
-
-function maskEmailAddress(email: string): string {
-  const [local, domain] = email.split('@');
-  if (!local || !domain) return email;
-  return `${maskEmailLocalPart(local)}@${domain}`;
-}
-
-function formatInitiatorValue(displayName: string, email: string): string {
-  return `${displayName} (${maskEmailAddress(email)})`;
+/** email-display-seed — 出仓脱敏 */
+export function formatInitiatorValue(displayName: string, email: string): string {
+  return `${displayName} (${maskDisplayEmail(email)})`;
 }
 
 function currentUserInitiatorValue(): string {
@@ -59,7 +47,7 @@ function buildMeInitiatorRow(value: string): GeneralStructureRowValues {
   };
 }
 
-/** 发起方主行 demo（0–7）；副行申请时间见 APPLICATION_TIME_ROW_PRESETS。 */
+/** 发起方主行 demo（0–7）；副行申请时间见 APPLICATION_TIME_ROW_PRESETS。email-display-seed */
 const INITIATOR_PRIMARY_PRESETS: readonly GeneralStructureRowValues[] = [
   {
     value: formatInitiatorValue('Treasury', 'treasury@cregis.com'),
@@ -72,7 +60,7 @@ const INITIATOR_PRIMARY_PRESETS: readonly GeneralStructureRowValues[] = [
     secondaryValue: '',
   },
   {
-    value: 'Ben (b******n@gmail.com)',
+    value: formatInitiatorValue('Ben', 'ben@gmail.com'),
     secondaryValue: '',
   },
   {
@@ -80,7 +68,7 @@ const INITIATOR_PRIMARY_PRESETS: readonly GeneralStructureRowValues[] = [
     secondaryValue: '',
   },
   {
-    value: 'Chris (c******s@proton.me)',
+    value: formatInitiatorValue('Chris', 'chris@proton.me'),
     secondaryValue: '',
   },
   {

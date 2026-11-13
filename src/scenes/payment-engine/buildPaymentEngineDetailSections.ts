@@ -60,7 +60,7 @@ function buildSettlementRecordDetailItems(
 ): DetailItemData[] {
   const detail = resolvePaymentSettlementRecordDetail(row);
   const cryptoName =
-    resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether';
+    resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether usd';
   const networkLabel = (row.currencyNetwork ?? row.networkLabel ?? '').trim();
 
   return [
@@ -122,7 +122,7 @@ function buildBulkTransferDetailItems(
   amountLabelKey: string,
 ): DetailItemData[] {
   const cryptoName =
-    resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether';
+    resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether usd';
   const transferId = row.bulkTransferId ?? row.id;
 
   return [

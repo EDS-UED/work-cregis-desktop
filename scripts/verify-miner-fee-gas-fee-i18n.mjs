@@ -13,6 +13,13 @@ const SHOWCASE_MOCK = join(
 );
 const UI_ZH = join(ROOT, 'src/i18n/uiTextZhCN.ts');
 
+/**
+ * 业务 zhCN 已拍板、暂领先 Showcase `gasFeeShowcaseMock` 的条目（EDS 对齐后可删）。
+ */
+const BUSINESS_ZH_AHEAD_OF_SHOWCASE = {
+  'Miner fee evm payment balance insufficient text': 'Gas 账户余额不足，请',
+};
+
 /** 批签 stub / TON 等：Showcase 未列但四网 Popover 会用到。 */
 const EXTRA_MINER_FEE_POPOVER_KEYS = [
   'Miner fee batch stub btc',
@@ -76,7 +83,8 @@ for (const key of requiredKeys) {
     failed = true;
     continue;
   }
-  const expected = showcaseCatalog[key];
+  const expected =
+    BUSINESS_ZH_AHEAD_OF_SHOWCASE[key] ?? showcaseCatalog[key];
   if (expected !== undefined && zh !== expected) {
     console.error(
       `[verify-miner-fee-gas-fee-i18n] uiTextZhCN mismatch for "${key}"\n  showcase: ${JSON.stringify(expected)}\n  zhCN:     ${JSON.stringify(zh)}`,

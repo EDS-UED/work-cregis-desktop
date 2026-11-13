@@ -40,6 +40,7 @@ import type {
   PaymentEngineCollectionDetailView,
 } from './paymentEngineCollectionDetailView';
 import type { DetailSectionData } from '@eds/desktop-components';
+import { applyPaymentEngineDetailSectionsPolicy } from './applyPaymentEngineDetailItemPolicy';
 import PaymentEngineCollectionDetailRecordsTable from './PaymentEngineCollectionDetailRecordsTable.vue';
 import styles from './PaymentEngineCollectionDetailPage.module.css';
 
@@ -85,12 +86,13 @@ const {
   ui,
 });
 
-const conditionSectionsWithAml = computed(() =>
-  applyDetailAmlSearchSectionOverlay(props.conditionSections, {
+const conditionSectionsWithAml = computed(() => {
+  const withAml = applyDetailAmlSearchSectionOverlay(props.conditionSections, {
     resultsByKey: amlSearchResultsByKey.value,
     translate: ui,
-  }),
-);
+  });
+  return applyPaymentEngineDetailSectionsPolicy(withAml);
+});
 
 const recordFilterConditions = ref<EgFilterCondition[]>([]);
 const recordFilterLogicMode = ref<EgFilterLogicMode>('all');

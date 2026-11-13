@@ -20,7 +20,7 @@ function buildApiCollectionOverviewItems(
   timeRow: ApiCollectionTimeRowFactory,
 ): DetailItemData[] {
   const cryptoName =
-    resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether';
+    resolveCryptoNameFromSymbol(row.currencySymbol ?? row.orderSymbol) ?? 'eds-usdt-tether usd';
   const networkTag = row.currencyNetwork?.trim() ?? '';
 
   return [

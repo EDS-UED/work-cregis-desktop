@@ -7,6 +7,7 @@ import {
   RISK_CONTROL_CURRENCY_CONDITION_HIDDEN,
   RISK_CONTROL_CURRENCY_CONDITION_SHOWCASE,
 } from './riskControlCurrencyConditionDemoData';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 
 function buildAutoRuleDetailRecord(row: PaymentEngineRecordRow): RiskControlAutoRuleDetailRecord {
   const direction = row.autoRuleDirection ?? 'inflow';
@@ -16,7 +17,7 @@ function buildAutoRuleDetailRecord(row: PaymentEngineRecordRow): RiskControlAuto
   return {
     creatorName: 'Alex Mah.',
     creatorAvatarName: 'Alex Mah.',
-    creatorEmailMasked: 't******z@gmail.com',
+    creatorEmailMasked: maskDisplayEmail('testz@gmail.com'),
     createdAt: row.createdAt,
     recordNumber: row.ruleNumber?.trim() || 'AML2026102100001',
     waasProject: row.autoRuleWaasProject?.trim() || 'Doris Stodio',
@@ -28,7 +29,7 @@ function buildAutoRuleDetailRecord(row: PaymentEngineRecordRow): RiskControlAuto
       : '大于等于“0.1”为危险交易，并禁用API收款地址',
     alertRecipientName: isOutflow ? 'Withdrawal initiator' : 'Ed Stark.',
     alertRecipientAvatarName: isOutflow ? undefined : 'Ed Stark.',
-    alertRecipientEmailMasked: isOutflow ? undefined : 'e******k@gmail.com',
+    alertRecipientEmailMasked: isOutflow ? undefined : maskDisplayEmail('emilyk@gmail.com'),
     direction,
     withdrawalTypeKey: row.autoRuleScopeKey ?? 'Manual Transfer',
     scopeLabel: row.autoRuleScopeKey,

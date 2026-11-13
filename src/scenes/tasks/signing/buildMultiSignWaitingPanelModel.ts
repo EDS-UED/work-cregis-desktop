@@ -3,6 +3,7 @@ import { formatEmptyDisplayValue } from '@/utils/formatEmptyDisplay';
 import { parseSigningThreshold } from './multiSignWaiting.constants';
 import { formatGroupedAmountText } from '@/utils/formatGroupedDisplay';
 import type { SigningDetail, SigningProgressMember } from './types';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 
 export type MultiSignWaitingSidebarField = {
   key: string;
@@ -43,12 +44,15 @@ const MEMBER_NAME_PRESETS = [
   'Sophia',
 ] as const;
 
-const MEMBER_EMAIL_PRESETS = [
-  'w******g@stark.com',
-  'j******n@x.com',
-  'w******g@yandex.com',
-  'w******g@yahoo.com',
+/** email-display-seed */
+const MEMBER_EMAIL_SEEDS = [
+  'wayneg@stark.com',
+  'jordann@x.com',
+  'wayneg@yandex.com',
+  'wayneg@yahoo.com',
 ] as const;
+
+const MEMBER_EMAIL_PRESETS = MEMBER_EMAIL_SEEDS.map((email) => maskDisplayEmail(email));
 
 function resolveInitiatorMember(detail: SigningDetail): SigningProgressMember | null {
   if (detail.initiatorKind !== 'member') return null;
@@ -87,7 +91,7 @@ function buildMultiSignWaitingMembers(
     const signer = detail.signers[index];
     const name = signer?.name ?? MEMBER_NAME_PRESETS[index] ?? `Signer ${index + 1}`;
     const emailMasked =
-      signer?.emailMasked ?? MEMBER_EMAIL_PRESETS[index] ?? 'm******r@example.com';
+      signer?.emailMasked ?? MEMBER_EMAIL_PRESETS[index] ?? maskDisplayEmail('member@example.com');
     const avatarName = signer?.avatarName ?? name;
     const isInitiator =
       initiatorMember != null

@@ -3,6 +3,7 @@ import {
   sideAddressPoolIndex,
 } from '../../list-field/listFieldCryptoSampleAddresses';
 import type { MultiSignInvitation } from './types';
+import { maskDisplayEmail } from '@/utils/maskDisplayEmail';
 
 export const MULTI_SIGN_INVITATION_DEMO_COUNT = 23;
 
@@ -42,17 +43,6 @@ const CURRENCY_PRESETS = [
 ];
 
 const SENDER_WALLET_NAMES = ['主钱包', '运营钱包', 'Treasury', 'Cold Wallet', 'Payroll'];
-
-function maskInviterEmail(local: string, domain = 'gtc.com'): string {
-  const trimmed = local.trim();
-  if (!trimmed) {
-    return `u***u@${domain}`;
-  }
-  if (trimmed.length === 1) {
-    return `${trimmed}***@${domain}`;
-  }
-  return `${trimmed[0]}***${trimmed.slice(-1)}@${domain}`;
-}
 
 function formatInvitedAtDisplay(baseMs: number, offsetHours: number): string {
   const date = new Date(baseMs - offsetHours * 60 * 60 * 1000);
@@ -114,7 +104,7 @@ export function buildMultiSignInvitationDemoData(
       id: `msi-${index + 1}`,
       status: 'pending' as const,
       inviterName,
-      inviterEmailMasked: maskInviterEmail(emailLocal),
+      inviterEmailMasked: maskDisplayEmail(`${emailLocal}@gtc.com`),
       invitedAtDisplay: formatInvitedAtDisplay(baseInvitedAtMs, index * 3 + (index % 5)),
       amountDisplay: preset.amountDisplay,
       amountSymbol: preset.symbol,
