@@ -25,6 +25,7 @@ import {
   OVERVIEW_RECHARGE_MINIMUM_DISPLAY,
   OVERVIEW_RECHARGE_NETWORK_OPTIONS,
   resolveOverviewGasRechargeDepositAddress,
+  resolveOverviewGasRechargeSkidAccountKey,
   resolveOverviewRechargeDepositAddress,
   type OverviewGasRechargeAccountKey,
   type OverviewRechargeNetworkKey,
@@ -60,7 +61,7 @@ watch(
   () => [props.mode, props.gasAccountKey] as const,
   ([mode, gasKey]) => {
     if (mode === 'gas') {
-      selectedGasAccountKey.value = gasKey ?? OVERVIEW_GAS_RECHARGE_DEFAULT_ACCOUNT_KEY;
+      selectedGasAccountKey.value = resolveOverviewGasRechargeSkidAccountKey(gasKey);
       return;
     }
     selectedTeamNetworkKey.value = OVERVIEW_RECHARGE_DEFAULT_NETWORK_KEY;

@@ -74,16 +74,9 @@ export type OverviewGasRechargeAccountOption = {
 };
 
 /** 总览 Gas 充值侧栏网络，与 Gas 账户列表一一对应。 */
+/** Gas 原生币充值可选网络（不含 TRX：与团队账户共用，走团队账户 USDT 充值）。 */
 export const OVERVIEW_GAS_RECHARGE_ACCOUNT_OPTIONS: readonly OverviewGasRechargeAccountOption[] =
   [
-    {
-      key: 'trx',
-      titleKey: 'TRX Gas Account',
-      cryptoName: 'eds-trx-tron',
-      symbol: 'TRX',
-      addressFamily: 'trx',
-      minimumDisplay: '10 TRX',
-    },
     {
       key: 'eth',
       titleKey: 'ETH Gas Account',
@@ -118,7 +111,19 @@ export const OVERVIEW_GAS_RECHARGE_ACCOUNT_OPTIONS: readonly OverviewGasRecharge
     },
   ];
 
-export const OVERVIEW_GAS_RECHARGE_DEFAULT_ACCOUNT_KEY: OverviewGasRechargeAccountKey = 'trx';
+export const OVERVIEW_GAS_RECHARGE_DEFAULT_ACCOUNT_KEY: OverviewGasRechargeAccountKey = 'eth';
+
+export function resolveOverviewGasRechargeSkidAccountKey(
+  accountKey?: OverviewGasRechargeAccountKey,
+): OverviewGasRechargeAccountKey {
+  if (
+    accountKey
+    && OVERVIEW_GAS_RECHARGE_ACCOUNT_OPTIONS.some((option) => option.key === accountKey)
+  ) {
+    return accountKey;
+  }
+  return OVERVIEW_GAS_RECHARGE_DEFAULT_ACCOUNT_KEY;
+}
 
 export function resolveOverviewGasRechargeDepositAddress(
   accountKey: OverviewGasRechargeAccountKey,

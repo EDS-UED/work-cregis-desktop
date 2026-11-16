@@ -30,7 +30,11 @@ import {
   OVERVIEW_GENERATE_BILL_FLOTATION_WIDTH,
 } from './manageOverviewGenerateBill.constants';
 import { OVERVIEW_BALANCE_REMINDER_GAS_MULTICHAIN_KEYS } from './overviewBalanceReminderSkidData';
-import type { OverviewGasRechargeAccountKey } from './overviewRechargeSkidData';
+import {
+  OVERVIEW_GAS_RECHARGE_DEFAULT_ACCOUNT_KEY,
+  resolveOverviewGasRechargeSkidAccountKey,
+  type OverviewGasRechargeAccountKey,
+} from './overviewRechargeSkidData';
 import { useManageOverviewBalanceReminderForm } from './useManageOverviewBalanceReminderForm';
 import { registerManageOverviewOverlay } from './manageOverviewOverlayContext';
 import { useManageOverviewAccountTransferFlow } from './useManageOverviewAccountTransferFlow';
@@ -82,7 +86,9 @@ type OverviewSkidKind = 'recharge' | 'balance-reminder' | 'account-transfer';
 const overviewSkidOpen = ref(false);
 const overviewSkidKind = ref<OverviewSkidKind>('recharge');
 const rechargeSkidTarget = ref<OverviewRechargeSkidTarget>('team');
-const rechargeGasAccountKey = ref<OverviewGasRechargeAccountKey>('trx');
+const rechargeGasAccountKey = ref<OverviewGasRechargeAccountKey>(
+  OVERVIEW_GAS_RECHARGE_DEFAULT_ACCOUNT_KEY,
+);
 
 const overviewSkidTitleKey = computed(() => {
   if (overviewSkidKind.value === 'balance-reminder') {
@@ -328,7 +334,7 @@ function openRechargeSkid(
   overviewSkidKind.value = 'recharge';
   rechargeSkidTarget.value = target;
   if (target === 'gas') {
-    rechargeGasAccountKey.value = gasAccountKey ?? 'trx';
+    rechargeGasAccountKey.value = resolveOverviewGasRechargeSkidAccountKey(gasAccountKey);
   }
   overviewSkidOpen.value = true;
 }
@@ -407,7 +413,7 @@ function resetOverviewQaBaseline() {
   canConfigureGasProxyPayment.value = true;
   overviewSkidKind.value = 'recharge';
   rechargeSkidTarget.value = 'team';
-  rechargeGasAccountKey.value = 'trx';
+  rechargeGasAccountKey.value = OVERVIEW_GAS_RECHARGE_DEFAULT_ACCOUNT_KEY;
   verifyPurpose.value = null;
 }
 
