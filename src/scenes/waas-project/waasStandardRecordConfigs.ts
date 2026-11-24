@@ -187,13 +187,13 @@ const TASK_RECORD_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   },
 ];
 
-const API_COLLECTION_SENDER_COLUMN_MIN_WIDTH = '180px';
-const API_COLLECTION_RECEIVER_COLUMN_MIN_WIDTH = '180px';
-const API_COLLECTION_AMOUNT_TIME_COLUMN_MIN_WIDTH = '208px';
-const API_COLLECTION_STATUS_COLUMN_MIN_WIDTH = '120px';
-const API_COLLECTION_ACTIONS_COLUMN_MIN_WIDTH = '192px';
+/** API 归集 4 列 Σ min 716px + reserve；尾列金额|发起时间 flex 右对齐。 */
+const API_COLLECTION_SENDER_COLUMN_MIN_WIDTH = '168px';
+const API_COLLECTION_RECEIVER_COLUMN_MIN_WIDTH = '168px';
+const API_COLLECTION_STATUS_COLUMN_MIN_WIDTH = '132px';
+const API_COLLECTION_AMOUNT_TIME_COLUMN_MIN_WIDTH = '248px';
 
-/** API 归集 · 5 列：发送方、接收方、金额|发起时间、状态、操作（驳回、归集）。 */
+/** API 归集 · 4 列：发送方、接收方、状态、金额|发起时间（操作在详情）。 */
 const API_COLLECTION_COLUMNS: PaymentEngineRecordColumnConfig[] = [
   {
     ...WALLET_PAYOUT_CALLBACK_SENDER_COLUMN,
@@ -208,6 +208,14 @@ const API_COLLECTION_COLUMNS: PaymentEngineRecordColumnConfig[] = [
     displayOrder: 2,
   },
   {
+    key: 'bulkState',
+    labelKey: L.status,
+    minWidth: API_COLLECTION_STATUS_COLUMN_MIN_WIDTH,
+    align: 'center',
+    flexGrow: false,
+    displayOrder: 3,
+  },
+  {
     key: 'callbackAmountTime',
     labelKey: L.amount,
     secondaryLabelKey: timeCol('initiationTime'),
@@ -216,22 +224,9 @@ const API_COLLECTION_COLUMNS: PaymentEngineRecordColumnConfig[] = [
     headerKind: 'combo',
     sortable: true,
     secondarySortable: true,
-    displayOrder: 3,
-  },
-  {
-    key: 'bulkState',
-    labelKey: L.status,
-    minWidth: API_COLLECTION_STATUS_COLUMN_MIN_WIDTH,
-    align: 'center',
-    flexGrow: false,
-    displayOrder: 4,
-  },
-  {
-    key: 'apiCollectionActions',
-    labelKey: 'Actions',
-    minWidth: API_COLLECTION_ACTIONS_COLUMN_MIN_WIDTH,
     align: 'end',
-    displayOrder: 5,
+    comboAlignEnd: true,
+    displayOrder: 4,
   },
 ];
 

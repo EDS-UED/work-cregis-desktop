@@ -398,6 +398,7 @@ function resolveCallbackAmountTimeAlignEnd(column: PaymentEngineRecordColumnConf
     isWalletPayoutMenuItem(props.menuItem)
     || isWaasTransactionRecordListMenuItem(props.menuItem)
     || isWaasCollectionRecordListMenuItem(props.menuItem)
+    || isWaasApiCollectionMenuItem(props.menuItem)
   ) {
     return Boolean(column.comboAlignEnd ?? column.align === 'end');
   }

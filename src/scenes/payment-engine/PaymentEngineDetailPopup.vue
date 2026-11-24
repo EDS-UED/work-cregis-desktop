@@ -8,8 +8,9 @@ import {
   watch,
   withDefaults,
 } from 'vue';
-import { EgButton, EgDetail, EgDetailPopup } from '@eds/desktop-components';
+import { EgButton, EgDetail, EgDetailPopup, EgIcon } from '@eds/desktop-components';
 import DetailToolbarSlot from '@/scenes/tasks/shared/DetailToolbarSlot.vue';
+import remarkTriggerStyles from '@/scenes/tasks/shared/remarkPopoverTrigger.module.css';
 import { useAppI18n } from '@/composables/useAppI18n';
 import { formatGroupedAmountText } from '@/utils/formatGroupedDisplay';
 import { splitDetailAmountHeadline } from '@/scenes/tasks/shared/splitDetailAmountHeadline';
@@ -38,6 +39,7 @@ import {
   isPaymentSettlementRecordMenuItem,
   isWalletPayoutRecordMenuItem,
   isTransactionRecordDetailMenuItem,
+  isWaasTransactionRecordListMenuItem,
   isApiCollectionRecordMenuItem,
   isCollectionRecordDetailMenuItem,
   isRuleConfigurationRecordMenuItem,
@@ -148,8 +150,11 @@ const isCallbackRecordDetail = computed(() => isCallbackRecordDetailMenuItem(pro
 const isSettlementRecordDetail = computed(() => isPaymentSettlementRecordMenuItem(props.menuItem));
 const isWalletPayoutRecordDetail = computed(() => isWalletPayoutRecordMenuItem(props.menuItem));
 const isTransactionRecordDetail = computed(() => isTransactionRecordDetailMenuItem(props.menuItem));
-const showTransactionProcessingDetailToolbar = computed(
-  () => isTransactionRecordDetail.value && props.menuItem === 'Processing',
+const showWaasTransactionRecordDetailToolbar = computed(() =>
+  isWaasTransactionRecordListMenuItem(props.menuItem),
+);
+const showWaasTransactionProcessingToolbarActions = computed(
+  () => props.menuItem === 'Processing',
 );
 const isApiCollectionRecordDetail = computed(() => isApiCollectionRecordMenuItem(props.menuItem));
 const isCollectionRecordDetail = computed(() => isCollectionRecordDetailMenuItem(props.menuItem));
@@ -621,8 +626,8 @@ function onDetailClose() {
         :show-tabs="showDetailTabs"
         :tab-labels="detailTabLabels"
         :sections="sections"
-        :show-toolbar="showTransactionProcessingDetailToolbar"
-        :show-toolbar-nav="showDetailTabs && !showTransactionProcessingDetailToolbar"
+        :show-toolbar="showWaasTransactionRecordDetailToolbar"
+        :show-toolbar-nav="showDetailTabs && !showWaasTransactionRecordDetailToolbar"
         toolbar-tone="decor"
         toolbar-divider-pinned
         :value-copy-label="ui('Copy')"
@@ -662,9 +667,24 @@ function onDetailClose() {
             :destination-trace="amlRiskTracePanelDetail.destinationTrace"
           />
         </template>
-        <template v-if="showTransactionProcessingDetailToolbar" #toolbar>
+        <template v-if="showWaasTransactionRecordDetailToolbar" #toolbar>
           <DetailToolbarSlot :show-toolbar-nav="false" toolbar-divider-pinned>
-            <template #actions>
+            <template #leading>
+              <span :class="remarkTriggerStyles.remarkTrigger">
+                <EgButton
+                  tone="subtle"
+                  variant="outline"
+                  size="md"
+                  :aria-label="ui('Download Transaction Voucher')"
+                >
+                  <template #icon>
+                    <EgIcon name="eds-arrow-download" fit size="md" />
+                  </template>
+                  {{ ui('Download Transaction Voucher') }}
+                </EgButton>
+              </span>
+            </template>
+            <template v-if="showWaasTransactionProcessingToolbarActions" #actions>
               <EgButton variant="text" tone="subtle" size="md">
                 {{ ui('Cancel') }}
               </EgButton>

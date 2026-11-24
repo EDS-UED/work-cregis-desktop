@@ -1122,6 +1122,7 @@ export const UI_TEXT_ZH_CN: Record<string, string> = {
   Confirming: '确认中',
   'Send Failed': '发送失败',
   'Transaction Acceleration': '交易加速',
+  'Download Transaction Voucher': '下载交易凭证',
   Deposit: '充值',
   'Gas Fee Top-up': '矿工费充值',
   'Address Activation': '地址激活',
